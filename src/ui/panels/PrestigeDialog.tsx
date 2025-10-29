@@ -28,122 +28,69 @@ export function PrestigeDialog({ isOpen, onClose, onConfirm }: PrestigeDialogPro
 
   return (
     <div className="fixed inset-0 bg-black flex items-center justify-center z-50">
-      <div className="bg-neutral-900 border-2 border-emerald-500 rounded-lg p-8 max-w-2xl w-full mx-4">
-        <h2 className="text-3xl font-bold text-emerald-400 mb-6 text-center">
-          🔄 RECOMPILE CORE
+      <div className="bg-neutral-900 border-2 border-emerald-500 rounded-lg p-8 max-w-md w-full mx-4">
+        {/* Title */}
+        <h2 className="text-2xl font-bold text-emerald-400 mb-6 text-center">
+          Recompile Core
         </h2>
 
-        <div className="space-y-4 mb-6">
-          <p className="text-neutral-300 text-center">
-            Recompiling your factory core will reset this run but grant you{" "}
-            <span className="text-amber-400 font-bold text-xl">
-              {Math.floor(totalShards)} Compile Shards
-            </span>
-            .
-          </p>
-
-          <div className="bg-neutral-800 rounded-lg p-4 space-y-2">
-            <h3 className="text-lg font-semibold text-emerald-400 mb-3">
-              Shard Breakdown:
-            </h3>
-
-            <div className="space-y-2 text-sm">
-              {/* Throughput Contribution */}
-              <div className="flex justify-between items-center">
-                <div className="flex items-center gap-2">
-                  <span className="text-purple-400">⚡ Peak Throughput</span>
-                  <span className="text-neutral-500 text-xs">
-                    ({peakThroughput.toFixed(1)} atoms/s)
-                  </span>
-                </div>
-                <span className="text-amber-400 font-semibold">
-                  +{breakdown.throughputContribution.toFixed(1)}
-                </span>
-              </div>
-
-              {/* Cohesion Contribution */}
-              <div className="flex justify-between items-center">
-                <div className="flex items-center gap-2">
-                  <span className="text-blue-400">🔗 Cohesion Score</span>
-                  <span className="text-neutral-500 text-xs">
-                    ({cohesionScore.toFixed(1)} seconds satisfied)
-                  </span>
-                </div>
-                <span className="text-amber-400 font-semibold">
-                  +{breakdown.cohesionContribution.toFixed(1)}
-                </span>
-              </div>
-
-              {/* Stress Contribution */}
-              <div className="flex justify-between items-center">
-                <div className="flex items-center gap-2">
-                  <span className="text-red-400">🔥 Stress Time</span>
-                  <span className="text-neutral-500 text-xs">
-                    ({stressSecondsAccum.toFixed(1)} seconds overclock stress)
-                  </span>
-                </div>
-                <span className="text-amber-400 font-semibold">
-                  +{breakdown.stressContribution.toFixed(1)}
-                </span>
-              </div>
-
-              {/* Base Total */}
-              <div className="border-t border-neutral-700 pt-2 mt-2 flex justify-between items-center">
-                <span className="text-neutral-400">Base Total</span>
-                <span className="text-amber-300 font-semibold">
-                  {breakdown.baseTotal.toFixed(1)}
-                </span>
-              </div>
-
-              {/* Yield Multiplier */}
-              {compileYieldMult !== 1.0 && (
-                <div className="flex justify-between items-center">
-                  <span className="text-emerald-400">✨ Yield Multiplier</span>
-                  <span className="text-emerald-400 font-semibold">
-                    ×{compileYieldMult.toFixed(2)}
-                  </span>
-                </div>
-              )}
-
-              {/* Scrap Bonus */}
-              {scrapBonusShards > 0 && (
-                <div className="flex justify-between items-center">
-                  <span className="text-orange-400">♻️ Scrap Bonus</span>
-                  <span className="text-amber-400 font-semibold">
-                    +{scrapBonusShards.toFixed(1)}
-                  </span>
-                </div>
-              )}
-
-              {/* Final Total */}
-              <div className="border-t-2 border-emerald-500 pt-2 mt-2 flex justify-between items-center">
-                <span className="text-lg font-bold text-white">Final Yield</span>
-                <span className="text-2xl font-bold text-amber-400">
-                  {Math.floor(totalShards)}
-                </span>
-              </div>
+        {/* Shard Display - Large and Prominent */}
+        <div className="bg-gradient-to-br from-amber-900/30 to-orange-900/30 border-2 border-amber-500 rounded-lg p-6 mb-6">
+          <div className="text-center">
+            <div className="text-neutral-400 text-sm mb-2">You will gain</div>
+            <div className="text-6xl font-bold text-amber-400 mb-2">
+              {Math.floor(totalShards)}
             </div>
-          </div>
-
-          <div className="bg-red-900/30 border border-red-700 rounded-lg p-3 text-sm text-red-300">
-            <strong>⚠️ Warning:</strong> This will reset your current run. All buildings,
-            drones, and resources will be lost. Meta upgrades and banked shards will be
-            preserved.
+            <div className="text-amber-300 text-lg">Compile Shards</div>
           </div>
         </div>
 
-        <div className="flex gap-4">
+        {/* Simple Breakdown - Compact */}
+        <div className="bg-neutral-800 rounded-lg p-4 mb-6 space-y-2 text-sm">
+          <div className="flex justify-between text-neutral-300">
+            <span>⚡ Throughput</span>
+            <span className="text-amber-400">+{breakdown.throughputContribution.toFixed(0)}</span>
+          </div>
+          <div className="flex justify-between text-neutral-300">
+            <span>🔗 Cohesion</span>
+            <span className="text-amber-400">+{breakdown.cohesionContribution.toFixed(0)}</span>
+          </div>
+          <div className="flex justify-between text-neutral-300">
+            <span>🔥 Stress</span>
+            <span className="text-amber-400">+{breakdown.stressContribution.toFixed(0)}</span>
+          </div>
+          {compileYieldMult !== 1.0 && (
+            <div className="flex justify-between text-neutral-300 pt-2 border-t border-neutral-700">
+              <span>✨ Multiplier</span>
+              <span className="text-emerald-400">×{compileYieldMult.toFixed(2)}</span>
+            </div>
+          )}
+          {scrapBonusShards > 0 && (
+            <div className="flex justify-between text-neutral-300">
+              <span>♻️ Scrap</span>
+              <span className="text-orange-400">+{scrapBonusShards.toFixed(0)}</span>
+            </div>
+          )}
+        </div>
+
+        {/* Warning - Compact */}
+        <div className="bg-red-900/20 border border-red-800 rounded-lg p-3 mb-6 text-center text-sm text-red-300">
+          This will reset your current run
+        </div>
+
+        {/* Buttons */}
+        <div className="flex gap-3">
           <button
             onClick={onClose}
-            className="flex-1 px-6 py-3 rounded-lg font-semibold bg-neutral-700 hover:bg-neutral-600 text-white transition-colors"
+            className="flex-1 px-4 py-3 rounded-lg font-semibold bg-neutral-700 hover:bg-neutral-600 text-white transition-colors"
           >
             Cancel
           </button>
           <button
             onClick={onConfirm}
-            className="flex-1 px-6 py-3 rounded-lg font-semibold bg-emerald-600 hover:bg-emerald-700 text-white transition-colors"
+            className="flex-1 px-4 py-3 rounded-lg font-semibold bg-emerald-600 hover:bg-emerald-700 text-white transition-colors"
           >
-            Recompile Core
+            Confirm
           </button>
         </div>
       </div>
