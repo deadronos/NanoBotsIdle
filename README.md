@@ -73,6 +73,18 @@ The game emphasizes:
 - Save/load system
 - Sound effects and animations
 
+## Development Planning
+
+Comprehensive milestone planning and roadmap documentation:
+
+- **[MILESTONES.md](MILESTONES.md)**: Complete roadmap with 21 milestones across 5 development phases
+- **[GITHUB_ISSUES.md](GITHUB_ISSUES.md)**: Ready-to-use templates for creating GitHub issues
+- **[IMPLEMENTATION_GUIDE.md](IMPLEMENTATION_GUIDE.md)**: Quick reference for developers
+- **[MILESTONE_SUMMARY.md](MILESTONE_SUMMARY.md)**: Executive summary and next steps
+- **[QUICK_START.md](QUICK_START.md)**: Step-by-step guide for creating GitHub issues
+
+**MVP Timeline**: 10-12 weeks (10 milestones covering Phases 0-2 + visual polish)
+
 ## Credits
 
 Game design based on the comprehensive design documents in the `01-*.md` files.
