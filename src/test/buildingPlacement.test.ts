@@ -1,7 +1,6 @@
 import { describe, it, expect, beforeEach } from "vitest";
 import { canAffordBuilding, placeBuilding, BUILDING_COSTS } from "../state/buildingActions";
 import { World } from "../ecs/world/World";
-import { BuildingType } from "../types/buildings";
 
 describe("Building Placement and Cost Validation", () => {
   let world: World;

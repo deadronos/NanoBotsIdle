@@ -91,26 +91,111 @@ export function BuildPanel() {
               const id = Number(idStr);
               const producer = world.producer[id];
               const inv = world.inventory[id];
+              const powerLink = world.powerLink[id];
+
+              // Get heat ratio to show performance impact
+              const heatRatio =
+                world.globals.heatSafeCap > 0
+                  ? world.globals.heatCurrent / world.globals.heatSafeCap
+                  : 0;
+              const heatPenalty = 1 / (1 + heatRatio);
+
+              // Determine status
+              const isOnline = powerLink?.online ?? true;
+              const isActive = producer?.active ?? false;
+              const isStarved = producer && !producer.active;
+
+              // Status indicator color
+              const statusColor = !isOnline
+                ? "bg-red-500"
+                : isStarved
+                  ? "bg-orange-500"
+                  : isActive
+                    ? "bg-green-500"
+                    : "bg-neutral-500";
 
               return (
-                <div key={id} className="bg-neutral-800 rounded p-2">
-                  <div className="flex justify-between items-center mb-1">
-                    <span className="font-semibold text-white">{type}</span>
-                    {producer && <span className="text-xs text-neutral-400">T{producer.tier}</span>}
+                <div key={id} className="bg-neutral-800 rounded p-2 relative overflow-hidden">
+                  {/* Heat effect overlay */}
+                  {producer && heatRatio > 0.5 && (
+                    <div
+                      className="absolute inset-0 bg-red-500 opacity-5 pointer-events-none"
+                      style={{ opacity: (heatRatio - 0.5) * 0.2 }}
+                    />
+                  )}
+
+                  <div className="relative">
+                    <div className="flex justify-between items-center mb-1">
+                      <div className="flex items-center gap-2">
+                        {/* Status indicator dot */}
+                        <div className={`w-2 h-2 rounded-full ${statusColor}`} />
+                        <span className="font-semibold text-white">{type}</span>
+                      </div>
+                      {producer && (
+                        <span className="text-xs text-neutral-400">
+                          T{producer.tier} ({Math.floor(heatPenalty * 100)}%)
+                        </span>
+                      )}
+                    </div>
+
+                    {producer && (
+                      <>
+                        {/* Progress bar */}
+                        <div className="mb-1">
+                          <div className="flex justify-between items-center mb-0.5">
+                            <span className="text-xs text-neutral-400">
+                              {isStarved ? "Starved" : isActive ? "Active" : "Idle"}
+                            </span>
+                            <span className="text-xs text-neutral-400">
+                              {Math.floor(producer.progress * 100)}%
+                            </span>
+                          </div>
+                          <div className="w-full bg-neutral-700 rounded-full h-1.5 overflow-hidden">
+                            <div
+                              className={`h-full transition-all duration-200 ${
+                                isStarved
+                                  ? "bg-orange-400"
+                                  : isActive
+                                    ? "bg-emerald-500"
+                                    : "bg-neutral-600"
+                              }`}
+                              style={{ width: `${producer.progress * 100}%` }}
+                            />
+                          </div>
+                        </div>
+
+                        {/* Recipe info */}
+                        <div className="text-xs text-neutral-500 mt-1">
+                          {Object.keys(producer.recipe.inputs).length > 0 && (
+                            <div>
+                              In:{" "}
+                              {Object.entries(producer.recipe.inputs)
+                                .map(([res, amt]) => `${amt} ${res}`)
+                                .join(", ")}
+                            </div>
+                          )}
+                          {Object.keys(producer.recipe.outputs).length > 0 && (
+                            <div>
+                              Out:{" "}
+                              {Object.entries(producer.recipe.outputs)
+                                .map(([res, amt]) => `${amt} ${res}`)
+                                .join(", ")}
+                            </div>
+                          )}
+                        </div>
+                      </>
+                    )}
+
+                    {inv && Object.keys(inv.contents).length > 0 && (
+                      <div className="text-xs text-neutral-500 mt-1 pt-1 border-t border-neutral-700">
+                        Storage:{" "}
+                        {Object.entries(inv.contents)
+                          .filter(([_, amt]) => (amt || 0) > 0)
+                          .map(([res, amt]) => `${Math.floor(amt || 0)} ${res}`)
+                          .join(", ")}
+                      </div>
+                    )}
                   </div>
-                  {producer && (
-                    <div className="text-xs text-neutral-400">
-                      Progress: {Math.floor(producer.progress * 100)}%
-                    </div>
-                  )}
-                  {inv && Object.keys(inv.contents).length > 0 && (
-                    <div className="text-xs text-neutral-500 mt-1">
-                      {Object.entries(inv.contents)
-                        .filter(([_, amt]) => (amt || 0) > 0)
-                        .map(([res, amt]) => `${res}: ${Math.floor(amt || 0)}`)
-                        .join(", ")}
-                    </div>
-                  )}
                 </div>
               );
             })}
