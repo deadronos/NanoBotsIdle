@@ -1,4 +1,6 @@
+import { useState } from "react";
 import { useGameStore } from "../../state/store";
+import { MetaUpgradesPanel } from "./MetaUpgradesPanel";
 
 export function BottomBar() {
   const snapshot = useGameStore((s) => s.uiSnapshot);
@@ -9,6 +11,7 @@ export function BottomBar() {
   const compileShards = useGameStore((s) => s.compileShardsBanked);
   const forkPoints = useGameStore((s) => s.forkPoints);
   const world = useGameStore((s) => s.world);
+  const [showMetaUpgrades, setShowMetaUpgrades] = useState(false);
 
   // Get unlock state
   const unlocks = world.globals.unlocks;
@@ -20,7 +23,10 @@ export function BottomBar() {
   const canFork = unlocks.forkProcess && snapshot.currentPhase >= 2 && droneCount > 0 && snapshot.simTimeSeconds >= 960; // 16 minutes
 
   return (
-    <div className="bg-neutral-900 border-t border-neutral-800 px-6 py-4">
+    <>
+      {showMetaUpgrades && <MetaUpgradesPanel onClose={() => setShowMetaUpgrades(false)} />}
+      
+      <div className="bg-neutral-900 border-t border-neutral-800 px-6 py-4">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
           <div className="text-sm text-neutral-400">
@@ -37,6 +43,17 @@ export function BottomBar() {
               Fork Points:{" "}
               <span className="text-lg font-bold text-purple-400">{forkPoints}</span>
             </div>
+          )}
+          
+          {/* Meta Upgrades Button */}
+          {compileShards >= 1 && (
+            <button
+              onClick={() => setShowMetaUpgrades(true)}
+              className="px-4 py-2 rounded-lg font-semibold bg-amber-600 hover:bg-amber-700 text-white transition-colors border-2 border-amber-400"
+              title="View and purchase meta upgrades"
+            >
+              📊 META UPGRADES
+            </button>
           )}
         </div>
 
@@ -96,5 +113,6 @@ export function BottomBar() {
         </div>
       </div>
     </div>
+    </>
   );
 }
