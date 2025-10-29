@@ -1,6 +1,7 @@
 import { World } from "../ecs/world/World";
 import { MetaSlice } from "./metaSlice";
 import { migrateSaveData, validateSaveData } from "./migrations";
+import { RunBehaviorContext } from "../types/forkModules";
 
 const SAVE_KEY = "nanofactory-save";
 const SAVE_VERSION = 1;
@@ -19,13 +20,22 @@ export interface SaveData {
     world: World;
     projectedCompileShards: number;
     forkPoints: number;
+    acquiredModules: string[];
+    runBehaviorContext: RunBehaviorContext;
     currentPhase: 1 | 2 | 3;
   };
 }
 
 export function saveGame(
   meta: MetaSlice,
-  run: { world: World; projectedCompileShards: number; forkPoints: number; currentPhase: 1 | 2 | 3 }
+  run: { 
+    world: World; 
+    projectedCompileShards: number; 
+    forkPoints: number; 
+    acquiredModules: string[];
+    runBehaviorContext: RunBehaviorContext;
+    currentPhase: 1 | 2 | 3;
+  }
 ): boolean {
   try {
     const saveData: SaveData = {
