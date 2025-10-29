@@ -8,6 +8,29 @@ const GRID_HEIGHT = 64;
 export function FactoryCanvas() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const snapshot = useGameStore((s) => s.uiSnapshot);
+  const selectedBuildingType = useGameStore((s) => s.selectedBuildingType);
+  const placeBuilding = useGameStore((s) => s.placeBuilding);
+
+  const handleCanvasClick = (event: React.MouseEvent<HTMLCanvasElement>) => {
+    if (!selectedBuildingType) return;
+
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+
+    const rect = canvas.getBoundingClientRect();
+    const clickX = event.clientX - rect.left;
+    const clickY = event.clientY - rect.top;
+
+    // Convert to grid coordinates
+    const gridX = Math.floor(clickX / TILE_SIZE);
+    const gridY = Math.floor(clickY / TILE_SIZE);
+
+    // Place building
+    const success = placeBuilding(gridX, gridY);
+    if (!success) {
+      console.log("Failed to place building");
+    }
+  };
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -105,8 +128,16 @@ export function FactoryCanvas() {
           ref={canvasRef}
           width={GRID_WIDTH * TILE_SIZE}
           height={GRID_HEIGHT * TILE_SIZE}
-          className="border border-neutral-800 rounded-lg"
+          className={`border border-neutral-800 rounded-lg ${
+            selectedBuildingType ? "cursor-crosshair" : "cursor-default"
+          }`}
+          onClick={handleCanvasClick}
         />
+        {selectedBuildingType && (
+          <div className="absolute top-4 left-4 bg-emerald-900/80 backdrop-blur px-3 py-2 rounded text-sm text-emerald-200">
+            Placing: {selectedBuildingType}
+          </div>
+        )}
         <div className="absolute bottom-4 right-4 bg-black/70 backdrop-blur px-3 py-2 rounded text-xs text-neutral-400">
           <div>🟦 Extractor  🟪 Assembler  🟨 Fabricator</div>
           <div>🔵 Hauler  🟡 Builder  🟢 Maintainer</div>

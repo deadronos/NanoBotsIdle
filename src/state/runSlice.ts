@@ -3,6 +3,8 @@ import { World } from "../ecs/world/World";
 import { createWorld } from "../ecs/world/createWorld";
 import { MetaSlice } from "./metaSlice";
 import { getCompileShardEstimate } from "../sim/balance";
+import { BuildingType } from "../types/buildings";
+import { placeBuilding } from "./buildingActions";
 
 export interface UISnapshot {
   heatCurrent: number;
@@ -38,11 +40,14 @@ export interface RunSlice {
   projectedCompileShards: number;
   forkPoints: number;
   selectedEntity: number | null;
+  selectedBuildingType: BuildingType | null;
   currentPhase: 1 | 2 | 3;
   overclockArmed: boolean;
   uiSnapshot: UISnapshot | null;
 
   // Actions
+  setSelectedBuildingType: (type: BuildingType | null) => void;
+  placeBuilding: (x: number, y: number) => boolean;
   toggleOverclock: (on: boolean) => void;
   prestigeNow: () => void;
   updateUISnapshot: () => void;
@@ -77,9 +82,25 @@ export const createRunSlice: StateCreator<
   projectedCompileShards: 0,
   forkPoints: 0,
   selectedEntity: null,
+  selectedBuildingType: null,
   currentPhase: 1,
   overclockArmed: false,
   uiSnapshot: null,
+
+  setSelectedBuildingType: (type: BuildingType | null) => {
+    set({ selectedBuildingType: type });
+  },
+
+  placeBuilding: (x: number, y: number) => {
+    const state = get();
+    if (!state.selectedBuildingType) return false;
+    
+    const success = placeBuilding(state.world, state.selectedBuildingType, x, y);
+    if (success) {
+      set({ selectedBuildingType: null });
+    }
+    return success;
+  },
 
   toggleOverclock: (on: boolean) => {
     const world = get().world;
