@@ -112,7 +112,7 @@ export function createWorld(params: CreateWorldParams): World {
     world.heatSink[coreId] = { coolingPerSecond: 0.2 * bio.passiveCoolingBonus };
   }
 
-  world.powerLink[coreId] = { demand: 1, priority: 0, online: true };
+  world.powerLink[coreId] = { demand: 1, priority: 0, online: true, connectedToGrid: true };
   world.compileEmitter[coreId] = { throughputWeight: 1, cohesionWeight: 1 };
 
   // Create starting Extractor
@@ -129,7 +129,7 @@ export function createWorld(params: CreateWorldParams): World {
   world.heatSource[extractorId] = {
     heatPerSecond: 0.5 * bio.startingExtractorTier,
   };
-  world.powerLink[extractorId] = { demand: 1, priority: 1, online: true };
+  world.powerLink[extractorId] = { demand: 1, priority: 1, online: true, connectedToGrid: true };
   world.overclockable[extractorId] = {
     safeRateMult: 1.0,
     overRateMult: 2.0,
@@ -152,7 +152,7 @@ export function createWorld(params: CreateWorldParams): World {
     active: true,
   };
   world.heatSource[assemblerId] = { heatPerSecond: 0.7 };
-  world.powerLink[assemblerId] = { demand: 2, priority: 2, online: true };
+  world.powerLink[assemblerId] = { demand: 2, priority: 2, online: true, connectedToGrid: true };
   world.overclockable[assemblerId] = {
     safeRateMult: 1.0,
     overRateMult: 2.5,
@@ -175,7 +175,7 @@ export function createWorld(params: CreateWorldParams): World {
     active: true,
   };
   world.heatSource[fabId] = { heatPerSecond: 1.0 };
-  world.powerLink[fabId] = { demand: 2, priority: 1, online: true };
+  world.powerLink[fabId] = { demand: 2, priority: 1, online: true, connectedToGrid: true };
   world.overclockable[fabId] = {
     safeRateMult: 1.0,
     overRateMult: 3.0,
@@ -208,7 +208,7 @@ export function createWorld(params: CreateWorldParams): World {
         buildRadius: role === "builder" ? baseBehavior.buildRadius + 2 : baseBehavior.buildRadius,
       },
     };
-    world.powerLink[dId] = { demand: 0.1, priority: 0, online: true };
+    world.powerLink[dId] = { demand: 0.1, priority: 0, online: true, connectedToGrid: true };
   }
 
   for (let i = 0; i < startHaulers; i++) {
