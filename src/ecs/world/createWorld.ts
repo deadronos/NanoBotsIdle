@@ -107,10 +107,11 @@ export function createWorld(params: CreateWorldParams): World {
   world.inventory[coreId] = {
     capacity: 999,
     contents: {
-      ...bio.startingCoreInventory,
       // Add some initial resources so player can interact with the game
       Carbon: 10,
       Components: 20,
+      // Apply meta upgrades on top of base starting resources
+      ...bio.startingCoreInventory,
     },
   };
   world.heatSource[coreId] = { heatPerSecond: 0.2 };
