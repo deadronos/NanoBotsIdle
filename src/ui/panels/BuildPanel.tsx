@@ -18,6 +18,8 @@ export function BuildPanel() {
     "Fabricator",
     "Cooler",
     "Storage",
+    "PowerVein",
+    "CoreCompiler",
   ];
 
   return (
