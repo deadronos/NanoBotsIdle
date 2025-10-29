@@ -104,6 +104,14 @@ export function FactoryCanvas() {
         color = "#fbbf24"; // yellow
       else if (drone.role === "maintainer") color = "#34d399"; // green
 
+      // Draw cargo indicator if carrying something
+      if (drone.cargoAmount > 0) {
+        ctx.fillStyle = "#fbbf24"; // yellow for cargo
+        ctx.beginPath();
+        ctx.arc(x, y, 4, 0, Math.PI * 2);
+        ctx.fill();
+      }
+
       ctx.fillStyle = color;
       ctx.beginPath();
       ctx.arc(x, y, 2.5, 0, Math.PI * 2);
@@ -116,6 +124,21 @@ export function FactoryCanvas() {
       ctx.arc(x, y, 2, 0, Math.PI * 2);
       ctx.fill();
       ctx.shadowBlur = 0;
+
+      // Add state indicator
+      if (drone.state === "toPickup") {
+        ctx.strokeStyle = "#3b82f6";
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.arc(x, y, 5, 0, Math.PI * 2);
+        ctx.stroke();
+      } else if (drone.state === "toDropoff") {
+        ctx.strokeStyle = "#10b981";
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.arc(x, y, 5, 0, Math.PI * 2);
+        ctx.stroke();
+      }
     });
 
     // Draw heat overlay if high

@@ -6,12 +6,14 @@ import { movementSystem } from "../systems/movementSystem";
 import { productionSystem } from "../systems/productionSystem";
 import { heatAndPowerSystem } from "../systems/heatAndPowerSystem";
 import { compileScoringSystem } from "../systems/compileScoringSystem";
+import { congestionSystem } from "../systems/congestionSystem";
 
 export function tickWorld(world: World, dt: number) {
   // Update simulation time
   world.globals.simTimeSeconds += dt;
 
   // Run systems in order
+  congestionSystem(world, dt); // Track drone congestion first
   demandPlanningSystem(world, dt);
   droneAssignmentSystem(world, dt);
   pathfindingSystem(world, dt);

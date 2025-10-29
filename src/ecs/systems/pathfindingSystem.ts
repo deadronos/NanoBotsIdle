@@ -1,7 +1,7 @@
 import { World } from "../world/World";
+import { findPath } from "./astar";
 
 export function pathfindingSystem(world: World, _dt: number) {
-  // Simplified: drones just path directly to targets
   Object.entries(world.droneBrain).forEach(([idStr, brain]) => {
     const id = Number(idStr);
 
@@ -13,13 +13,31 @@ export function pathfindingSystem(world: World, _dt: number) {
 
     if (!startPos || !targetPos) return;
 
-    // Simple direct path
-    world.path[id] = {
-      nodes: [
-        { x: startPos.x, y: startPos.y },
-        { x: targetPos.x, y: targetPos.y },
-      ],
-      idx: 0,
-    };
+    // Use A* pathfinding with congestion awareness
+    const congestionWeight = brain.behavior.congestionAvoidance;
+    const pathNodes = findPath(
+      world.grid,
+      startPos.x,
+      startPos.y,
+      targetPos.x,
+      targetPos.y,
+      congestionWeight
+    );
+
+    if (pathNodes && pathNodes.length > 0) {
+      world.path[id] = {
+        nodes: pathNodes,
+        idx: 0,
+      };
+    } else {
+      // Fallback to direct path if A* fails
+      world.path[id] = {
+        nodes: [
+          { x: startPos.x, y: startPos.y },
+          { x: targetPos.x, y: targetPos.y },
+        ],
+        idx: 0,
+      };
+    }
   });
 }
