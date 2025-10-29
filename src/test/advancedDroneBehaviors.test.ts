@@ -188,10 +188,10 @@ describe("Advanced Drone Behaviors", () => {
       world.position[coolerId] = { x: 33, y: 32 };
       world.inventory[coolerId] = {
         capacity: 50,
-        contents: { Coolant: 1 }, // Low coolant
+        contents: { Components: 1 }, // Low components for cooling
       };
       world.producer[coolerId] = {
-        recipe: { inputs: { Coolant: 2 }, outputs: {}, batchTimeSeconds: 3 },
+        recipe: { inputs: { Components: 2 }, outputs: {}, batchTimeSeconds: 3 },
         progress: 0,
         baseRate: 1,
         tier: 1,
@@ -218,10 +218,10 @@ describe("Advanced Drone Behaviors", () => {
       world.position[coolerId] = { x: 33, y: 32 };
       world.inventory[coolerId] = {
         capacity: 50,
-        contents: { Coolant: 1 },
+        contents: { Components: 1 },
       };
       world.producer[coolerId] = {
-        recipe: { inputs: { Coolant: 2 }, outputs: {}, batchTimeSeconds: 3 },
+        recipe: { inputs: { Components: 2 }, outputs: {}, batchTimeSeconds: 3 },
         progress: 0,
         baseRate: 1,
         tier: 1,
