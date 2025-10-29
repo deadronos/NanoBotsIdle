@@ -56,6 +56,7 @@ export interface RunSlice {
   toggleOverclock: (on: boolean) => void;
   scrapEntity: (entityId: number) => number;
   selfTerminate: () => void;
+  forkProcess: () => void;
   prestigeNow: () => void;
   updateUISnapshot: () => void;
 }
@@ -176,6 +177,37 @@ export const createRunSlice: StateCreator<RunSlice & MetaSlice, [], [], RunSlice
 
     // Immediately prestige after self-termination
     state.prestigeNow();
+  },
+
+  forkProcess: () => {
+    const state = get();
+    const world = state.world;
+    
+    // Count and remove all drones
+    const droneIds = Object.entries(world.entityType)
+      .filter(([_, type]) => type === "Drone")
+      .map(([id]) => Number(id));
+    
+    const droneCount = droneIds.length;
+    
+    // Remove drones from world
+    droneIds.forEach(id => {
+      delete world.entityType[id];
+      delete world.position[id];
+      delete world.inventory[id];
+      delete world.droneBrain[id];
+      delete world.path[id];
+      delete world.powerLink[id];
+    });
+    
+    // Grant fork points (1 per 3 drones sacrificed, minimum 1)
+    const earnedPoints = Math.max(1, Math.floor(droneCount / 3));
+    
+    set({ 
+      forkPoints: state.forkPoints + earnedPoints,
+    });
+    
+    console.log(`Fork Process complete: sacrificed ${droneCount} drones, earned ${earnedPoints} fork points`);
   },
 
   prestigeNow: () => {
