@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useGameStore } from "../../state/store";
 import { PrestigeDialog } from "./PrestigeDialog";
 import { MetaUpgradesPanel } from "./MetaUpgradesPanel";
+import { ForkModulesPanel } from "./ForkModulesPanel";
 
 export function BottomBar() {
   const snapshot = useGameStore((s) => s.uiSnapshot);
@@ -13,6 +14,7 @@ export function BottomBar() {
   const forkPoints = useGameStore((s) => s.forkPoints);
   const world = useGameStore((s) => s.world);
   const [showMetaUpgrades, setShowMetaUpgrades] = useState(false);
+  const [showForkModules, setShowForkModules] = useState(false);
 
   const [showPrestigeDialog, setShowPrestigeDialog] = useState(false);
 
@@ -46,6 +48,7 @@ export function BottomBar() {
         onConfirm={handlePrestigeConfirm}
       />
       {showMetaUpgrades && <MetaUpgradesPanel onClose={() => setShowMetaUpgrades(false)} />}
+      {showForkModules && <ForkModulesPanel onClose={() => setShowForkModules(false)} />}
       
       <div className="bg-neutral-900 border-t border-neutral-800 px-6 py-4">
       <div className="flex items-center justify-between">
@@ -74,6 +77,17 @@ export function BottomBar() {
               title="View and purchase meta upgrades"
             >
               📊 META UPGRADES
+            </button>
+          )}
+          
+          {/* Fork Modules Button */}
+          {forkPoints >= 1 && snapshot.currentPhase >= 2 && (
+            <button
+              onClick={() => setShowForkModules(true)}
+              className="px-4 py-2 rounded-lg font-semibold bg-purple-600 hover:bg-purple-700 text-white transition-colors border-2 border-purple-400"
+              title="View and purchase fork behavior modules"
+            >
+              🧬 FORK MODULES
             </button>
           )}
         </div>
