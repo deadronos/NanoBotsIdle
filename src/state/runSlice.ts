@@ -41,7 +41,6 @@ export interface UISnapshot {
 export interface RunSlice {
   world: World;
   projectedCompileShards: number;
-  forkPoints: number;
   selectedEntity: number | null;
   selectedBuildingType: BuildingType | null;
   currentPhase: 1 | 2 | 3;
@@ -83,7 +82,6 @@ export const createRunSlice: StateCreator<RunSlice & MetaSlice, [], [], RunSlice
     },
   }),
   projectedCompileShards: 0,
-  forkPoints: 0,
   selectedEntity: null,
   selectedBuildingType: null,
   currentPhase: 1,
@@ -180,8 +178,7 @@ export const createRunSlice: StateCreator<RunSlice & MetaSlice, [], [], RunSlice
   },
 
   forkProcess: () => {
-    const state = get();
-    const world = state.world;
+    const world = get().world;
     
     // Count and remove all drones
     const droneIds = Object.entries(world.entityType)
@@ -203,16 +200,18 @@ export const createRunSlice: StateCreator<RunSlice & MetaSlice, [], [], RunSlice
     // Grant fork points (1 per 3 drones sacrificed, minimum 1)
     const earnedPoints = Math.max(1, Math.floor(droneCount / 3));
     
-    set({ 
-      forkPoints: state.forkPoints + earnedPoints,
-    });
+    // Use grantForkPoints action from ForkSlice
+    const grantForkPoints = (get() as any).grantForkPoints;
+    if (grantForkPoints) {
+      grantForkPoints(earnedPoints);
+    }
     
     console.log(`Fork Process complete: sacrificed ${droneCount} drones, earned ${earnedPoints} fork points`);
   },
 
   prestigeNow: () => {
-    const state = get();
-    const world = state.world;
+    const world = get().world;
+    const state = get() as any; // Cast to access all slice methods
 
     // Calculate final shards (including scrap bonus)
     const shards = getCompileShardEstimate({
@@ -235,15 +234,25 @@ export const createRunSlice: StateCreator<RunSlice & MetaSlice, [], [], RunSlice
       compiler: state.compilerOptimization,
     });
 
+    // Reset fork state (modules are per-run)
+    if (state.resetForkState) {
+      state.resetForkState();
+    }
+
+    // Reset run state
     set({
       world: newWorld,
       projectedCompileShards: 0,
-      forkPoints: state.compilerOptimization.startingForkPoints,
       selectedEntity: null,
       currentPhase: 1,
       overclockArmed: false,
       scrapBonusShards: 0,
     });
+
+    // Grant starting fork points from meta upgrades
+    if (state.compilerOptimization.startingForkPoints > 0 && state.grantForkPoints) {
+      state.grantForkPoints(state.compilerOptimization.startingForkPoints);
+    }
   },
 
   updateUISnapshot: () => {

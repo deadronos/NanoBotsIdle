@@ -2,17 +2,18 @@ import { useState } from "react";
 import { useGameStore } from "../../state/store";
 import { PrestigeDialog } from "./PrestigeDialog";
 import { MetaUpgradesPanel } from "./MetaUpgradesPanel";
+import { ForkModal } from "./ForkModal";
 
 export function BottomBar() {
   const snapshot = useGameStore((s) => s.uiSnapshot);
   const toggleOverclock = useGameStore((s) => s.toggleOverclock);
-  const forkProcess = useGameStore((s) => s.forkProcess);
   const prestigeNow = useGameStore((s) => s.prestigeNow);
   const selfTerminate = useGameStore((s) => s.selfTerminate);
   const compileShards = useGameStore((s) => s.compileShardsBanked);
   const forkPoints = useGameStore((s) => s.forkPoints);
   const world = useGameStore((s) => s.world);
   const [showMetaUpgrades, setShowMetaUpgrades] = useState(false);
+  const [showForkModal, setShowForkModal] = useState(false);
 
   const [showPrestigeDialog, setShowPrestigeDialog] = useState(false);
 
@@ -38,6 +39,11 @@ export function BottomBar() {
     setShowPrestigeDialog(false);
   };
 
+  const handleForkClick = () => {
+    // Open Fork Modal
+    setShowForkModal(true);
+  };
+
   return (
     <>
       <PrestigeDialog
@@ -46,6 +52,7 @@ export function BottomBar() {
         onConfirm={handlePrestigeConfirm}
       />
       {showMetaUpgrades && <MetaUpgradesPanel onClose={() => setShowMetaUpgrades(false)} />}
+      <ForkModal isOpen={showForkModal} onClose={() => setShowForkModal(false)} />
       
       <div className="bg-neutral-900 border-t border-neutral-800 px-6 py-4">
       <div className="flex items-center justify-between">
@@ -82,7 +89,7 @@ export function BottomBar() {
           {/* Fork Process Button */}
           {canFork && (
             <button
-              onClick={forkProcess}
+              onClick={handleForkClick}
               disabled={droneCount === 0}
               className={`px-6 py-2 rounded-lg font-semibold transition-colors ${
                 droneCount > 0
