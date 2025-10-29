@@ -1,7 +1,6 @@
 import { describe, it, expect, beforeEach } from "vitest";
 import { createWorld } from "../ecs/world/createWorld";
 import { heatAndPowerSystem } from "../ecs/systems/heatAndPowerSystem";
-import { productionSystem } from "../ecs/systems/productionSystem";
 import { World } from "../ecs/world/World";
 
 describe("Overclock Mode and Phase 3 Mechanics", () => {
