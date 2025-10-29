@@ -1,0 +1,193 @@
+{
+  "swarmCognition": [
+    {
+      "id": "swarm.congestionAwareness",
+      "name": "Congestion Awareness",
+      "desc": "Drones avoid traffic hotspots, increasing hauling efficiency at higher swarm sizes.",
+      "cost": { "currency": "CompileShards", "amount": 5 },
+      "requires": {
+        "minPrestiges": 0,
+        "requiresUpgradeIds": []
+      },
+      "effects": {
+        "swarm": {
+          "congestionAvoidanceLevel": 1
+        }
+      }
+    },
+    {
+      "id": "swarm.predictiveHauling",
+      "name": "Predictive Hauling",
+      "desc": "Haulers prefetch inputs for high-priority buildings before they run dry.",
+      "cost": { "currency": "CompileShards", "amount": 15 },
+      "requires": {
+        "minPrestiges": 1,
+        "requiresUpgradeIds": ["swarm.congestionAwareness"]
+      },
+      "effects": {
+        "swarm": {
+          "prefetchUnlocked": true
+        }
+      }
+    },
+    {
+      "id": "swarm.specialistSeed",
+      "name": "Specialist Seed",
+      "desc": "Start each run with +1 Hauler, +1 Builder, +1 Maintainer already active.",
+      "cost": { "currency": "CompileShards", "amount": 40 },
+      "requires": {
+        "minPrestiges": 3,
+        "requiresUpgradeIds": ["swarm.predictiveHauling"]
+      },
+      "effects": {
+        "swarm": {
+          "startingSpecialists": { "hauler": 1, "builder": 1, "maintainer": 1 }
+        }
+      }
+    },
+    {
+      "id": "swarm.coordinatedDispatch",
+      "name": "Coordinated Dispatch",
+      "desc": "Haulers can serve multiple delivery targets in a single trip.",
+      "cost": { "currency": "CompileShards", "amount": 100 },
+      "requires": {
+        "minPrestiges": 6,
+        "requiresUpgradeIds": ["swarm.specialistSeed"]
+      },
+      "effects": {
+        "swarm": {
+          "multiDropUnlocked": true
+        }
+      }
+    }
+  ],
+
+  "bioStructure": [
+    {
+      "id": "bio.preGrownTissue",
+      "name": "Pre-Grown Tissue Radius",
+      "desc": "Begin each run with an expanded viable build radius around the Core.",
+      "cost": { "currency": "CompileShards", "amount": 5 },
+      "requires": {
+        "minPrestiges": 0,
+        "requiresUpgradeIds": []
+      },
+      "effects": {
+        "bio": {
+          "startingRadius": 6
+        }
+      }
+    },
+    {
+      "id": "bio.hardenedCoolingVeins",
+      "name": "Hardened Cooling Veins",
+      "desc": "Your bio-core circulates coolant more efficiently. Higher safe heat capacity.",
+      "cost": { "currency": "CompileShards", "amount": 15 },
+      "requires": {
+        "minPrestiges": 1,
+        "requiresUpgradeIds": ["bio.preGrownTissue"]
+      },
+      "effects": {
+        "bio": {
+          "passiveCoolingBonus": 1
+        }
+      }
+    },
+    {
+      "id": "bio.preInfusedExtractor",
+      "name": "Pre-Infused Extractor",
+      "desc": "Initial Extractor boots at Tier 2 for higher atom throughput.",
+      "cost": { "currency": "CompileShards", "amount": 40 },
+      "requires": {
+        "minPrestiges": 2,
+        "requiresUpgradeIds": ["bio.hardenedCoolingVeins"]
+      },
+      "effects": {
+        "bio": {
+          "startingExtractorTier": 2
+        }
+      }
+    },
+    {
+      "id": "bio.seedStockpile",
+      "name": "Seed Stockpile",
+      "desc": "Core spawns with Components and TissueMass so you can expand and print drones instantly.",
+      "cost": { "currency": "CompileShards", "amount": 100 },
+      "requires": {
+        "minPrestiges": 5,
+        "requiresUpgradeIds": ["bio.preInfusedExtractor"]
+      },
+      "effects": {
+        "bio": {
+          "startingCoreInventory": {
+            "Components": 20,
+            "TissueMass": 10
+          }
+        }
+      }
+    }
+  ],
+
+  "compilerOptimization": [
+    {
+      "id": "compiler.yieldMult",
+      "name": "Yield Multiplier",
+      "desc": "+20% Compile Shards gained when you Recompile Core.",
+      "cost": { "currency": "CompileShards", "amount": 5 },
+      "requires": {
+        "minPrestiges": 0,
+        "requiresUpgradeIds": []
+      },
+      "effects": {
+        "compiler": {
+          "compileYieldMult": 1.2
+        }
+      }
+    },
+    {
+      "id": "compiler.thermalOverdriveTuning",
+      "name": "Thermal Overdrive Tuning",
+      "desc": "Overclock generates less excess heat, so you can stay in stress mode longer.",
+      "cost": { "currency": "CompileShards", "amount": 15 },
+      "requires": {
+        "minPrestiges": 2,
+        "requiresUpgradeIds": ["compiler.yieldMult"]
+      },
+      "effects": {
+        "compiler": {
+          "overclockEfficiencyBonus": 1
+        }
+      }
+    },
+    {
+      "id": "compiler.efficientRecycling",
+      "name": "Efficient Recycling",
+      "desc": "Scrapping drones/buildings in Phase 3 yields +30% more shards.",
+      "cost": { "currency": "CompileShards", "amount": 40 },
+      "requires": {
+        "minPrestiges": 4,
+        "requiresUpgradeIds": ["compiler.thermalOverdriveTuning"]
+      },
+      "effects": {
+        "compiler": {
+          "recycleBonus": 0.3
+        }
+      }
+    },
+    {
+      "id": "compiler.recursiveCompilePath",
+      "name": "Recursive Compile Path",
+      "desc": "Start each run with +1 Fork Point pre-charged.",
+      "cost": { "currency": "CompileShards", "amount": 100 },
+      "requires": {
+        "minPrestiges": 7,
+        "requiresUpgradeIds": ["compiler.efficientRecycling"]
+      },
+      "effects": {
+        "compiler": {
+          "startingForkPoints": 1
+        }
+      }
+    }
+  ]
+}

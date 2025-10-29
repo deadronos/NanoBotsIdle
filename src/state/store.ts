@@ -19,10 +19,14 @@ export const useGameStore = create<GameState>()((set, get, api) => ({
       {
         compileShardsBanked: state.compileShardsBanked,
         totalPrestiges: state.totalPrestiges,
+        purchasedUpgrades: state.purchasedUpgrades,
         swarmCognition: state.swarmCognition,
         bioStructure: state.bioStructure,
         compilerOptimization: state.compilerOptimization,
         spendShards: state.spendShards,
+        getAvailableUpgrades: state.getAvailableUpgrades,
+        canPurchaseUpgrade: state.canPurchaseUpgrade,
+        purchaseUpgrade: state.purchaseUpgrade,
       },
       {
         world: state.world,

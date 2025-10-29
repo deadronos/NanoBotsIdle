@@ -50,6 +50,7 @@ describe("Persistence System", () => {
       const meta: MetaSlice = {
         compileShardsBanked: 100,
         totalPrestiges: 5,
+        purchasedUpgrades: [],
         swarmCognition: {
           congestionAvoidanceLevel: 2,
           prefetchUnlocked: true,
@@ -69,6 +70,9 @@ describe("Persistence System", () => {
           startingForkPoints: 2,
         },
         spendShards: () => {},
+        getAvailableUpgrades: () => [],
+        canPurchaseUpgrade: () => ({ canPurchase: false }),
+        purchaseUpgrade: () => false,
       };
 
       const world = createWorld({
@@ -139,6 +143,7 @@ describe("Persistence System", () => {
       const meta: MetaSlice = {
         compileShardsBanked: 100,
         totalPrestiges: 5,
+        purchasedUpgrades: [],
         swarmCognition: {
           congestionAvoidanceLevel: 0,
           prefetchUnlocked: false,
@@ -158,6 +163,9 @@ describe("Persistence System", () => {
           startingForkPoints: 0,
         },
         spendShards: () => {},
+        getAvailableUpgrades: () => [],
+        canPurchaseUpgrade: () => ({ canPurchase: false }),
+        purchaseUpgrade: () => false,
       };
 
       const world = createWorld({
@@ -186,6 +194,7 @@ describe("Persistence System", () => {
       const meta: MetaSlice = {
         compileShardsBanked: 200,
         totalPrestiges: 10,
+        purchasedUpgrades: [],
         swarmCognition: {
           congestionAvoidanceLevel: 1,
           prefetchUnlocked: true,
@@ -205,6 +214,9 @@ describe("Persistence System", () => {
           startingForkPoints: 1,
         },
         spendShards: () => {},
+        getAvailableUpgrades: () => [],
+        canPurchaseUpgrade: () => ({ canPurchase: false }),
+        purchaseUpgrade: () => false,
       };
 
       const world = createWorld({
@@ -234,6 +246,7 @@ describe("Persistence System", () => {
       const meta: MetaSlice = {
         compileShardsBanked: 300,
         totalPrestiges: 15,
+        purchasedUpgrades: [],
         swarmCognition: {
           congestionAvoidanceLevel: 2,
           prefetchUnlocked: true,
@@ -253,6 +266,9 @@ describe("Persistence System", () => {
           startingForkPoints: 3,
         },
         spendShards: () => {},
+        getAvailableUpgrades: () => [],
+        canPurchaseUpgrade: () => ({ canPurchase: false }),
+        purchaseUpgrade: () => false,
       };
 
       const world = createWorld({
@@ -309,6 +325,7 @@ describe("Persistence System", () => {
       const meta: MetaSlice = {
         compileShardsBanked: 500,
         totalPrestiges: 25,
+        purchasedUpgrades: [],
         swarmCognition: {
           congestionAvoidanceLevel: 3,
           prefetchUnlocked: true,
@@ -328,6 +345,9 @@ describe("Persistence System", () => {
           startingForkPoints: 5,
         },
         spendShards: () => {},
+        getAvailableUpgrades: () => [],
+        canPurchaseUpgrade: () => ({ canPurchase: false }),
+        purchaseUpgrade: () => false,
       };
 
       const world = createWorld({
