@@ -62,9 +62,15 @@ interface World {
 
 **Implementation** (`demandPlanningSystem.ts`):
 - Detects if any drone has `prefetchCriticalInputs: true`
-- Uses 30% inventory threshold instead of waiting for near-empty (200% of needed)
+- Uses `PREFETCH_LOW_WATER_THRESHOLD` (30%) instead of `NORMAL_LOW_WATER_THRESHOLD` (200%)
 - Creates task requests when inventory ratio < low-water threshold
 - Prevents idle time in production chains
+
+**Configuration Constants**:
+```typescript
+const PREFETCH_LOW_WATER_THRESHOLD = 0.3; // 30% inventory threshold
+const NORMAL_LOW_WATER_THRESHOLD = 2.0;   // 200% (backwards compat)
+```
 
 **Activation**:
 ```typescript
@@ -107,9 +113,16 @@ drone.behavior.avoidDuplicateGhostTargets = true; // Enabled by Fork module
 
 **Implementation** (`demandPlanningSystem.ts`):
 - Monitors heat ratio: `heatCurrent / heatSafeCap`
-- When heat > 90% of safe capacity, applies 1000x priority to Cooler tasks
+- When heat > `HEAT_CRITICAL_THRESHOLD` (90%), applies `HEAT_CRITICAL_PRIORITY_BOOST` (1000x) to Cooler tasks
 - Forces haulers to prioritize cooling logistics above all else
 - Tasks are sorted by priority, so critical tasks execute first
+
+**Configuration Constants**:
+```typescript
+const HEAT_CRITICAL_THRESHOLD = 0.9;           // 90% of safe cap
+const HEAT_CRITICAL_PRIORITY_BOOST = 1000;     // Priority multiplier
+const NORMAL_TASK_PRIORITY = 1;                // Default priority
+```
 
 **Activation**:
 Automatic when heat exceeds threshold (no configuration needed)
@@ -159,9 +172,15 @@ const refund = recycleEntity(world, buildingId);
 
 **Implementation** (`demandPlanningSystem.ts`):
 - Detects `world.globals.overclockEnabled`
-- Applies priority boost to Fabricator and CoreCompiler (priority = 100)
-- Applies priority penalty to all other buildings (priority = 0.01)
+- Applies `OVERCLOCK_CRITICAL_PRIORITY` (100) to Fabricator and CoreCompiler
+- Applies `OVERCLOCK_NON_CRITICAL_PENALTY` (0.01) to all other buildings
 - Effectively "tunnels" all hauler effort into high-value targets
+
+**Configuration Constants**:
+```typescript
+const OVERCLOCK_CRITICAL_PRIORITY = 100;       // Priority for critical buildings
+const OVERCLOCK_NON_CRITICAL_PENALTY = 0.01;   // Penalty for other buildings
+```
 
 **Activation**:
 ```typescript
