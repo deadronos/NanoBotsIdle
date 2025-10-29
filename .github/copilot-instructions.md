@@ -10,7 +10,7 @@ NanoFactory Evolution is a bio-inspired nanofactory idle game built with React 1
 - **State Management**: Zustand
 - **Styling**: Tailwind CSS v4
 - **Build Tool**: Vite
-- **Architecture**: ECS (Entity Component System)
+- **Architecture**: ECS (Entity Component System) - separates data (components) from logic (systems) for scalable game architecture
 
 ## Development Commands
 
@@ -79,9 +79,10 @@ src/
 ## Testing
 
 **Note**: This repository currently does not have a test framework configured. When adding tests:
-- Follow existing patterns in the repository
+- Consider using Vitest (aligns well with Vite build tool) or React Testing Library
 - Test both simulation logic and UI components
 - Ensure tests are focused and maintainable
+- Add test scripts to `package.json`
 
 ## Important Files
 
