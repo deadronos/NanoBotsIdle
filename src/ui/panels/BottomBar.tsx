@@ -4,6 +4,7 @@ export function BottomBar() {
   const snapshot = useGameStore((s) => s.uiSnapshot);
   const toggleOverclock = useGameStore((s) => s.toggleOverclock);
   const prestigeNow = useGameStore((s) => s.prestigeNow);
+  const selfTerminate = useGameStore((s) => s.selfTerminate);
   const compileShards = useGameStore((s) => s.compileShardsBanked);
 
   if (!snapshot) return null;
@@ -34,6 +35,16 @@ export function BottomBar() {
               }`}
             >
               {snapshot.overclockEnabled ? "OVERCLOCK ACTIVE" : "ENABLE OVERCLOCK"}
+            </button>
+          )}
+
+          {/* Self-Termination Button */}
+          {snapshot.canSelfTerminate && (
+            <button
+              onClick={selfTerminate}
+              className="px-6 py-2 rounded-lg font-semibold bg-red-800 hover:bg-red-900 text-white border-2 border-red-500 transition-colors animate-pulse"
+            >
+              SELF-TERMINATE ({Math.floor(snapshot.projectedShards)} Shards)
             </button>
           )}
 

@@ -35,11 +35,37 @@ export function heatAndPowerSystem(world: World, dt: number) {
     world.globals.stressSecondsAccum += dt;
   }
 
+  // Heat cascade failure mechanics
+  const heatRatio = world.globals.heatSafeCap > 0 
+    ? world.globals.heatCurrent / world.globals.heatSafeCap 
+    : 0;
+
+  // Buildings start failing when heat exceeds 150% of safe cap
+  if (heatRatio > 1.5) {
+    Object.entries(world.producer).forEach(([idStr, producer]) => {
+      const id = Number(idStr);
+      const powerLink = world.powerLink[id];
+      
+      if (!powerLink) return;
+
+      // Failure probability increases with heat
+      // At 1.5x: 1% per second, at 2.0x: 10% per second, at 3.0x: 50% per second
+      const failureChance = Math.min(0.5, Math.pow((heatRatio - 1.5) / 1.5, 2) * 0.5);
+      
+      if (Math.random() < failureChance * dt) {
+        // Building goes offline due to heat damage
+        powerLink.online = false;
+        producer.active = false;
+      }
+    });
+  }
+
   // Simple power management (everyone online for now)
   let totalPowerDemand = 0;
   Object.values(world.powerLink).forEach((link) => {
     totalPowerDemand += link.demand;
-    link.online = true;
+    // Buildings can be forced offline by heat cascade
+    // link.online is already set by cascade failure logic above
   });
 
   world.globals.powerDemand = totalPowerDemand;

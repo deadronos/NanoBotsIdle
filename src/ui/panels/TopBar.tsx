@@ -14,13 +14,27 @@ export function TopBar() {
 
   const heatPercent = Math.floor(snapshot.heatRatio * 100);
   const heatColor =
-    heatPercent > 80 ? "text-red-400" : heatPercent > 50 ? "text-orange-400" : "text-green-400";
+    heatPercent > 150 ? "text-red-600" :
+    heatPercent > 120 ? "text-red-500" :
+    heatPercent > 100 ? "text-red-400" : 
+    heatPercent > 80 ? "text-orange-400" : 
+    heatPercent > 50 ? "text-yellow-400" : "text-green-400";
   const heatBgColor =
-    heatPercent > 80
-      ? "bg-red-900/30"
-      : heatPercent > 50
-        ? "bg-orange-900/30"
-        : "bg-green-900/30";
+    heatPercent > 150
+      ? "bg-red-900/50"
+      : heatPercent > 120
+        ? "bg-red-900/40"
+        : heatPercent > 100
+          ? "bg-red-900/30"
+          : heatPercent > 80
+            ? "bg-orange-900/30"
+            : heatPercent > 50
+              ? "bg-yellow-900/30"
+              : "bg-green-900/30";
+
+  // Critical heat warning
+  const isCriticalHeat = heatPercent > 100;
+  const isCascadeFailure = heatPercent > 150;
 
   // Heat impact on production
   const heatPenalty = Math.floor((1 / (1 + snapshot.heatRatio)) * 100);
@@ -107,7 +121,7 @@ export function TopBar() {
           {/* Heat */}
           <div className="flex flex-col">
             <div className="text-xs text-neutral-400">Heat</div>
-            <div className={`text-lg font-semibold ${heatColor}`}>
+            <div className={`text-lg font-semibold ${heatColor} ${isCriticalHeat ? 'animate-pulse' : ''}`}>
               {Math.floor(snapshot.heatCurrent)} / {snapshot.heatSafeCap}
               <span className="text-sm ml-1">({heatPercent}%)</span>
             </div>
@@ -115,6 +129,17 @@ export function TopBar() {
             <div className={`text-xs ${heatColor} ${heatBgColor} px-1 rounded mt-0.5`}>
               Efficiency: {heatPenalty}%
             </div>
+            {/* Critical heat warning */}
+            {isCascadeFailure && (
+              <div className="text-xs text-red-500 font-bold animate-pulse">
+                ⚠️ CASCADE FAILURE
+              </div>
+            )}
+            {isCriticalHeat && !isCascadeFailure && (
+              <div className="text-xs text-orange-500 font-bold">
+                ⚠️ CRITICAL HEAT
+              </div>
+            )}
           </div>
 
           {/* Power */}
