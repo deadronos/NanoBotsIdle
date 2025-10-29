@@ -99,7 +99,12 @@ export function createWorld(params: CreateWorldParams): World {
   world.position[coreId] = { x: 32, y: 32 };
   world.inventory[coreId] = {
     capacity: 999,
-    contents: { ...bio.startingCoreInventory },
+    contents: { 
+      ...bio.startingCoreInventory,
+      // Add some initial resources so player can interact with the game
+      Carbon: 10,
+      Components: 20,
+    },
   };
   world.heatSource[coreId] = { heatPerSecond: 0.2 };
   
