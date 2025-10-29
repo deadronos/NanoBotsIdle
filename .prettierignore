@@ -1,0 +1,16 @@
+# Ignore build outputs
+dist
+build
+coverage
+
+# Ignore dependencies
+node_modules
+
+# Ignore generated files
+*.log
+*.cache
+
+# Ignore config files that should not be formatted
+package-lock.json
+pnpm-lock.yaml
+yarn.lock

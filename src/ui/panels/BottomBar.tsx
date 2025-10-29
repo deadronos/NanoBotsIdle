@@ -15,9 +15,10 @@ export function BottomBar() {
           <div className="text-sm text-neutral-400">
             Phase <span className="text-xl font-bold text-white">{snapshot.currentPhase}</span>
           </div>
-          
+
           <div className="text-sm text-neutral-400">
-            Banked Shards: <span className="text-lg font-bold text-amber-400">{Math.floor(compileShards)}</span>
+            Banked Shards:{" "}
+            <span className="text-lg font-bold text-amber-400">{Math.floor(compileShards)}</span>
           </div>
         </div>
 

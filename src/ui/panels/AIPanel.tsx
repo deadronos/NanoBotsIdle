@@ -5,12 +5,8 @@ export function AIPanel() {
   const snapshot = useGameStore((s) => s.uiSnapshot);
 
   const droneCount = Object.keys(world.droneBrain).length;
-  const haulers = Object.values(world.droneBrain).filter(
-    (b) => b.role === "hauler"
-  ).length;
-  const builders = Object.values(world.droneBrain).filter(
-    (b) => b.role === "builder"
-  ).length;
+  const haulers = Object.values(world.droneBrain).filter((b) => b.role === "hauler").length;
+  const builders = Object.values(world.droneBrain).filter((b) => b.role === "builder").length;
 
   return (
     <div className="w-64 bg-neutral-900 border-l border-neutral-800 p-4 overflow-y-auto">
@@ -53,9 +49,7 @@ export function AIPanel() {
             Phase {snapshot.currentPhase}
           </h3>
           <div className="text-xs text-neutral-500">
-            {snapshot.currentPhase === 1 && (
-              <p>Bootstrap: Build your initial production chain</p>
-            )}
+            {snapshot.currentPhase === 1 && <p>Bootstrap: Build your initial production chain</p>}
             {snapshot.currentPhase === 2 && (
               <p>Networked Logistics: Optimize your swarm's behavior</p>
             )}

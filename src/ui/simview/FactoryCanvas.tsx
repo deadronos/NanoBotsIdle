@@ -8,6 +8,29 @@ const GRID_HEIGHT = 64;
 export function FactoryCanvas() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const snapshot = useGameStore((s) => s.uiSnapshot);
+  const selectedBuildingType = useGameStore((s) => s.selectedBuildingType);
+  const placeBuilding = useGameStore((s) => s.placeBuilding);
+
+  const handleCanvasClick = (event: React.MouseEvent<HTMLCanvasElement>) => {
+    if (!selectedBuildingType) return;
+
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+
+    const rect = canvas.getBoundingClientRect();
+    const clickX = event.clientX - rect.left;
+    const clickY = event.clientY - rect.top;
+
+    // Convert to grid coordinates
+    const gridX = Math.floor(clickX / TILE_SIZE);
+    const gridY = Math.floor(clickY / TILE_SIZE);
+
+    // Place building
+    const success = placeBuilding(gridX, gridY);
+    if (!success) {
+      console.log("Failed to place building");
+    }
+  };
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -43,9 +66,12 @@ export function FactoryCanvas() {
 
       // Color based on type
       let color = "#888";
-      if (building.type === "Core") color = "#10b981"; // emerald
-      else if (building.type === "Extractor") color = "#3b82f6"; // blue
-      else if (building.type === "Assembler") color = "#8b5cf6"; // purple
+      if (building.type === "Core")
+        color = "#10b981"; // emerald
+      else if (building.type === "Extractor")
+        color = "#3b82f6"; // blue
+      else if (building.type === "Assembler")
+        color = "#8b5cf6"; // purple
       else if (building.type === "Fabricator") color = "#f59e0b"; // amber
 
       ctx.fillStyle = building.online ? color : "#333";
@@ -72,8 +98,10 @@ export function FactoryCanvas() {
 
       // Color based on role
       let color = "#fff";
-      if (drone.role === "hauler") color = "#60a5fa"; // light blue
-      else if (drone.role === "builder") color = "#fbbf24"; // yellow
+      if (drone.role === "hauler")
+        color = "#60a5fa"; // light blue
+      else if (drone.role === "builder")
+        color = "#fbbf24"; // yellow
       else if (drone.role === "maintainer") color = "#34d399"; // green
 
       ctx.fillStyle = color;
@@ -105,11 +133,19 @@ export function FactoryCanvas() {
           ref={canvasRef}
           width={GRID_WIDTH * TILE_SIZE}
           height={GRID_HEIGHT * TILE_SIZE}
-          className="border border-neutral-800 rounded-lg"
+          className={`border border-neutral-800 rounded-lg ${
+            selectedBuildingType ? "cursor-crosshair" : "cursor-default"
+          }`}
+          onClick={handleCanvasClick}
         />
+        {selectedBuildingType && (
+          <div className="absolute top-4 left-4 bg-emerald-900/80 backdrop-blur px-3 py-2 rounded text-sm text-emerald-200">
+            Placing: {selectedBuildingType}
+          </div>
+        )}
         <div className="absolute bottom-4 right-4 bg-black/70 backdrop-blur px-3 py-2 rounded text-xs text-neutral-400">
-          <div>🟦 Extractor  🟪 Assembler  🟨 Fabricator</div>
-          <div>🔵 Hauler  🟡 Builder  🟢 Maintainer</div>
+          <div>🟦 Extractor 🟪 Assembler 🟨 Fabricator</div>
+          <div>🔵 Hauler 🟡 Builder 🟢 Maintainer</div>
         </div>
       </div>
     </div>
