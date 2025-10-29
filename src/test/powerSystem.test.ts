@@ -190,16 +190,16 @@ describe("Power System", () => {
       // Run power system for 1 second
       heatAndPowerSystem(world, 1.0);
 
-      // The offline cooler should not contribute to cooling
-      // Heat should increase (or stay similar) because offline cooler doesn't work
+      // Verify the cooler is offline
       const farCooler = Object.entries(world.position).find(
         ([id, pos]) => pos.x === 50 && pos.y === 50 && world.entityType[Number(id)] === "Cooler"
       );
       expect(farCooler).toBeDefined();
       expect(world.powerLink[Number(farCooler![0])].online).toBe(false);
 
-      // Heat should be higher than initial (buildings generate heat)
-      expect(world.globals.heatCurrent).toBeGreaterThanOrEqual(initialHeat);
+      // Heat should increase because buildings generate heat and offline cooler doesn't cool
+      // (Core and producers generate heat, but offline cooler provides no cooling)
+      expect(world.globals.heatCurrent).toBeGreaterThan(initialHeat);
     });
   });
 
@@ -207,9 +207,16 @@ describe("Power System", () => {
     it("should calculate total power demand from online buildings", () => {
       heatAndPowerSystem(world, 0.1);
 
+      // Expected demand from initial world:
       // Core: 1, Extractor: 1, Assembler: 2, Fabricator: 2, Drones: 0.1 * count
+      const CORE_DEMAND = 1;
+      const EXTRACTOR_DEMAND = 1;
+      const ASSEMBLER_DEMAND = 2;
+      const FABRICATOR_DEMAND = 2;
+      const DRONE_DEMAND = 0.1;
+      
       const droneCount = Object.keys(world.droneBrain).length;
-      const expectedDemand = 1 + 1 + 2 + 2 + droneCount * 0.1;
+      const expectedDemand = CORE_DEMAND + EXTRACTOR_DEMAND + ASSEMBLER_DEMAND + FABRICATOR_DEMAND + droneCount * DRONE_DEMAND;
 
       expect(world.globals.powerDemand).toBeCloseTo(expectedDemand, 1);
     });
@@ -226,9 +233,16 @@ describe("Power System", () => {
       // Run power system
       heatAndPowerSystem(world, 0.1);
 
-      // Power demand should NOT include the offline extractor (demand: 1)
+      // Power demand should NOT include the offline extractor
+      // Expected demand is same as test above (offline buildings don't contribute)
+      const CORE_DEMAND = 1;
+      const EXTRACTOR_DEMAND = 1;
+      const ASSEMBLER_DEMAND = 2;
+      const FABRICATOR_DEMAND = 2;
+      const DRONE_DEMAND = 0.1;
+      
       const droneCount = Object.keys(world.droneBrain).length;
-      const expectedDemand = 1 + 1 + 2 + 2 + droneCount * 0.1; // Same as before, no extra extractor
+      const expectedDemand = CORE_DEMAND + EXTRACTOR_DEMAND + ASSEMBLER_DEMAND + FABRICATOR_DEMAND + droneCount * DRONE_DEMAND;
 
       expect(world.globals.powerDemand).toBeCloseTo(expectedDemand, 1);
     });
