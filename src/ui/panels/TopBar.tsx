@@ -1,7 +1,10 @@
 import { useGameStore } from "../../state/store";
+import { hasSave } from "../../state/persistence";
 
 export function TopBar() {
   const snapshot = useGameStore((s) => s.uiSnapshot);
+  const saveGame = useGameStore((s) => s.saveGame);
+  const loadGame = useGameStore((s) => s.loadGame);
 
   if (!snapshot) return null;
 
@@ -59,6 +62,26 @@ export function TopBar() {
               {Math.floor(snapshot.simTimeSeconds / 60)}m {Math.floor(snapshot.simTimeSeconds % 60)}s
             </div>
           </div>
+        </div>
+
+        {/* Save/Load Buttons */}
+        <div className="flex gap-2">
+          <button
+            onClick={saveGame}
+            className="px-3 py-1 text-sm bg-blue-600 hover:bg-blue-700 text-white rounded transition-colors"
+            title="Manual Save"
+          >
+            💾 Save
+          </button>
+          {hasSave() && (
+            <button
+              onClick={loadGame}
+              className="px-3 py-1 text-sm bg-green-600 hover:bg-green-700 text-white rounded transition-colors"
+              title="Load Save"
+            >
+              📂 Load
+            </button>
+          )}
         </div>
       </div>
     </div>

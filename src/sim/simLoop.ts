@@ -3,11 +3,14 @@ import { tickWorld } from "../ecs/world/tickWorld";
 
 let lastTime = 0;
 let animationFrameId: number | null = null;
+let lastSaveTime = 0;
+const AUTOSAVE_INTERVAL = 30000; // 30 seconds
 
 export function startSimLoop() {
   if (animationFrameId !== null) return; // Already running
 
   lastTime = performance.now();
+  lastSaveTime = performance.now();
 
   function loop(currentTime: number) {
     const dt = Math.min((currentTime - lastTime) / 1000, 0.1); // Cap at 100ms
@@ -20,6 +23,12 @@ export function startSimLoop() {
     
     // Update UI snapshot
     state.updateUISnapshot();
+
+    // Auto-save every 30 seconds
+    if (currentTime - lastSaveTime > AUTOSAVE_INTERVAL) {
+      state.saveGame();
+      lastSaveTime = currentTime;
+    }
 
     animationFrameId = requestAnimationFrame(loop);
   }

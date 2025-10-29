@@ -1,5 +1,7 @@
 import { useEffect } from "react";
 import { startSimLoop, stopSimLoop } from "../sim/simLoop";
+import { useGameStore } from "../state/store";
+import { hasSave } from "../state/persistence";
 import { TopBar } from "./panels/TopBar";
 import { BottomBar } from "./panels/BottomBar";
 import { BuildPanel } from "./panels/BuildPanel";
@@ -8,12 +10,19 @@ import { FactoryCanvas } from "./simview/FactoryCanvas";
 
 export function App() {
   useEffect(() => {
+    // Load save if it exists
+    if (hasSave()) {
+      useGameStore.getState().loadGame();
+    }
+
     // Start simulation loop on mount
     startSimLoop();
 
     // Cleanup on unmount
     return () => {
       stopSimLoop();
+      // Save on exit
+      useGameStore.getState().saveGame();
     };
   }, []);
 
