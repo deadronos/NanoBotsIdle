@@ -1,4 +1,5 @@
 import { useGameStore } from "../../state/store";
+import { getCompileShardBreakdown } from "../../sim/balance";
 
 interface PrestigeDialogProps {
   isOpen: boolean;
@@ -15,18 +16,15 @@ export function PrestigeDialog({ isOpen, onClose, onConfirm }: PrestigeDialogPro
 
   const { peakThroughput, cohesionScore, stressSecondsAccum } = world.globals;
 
-  // Calculate individual contributions
-  const A = 1.5;
-  const B = 4.0;
-  const C = 0.9;
+  // Get shard breakdown using the centralized calculation
+  const breakdown = getCompileShardBreakdown({
+    peakThroughput,
+    cohesionScore,
+    stressSecondsAccum,
+    yieldMult: compileYieldMult,
+  });
 
-  const throughputContribution = A * Math.sqrt(Math.max(0, peakThroughput));
-  const cohesionContribution = B * Math.log2(cohesionScore + 1);
-  const stressContribution = C * Math.pow(Math.max(0, stressSecondsAccum), 0.7);
-
-  const baseShards = throughputContribution + cohesionContribution + stressContribution;
-  const multipliedShards = baseShards * compileYieldMult;
-  const totalShards = multipliedShards + scrapBonusShards;
+  const totalShards = breakdown.finalTotal + scrapBonusShards;
 
   return (
     <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50">
@@ -59,7 +57,7 @@ export function PrestigeDialog({ isOpen, onClose, onConfirm }: PrestigeDialogPro
                   </span>
                 </div>
                 <span className="text-amber-400 font-semibold">
-                  +{throughputContribution.toFixed(1)}
+                  +{breakdown.throughputContribution.toFixed(1)}
                 </span>
               </div>
 
@@ -72,7 +70,7 @@ export function PrestigeDialog({ isOpen, onClose, onConfirm }: PrestigeDialogPro
                   </span>
                 </div>
                 <span className="text-amber-400 font-semibold">
-                  +{cohesionContribution.toFixed(1)}
+                  +{breakdown.cohesionContribution.toFixed(1)}
                 </span>
               </div>
 
@@ -85,7 +83,7 @@ export function PrestigeDialog({ isOpen, onClose, onConfirm }: PrestigeDialogPro
                   </span>
                 </div>
                 <span className="text-amber-400 font-semibold">
-                  +{stressContribution.toFixed(1)}
+                  +{breakdown.stressContribution.toFixed(1)}
                 </span>
               </div>
 
@@ -93,7 +91,7 @@ export function PrestigeDialog({ isOpen, onClose, onConfirm }: PrestigeDialogPro
               <div className="border-t border-neutral-700 pt-2 mt-2 flex justify-between items-center">
                 <span className="text-neutral-400">Base Total</span>
                 <span className="text-amber-300 font-semibold">
-                  {baseShards.toFixed(1)}
+                  {breakdown.baseTotal.toFixed(1)}
                 </span>
               </div>
 

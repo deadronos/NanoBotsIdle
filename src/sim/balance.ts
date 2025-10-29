@@ -80,25 +80,53 @@ export function getHaulingEffectiveRate(params: {
 // 4. COMPILE SHARD YIELD
 // ==============================
 
+// Shard formula coefficients
+export const SHARD_THROUGHPUT_COEFF = 1.5;
+export const SHARD_COHESION_COEFF = 4.0;
+export const SHARD_STRESS_COEFF = 0.9;
+
+export interface CompileShardBreakdown {
+  throughputContribution: number;
+  cohesionContribution: number;
+  stressContribution: number;
+  baseTotal: number;
+  yieldMult: number;
+  finalTotal: number;
+}
+
+export function getCompileShardBreakdown(params: {
+  peakThroughput: number;
+  cohesionScore: number;
+  stressSecondsAccum: number;
+  yieldMult: number;
+}): CompileShardBreakdown {
+  const { peakThroughput, cohesionScore, stressSecondsAccum, yieldMult } = params;
+
+  const safeLog = (x: number) => Math.log2(Math.max(1, x));
+
+  const throughputContribution = SHARD_THROUGHPUT_COEFF * Math.sqrt(Math.max(0, peakThroughput));
+  const cohesionContribution = SHARD_COHESION_COEFF * safeLog(cohesionScore + 1);
+  const stressContribution = SHARD_STRESS_COEFF * Math.pow(Math.max(0, stressSecondsAccum), 0.7);
+
+  const baseTotal = throughputContribution + cohesionContribution + stressContribution;
+  const finalTotal = baseTotal * yieldMult;
+
+  return {
+    throughputContribution,
+    cohesionContribution,
+    stressContribution,
+    baseTotal,
+    yieldMult,
+    finalTotal,
+  };
+}
+
 export function getCompileShardEstimate(params: {
   peakThroughput: number;
   cohesionScore: number;
   stressSecondsAccum: number;
   yieldMult: number;
 }): number {
-  const { peakThroughput, cohesionScore, stressSecondsAccum, yieldMult } = params;
-
-  const A = 1.5;
-  const B = 4.0;
-  const C = 0.9;
-
-  const safeLog = (x: number) => Math.log2(Math.max(1, x));
-
-  const termThroughput = A * Math.sqrt(Math.max(0, peakThroughput));
-  const termCohesion = B * safeLog(cohesionScore + 1);
-  const termStress = C * Math.pow(Math.max(0, stressSecondsAccum), 0.7);
-
-  const raw = termThroughput + termCohesion + termStress;
-
-  return raw * yieldMult;
+  const breakdown = getCompileShardBreakdown(params);
+  return breakdown.finalTotal;
 }

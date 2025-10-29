@@ -1,5 +1,11 @@
 import { describe, it, expect, beforeEach } from "vitest";
-import { getCompileShardEstimate } from "../sim/balance";
+import {
+  getCompileShardEstimate,
+  getCompileShardBreakdown,
+  SHARD_THROUGHPUT_COEFF,
+  SHARD_COHESION_COEFF,
+  SHARD_STRESS_COEFF,
+} from "../sim/balance";
 import { createWorld } from "../ecs/world/createWorld";
 import { World } from "../ecs/world/World";
 import { compileScoringSystem } from "../ecs/systems/compileScoringSystem";
@@ -94,6 +100,55 @@ describe("Prestige System - Compile Shard Calculation", () => {
 
       // Should not produce negative shards (Math.max protections)
       expect(shards).toBeGreaterThanOrEqual(0);
+    });
+  });
+
+  describe("Shard Breakdown", () => {
+    it("should return detailed breakdown of shard contributions", () => {
+      const breakdown = getCompileShardBreakdown({
+        peakThroughput: 100,
+        cohesionScore: 31,
+        stressSecondsAccum: 100,
+        yieldMult: 1.5,
+      });
+
+      // Verify individual contributions
+      expect(breakdown.throughputContribution).toBeCloseTo(
+        SHARD_THROUGHPUT_COEFF * Math.sqrt(100),
+        1,
+      );
+      expect(breakdown.cohesionContribution).toBeCloseTo(
+        SHARD_COHESION_COEFF * Math.log2(32),
+        1,
+      );
+      expect(breakdown.stressContribution).toBeCloseTo(
+        SHARD_STRESS_COEFF * Math.pow(100, 0.7),
+        1,
+      );
+
+      // Verify totals
+      expect(breakdown.baseTotal).toBeCloseTo(
+        breakdown.throughputContribution +
+          breakdown.cohesionContribution +
+          breakdown.stressContribution,
+        1,
+      );
+      expect(breakdown.finalTotal).toBeCloseTo(breakdown.baseTotal * 1.5, 1);
+      expect(breakdown.yieldMult).toBe(1.5);
+    });
+
+    it("should match getCompileShardEstimate result", () => {
+      const params = {
+        peakThroughput: 50,
+        cohesionScore: 15,
+        stressSecondsAccum: 50,
+        yieldMult: 1.2,
+      };
+
+      const estimate = getCompileShardEstimate(params);
+      const breakdown = getCompileShardBreakdown(params);
+
+      expect(breakdown.finalTotal).toBeCloseTo(estimate, 2);
     });
   });
 
