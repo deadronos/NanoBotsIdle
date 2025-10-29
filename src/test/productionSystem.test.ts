@@ -2,6 +2,7 @@ import { describe, it, expect, beforeEach } from "vitest";
 import { productionSystem } from "../ecs/systems/productionSystem";
 import { World } from "../ecs/world/World";
 import { getProducerOutputPerSec } from "../sim/balance";
+import { DEFAULT_UNLOCK_STATE } from "../types/unlocks";
 
 describe("Production System", () => {
   let world: World;
@@ -30,6 +31,8 @@ describe("Production System", () => {
         cohesionScore: 0,
         stressSecondsAccum: 0,
         simTimeSeconds: 0,
+        unlocks: { ...DEFAULT_UNLOCK_STATE },
+        milestones: [],
       },
       taskRequests: [],
       grid: {

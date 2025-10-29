@@ -8,6 +8,7 @@ import {
 import { BehaviorProfile, RoutingPriorityRule } from "../components/DroneBrain";
 import { Recipe } from "../../types/buildings";
 import { DroneRole } from "../../types/drones";
+import { DEFAULT_UNLOCK_STATE, PROGRESSION_MILESTONES } from "../../types/unlocks";
 
 export interface CreateWorldParams {
   swarm: SwarmCognitionUpgrades;
@@ -83,6 +84,12 @@ export function createWorld(params: CreateWorldParams): World {
       cohesionScore: 0,
       stressSecondsAccum: 0,
       simTimeSeconds: 0,
+      unlocks: { ...DEFAULT_UNLOCK_STATE },
+      milestones: PROGRESSION_MILESTONES.map((m) => ({
+        ...m,
+        achieved: false,
+        notified: false,
+      })),
     },
 
     taskRequests: [],

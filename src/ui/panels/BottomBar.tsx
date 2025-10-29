@@ -10,11 +10,14 @@ export function BottomBar() {
   const forkPoints = useGameStore((s) => s.forkPoints);
   const world = useGameStore((s) => s.world);
 
+  // Get unlock state
+  const unlocks = world.globals.unlocks;
+
   if (!snapshot) return null;
   
   // Count drones for fork button
   const droneCount = Object.keys(world.droneBrain).length;
-  const canFork = snapshot.currentPhase >= 2 && droneCount > 0 && snapshot.simTimeSeconds >= 960; // 16 minutes
+  const canFork = unlocks.forkProcess && snapshot.currentPhase >= 2 && droneCount > 0 && snapshot.simTimeSeconds >= 960; // 16 minutes
 
   return (
     <div className="bg-neutral-900 border-t border-neutral-800 px-6 py-4">
@@ -55,7 +58,7 @@ export function BottomBar() {
           )}
           
           {/* Overclock Toggle */}
-          {snapshot.currentPhase >= 2 && (
+          {unlocks.overclockMode && snapshot.currentPhase >= 2 && (
             <button
               onClick={() => toggleOverclock(!snapshot.overclockEnabled)}
               className={`px-6 py-2 rounded-lg font-semibold transition-colors ${
@@ -69,7 +72,7 @@ export function BottomBar() {
           )}
 
           {/* Self-Termination Button */}
-          {snapshot.canSelfTerminate && (
+          {unlocks.selfTermination && snapshot.canSelfTerminate && (
             <button
               onClick={selfTerminate}
               className="px-6 py-2 rounded-lg font-semibold bg-red-800 hover:bg-red-900 text-white border-2 border-red-500 transition-colors animate-pulse"

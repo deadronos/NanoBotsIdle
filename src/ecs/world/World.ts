@@ -9,6 +9,7 @@ import { Path } from "../components/Path";
 import { Overclockable } from "../components/Overclockable";
 import { CompileEmitter } from "../components/CompileEmitter";
 import { ResourceName } from "../../types/resources";
+import { UnlockState, ProgressionMilestone } from "../../types/unlocks";
 
 export interface TaskRequest {
   requestEntity: EntityId;
@@ -53,6 +54,8 @@ export interface World {
     cohesionScore: number;
     stressSecondsAccum: number;
     simTimeSeconds: number;
+    unlocks: UnlockState;
+    milestones: ProgressionMilestone[];
   };
 
   // Task requests waiting for haulers
