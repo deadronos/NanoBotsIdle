@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useGameStore } from "../../state/store";
+import { PrestigeDialog } from "./PrestigeDialog";
 import { MetaUpgradesPanel } from "./MetaUpgradesPanel";
 
 export function BottomBar() {
@@ -13,6 +14,8 @@ export function BottomBar() {
   const world = useGameStore((s) => s.world);
   const [showMetaUpgrades, setShowMetaUpgrades] = useState(false);
 
+  const [showPrestigeDialog, setShowPrestigeDialog] = useState(false);
+
   // Get unlock state
   const unlocks = world.globals.unlocks;
 
@@ -22,8 +25,26 @@ export function BottomBar() {
   const droneCount = Object.keys(world.droneBrain).length;
   const canFork = unlocks.forkProcess && snapshot.currentPhase >= 2 && droneCount > 0 && snapshot.simTimeSeconds >= 960; // 16 minutes
 
+  const handlePrestigeClick = () => {
+    setShowPrestigeDialog(true);
+  };
+
+  const handlePrestigeConfirm = () => {
+    setShowPrestigeDialog(false);
+    prestigeNow();
+  };
+
+  const handlePrestigeCancel = () => {
+    setShowPrestigeDialog(false);
+  };
+
   return (
     <>
+      <PrestigeDialog
+        isOpen={showPrestigeDialog}
+        onClose={handlePrestigeCancel}
+        onConfirm={handlePrestigeConfirm}
+      />
       {showMetaUpgrades && <MetaUpgradesPanel onClose={() => setShowMetaUpgrades(false)} />}
       
       <div className="bg-neutral-900 border-t border-neutral-800 px-6 py-4">
@@ -100,7 +121,7 @@ export function BottomBar() {
 
           {/* Prestige Button */}
           <button
-            onClick={prestigeNow}
+            onClick={handlePrestigeClick}
             disabled={!snapshot.canPrestige && snapshot.projectedShards < 1}
             className={`px-6 py-2 rounded-lg font-semibold transition-colors ${
               snapshot.canPrestige || snapshot.projectedShards >= 1
