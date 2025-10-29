@@ -29,13 +29,13 @@ export function App() {
   return (
     <div className="h-screen flex flex-col bg-black text-white">
       <TopBar />
-      
+
       <div className="flex-1 flex overflow-hidden">
         <BuildPanel />
         <FactoryCanvas />
         <AIPanel />
       </div>
-      
+
       <BottomBar />
     </div>
   );

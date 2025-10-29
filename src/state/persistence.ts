@@ -22,7 +22,10 @@ export interface SaveData {
   };
 }
 
-export function saveGame(meta: MetaSlice, run: { world: World; projectedCompileShards: number; forkPoints: number; currentPhase: 1 | 2 | 3 }): boolean {
+export function saveGame(
+  meta: MetaSlice,
+  run: { world: World; projectedCompileShards: number; forkPoints: number; currentPhase: 1 | 2 | 3 }
+): boolean {
   try {
     const saveData: SaveData = {
       version: SAVE_VERSION,
@@ -53,7 +56,7 @@ export function loadGame(): SaveData | null {
     if (!serialized) return null;
 
     const saveData: SaveData = JSON.parse(serialized);
-    
+
     // Version migration (for future use)
     if (saveData.version < SAVE_VERSION) {
       console.log(`Migrating save from version ${saveData.version} to ${SAVE_VERSION}`);

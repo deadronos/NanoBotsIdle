@@ -77,7 +77,7 @@ export function placeBuilding(
 
   const cost = BUILDING_COSTS[buildingType];
   for (const [resource, amount] of Object.entries(cost)) {
-    coreInv.contents[resource as keyof typeof coreInv.contents] = 
+    coreInv.contents[resource as keyof typeof coreInv.contents] =
       (coreInv.contents[resource as keyof typeof coreInv.contents] || 0) - amount;
   }
 
@@ -151,11 +151,11 @@ export function fabricateDrone(
   // Create drone
   const dId = world.nextEntityId++;
   world.entityType[dId] = "Drone";
-  
+
   // Find Fabricator position to spawn near it
   const fabPos = world.position[Number(fabId)];
   world.position[dId] = { x: fabPos.x, y: fabPos.y };
-  
+
   world.inventory[dId] = { capacity: 5, contents: {} };
   world.droneBrain[dId] = {
     role,
@@ -165,7 +165,8 @@ export function fabricateDrone(
     targetEntity: null,
     behavior: {
       ...defaultBehavior,
-      buildRadius: role === "builder" ? defaultBehavior.buildRadius + 2 : defaultBehavior.buildRadius,
+      buildRadius:
+        role === "builder" ? defaultBehavior.buildRadius + 2 : defaultBehavior.buildRadius,
     },
   };
   world.powerLink[dId] = { demand: 0.1, priority: 0, online: true };

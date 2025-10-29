@@ -29,7 +29,7 @@ export function movementSystem(world: World, dt: number) {
           const sourceInv = world.inventory[brain.targetEntity!];
           if (sourceInv && brain.cargo.resource) {
             const amount = Math.min(5, sourceInv.contents[brain.cargo.resource] || 0);
-            sourceInv.contents[brain.cargo.resource] = 
+            sourceInv.contents[brain.cargo.resource] =
               (sourceInv.contents[brain.cargo.resource] || 0) - amount;
             brain.cargo.amount = amount;
             brain.state = "toDropoff";
@@ -46,7 +46,7 @@ export function movementSystem(world: World, dt: number) {
           // Drop off cargo
           const destInv = world.inventory[brain.targetEntity!];
           if (destInv && brain.cargo.resource) {
-            destInv.contents[brain.cargo.resource] = 
+            destInv.contents[brain.cargo.resource] =
               (destInv.contents[brain.cargo.resource] || 0) + brain.cargo.amount;
             brain.cargo.amount = 0;
             brain.cargo.resource = null;

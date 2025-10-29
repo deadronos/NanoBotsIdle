@@ -8,13 +8,13 @@ export function droneAssignmentSystem(world: World, _dt: number) {
 
     // Pick first available task (simplified)
     const task = world.taskRequests[0];
-    
+
     // Check if there's a building with this resource
     let sourceEntity = null;
     for (const [eIdStr, inv] of Object.entries(world.inventory)) {
       const eId = Number(eIdStr);
       if (eId === task.requestEntity) continue;
-      
+
       const have = inv.contents[task.resource] || 0;
       if (have > 0) {
         sourceEntity = eId;
@@ -26,7 +26,7 @@ export function droneAssignmentSystem(world: World, _dt: number) {
       brain.state = "toPickup";
       brain.targetEntity = sourceEntity;
       brain.cargo.resource = task.resource;
-      
+
       // Remove task from queue
       world.taskRequests.shift();
     }

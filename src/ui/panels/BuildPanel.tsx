@@ -8,13 +8,17 @@ export function BuildPanel() {
   const setSelectedBuildingType = useGameStore((s) => s.setSelectedBuildingType);
 
   // Get inventory of Core
-  const coreId = Object.entries(world.entityType).find(
-    ([_, type]) => type === "Core"
-  )?.[0];
-  
+  const coreId = Object.entries(world.entityType).find(([_, type]) => type === "Core")?.[0];
+
   const coreInv = coreId ? world.inventory[Number(coreId)] : null;
 
-  const buildableTypes: BuildingType[] = ["Extractor", "Assembler", "Fabricator", "Cooler", "Storage"];
+  const buildableTypes: BuildingType[] = [
+    "Extractor",
+    "Assembler",
+    "Fabricator",
+    "Cooler",
+    "Storage",
+  ];
 
   return (
     <div className="w-64 bg-neutral-900 border-r border-neutral-800 p-4 overflow-y-auto">
@@ -45,7 +49,7 @@ export function BuildPanel() {
           {buildableTypes.map((type) => {
             const canAfford = canAffordBuilding(world, type);
             const cost = BUILDING_COSTS[type];
-            
+
             return (
               <button
                 key={type}
@@ -54,14 +58,17 @@ export function BuildPanel() {
                   type === selectedBuildingType
                     ? "bg-emerald-600 text-white"
                     : canAfford
-                    ? "bg-neutral-800 hover:bg-neutral-700 text-white"
-                    : "bg-neutral-800/50 text-neutral-600 cursor-not-allowed"
+                      ? "bg-neutral-800 hover:bg-neutral-700 text-white"
+                      : "bg-neutral-800/50 text-neutral-600 cursor-not-allowed"
                 }`}
                 disabled={!canAfford}
               >
                 <div className="font-semibold text-sm">{type}</div>
                 <div className="text-xs text-neutral-400 mt-1">
-                  Cost: {Object.entries(cost).map(([res, amt]) => `${amt} ${res}`).join(", ")}
+                  Cost:{" "}
+                  {Object.entries(cost)
+                    .map(([res, amt]) => `${amt} ${res}`)
+                    .join(", ")}
                 </div>
               </button>
             );
@@ -86,17 +93,10 @@ export function BuildPanel() {
               const inv = world.inventory[id];
 
               return (
-                <div
-                  key={id}
-                  className="bg-neutral-800 rounded p-2"
-                >
+                <div key={id} className="bg-neutral-800 rounded p-2">
                   <div className="flex justify-between items-center mb-1">
                     <span className="font-semibold text-white">{type}</span>
-                    {producer && (
-                      <span className="text-xs text-neutral-400">
-                        T{producer.tier}
-                      </span>
-                    )}
+                    {producer && <span className="text-xs text-neutral-400">T{producer.tier}</span>}
                   </div>
                   {producer && (
                     <div className="text-xs text-neutral-400">

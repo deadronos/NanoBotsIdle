@@ -53,12 +53,7 @@ export interface RunSlice {
   updateUISnapshot: () => void;
 }
 
-export const createRunSlice: StateCreator<
-  RunSlice & MetaSlice,
-  [],
-  [],
-  RunSlice
-> = (set, get) => ({
+export const createRunSlice: StateCreator<RunSlice & MetaSlice, [], [], RunSlice> = (set, get) => ({
   world: createWorld({
     swarm: {
       congestionAvoidanceLevel: 0,
@@ -94,7 +89,7 @@ export const createRunSlice: StateCreator<
   placeBuilding: (x: number, y: number) => {
     const state = get();
     if (!state.selectedBuildingType) return false;
-    
+
     const success = placeBuilding(state.world, state.selectedBuildingType, x, y);
     if (success) {
       set({ selectedBuildingType: null });
@@ -209,7 +204,7 @@ export const createRunSlice: StateCreator<
       buildings,
     };
 
-    set({ 
+    set({
       uiSnapshot: snapshot,
       projectedCompileShards: projectedShards,
       currentPhase,

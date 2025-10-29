@@ -17,10 +17,10 @@ export function startSimLoop() {
     lastTime = currentTime;
 
     const state = useGameStore.getState();
-    
+
     // Tick the world simulation
     tickWorld(state.world, dt);
-    
+
     // Update UI snapshot
     state.updateUISnapshot();
 

@@ -3,15 +3,16 @@ import { createMetaSlice, MetaSlice } from "./metaSlice";
 import { createRunSlice, RunSlice } from "./runSlice";
 import { saveGame, loadGame } from "./persistence";
 
-export type GameState = RunSlice & MetaSlice & {
-  saveGame: () => void;
-  loadGame: () => void;
-};
+export type GameState = RunSlice &
+  MetaSlice & {
+    saveGame: () => void;
+    loadGame: () => void;
+  };
 
 export const useGameStore = create<GameState>()((set, get, api) => ({
   ...createMetaSlice(set, get, api),
   ...createRunSlice(set, get, api),
-  
+
   saveGame: () => {
     const state = get();
     saveGame(

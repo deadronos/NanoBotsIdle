@@ -5,13 +5,7 @@ import { ResourceName } from "../types/resources";
 // ==============================
 
 // quadratic cost curve for building upgrades, drone production, etc.
-export function polyCost(
-  level: number,
-  base: number,
-  scaleA = 1,
-  scaleB = 1,
-  scaleC = 1
-): number {
+export function polyCost(level: number, base: number, scaleA = 1, scaleB = 1, scaleC = 1): number {
   const n = level;
   return base * (n * n * scaleA + n * scaleB + scaleC);
 }

@@ -9,10 +9,7 @@ export function compileScoringSystem(world: World, dt: number) {
     }
   });
 
-  world.globals.peakThroughput = Math.max(
-    world.globals.peakThroughput,
-    currentThroughput
-  );
+  world.globals.peakThroughput = Math.max(world.globals.peakThroughput, currentThroughput);
 
   // Track cohesion (simplified: increment if no starved buildings)
   let allSatisfied = true;

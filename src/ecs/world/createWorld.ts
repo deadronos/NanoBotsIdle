@@ -99,7 +99,7 @@ export function createWorld(params: CreateWorldParams): World {
   world.position[coreId] = { x: 32, y: 32 };
   world.inventory[coreId] = {
     capacity: 999,
-    contents: { 
+    contents: {
       ...bio.startingCoreInventory,
       // Add some initial resources so player can interact with the game
       Carbon: 10,
@@ -107,11 +107,11 @@ export function createWorld(params: CreateWorldParams): World {
     },
   };
   world.heatSource[coreId] = { heatPerSecond: 0.2 };
-  
+
   if (bio.passiveCoolingBonus > 0) {
     world.heatSink[coreId] = { coolingPerSecond: 0.2 * bio.passiveCoolingBonus };
   }
-  
+
   world.powerLink[coreId] = { demand: 1, priority: 0, online: true };
   world.compileEmitter[coreId] = { throughputWeight: 1, cohesionWeight: 1 };
 
@@ -205,10 +205,7 @@ export function createWorld(params: CreateWorldParams): World {
       targetEntity: null,
       behavior: {
         ...baseBehavior,
-        buildRadius:
-          role === "builder"
-            ? baseBehavior.buildRadius + 2
-            : baseBehavior.buildRadius,
+        buildRadius: role === "builder" ? baseBehavior.buildRadius + 2 : baseBehavior.buildRadius,
       },
     };
     world.powerLink[dId] = { demand: 0.1, priority: 0, online: true };

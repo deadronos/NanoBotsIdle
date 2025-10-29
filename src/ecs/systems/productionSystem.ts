@@ -5,7 +5,7 @@ export function productionSystem(world: World, dt: number) {
   Object.entries(world.producer).forEach(([idStr, producer]) => {
     const id = Number(idStr);
     const inv = world.inventory[id];
-    
+
     if (!inv || !producer.active) return;
 
     // Check if we have required inputs
@@ -33,9 +33,8 @@ export function productionSystem(world: World, dt: number) {
 
     // Apply overclock multiplier if enabled
     const overclockable = world.overclockable[id];
-    const rateMult = world.globals.overclockEnabled && overclockable
-      ? overclockable.overRateMult
-      : 1.0;
+    const rateMult =
+      world.globals.overclockEnabled && overclockable ? overclockable.overRateMult : 1.0;
 
     const effectiveRate = outputRate * rateMult;
 
@@ -49,13 +48,13 @@ export function productionSystem(world: World, dt: number) {
 
       // Consume inputs
       for (const [resource, amount] of Object.entries(producer.recipe.inputs)) {
-        inv.contents[resource as keyof typeof inv.contents] = 
+        inv.contents[resource as keyof typeof inv.contents] =
           (inv.contents[resource as keyof typeof inv.contents] || 0) - (amount || 0);
       }
 
       // Produce outputs
       for (const [resource, amount] of Object.entries(producer.recipe.outputs)) {
-        inv.contents[resource as keyof typeof inv.contents] = 
+        inv.contents[resource as keyof typeof inv.contents] =
           (inv.contents[resource as keyof typeof inv.contents] || 0) + (amount || 0);
       }
     }

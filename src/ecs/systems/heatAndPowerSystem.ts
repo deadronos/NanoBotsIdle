@@ -7,11 +7,11 @@ export function heatAndPowerSystem(world: World, dt: number) {
     const id = Number(idStr);
     const producer = world.producer[id];
     const overclockable = world.overclockable[id];
-    
+
     // Only generate heat if producer is active or if it's not a producer (like Core)
     const shouldGenerateHeat = !producer || producer.active;
     if (!shouldGenerateHeat) return;
-    
+
     let heatMult = 1.0;
     if (world.globals.overclockEnabled && overclockable) {
       heatMult = overclockable.heatMultiplier;
