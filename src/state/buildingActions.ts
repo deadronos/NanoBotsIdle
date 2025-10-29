@@ -86,7 +86,15 @@ export function placeBuilding(
   world.entityType[id] = buildingType;
   world.position[id] = { x, y };
   world.inventory[id] = { capacity: 50, contents: {} };
-  world.powerLink[id] = { demand: 2, priority: 1, online: true };
+  
+  // PowerVein is a connector and should be connected to grid
+  // Other buildings start unconnected and need PowerVeins to connect them
+  world.powerLink[id] = { 
+    demand: buildingType === "PowerVein" ? 0 : 2, 
+    priority: 1, 
+    online: buildingType === "PowerVein", 
+    connectedToGrid: buildingType === "PowerVein" 
+  };
 
   // Add producer component if applicable
   const recipe = RECIPES[buildingType];
@@ -169,7 +177,7 @@ export function fabricateDrone(
         role === "builder" ? defaultBehavior.buildRadius + 2 : defaultBehavior.buildRadius,
     },
   };
-  world.powerLink[dId] = { demand: 0.1, priority: 0, online: true };
+  world.powerLink[dId] = { demand: 0.1, priority: 0, online: true, connectedToGrid: true };
 
   console.log(`Fabricated ${role} drone`);
   return true;

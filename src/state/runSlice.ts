@@ -19,6 +19,7 @@ export interface UISnapshot {
   overclockEnabled: boolean;
   canFork: boolean;
   canPrestige: boolean;
+  canSelfTerminate: boolean;
   drones: Array<{
     id: number;
     x: number;
@@ -45,6 +46,7 @@ export interface RunSlice {
   selectedBuildingType: BuildingType | null;
   currentPhase: 1 | 2 | 3;
   overclockArmed: boolean;
+  scrapBonusShards: number;
   uiSnapshot: UISnapshot | null;
 
   // Actions
@@ -52,6 +54,9 @@ export interface RunSlice {
   setSelectedBuildingType: (type: BuildingType | null) => void;
   placeBuilding: (x: number, y: number) => boolean;
   toggleOverclock: (on: boolean) => void;
+  scrapEntity: (entityId: number) => number;
+  selfTerminate: () => void;
+  forkProcess: () => void;
   prestigeNow: () => void;
   updateUISnapshot: () => void;
 }
@@ -83,6 +88,7 @@ export const createRunSlice: StateCreator<RunSlice & MetaSlice, [], [], RunSlice
   selectedBuildingType: null,
   currentPhase: 1,
   overclockArmed: false,
+  scrapBonusShards: 0,
   uiSnapshot: null,
 
   setSelectedEntity: (id: number | null) => {
@@ -110,17 +116,111 @@ export const createRunSlice: StateCreator<RunSlice & MetaSlice, [], [], RunSlice
     set({ overclockArmed: on });
   },
 
+  scrapEntity: (entityId: number) => {
+    const state = get();
+    const world = state.world;
+    const entityType = world.entityType[entityId];
+
+    if (!entityType || entityType === "Core") {
+      return 0; // Can't scrap core
+    }
+
+    // Calculate scrap value based on entity type
+    let scrapValue = 0;
+    
+    if (entityType === "Drone") {
+      // Drones give small shard bonus
+      scrapValue = 0.5;
+    } else {
+      // Buildings give more based on tier
+      const producer = world.producer[entityId];
+      const tier = producer?.tier ?? 1;
+      scrapValue = 1.0 * tier; // Base value times tier
+    }
+
+    // Apply recycle bonus from meta upgrades
+    const recycleBonus = state.compilerOptimization.recycleBonus;
+    const finalValue = scrapValue * (1 + recycleBonus);
+
+    // Remove entity from world
+    delete world.entityType[entityId];
+    delete world.position[entityId];
+    delete world.inventory[entityId];
+    delete world.producer[entityId];
+    delete world.heatSource[entityId];
+    delete world.heatSink[entityId];
+    delete world.powerLink[entityId];
+    delete world.droneBrain[entityId];
+    delete world.path[entityId];
+    delete world.overclockable[entityId];
+    delete world.compileEmitter[entityId];
+
+    // Add to scrap bonus
+    set({ scrapBonusShards: state.scrapBonusShards + finalValue });
+
+    return finalValue;
+  },
+
+  selfTerminate: () => {
+    const state = get();
+    const world = state.world;
+
+    // Scrap all non-core buildings and drones
+    const entitiesToScrap = Object.entries(world.entityType)
+      .filter(([_, type]) => type !== "Core")
+      .map(([idStr]) => Number(idStr));
+
+    let totalScrapped = 0;
+    entitiesToScrap.forEach((id) => {
+      totalScrapped += state.scrapEntity(id);
+    });
+
+    // Immediately prestige after self-termination
+    state.prestigeNow();
+  },
+
+  forkProcess: () => {
+    const state = get();
+    const world = state.world;
+    
+    // Count and remove all drones
+    const droneIds = Object.entries(world.entityType)
+      .filter(([_, type]) => type === "Drone")
+      .map(([id]) => Number(id));
+    
+    const droneCount = droneIds.length;
+    
+    // Remove drones from world
+    droneIds.forEach(id => {
+      delete world.entityType[id];
+      delete world.position[id];
+      delete world.inventory[id];
+      delete world.droneBrain[id];
+      delete world.path[id];
+      delete world.powerLink[id];
+    });
+    
+    // Grant fork points (1 per 3 drones sacrificed, minimum 1)
+    const earnedPoints = Math.max(1, Math.floor(droneCount / 3));
+    
+    set({ 
+      forkPoints: state.forkPoints + earnedPoints,
+    });
+    
+    console.log(`Fork Process complete: sacrificed ${droneCount} drones, earned ${earnedPoints} fork points`);
+  },
+
   prestigeNow: () => {
     const state = get();
     const world = state.world;
 
-    // Calculate final shards
+    // Calculate final shards (including scrap bonus)
     const shards = getCompileShardEstimate({
       peakThroughput: world.globals.peakThroughput,
       cohesionScore: world.globals.cohesionScore,
       stressSecondsAccum: world.globals.stressSecondsAccum,
       yieldMult: state.compilerOptimization.compileYieldMult,
-    });
+    }) + state.scrapBonusShards;
 
     // Update meta
     set({
@@ -142,6 +242,7 @@ export const createRunSlice: StateCreator<RunSlice & MetaSlice, [], [], RunSlice
       selectedEntity: null,
       currentPhase: 1,
       overclockArmed: false,
+      scrapBonusShards: 0,
     });
   },
 
@@ -203,12 +304,13 @@ export const createRunSlice: StateCreator<RunSlice & MetaSlice, [], [], RunSlice
       powerAvailable: world.globals.powerAvailable,
       powerDemand: world.globals.powerDemand,
       throughput: world.globals.peakThroughput,
-      projectedShards,
+      projectedShards: projectedShards + state.scrapBonusShards,
       currentPhase,
       simTimeSeconds: world.globals.simTimeSeconds,
       overclockEnabled: world.globals.overclockEnabled,
       canFork: currentPhase >= 2,
       canPrestige: currentPhase === 3,
+      canSelfTerminate: heatRatio > 1.2 && currentPhase === 3,
       drones,
       buildings,
     };

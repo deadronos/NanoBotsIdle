@@ -197,15 +197,94 @@ export function AIPanel() {
                     ⚠️ Some producers starved
                   </div>
                 )}
+                {Object.entries(world.powerLink).some(([id, link]) => !link.connectedToGrid && world.entityType[Number(id)] !== "Drone") && (
+                  <div className="bg-red-900/30 border border-red-800 rounded p-2 text-red-300">
+                    ⚠️ Buildings offline: not connected to power grid
+                  </div>
+                )}
                 {snapshot &&
                   snapshot.heatRatio < 0.5 &&
                   droneCount > 0 &&
                   world.taskRequests.length <= 10 &&
-                  !Object.values(world.producer).some((p) => !p.active) && (
+                  !Object.values(world.producer).some((p) => !p.active) &&
+                  !Object.entries(world.powerLink).some(([id, link]) => !link.connectedToGrid && world.entityType[Number(id)] !== "Drone") && (
                     <div className="bg-green-900/30 border border-green-800 rounded p-2 text-green-300">
                       ✓ All systems nominal
                     </div>
                   )}
+              </div>
+            </div>
+
+            {/* Bottleneck Detection */}
+            <div className="mb-4">
+              <div className="text-xs text-neutral-500 mb-2">Bottleneck Analysis</div>
+              <div className="space-y-2">
+                {(() => {
+                  const starvedProducers = Object.entries(world.producer)
+                    .filter(([_, p]) => !p.active)
+                    .map(([id]) => {
+                      const entityId = Number(id);
+                      const type = world.entityType[entityId];
+                      const pos = world.position[entityId];
+                      const link = world.powerLink[entityId];
+                      return { id: entityId, type, pos, offline: link && !link.online };
+                    });
+                  
+                  const offlineBuildings = Object.entries(world.powerLink)
+                    .filter(([id, link]) => {
+                      const entityId = Number(id);
+                      return !link.connectedToGrid && world.entityType[entityId] !== "Drone" && world.entityType[entityId] !== "PowerVein";
+                    })
+                    .map(([id]) => {
+                      const entityId = Number(id);
+                      const type = world.entityType[entityId];
+                      const pos = world.position[entityId];
+                      return { id: entityId, type, pos };
+                    });
+
+                  return (
+                    <>
+                      {starvedProducers.length > 0 && (
+                        <div className="bg-neutral-800 rounded p-2">
+                          <div className="text-white font-semibold mb-1">Starved Producers</div>
+                          {starvedProducers.slice(0, 3).map(({ id, type, pos, offline }) => (
+                            <div key={id} className="text-neutral-300 text-xs">
+                              • {type} at ({Math.floor(pos.x)}, {Math.floor(pos.y)})
+                              {offline && <span className="text-red-400"> - OFFLINE</span>}
+                            </div>
+                          ))}
+                          {starvedProducers.length > 3 && (
+                            <div className="text-neutral-400 text-xs mt-1">
+                              ... and {starvedProducers.length - 3} more
+                            </div>
+                          )}
+                        </div>
+                      )}
+                      
+                      {offlineBuildings.length > 0 && (
+                        <div className="bg-neutral-800 rounded p-2">
+                          <div className="text-white font-semibold mb-1">Not Connected to Power Grid</div>
+                          {offlineBuildings.slice(0, 3).map(({ id, type, pos }) => (
+                            <div key={id} className="text-neutral-300 text-xs">
+                              • {type} at ({Math.floor(pos.x)}, {Math.floor(pos.y)})
+                            </div>
+                          ))}
+                          {offlineBuildings.length > 3 && (
+                            <div className="text-neutral-400 text-xs mt-1">
+                              ... and {offlineBuildings.length - 3} more
+                            </div>
+                          )}
+                        </div>
+                      )}
+                      
+                      {starvedProducers.length === 0 && offlineBuildings.length === 0 && (
+                        <div className="bg-neutral-800 rounded p-2 text-neutral-400 text-xs">
+                          No bottlenecks detected
+                        </div>
+                      )}
+                    </>
+                  );
+                })()}
               </div>
             </div>
 
