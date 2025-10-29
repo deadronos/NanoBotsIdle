@@ -178,11 +178,18 @@ export function getSaveMetadata(): {
     if (!serialized) return null;
 
     const saveData = JSON.parse(serialized);
+
+    // Validate structure before accessing properties
+    if (!validateSaveData(saveData)) {
+      console.error("Invalid save data structure in metadata retrieval");
+      return null;
+    }
+
     return {
       version: saveData.version,
       timestamp: saveData.timestamp,
-      shards: saveData.meta?.compileShardsBanked ?? 0,
-      prestiges: saveData.meta?.totalPrestiges ?? 0,
+      shards: saveData.meta.compileShardsBanked,
+      prestiges: saveData.meta.totalPrestiges,
     };
   } catch (error) {
     console.error("Failed to get save metadata:", error);

@@ -72,10 +72,9 @@ export function TopBar() {
         const success = importSave(content);
         if (success) {
           setLoadStatus("loaded");
-          setTimeout(() => {
-            loadGame();
-            setLoadStatus("idle");
-          }, 1000);
+          // Load the imported save immediately
+          loadGame();
+          setTimeout(() => setLoadStatus("idle"), 2000);
         } else {
           setLoadStatus("error");
           setTimeout(() => setLoadStatus("idle"), 3000);
