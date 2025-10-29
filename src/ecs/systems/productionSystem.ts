@@ -42,9 +42,9 @@ export function productionSystem(world: World, dt: number) {
     const progressDelta = (effectiveRate * dt) / producer.recipe.batchTimeSeconds;
     producer.progress += progressDelta;
 
-    // Complete batch
-    if (producer.progress >= 1.0) {
-      producer.progress = 0;
+    // Complete batches (handle multiple batches in one tick)
+    while (producer.progress >= 1.0) {
+      producer.progress -= 1.0;
 
       // Consume inputs
       for (const [resource, amount] of Object.entries(producer.recipe.inputs)) {
@@ -57,6 +57,19 @@ export function productionSystem(world: World, dt: number) {
         inv.contents[resource as keyof typeof inv.contents] =
           (inv.contents[resource as keyof typeof inv.contents] || 0) + (amount || 0);
       }
+
+      // Check if we still have inputs for another batch
+      let canContinue = true;
+      for (const [resource, amount] of Object.entries(producer.recipe.inputs)) {
+        const have = inv.contents[resource as keyof typeof inv.contents] || 0;
+        if (have < (amount || 0)) {
+          canContinue = false;
+          producer.active = false;
+          break;
+        }
+      }
+
+      if (!canContinue) break;
     }
   });
 }

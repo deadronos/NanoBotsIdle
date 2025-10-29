@@ -11,6 +11,15 @@ export function TopBar() {
   const heatPercent = Math.floor(snapshot.heatRatio * 100);
   const heatColor =
     heatPercent > 80 ? "text-red-400" : heatPercent > 50 ? "text-orange-400" : "text-green-400";
+  const heatBgColor =
+    heatPercent > 80
+      ? "bg-red-900/30"
+      : heatPercent > 50
+        ? "bg-orange-900/30"
+        : "bg-green-900/30";
+
+  // Heat impact on production
+  const heatPenalty = Math.floor((1 / (1 + snapshot.heatRatio)) * 100);
 
   return (
     <div className="bg-neutral-900 border-b border-neutral-800 px-6 py-3">
@@ -24,6 +33,10 @@ export function TopBar() {
             <div className={`text-lg font-semibold ${heatColor}`}>
               {Math.floor(snapshot.heatCurrent)} / {snapshot.heatSafeCap}
               <span className="text-sm ml-1">({heatPercent}%)</span>
+            </div>
+            {/* Heat efficiency indicator */}
+            <div className={`text-xs ${heatColor} ${heatBgColor} px-1 rounded mt-0.5`}>
+              Efficiency: {heatPenalty}%
             </div>
           </div>
 
