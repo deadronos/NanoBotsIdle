@@ -34,6 +34,7 @@ describe("Congestion System", () => {
         milestones: [],
       },
       taskRequests: [],
+      builderTargets: {},
       grid: {
         width: 10,
         height: 10,

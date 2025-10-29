@@ -93,6 +93,7 @@ export function createWorld(params: CreateWorldParams): World {
     },
 
     taskRequests: [],
+    builderTargets: {},
 
     grid: {
       width: 64,
