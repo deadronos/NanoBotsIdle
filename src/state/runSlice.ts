@@ -24,6 +24,8 @@ export interface UISnapshot {
     x: number;
     y: number;
     role: string;
+    cargoAmount: number;
+    state: string;
   }>;
   buildings: Array<{
     id: number;
@@ -166,6 +168,8 @@ export const createRunSlice: StateCreator<RunSlice & MetaSlice, [], [], RunSlice
         x: pos?.x ?? 0,
         y: pos?.y ?? 0,
         role: brain.role,
+        cargoAmount: brain.cargo.amount,
+        state: brain.state,
       };
     });
 
