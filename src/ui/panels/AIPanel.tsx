@@ -8,6 +8,9 @@ export function AIPanel() {
   const snapshot = useGameStore((s) => s.uiSnapshot);
   const [activeTab, setActiveTab] = useState<TabType>("overview");
 
+  // Get unlock state
+  const unlocks = world.globals.unlocks;
+
   const droneCount = Object.keys(world.droneBrain).length;
   const haulers = Object.values(world.droneBrain).filter((b) => b.role === "hauler").length;
   const builders = Object.values(world.droneBrain).filter((b) => b.role === "builder").length;
@@ -30,26 +33,30 @@ export function AIPanel() {
         >
           Overview
         </button>
-        <button
-          onClick={() => setActiveTab("priorities")}
-          className={`flex-1 py-2 px-3 text-sm font-medium transition-colors ${
-            activeTab === "priorities"
-              ? "bg-neutral-800 text-white border-b-2 border-emerald-500"
-              : "text-neutral-400 hover:text-white hover:bg-neutral-800/50"
-          }`}
-        >
-          Priorities
-        </button>
-        <button
-          onClick={() => setActiveTab("diagnostics")}
-          className={`flex-1 py-2 px-3 text-sm font-medium transition-colors ${
-            activeTab === "diagnostics"
-              ? "bg-neutral-800 text-white border-b-2 border-emerald-500"
-              : "text-neutral-400 hover:text-white hover:bg-neutral-800/50"
-          }`}
-        >
-          Diagnostics
-        </button>
+        {unlocks.routingPriorities && (
+          <button
+            onClick={() => setActiveTab("priorities")}
+            className={`flex-1 py-2 px-3 text-sm font-medium transition-colors ${
+              activeTab === "priorities"
+                ? "bg-neutral-800 text-white border-b-2 border-emerald-500"
+                : "text-neutral-400 hover:text-white hover:bg-neutral-800/50"
+            }`}
+          >
+            Priorities
+          </button>
+        )}
+        {unlocks.diagnosticsTab && (
+          <button
+            onClick={() => setActiveTab("diagnostics")}
+            className={`flex-1 py-2 px-3 text-sm font-medium transition-colors ${
+              activeTab === "diagnostics"
+                ? "bg-neutral-800 text-white border-b-2 border-emerald-500"
+                : "text-neutral-400 hover:text-white hover:bg-neutral-800/50"
+            }`}
+          >
+            Diagnostics
+          </button>
+        )}
       </div>
 
       {/* Tab Content */}

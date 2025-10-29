@@ -11,7 +11,19 @@ export function polyCost(level: number, base: number, scaleA = 1, scaleB = 1, sc
 }
 
 export function getDroneFabricationCost(droneIndex: number): Partial<Record<ResourceName, number>> {
-  const cost = Math.floor(polyCost(droneIndex, 5, 0.6, 0.8, 1));
+  // Quadratic cost scaling: cost(n) = base * (a*n² + b*n + c)
+  // Tuned so that:
+  // - Drone 1: ~9 Components (early game accessible)
+  // - Drone 2: ~12 Components
+  // - Drone 3: ~16 Components (requires some buildup)
+  // - Drone 4-5: ~22-28 Components (15 min milestone)
+  // This ensures 3-5 drones are achievable in first 15 minutes
+  const base = 3;
+  const a = 0.4; // Quadratic coefficient (reduced for gentler scaling)
+  const b = 0.5; // Linear coefficient
+  const c = 1.0; // Constant
+  
+  const cost = Math.floor(base * (a * droneIndex * droneIndex + b * droneIndex + c));
   return {
     Components: cost,
   };

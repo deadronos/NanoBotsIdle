@@ -7,20 +7,31 @@ export function BuildPanel() {
   const selectedBuildingType = useGameStore((s) => s.selectedBuildingType);
   const setSelectedBuildingType = useGameStore((s) => s.setSelectedBuildingType);
 
+  // Get unlock state
+  const unlocks = world.globals.unlocks;
+
   // Get inventory of Core
   const coreId = Object.entries(world.entityType).find(([_, type]) => type === "Core")?.[0];
 
   const coreInv = coreId ? world.inventory[Number(coreId)] : null;
 
-  const buildableTypes: BuildingType[] = [
+  // Filter buildable types based on unlocks
+  const allBuildingTypes: BuildingType[] = [
     "Extractor",
     "Assembler",
     "Fabricator",
-    "Cooler",
     "Storage",
-    "PowerVein",
-    "CoreCompiler",
   ];
+
+  // Add unlockable buildings
+  if (unlocks.coolers) {
+    allBuildingTypes.push("Cooler");
+  }
+  if (unlocks.powerVeins) {
+    allBuildingTypes.push("PowerVein");
+  }
+  // CoreCompiler is always available but expensive
+  allBuildingTypes.push("CoreCompiler");
 
   return (
     <div className="w-64 bg-neutral-900 border-r border-neutral-800 p-4 overflow-y-auto">
@@ -48,7 +59,7 @@ export function BuildPanel() {
       <div className="mb-6">
         <h3 className="text-sm font-semibold text-neutral-400 mb-2">Build Structures</h3>
         <div className="space-y-2">
-          {buildableTypes.map((type) => {
+          {allBuildingTypes.map((type) => {
             const canAfford = canAffordBuilding(world, type);
             const cost = BUILDING_COSTS[type];
 

@@ -1,6 +1,7 @@
 import { describe, it, expect, beforeEach } from "vitest";
 import { canAffordBuilding, placeBuilding, BUILDING_COSTS } from "../state/buildingActions";
 import { World } from "../ecs/world/World";
+import { DEFAULT_UNLOCK_STATE } from "../types/unlocks";
 
 describe("Building Placement and Cost Validation", () => {
   let world: World;
@@ -30,6 +31,8 @@ describe("Building Placement and Cost Validation", () => {
         cohesionScore: 0,
         stressSecondsAccum: 0,
         simTimeSeconds: 0,
+        unlocks: { ...DEFAULT_UNLOCK_STATE },
+        milestones: [],
       },
       taskRequests: [],
       grid: {

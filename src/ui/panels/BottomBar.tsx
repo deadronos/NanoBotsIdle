@@ -5,6 +5,10 @@ export function BottomBar() {
   const toggleOverclock = useGameStore((s) => s.toggleOverclock);
   const prestigeNow = useGameStore((s) => s.prestigeNow);
   const compileShards = useGameStore((s) => s.compileShardsBanked);
+  const world = useGameStore((s) => s.world);
+
+  // Get unlock state
+  const unlocks = world.globals.unlocks;
 
   if (!snapshot) return null;
 
@@ -24,7 +28,7 @@ export function BottomBar() {
 
         <div className="flex items-center gap-4">
           {/* Overclock Toggle */}
-          {snapshot.currentPhase >= 2 && (
+          {unlocks.overclockMode && snapshot.currentPhase >= 2 && (
             <button
               onClick={() => toggleOverclock(!snapshot.overclockEnabled)}
               className={`px-6 py-2 rounded-lg font-semibold transition-colors ${
