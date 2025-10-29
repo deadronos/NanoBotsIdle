@@ -103,7 +103,7 @@ export function BuildPanel() {
               // Determine status
               const isOnline = powerLink?.online ?? true;
               const isActive = producer?.active ?? false;
-              const isStarved = producer && !producer.active;
+              const isStarved = producer && isOnline && !producer.active;
 
               // Status indicator color
               const statusColor = !isOnline
