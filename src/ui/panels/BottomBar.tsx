@@ -72,7 +72,6 @@ export function BottomBar() {
           )}
 
           {/* Self-Termination Button */}
-          {/* Self-Termination Button */}
           {unlocks.selfTermination && snapshot.canSelfTerminate && (
             <button
               onClick={selfTerminate}
