@@ -35,9 +35,7 @@ export function FactoryCanvas() {
       }
     } else {
       // Try to select a building at this position
-      const building = snapshot?.buildings.find(
-        (b) => Math.abs(b.x - gridX) < 1 && Math.abs(b.y - gridY) < 1
-      );
+      const building = snapshot?.buildings.find((b) => b.x === gridX && b.y === gridY);
       if (building) {
         setSelectedEntity(building.id);
       } else {
@@ -186,7 +184,7 @@ export function FactoryCanvas() {
 
       // Check if position is valid
       const isOccupied = snapshot.buildings.some(
-        (b) => Math.abs(b.x - ghostPosition.x) < 1 && Math.abs(b.y - ghostPosition.y) < 1
+        (b) => b.x === ghostPosition.x && b.y === ghostPosition.y
       );
 
       // Draw ghost with transparency
@@ -231,7 +229,11 @@ export function FactoryCanvas() {
         )}
         <BuildingInfoPanel />
         <div className="absolute bottom-4 right-4 bg-black/70 backdrop-blur px-3 py-2 rounded text-xs text-neutral-400">
-          <div>🟦 Extractor 🟪 Assembler 🟨 Fabricator</div>
+          <div className="mb-1 font-semibold text-neutral-300">Buildings:</div>
+          <div>🟩 Core 🟦 Extractor 🟪 Assembler</div>
+          <div>🟨 Fabricator 🟦 Cooler 🟫 Storage</div>
+          <div>🟨 PowerVein 🩷 CoreCompiler</div>
+          <div className="mt-2 mb-1 font-semibold text-neutral-300">Drones:</div>
           <div>🔵 Hauler 🟡 Builder 🟢 Maintainer</div>
         </div>
       </div>
