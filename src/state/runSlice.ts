@@ -170,9 +170,9 @@ export const createRunSlice: StateCreator<RunSlice & MetaSlice, [], [], RunSlice
       .filter(([_, type]) => type !== "Core")
       .map(([idStr]) => Number(idStr));
 
-    let totalScrapped = 0;
+    let _totalScrapped = 0;
     entitiesToScrap.forEach((id) => {
-      totalScrapped += state.scrapEntity(id);
+      _totalScrapped += state.scrapEntity(id);
     });
 
     // Immediately prestige after self-termination
