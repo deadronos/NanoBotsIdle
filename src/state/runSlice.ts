@@ -46,6 +46,7 @@ export interface RunSlice {
   uiSnapshot: UISnapshot | null;
 
   // Actions
+  setSelectedEntity: (id: number | null) => void;
   setSelectedBuildingType: (type: BuildingType | null) => void;
   placeBuilding: (x: number, y: number) => boolean;
   toggleOverclock: (on: boolean) => void;
@@ -81,6 +82,10 @@ export const createRunSlice: StateCreator<RunSlice & MetaSlice, [], [], RunSlice
   currentPhase: 1,
   overclockArmed: false,
   uiSnapshot: null,
+
+  setSelectedEntity: (id: number | null) => {
+    set({ selectedEntity: id });
+  },
 
   setSelectedBuildingType: (type: BuildingType | null) => {
     set({ selectedBuildingType: type });

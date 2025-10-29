@@ -1,5 +1,6 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useGameStore } from "../../state/store";
+import { BuildingInfoPanel } from "../panels/BuildingInfoPanel";
 
 const TILE_SIZE = 12;
 const GRID_WIDTH = 64;
@@ -9,11 +10,12 @@ export function FactoryCanvas() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const snapshot = useGameStore((s) => s.uiSnapshot);
   const selectedBuildingType = useGameStore((s) => s.selectedBuildingType);
+  const selectedEntity = useGameStore((s) => s.selectedEntity);
+  const setSelectedEntity = useGameStore((s) => s.setSelectedEntity);
   const placeBuilding = useGameStore((s) => s.placeBuilding);
+  const [ghostPosition, setGhostPosition] = useState<{ x: number; y: number } | null>(null);
 
   const handleCanvasClick = (event: React.MouseEvent<HTMLCanvasElement>) => {
-    if (!selectedBuildingType) return;
-
     const canvas = canvasRef.current;
     if (!canvas) return;
 
@@ -25,11 +27,47 @@ export function FactoryCanvas() {
     const gridX = Math.floor(clickX / TILE_SIZE);
     const gridY = Math.floor(clickY / TILE_SIZE);
 
-    // Place building
-    const success = placeBuilding(gridX, gridY);
-    if (!success) {
-      console.log("Failed to place building");
+    if (selectedBuildingType) {
+      // Place building
+      const success = placeBuilding(gridX, gridY);
+      if (!success) {
+        console.log("Failed to place building");
+      }
+    } else {
+      // Try to select a building at this position
+      const building = snapshot?.buildings.find(
+        (b) => Math.abs(b.x - gridX) < 1 && Math.abs(b.y - gridY) < 1
+      );
+      if (building) {
+        setSelectedEntity(building.id);
+      } else {
+        setSelectedEntity(null);
+      }
     }
+  };
+
+  const handleCanvasMouseMove = (event: React.MouseEvent<HTMLCanvasElement>) => {
+    if (!selectedBuildingType) {
+      setGhostPosition(null);
+      return;
+    }
+
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+
+    const rect = canvas.getBoundingClientRect();
+    const mouseX = event.clientX - rect.left;
+    const mouseY = event.clientY - rect.top;
+
+    // Convert to grid coordinates
+    const gridX = Math.floor(mouseX / TILE_SIZE);
+    const gridY = Math.floor(mouseY / TILE_SIZE);
+
+    setGhostPosition({ x: gridX, y: gridY });
+  };
+
+  const handleCanvasMouseLeave = () => {
+    setGhostPosition(null);
   };
 
   useEffect(() => {
@@ -63,6 +101,7 @@ export function FactoryCanvas() {
     snapshot.buildings.forEach((building) => {
       const x = building.x * TILE_SIZE;
       const y = building.y * TILE_SIZE;
+      const isSelected = building.id === selectedEntity;
 
       // Color based on type
       let color = "#888";
@@ -72,7 +111,22 @@ export function FactoryCanvas() {
         color = "#3b82f6"; // blue
       else if (building.type === "Assembler")
         color = "#8b5cf6"; // purple
-      else if (building.type === "Fabricator") color = "#f59e0b"; // amber
+      else if (building.type === "Fabricator")
+        color = "#f59e0b"; // amber
+      else if (building.type === "Cooler")
+        color = "#06b6d4"; // cyan
+      else if (building.type === "Storage")
+        color = "#6b7280"; // gray
+      else if (building.type === "PowerVein")
+        color = "#eab308"; // yellow
+      else if (building.type === "CoreCompiler") color = "#ec4899"; // pink
+
+      // Draw selection highlight
+      if (isSelected) {
+        ctx.strokeStyle = "#fbbf24";
+        ctx.lineWidth = 2;
+        ctx.strokeRect(x - 8, y - 8, 16, 16);
+      }
 
       ctx.fillStyle = building.online ? color : "#333";
       ctx.fillRect(x - 4, y - 4, 8, 8);
@@ -124,7 +178,37 @@ export function FactoryCanvas() {
       ctx.fillStyle = `rgba(239, 68, 68, ${alpha})`;
       ctx.fillRect(0, 0, canvas.width, canvas.height);
     }
-  }, [snapshot]);
+
+    // Draw ghost building
+    if (ghostPosition && selectedBuildingType) {
+      const x = ghostPosition.x * TILE_SIZE;
+      const y = ghostPosition.y * TILE_SIZE;
+
+      // Check if position is valid
+      const isOccupied = snapshot.buildings.some(
+        (b) => Math.abs(b.x - ghostPosition.x) < 1 && Math.abs(b.y - ghostPosition.y) < 1
+      );
+
+      // Draw ghost with transparency
+      ctx.globalAlpha = 0.5;
+      ctx.fillStyle = isOccupied ? "#ef4444" : "#10b981";
+      ctx.fillRect(x - 4, y - 4, 8, 8);
+
+      // Draw dashed border
+      ctx.globalAlpha = 1;
+      ctx.strokeStyle = isOccupied ? "#ef4444" : "#10b981";
+      ctx.lineWidth = 1;
+      ctx.setLineDash([3, 3]);
+      ctx.strokeRect(x - 8, y - 8, 16, 16);
+      ctx.setLineDash([]);
+
+      // Draw type label
+      ctx.fillStyle = isOccupied ? "#ef4444" : "#10b981";
+      ctx.font = "7px monospace";
+      const label = selectedBuildingType.substring(0, 3).toUpperCase();
+      ctx.fillText(label, x - 8, y - 6);
+    }
+  }, [snapshot, selectedEntity, ghostPosition, selectedBuildingType]);
 
   return (
     <div className="flex-1 flex items-center justify-center bg-black">
@@ -134,15 +218,18 @@ export function FactoryCanvas() {
           width={GRID_WIDTH * TILE_SIZE}
           height={GRID_HEIGHT * TILE_SIZE}
           className={`border border-neutral-800 rounded-lg ${
-            selectedBuildingType ? "cursor-crosshair" : "cursor-default"
+            selectedBuildingType ? "cursor-crosshair" : "cursor-pointer"
           }`}
           onClick={handleCanvasClick}
+          onMouseMove={handleCanvasMouseMove}
+          onMouseLeave={handleCanvasMouseLeave}
         />
         {selectedBuildingType && (
           <div className="absolute top-4 left-4 bg-emerald-900/80 backdrop-blur px-3 py-2 rounded text-sm text-emerald-200">
             Placing: {selectedBuildingType}
           </div>
         )}
+        <BuildingInfoPanel />
         <div className="absolute bottom-4 right-4 bg-black/70 backdrop-blur px-3 py-2 rounded text-xs text-neutral-400">
           <div>🟦 Extractor 🟪 Assembler 🟨 Fabricator</div>
           <div>🔵 Hauler 🟡 Builder 🟢 Maintainer</div>
