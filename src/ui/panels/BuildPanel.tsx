@@ -7,8 +7,20 @@ export function BuildPanel() {
   const selectedBuildingType = useGameStore((s) => s.selectedBuildingType);
   const setSelectedBuildingType = useGameStore((s) => s.setSelectedBuildingType);
 
-  // Get unlock state
-  const unlocks = world.globals.unlocks;
+  // Get unlock state with fallback to empty unlocks if not initialized
+  const unlocks = world.globals?.unlocks || {
+    coolers: false,
+    powerVeins: false,
+    ghostBuilding: false,
+    routingPriorities: false,
+    diagnosticsTab: false,
+    forkProcess: false,
+    overclockMode: false,
+    selfTermination: false,
+    firstDroneFabricated: false,
+    firstGhostPlaced: false,
+    firstPrioritySet: false,
+  };
 
   // Get inventory of Core
   const coreId = Object.entries(world.entityType).find(([_, type]) => type === "Core")?.[0];
@@ -24,10 +36,10 @@ export function BuildPanel() {
   ];
 
   // Add unlockable buildings
-  if (unlocks.coolers) {
+  if (unlocks?.coolers) {
     allBuildingTypes.push("Cooler");
   }
-  if (unlocks.powerVeins) {
+  if (unlocks?.powerVeins) {
     allBuildingTypes.push("PowerVein");
   }
   // CoreCompiler is always available but expensive

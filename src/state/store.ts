@@ -36,6 +36,22 @@ export const useGameStore = create<GameState>()((set, get, api) => ({
   loadGame: () => {
     const saveData = loadGame();
     if (saveData) {
+      // Ensure the loaded world has proper globals structure
+      if (saveData.run.world.globals && !saveData.run.world.globals.unlocks) {
+        saveData.run.world.globals.unlocks = {
+          coolers: false,
+          powerVeins: false,
+          ghostBuilding: false,
+          routingPriorities: false,
+          diagnosticsTab: false,
+          forkProcess: false,
+          overclockMode: false,
+          selfTermination: false,
+          firstDroneFabricated: false,
+          firstGhostPlaced: false,
+          firstPrioritySet: false,
+        };
+      }
       set({
         ...saveData.meta,
         ...saveData.run,
