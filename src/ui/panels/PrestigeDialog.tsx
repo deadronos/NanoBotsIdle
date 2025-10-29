@@ -27,7 +27,7 @@ export function PrestigeDialog({ isOpen, onClose, onConfirm }: PrestigeDialogPro
   const totalShards = breakdown.finalTotal + scrapBonusShards;
 
   return (
-    <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50">
+    <div className="fixed inset-0 bg-black flex items-center justify-center z-50">
       <div className="bg-neutral-900 border-2 border-emerald-500 rounded-lg p-8 max-w-2xl w-full mx-4">
         <h2 className="text-3xl font-bold text-emerald-400 mb-6 text-center">
           🔄 RECOMPILE CORE
