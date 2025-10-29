@@ -111,6 +111,11 @@ export function heatAndPowerSystem(world: World, dt: number) {
   // Update power grid connectivity
   updatePowerConnectivity(world);
   
+  // Calculate heat ratio for cascade failure check
+  const heatRatio = world.globals.heatSafeCap > 0 
+    ? world.globals.heatCurrent / world.globals.heatSafeCap 
+    : 0;
+  
   // Calculate power demand and set online status
   let totalPowerDemand = 0;
   Object.entries(world.powerLink).forEach(([idStr, link]) => {
@@ -124,7 +129,24 @@ export function heatAndPowerSystem(world: World, dt: number) {
     }
     
     // Buildings must be connected to grid to be online
+    // But can also be forced offline by heat cascade failure
     link.online = link.connectedToGrid;
+    
+    // Heat cascade failure mechanics
+    // Buildings start failing when heat exceeds 150% of safe cap
+    if (heatRatio > 1.5 && link.online) {
+      const producer = world.producer[id];
+      if (producer) {
+        // Failure probability increases with heat
+        // At 1.5x: 1% per second, at 2.0x: 10% per second, at 3.0x: 50% per second
+        const failureChance = Math.min(0.5, Math.pow((heatRatio - 1.5) / 1.5, 2) * 0.5);
+        
+        if (Math.random() < failureChance * dt) {
+          // Building goes offline due to heat damage
+          link.online = false;
+        }
+      }
+    }
     
     if (link.online) {
       totalPowerDemand += link.demand;
