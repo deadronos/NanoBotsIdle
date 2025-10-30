@@ -62,8 +62,8 @@ Successfully implemented all 5 fork behavior modules as specified in Issue #12. 
 
 **Effects:**
 - `overrideTaskPrioritiesDuringOverclock: true`
-- `overclockPrimaryTargets: ["Fabricator", "CoreCompiler"]`
-- `overclockNonPrimaryPenalty: 1000`
+- `overclockPrimaryTargets: ["Fabricator", "CoreCompiler"]` (mapped from JSON `primaryTargets`)
+- `overclockNonPrimaryPenalty: 1000` (mapped from JSON `nonPrimaryPenalty`)
 
 **Impact:** Maximizes shard generation during Overclock phase by focusing all logistics on critical buildings.
 
