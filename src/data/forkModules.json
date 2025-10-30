@@ -1,99 +1,87 @@
-[
-  {
-    "id": "hauler_prefetch",
-    "name": "Anticipatory Logistics",
-    "desc": "Haulers predict demand and prefetch critical inputs before they run out",
-    "cost": { "currency": "ForkPoints", "amount": 1 },
-    "effects": {
-      "droneBehavior": {
-        "prefetchCriticalInputs": true
+{
+  "forkModules": [
+    {
+      "id": "fork.predictiveHauler",
+      "name": "Predictive Hauler",
+      "desc": "Haulers prefetch inputs before factories are empty, reducing idle time.",
+      "cost": { "currency": "ForkPoints", "amount": 1 },
+      "requires": {
+        "requiresModuleIds": []
+      },
+      "effects": {
+        "droneBehavior": {
+          "prefetchCriticalInputs": true
+        },
+        "demandPlanningSystem": {
+          "lowWaterMarkEnabled": true,
+          "lowWaterThresholdFraction": 0.3
+        }
       }
-    }
-  },
-  {
-    "id": "builder_radius",
-    "name": "Extended Reach",
-    "desc": "Builders can work from a slightly larger distance",
-    "cost": { "currency": "ForkPoints", "amount": 1 },
-    "effects": {
-      "droneBehavior": {
-        "buildRadiusBonus": 1
-      }
-    }
-  },
-  {
-    "id": "swarm_rebuild",
-    "name": "Rapid Regeneration",
-    "desc": "Drones respawn faster after a Fork, accelerating recovery",
-    "cost": { "currency": "ForkPoints", "amount": 2 },
-    "effects": {
-      "swarmRegen": {
-        "postForkRebuildBoost": true
-      }
-    }
-  },
-  {
-    "id": "heat_priority",
-    "name": "Emergency Cooling Protocol",
-    "desc": "Haulers prioritize cooler delivery when heat is critical",
-    "cost": { "currency": "ForkPoints", "amount": 2 },
-    "effects": {
-      "demandPlanningSystem": {
-        "heatCriticalRoutingBoost": true,
-        "heatCriticalThresholdRatio": 0.85,
-        "coolerPriorityOverride": 0
-      }
-    }
-  },
-  {
-    "id": "recycle_components",
-    "name": "Material Recovery",
-    "desc": "Scrapped buildings refund 25% of their components to the Fabricator",
-    "cost": { "currency": "ForkPoints", "amount": 2 },
-    "effects": {
-      "recycling": {
-        "refundToFabricator": true,
-        "refundComponentsFraction": 0.25
-      }
-    }
-  },
-  {
-    "id": "overclock_focus",
-    "name": "Surge Targeting",
-    "desc": "During Overclock, focus drone effort on Fabricators and CoreCompiler",
-    "cost": { "currency": "ForkPoints", "amount": 3 },
-    "requires": {
-      "requiresModuleIds": []
     },
-    "effects": {
-      "overclockBehavior": {
-        "overrideTaskPrioritiesDuringOverclock": true,
-        "primaryTargets": ["Fabricator", "CoreCompiler"],
-        "nonPrimaryPenalty": 1000
+    {
+      "id": "fork.builderSwarmInstinct",
+      "name": "Builder Swarm Instinct",
+      "desc": "Builder drones coordinate to finish multiple ghost structures efficiently.",
+      "cost": { "currency": "ForkPoints", "amount": 1 },
+      "requires": {
+        "requiresModuleIds": []
+      },
+      "effects": {
+        "droneBehavior": {
+          "buildRadiusBonus": 4,
+          "avoidDuplicateGhostTargets": true
+        }
+      }
+    },
+    {
+      "id": "fork.emergencyCoolingProtocol",
+      "name": "Emergency Cooling Protocol",
+      "desc": "When heat is critical, the swarm prioritizes cooling logistics above everything else.",
+      "cost": { "currency": "ForkPoints", "amount": 2 },
+      "requires": {
+        "requiresModuleIds": []
+      },
+      "effects": {
+        "demandPlanningSystem": {
+          "heatCriticalRoutingBoost": true,
+          "heatCriticalThresholdRatio": 0.9,
+          "coolerPriorityOverride": 0
+        }
+      }
+    },
+    {
+      "id": "fork.cannibalizeAndReforge",
+      "name": "Cannibalize & Reforge",
+      "desc": "Scrapped drones and buildings partially refund into Fabricator inventory.",
+      "cost": { "currency": "ForkPoints", "amount": 2 },
+      "requires": {
+        "requiresModuleIds": []
+      },
+      "effects": {
+        "recycling": {
+          "refundToFabricator": true,
+          "refundComponentsFraction": 0.5
+        },
+        "swarmRegen": {
+          "postForkRebuildBoost": true
+        }
+      }
+    },
+    {
+      "id": "fork.prioritySurge",
+      "name": "Priority Surge",
+      "desc": "During Overclock, all logistics tunnels into Fabricator and CoreCompiler, starving everything else.",
+      "cost": { "currency": "ForkPoints", "amount": 3 },
+      "requires": {
+        "requiresModuleIds": []
+      },
+      "effects": {
+        "overclockBehavior": {
+          "overrideTaskPrioritiesDuringOverclock": true,
+          "primaryTargets": ["Fabricator", "CoreCompiler"],
+          "nonPrimaryPenalty": 1000
+        }
       }
     }
-  },
-  {
-    "id": "low_water_hauling",
-    "name": "Just-In-Time Delivery",
-    "desc": "Haulers wait until buildings are below 30% before delivering",
-    "cost": { "currency": "ForkPoints", "amount": 1 },
-    "effects": {
-      "demandPlanningSystem": {
-        "lowWaterMarkEnabled": true,
-        "lowWaterThresholdFraction": 0.3
-      }
-    }
-  },
-  {
-    "id": "ghost_coordination",
-    "name": "Construction Coordination",
-    "desc": "Builders avoid targeting the same ghost structure",
-    "cost": { "currency": "ForkPoints", "amount": 1 },
-    "effects": {
-      "droneBehavior": {
-        "avoidDuplicateGhostTargets": true
-      }
-    }
-  }
-]
+  ]
+}

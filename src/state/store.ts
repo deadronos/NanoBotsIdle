@@ -1,12 +1,10 @@
 import { create } from "zustand";
 import { createMetaSlice, MetaSlice } from "./metaSlice";
 import { createRunSlice, RunSlice } from "./runSlice";
-import { createForkSlice, ForkSlice } from "./forkSlice";
 import { saveGame, loadGame } from "./persistence";
 
 export type GameState = RunSlice &
-  MetaSlice &
-  ForkSlice & {
+  MetaSlice & {
     saveGame: () => void;
     loadGame: () => void;
   };
@@ -14,7 +12,6 @@ export type GameState = RunSlice &
 export const useGameStore = create<GameState>()((set, get, api) => ({
   ...createMetaSlice(set, get, api),
   ...createRunSlice(set, get, api),
-  ...createForkSlice(set, get, api),
 
   saveGame: () => {
     const state = get();
@@ -35,9 +32,9 @@ export const useGameStore = create<GameState>()((set, get, api) => ({
         world: state.world,
         projectedCompileShards: state.projectedCompileShards,
         forkPoints: state.forkPoints,
-        currentPhase: state.currentPhase,
         acquiredModules: state.acquiredModules,
         runBehaviorContext: state.runBehaviorContext,
+        currentPhase: state.currentPhase,
       }
     );
   },
@@ -65,12 +62,6 @@ export const useGameStore = create<GameState>()((set, get, api) => ({
         ...saveData.meta,
         ...saveData.run,
       });
-      // Load fork catalog and recompute context
-      get().loadForkCatalog();
-      get().recomputeBehaviorContext();
-    } else {
-      // Initialize fork catalog on first load
-      get().loadForkCatalog();
     }
   },
 }));

@@ -5,6 +5,76 @@ import { MetaSlice } from "./metaSlice";
 import { getCompileShardEstimate } from "../sim/balance";
 import { BuildingType } from "../types/buildings";
 import { placeBuilding } from "./buildingActions";
+import forkModulesData from "../data/forkModules.json";
+import { ForkModule, ForkModulesData, RunBehaviorContext, DEFAULT_RUN_BEHAVIOR_CONTEXT } from "../types/forkModules";
+
+const modulesData = forkModulesData as ForkModulesData;
+
+function applyModuleEffects(
+  context: RunBehaviorContext,
+  module: ForkModule
+): RunBehaviorContext {
+  const updated = { ...context };
+
+  if (module.effects.droneBehavior) {
+    if (module.effects.droneBehavior.prefetchCriticalInputs !== undefined) {
+      updated.prefetchCriticalInputs = module.effects.droneBehavior.prefetchCriticalInputs;
+    }
+    if (module.effects.droneBehavior.buildRadiusBonus !== undefined) {
+      updated.buildRadiusBonus += module.effects.droneBehavior.buildRadiusBonus;
+    }
+    if (module.effects.droneBehavior.avoidDuplicateGhostTargets !== undefined) {
+      updated.avoidDuplicateGhostTargets = module.effects.droneBehavior.avoidDuplicateGhostTargets;
+    }
+  }
+
+  if (module.effects.demandPlanningSystem) {
+    if (module.effects.demandPlanningSystem.lowWaterMarkEnabled !== undefined) {
+      updated.lowWaterMarkEnabled = module.effects.demandPlanningSystem.lowWaterMarkEnabled;
+    }
+    if (module.effects.demandPlanningSystem.lowWaterThresholdFraction !== undefined) {
+      updated.lowWaterThresholdFraction = module.effects.demandPlanningSystem.lowWaterThresholdFraction;
+    }
+    if (module.effects.demandPlanningSystem.heatCriticalRoutingBoost !== undefined) {
+      updated.heatCriticalRoutingBoost = module.effects.demandPlanningSystem.heatCriticalRoutingBoost;
+    }
+    if (module.effects.demandPlanningSystem.heatCriticalThresholdRatio !== undefined) {
+      updated.heatCriticalThresholdRatio = module.effects.demandPlanningSystem.heatCriticalThresholdRatio;
+    }
+    if (module.effects.demandPlanningSystem.coolerPriorityOverride !== undefined) {
+      updated.coolerPriorityOverride = module.effects.demandPlanningSystem.coolerPriorityOverride;
+    }
+  }
+
+  if (module.effects.recycling) {
+    if (module.effects.recycling.refundToFabricator !== undefined) {
+      updated.refundToFabricator = module.effects.recycling.refundToFabricator;
+    }
+    if (module.effects.recycling.refundComponentsFraction !== undefined) {
+      updated.refundComponentsFraction = module.effects.recycling.refundComponentsFraction;
+    }
+  }
+
+  if (module.effects.swarmRegen) {
+    if (module.effects.swarmRegen.postForkRebuildBoost !== undefined) {
+      updated.postForkRebuildBoost = module.effects.swarmRegen.postForkRebuildBoost;
+    }
+  }
+
+  if (module.effects.overclockBehavior) {
+    if (module.effects.overclockBehavior.overrideTaskPrioritiesDuringOverclock !== undefined) {
+      updated.overrideTaskPrioritiesDuringOverclock = module.effects.overclockBehavior.overrideTaskPrioritiesDuringOverclock;
+    }
+    if (module.effects.overclockBehavior.primaryTargets !== undefined) {
+      updated.overclockPrimaryTargets = module.effects.overclockBehavior.primaryTargets;
+    }
+    if (module.effects.overclockBehavior.nonPrimaryPenalty !== undefined) {
+      updated.overclockNonPrimaryPenalty = module.effects.overclockBehavior.nonPrimaryPenalty;
+    }
+  }
+
+  return updated;
+}
 
 export interface UISnapshot {
   heatCurrent: number;
@@ -41,6 +111,9 @@ export interface UISnapshot {
 export interface RunSlice {
   world: World;
   projectedCompileShards: number;
+  forkPoints: number;
+  acquiredModules: string[];
+  runBehaviorContext: RunBehaviorContext;
   selectedEntity: number | null;
   selectedBuildingType: BuildingType | null;
   currentPhase: 1 | 2 | 3;
@@ -58,6 +131,11 @@ export interface RunSlice {
   forkProcess: () => void;
   prestigeNow: () => void;
   updateUISnapshot: () => void;
+  
+  // Fork Module Actions
+  getAvailableForkModules: () => ForkModule[];
+  canPurchaseForkModule: (moduleId: string) => { canPurchase: boolean; reason?: string };
+  purchaseForkModule: (moduleId: string) => boolean;
 }
 
 export const createRunSlice: StateCreator<RunSlice & MetaSlice, [], [], RunSlice> = (set, get) => ({
@@ -82,6 +160,9 @@ export const createRunSlice: StateCreator<RunSlice & MetaSlice, [], [], RunSlice
     },
   }),
   projectedCompileShards: 0,
+  forkPoints: 0,
+  acquiredModules: [],
+  runBehaviorContext: { ...DEFAULT_RUN_BEHAVIOR_CONTEXT },
   selectedEntity: null,
   selectedBuildingType: null,
   currentPhase: 1,
@@ -178,7 +259,8 @@ export const createRunSlice: StateCreator<RunSlice & MetaSlice, [], [], RunSlice
   },
 
   forkProcess: () => {
-    const world = get().world;
+    const state = get();
+    const world = state.world;
     
     // Count and remove all drones
     const droneIds = Object.entries(world.entityType)
@@ -200,18 +282,16 @@ export const createRunSlice: StateCreator<RunSlice & MetaSlice, [], [], RunSlice
     // Grant fork points (1 per 3 drones sacrificed, minimum 1)
     const earnedPoints = Math.max(1, Math.floor(droneCount / 3));
     
-    // Use grantForkPoints action from ForkSlice
-    const grantForkPoints = (get() as any).grantForkPoints;
-    if (grantForkPoints) {
-      grantForkPoints(earnedPoints);
-    }
+    set({ 
+      forkPoints: state.forkPoints + earnedPoints,
+    });
     
     console.log(`Fork Process complete: sacrificed ${droneCount} drones, earned ${earnedPoints} fork points`);
   },
 
   prestigeNow: () => {
-    const world = get().world;
-    const state = get() as any; // Cast to access all slice methods
+    const state = get();
+    const world = state.world;
 
     // Calculate final shards (including scrap bonus)
     const shards = getCompileShardEstimate({
@@ -234,25 +314,82 @@ export const createRunSlice: StateCreator<RunSlice & MetaSlice, [], [], RunSlice
       compiler: state.compilerOptimization,
     });
 
-    // Reset fork state (modules are per-run)
-    if (state.resetForkState) {
-      state.resetForkState();
-    }
-
-    // Reset run state
     set({
       world: newWorld,
       projectedCompileShards: 0,
+      forkPoints: state.compilerOptimization.startingForkPoints,
+      acquiredModules: [],
+      runBehaviorContext: { ...DEFAULT_RUN_BEHAVIOR_CONTEXT },
       selectedEntity: null,
       currentPhase: 1,
       overclockArmed: false,
       scrapBonusShards: 0,
     });
+  },
 
-    // Grant starting fork points from meta upgrades
-    if (state.compilerOptimization.startingForkPoints > 0 && state.grantForkPoints) {
-      state.grantForkPoints(state.compilerOptimization.startingForkPoints);
+  getAvailableForkModules: () => {
+    return modulesData.forkModules;
+  },
+
+  canPurchaseForkModule: (moduleId: string) => {
+    const state = get();
+    const module = modulesData.forkModules.find((m) => m.id === moduleId);
+
+    if (!module) {
+      return { canPurchase: false, reason: "Module not found" };
     }
+
+    // Check if already purchased
+    if (state.acquiredModules.includes(moduleId)) {
+      return { canPurchase: false, reason: "Already purchased" };
+    }
+
+    // Check if have enough fork points
+    if (state.forkPoints < module.cost.amount) {
+      return {
+        canPurchase: false,
+        reason: `Need ${module.cost.amount} fork points (have ${state.forkPoints})`,
+      };
+    }
+
+    // Check if dependencies are met
+    const missingDeps = module.requires.requiresModuleIds.filter(
+      (depId) => !state.acquiredModules.includes(depId)
+    );
+    if (missingDeps.length > 0) {
+      return {
+        canPurchase: false,
+        reason: "Missing required modules",
+      };
+    }
+
+    return { canPurchase: true };
+  },
+
+  purchaseForkModule: (moduleId: string) => {
+    const state = get();
+    const check = state.canPurchaseForkModule(moduleId);
+
+    if (!check.canPurchase) {
+      console.warn(`Cannot purchase module ${moduleId}: ${check.reason}`);
+      return false;
+    }
+
+    const module = modulesData.forkModules.find((m) => m.id === moduleId);
+    if (!module) return false;
+
+    // Apply module effects to behavior context
+    const newContext = applyModuleEffects(state.runBehaviorContext, module);
+
+    // Deduct fork points and add to acquired list
+    set({
+      forkPoints: state.forkPoints - module.cost.amount,
+      acquiredModules: [...state.acquiredModules, moduleId],
+      runBehaviorContext: newContext,
+    });
+
+    console.log(`Purchased module: ${module.name}`);
+    return true;
   },
 
   updateUISnapshot: () => {

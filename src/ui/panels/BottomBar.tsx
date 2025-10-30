@@ -2,18 +2,19 @@ import { useState } from "react";
 import { useGameStore } from "../../state/store";
 import { PrestigeDialog } from "./PrestigeDialog";
 import { MetaUpgradesPanel } from "./MetaUpgradesPanel";
-import { ForkModal } from "./ForkModal";
+import { ForkModulesPanel } from "./ForkModulesPanel";
 
 export function BottomBar() {
   const snapshot = useGameStore((s) => s.uiSnapshot);
   const toggleOverclock = useGameStore((s) => s.toggleOverclock);
+  const forkProcess = useGameStore((s) => s.forkProcess);
   const prestigeNow = useGameStore((s) => s.prestigeNow);
   const selfTerminate = useGameStore((s) => s.selfTerminate);
   const compileShards = useGameStore((s) => s.compileShardsBanked);
   const forkPoints = useGameStore((s) => s.forkPoints);
   const world = useGameStore((s) => s.world);
   const [showMetaUpgrades, setShowMetaUpgrades] = useState(false);
-  const [showForkModal, setShowForkModal] = useState(false);
+  const [showForkModules, setShowForkModules] = useState(false);
 
   const [showPrestigeDialog, setShowPrestigeDialog] = useState(false);
 
@@ -39,11 +40,6 @@ export function BottomBar() {
     setShowPrestigeDialog(false);
   };
 
-  const handleForkClick = () => {
-    // Open Fork Modal
-    setShowForkModal(true);
-  };
-
   return (
     <>
       <PrestigeDialog
@@ -52,7 +48,7 @@ export function BottomBar() {
         onConfirm={handlePrestigeConfirm}
       />
       {showMetaUpgrades && <MetaUpgradesPanel onClose={() => setShowMetaUpgrades(false)} />}
-      <ForkModal isOpen={showForkModal} onClose={() => setShowForkModal(false)} />
+      {showForkModules && <ForkModulesPanel onClose={() => setShowForkModules(false)} />}
       
       <div className="bg-neutral-900 border-t border-neutral-800 px-6 py-4">
       <div className="flex items-center justify-between">
@@ -83,13 +79,24 @@ export function BottomBar() {
               📊 META UPGRADES
             </button>
           )}
+          
+          {/* Fork Modules Button */}
+          {forkPoints >= 1 && snapshot.currentPhase >= 2 && (
+            <button
+              onClick={() => setShowForkModules(true)}
+              className="px-4 py-2 rounded-lg font-semibold bg-purple-600 hover:bg-purple-700 text-white transition-colors border-2 border-purple-400"
+              title="View and purchase fork behavior modules"
+            >
+              🧬 FORK MODULES
+            </button>
+          )}
         </div>
 
         <div className="flex items-center gap-4">
           {/* Fork Process Button */}
           {canFork && (
             <button
-              onClick={handleForkClick}
+              onClick={forkProcess}
               disabled={droneCount === 0}
               className={`px-6 py-2 rounded-lg font-semibold transition-colors ${
                 droneCount > 0

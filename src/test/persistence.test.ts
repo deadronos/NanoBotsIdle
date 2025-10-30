@@ -11,6 +11,7 @@ import {
 } from "../state/persistence";
 import { createWorld } from "../ecs/world/createWorld";
 import { MetaSlice } from "../state/metaSlice";
+import { DEFAULT_RUN_BEHAVIOR_CONTEXT } from "../types/forkModules";
 
 // Mock localStorage
 const localStorageMock = (() => {
@@ -85,6 +86,8 @@ describe("Persistence System", () => {
         world,
         projectedCompileShards: 50,
         forkPoints: 1,
+        acquiredModules: [],
+        runBehaviorContext: { ...DEFAULT_RUN_BEHAVIOR_CONTEXT },
         currentPhase: 2 as const,
       };
 
@@ -178,6 +181,8 @@ describe("Persistence System", () => {
         world,
         projectedCompileShards: 0,
         forkPoints: 0,
+        acquiredModules: [],
+        runBehaviorContext: { ...DEFAULT_RUN_BEHAVIOR_CONTEXT },
         currentPhase: 1,
       });
 
@@ -229,6 +234,8 @@ describe("Persistence System", () => {
         world,
         projectedCompileShards: 25,
         forkPoints: 0,
+        acquiredModules: [],
+        runBehaviorContext: { ...DEFAULT_RUN_BEHAVIOR_CONTEXT },
         currentPhase: 1,
       });
 
@@ -291,6 +298,8 @@ describe("Persistence System", () => {
           world,
           projectedCompileShards: 75,
           forkPoints: 2,
+          acquiredModules: [],
+          runBehaviorContext: { ...DEFAULT_RUN_BEHAVIOR_CONTEXT },
           currentPhase: 3,
         },
       };
@@ -360,6 +369,8 @@ describe("Persistence System", () => {
         world,
         projectedCompileShards: 100,
         forkPoints: 3,
+        acquiredModules: [],
+        runBehaviorContext: { ...DEFAULT_RUN_BEHAVIOR_CONTEXT },
         currentPhase: 3,
       });
 
