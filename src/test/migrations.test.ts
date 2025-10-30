@@ -60,6 +60,8 @@ describe("Migration System", () => {
         run: {
           world,
           projectedCompileShards: 50,
+        acquiredModules: [],
+        runBehaviorContext: {} as any,
           forkPoints: 1,
           currentPhase: 2,
         },
@@ -172,6 +174,8 @@ describe("Migration System", () => {
         run: {
           world,
           projectedCompileShards: 50,
+        acquiredModules: [],
+        runBehaviorContext: {} as any,
           forkPoints: 1,
           currentPhase: 2,
         },
@@ -232,6 +236,8 @@ describe("Migration System", () => {
         run: {
           world,
           projectedCompileShards: 50,
+        acquiredModules: [],
+        runBehaviorContext: {} as any,
           forkPoints: 1,
           currentPhase: 2,
         },
@@ -320,6 +326,8 @@ describe("Migration System", () => {
         run: {
           world,
           projectedCompileShards: 50,
+        acquiredModules: [],
+        runBehaviorContext: {} as any,
           forkPoints: 1,
           currentPhase: 2,
         },
@@ -391,6 +399,8 @@ describe("Migration System", () => {
         run: {
           world,
           projectedCompileShards: 50,
+        acquiredModules: [],
+        runBehaviorContext: {} as any,
           forkPoints: 1,
           currentPhase: 2,
         },

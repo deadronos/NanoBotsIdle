@@ -1,0 +1,87 @@
+{
+  "forkModules": [
+    {
+      "id": "fork.predictiveHauler",
+      "name": "Predictive Hauler",
+      "desc": "Haulers prefetch inputs before factories are empty, reducing idle time.",
+      "cost": { "currency": "ForkPoints", "amount": 1 },
+      "requires": {
+        "requiresModuleIds": []
+      },
+      "effects": {
+        "droneBehavior": {
+          "prefetchCriticalInputs": true
+        },
+        "demandPlanningSystem": {
+          "lowWaterMarkEnabled": true,
+          "lowWaterThresholdFraction": 0.3
+        }
+      }
+    },
+    {
+      "id": "fork.builderSwarmInstinct",
+      "name": "Builder Swarm Instinct",
+      "desc": "Builder drones coordinate to finish multiple ghost structures efficiently.",
+      "cost": { "currency": "ForkPoints", "amount": 1 },
+      "requires": {
+        "requiresModuleIds": []
+      },
+      "effects": {
+        "droneBehavior": {
+          "buildRadiusBonus": 4,
+          "avoidDuplicateGhostTargets": true
+        }
+      }
+    },
+    {
+      "id": "fork.emergencyCoolingProtocol",
+      "name": "Emergency Cooling Protocol",
+      "desc": "When heat is critical, the swarm prioritizes cooling logistics above everything else.",
+      "cost": { "currency": "ForkPoints", "amount": 2 },
+      "requires": {
+        "requiresModuleIds": []
+      },
+      "effects": {
+        "demandPlanningSystem": {
+          "heatCriticalRoutingBoost": true,
+          "heatCriticalThresholdRatio": 0.9,
+          "coolerPriorityOverride": 0
+        }
+      }
+    },
+    {
+      "id": "fork.cannibalizeAndReforge",
+      "name": "Cannibalize & Reforge",
+      "desc": "Scrapped drones and buildings partially refund into Fabricator inventory.",
+      "cost": { "currency": "ForkPoints", "amount": 2 },
+      "requires": {
+        "requiresModuleIds": []
+      },
+      "effects": {
+        "recycling": {
+          "refundToFabricator": true,
+          "refundComponentsFraction": 0.5
+        },
+        "swarmRegen": {
+          "postForkRebuildBoost": true
+        }
+      }
+    },
+    {
+      "id": "fork.prioritySurge",
+      "name": "Priority Surge",
+      "desc": "During Overclock, all logistics tunnels into Fabricator and CoreCompiler, starving everything else.",
+      "cost": { "currency": "ForkPoints", "amount": 3 },
+      "requires": {
+        "requiresModuleIds": []
+      },
+      "effects": {
+        "overclockBehavior": {
+          "overrideTaskPrioritiesDuringOverclock": true,
+          "primaryTargets": ["Fabricator", "CoreCompiler"],
+          "nonPrimaryPenalty": 1000
+        }
+      }
+    }
+  ]
+}

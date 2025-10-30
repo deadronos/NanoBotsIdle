@@ -32,6 +32,8 @@ export const useGameStore = create<GameState>()((set, get, api) => ({
         world: state.world,
         projectedCompileShards: state.projectedCompileShards,
         forkPoints: state.forkPoints,
+        acquiredModules: state.acquiredModules,
+        runBehaviorContext: state.runBehaviorContext,
         currentPhase: state.currentPhase,
       }
     );
