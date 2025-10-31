@@ -9,6 +9,8 @@ import { compileScoringSystem } from "../systems/compileScoringSystem";
 import { congestionSystem } from "../systems/congestionSystem";
 import { unlockSystem } from "../systems/unlockSystem";
 import { storageHubSystem } from "../systems/storageHubSystem";
+import { degradationSystem } from "../systems/degradationSystem";
+import { maintenancePlanningSystem } from "../systems/maintenancePlanningSystem";
 
 export function tickWorld(world: World, dt: number) {
   // Update simulation time
@@ -17,8 +19,10 @@ export function tickWorld(world: World, dt: number) {
   // Run systems in order
   unlockSystem(world, dt); // Check for feature unlocks
   storageHubSystem(world, dt); // Apply storage capacity bonuses
+  degradationSystem(world, dt); // Accumulate building wear
   congestionSystem(world, dt); // Track drone congestion first
   demandPlanningSystem(world, dt);
+  maintenancePlanningSystem(world, dt); // Create maintenance requests
   droneAssignmentSystem(world, dt);
   pathfindingSystem(world, dt);
   movementSystem(world, dt);

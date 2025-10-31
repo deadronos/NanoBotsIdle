@@ -1,6 +1,6 @@
 # Advanced Drone Behaviors Implementation
 
-This document describes the implementation of advanced drone behaviors (Issue #13, Milestone 3.3) that enable visible AI improvements from Fork modules across all drone systems.
+This document describes the implementation of advanced drone behaviors (Issue #13, Milestone 3.3) that enable visible AI improvements from Fork modules across all drone systems, as well as the Maintainer drone role (Issue #18, Milestone 4.5).
 
 ## Overview
 
@@ -10,6 +10,27 @@ The advanced drone behaviors system enhances the base drone AI with five key cap
 3. **Heat-Critical Routing Override**: Emergency cooling prioritization
 4. **Recycling/Refund Mechanics**: Resource recovery from scrapped buildings
 5. **Overclock Priority Surge**: Focused logistics during high-throughput mode
+6. **Maintainer Role** (NEW): Building maintenance to prevent efficiency degradation
+
+## Drone Roles
+
+The game features three specialized drone roles:
+
+### Hauler Drones (🔵)
+- **Primary Function**: Transport resources between buildings
+- **Enhancements**: Prefetch hauling, priority routing, congestion avoidance
+- **Visual**: Blue color (#60a5fa)
+
+### Builder Drones (🟡)
+- **Primary Function**: Construct ghost buildings and expansions
+- **Enhancements**: Duplicate target avoidance, coordinated building
+- **Visual**: Yellow color (#fbbf24)
+
+### Maintainer Drones (🟢) - NEW
+- **Primary Function**: Repair degraded buildings to restore efficiency
+- **Mechanics**: Monitor wear, prioritize critical buildings, perform maintenance work
+- **Visual**: Green color (#34d399)
+- **See**: [MAINTAINER_DRONES.md](./MAINTAINER_DRONES.md) for full details
 
 ## Architecture
 
@@ -244,6 +265,32 @@ These behaviors are designed to be activated by Fork modules (Issue #12):
 3. **Overclock Priority Surge**: 3 tests
 4. **Builder Coordination**: 2 tests
 5. **Recycling Mechanics**: 4 tests
+6. **Maintainer Drones**: 18 tests (see `src/test/maintainerDrones.test.ts`)
+
+## Maintainer Drone Behavior (Issue #18)
+
+Maintainer drones represent the third specialized role, providing building maintenance to combat efficiency degradation. See [MAINTAINER_DRONES.md](./MAINTAINER_DRONES.md) for complete implementation details.
+
+### Quick Summary
+
+**Purpose**: Repair degraded buildings that lose efficiency over time
+
+**Key Features**:
+- Buildings accumulate wear based on activity, heat, and overclock status
+- Wear reduces production efficiency (up to 30% penalty)
+- Maintainers perform maintenance work to restore efficiency
+- Priority system focuses on critical buildings (Fabricator, CoreCompiler)
+
+**Integration**:
+- `degradationSystem`: Accumulates wear on active buildings
+- `maintenancePlanningSystem`: Creates maintenance requests
+- `droneAssignmentSystem`: Assigns maintainers to buildings
+- `movementSystem`: Executes maintenance work
+
+**Balance**:
+- Early game: Optional (slow degradation)
+- Mid game: Useful (efficiency preservation)
+- Late game: Essential (rapid wear under overclock)
 
 ## Future Enhancements
 
@@ -263,14 +310,22 @@ These behaviors are designed to be activated by Fork modules (Issue #12):
 
 ### Implementation
 - `src/ecs/systems/demandPlanningSystem.ts` - Task creation and prioritization
-- `src/ecs/systems/droneAssignmentSystem.ts` - Task assignment and builder coordination
+- `src/ecs/systems/droneAssignmentSystem.ts` - Task assignment and drone coordination (all roles)
 - `src/ecs/systems/recyclingSystem.ts` - Resource recovery mechanics
+- `src/ecs/systems/degradationSystem.ts` - Building wear accumulation (maintainers)
+- `src/ecs/systems/maintenancePlanningSystem.ts` - Maintenance request creation (maintainers)
+- `src/ecs/systems/movementSystem.ts` - Maintenance work execution (maintainers)
 - `src/ecs/components/DroneBrain.ts` - Behavior configuration
 - `src/ecs/components/Recyclable.ts` - Recyclable entity component
+- `src/ecs/components/Degradable.ts` - Building degradation tracking (maintainers)
 - `src/ecs/world/World.ts` - World state extensions
 
 ### Tests
-- `src/test/advancedDroneBehaviors.test.ts` - Comprehensive behavior test suite
+- `src/test/advancedDroneBehaviors.test.ts` - Hauler/builder behavior test suite (13 tests)
+- `src/test/maintainerDrones.test.ts` - Maintainer drone test suite (18 tests)
+
+### Documentation
+- `MAINTAINER_DRONES.md` - Comprehensive maintainer implementation guide
 
 ## Changelog
 

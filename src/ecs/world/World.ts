@@ -11,6 +11,7 @@ import { CompileEmitter } from "../components/CompileEmitter";
 import { Recyclable } from "../components/Recyclable";
 import { FlowField } from "../components/FlowField";
 import { StorageHub } from "../components/StorageHub";
+import { Degradable } from "../components/Degradable";
 import { ResourceName } from "../../types/resources";
 import { UnlockState, ProgressionMilestone } from "../../types/unlocks";
 
@@ -18,6 +19,12 @@ export interface TaskRequest {
   requestEntity: EntityId;
   resource: ResourceName;
   amountNeeded: number;
+  priorityScore: number;
+  createdAt: number;
+}
+
+export interface MaintenanceRequest {
+  targetEntity: EntityId;
   priorityScore: number;
   createdAt: number;
 }
@@ -44,6 +51,7 @@ export interface World {
   compileEmitter: Record<EntityId, CompileEmitter>;
   recyclable?: Record<EntityId, Recyclable>; // Optional: for recycling/refund mechanics
   storageHub: Record<EntityId, StorageHub>; // Storage buildings that provide capacity bonuses
+  degradable: Record<EntityId, Degradable>; // Buildings that can degrade and need maintenance
 
   // Entity metadata
   entityType: Record<EntityId, string>;
@@ -67,8 +75,14 @@ export interface World {
   // Task requests waiting for haulers
   taskRequests: TaskRequest[];
 
+  // Maintenance requests waiting for maintainers
+  maintenanceRequests: MaintenanceRequest[];
+
   // Builder coordination: track which entities are already being built
   builderTargets: Record<EntityId, EntityId>; // maps target entity -> builder drone
+
+  // Maintainer coordination: track which entities are being maintained
+  maintainerTargets: Record<EntityId, EntityId>; // maps target entity -> maintainer drone
 
   // Pathfinding grid
   grid: GridData;

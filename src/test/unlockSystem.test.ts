@@ -21,6 +21,7 @@ describe("Unlock System", () => {
       overclockable: {},
       compileEmitter: {},
       storageHub: {},
+      degradable: {},
       entityType: {},
       globals: {
         heatCurrent: 0,
@@ -38,6 +39,8 @@ describe("Unlock System", () => {
       },
       taskRequests: [],
       builderTargets: {},
+      maintenanceRequests: [],
+      maintainerTargets: {},
       flowFields: new Map(),
       grid: {
         width: 64,

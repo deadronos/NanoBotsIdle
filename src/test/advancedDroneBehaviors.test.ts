@@ -33,6 +33,7 @@ describe("Advanced Drone Behaviors", () => {
       overclockable: {},
       compileEmitter: {},
       storageHub: {},
+      degradable: {},
       recyclable: {},
       entityType: {},
       globals: {
@@ -50,7 +51,9 @@ describe("Advanced Drone Behaviors", () => {
         swarmCognition: 0,
       },
       taskRequests: [],
+      maintenanceRequests: [],
       builderTargets: {},
+      maintainerTargets: {},
       flowFields: new Map(),
       grid: {
         width: 64,
