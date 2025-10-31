@@ -1,5 +1,11 @@
 import { useState } from "react";
 import { useGameStore } from "../../state/store";
+import type { TaskRequest, MaintenanceRequest } from "../../ecs/world/World";
+import type { DroneBrain } from "../../ecs/components/DroneBrain";
+import type { Producer } from "../../ecs/components/Producer";
+import type { PowerLink } from "../../ecs/components/PowerLink";
+import type { Position } from "../../ecs/components/Position";
+import { UnlockState, DEFAULT_UNLOCK_STATE } from "../../types/unlocks";
 
 type TabType = "overview" | "priorities" | "diagnostics";
 
@@ -9,12 +15,21 @@ export function AIPanel() {
   const [activeTab, setActiveTab] = useState<TabType>("overview");
 
   // Get unlock state
-  const unlocks = world.globals.unlocks;
+  // Defensive accessors to avoid runtime errors when loading older saves or partial state
+  const unlocks: UnlockState = world?.globals?.unlocks ?? DEFAULT_UNLOCK_STATE;
 
-  const droneCount = Object.keys(world.droneBrain).length;
-  const haulers = Object.values(world.droneBrain).filter((b) => b.role === "hauler").length;
-  const builders = Object.values(world.droneBrain).filter((b) => b.role === "builder").length;
-  const maintainers = Object.values(world.droneBrain).filter((b) => b.role === "maintainer").length;
+  const droneBrain: Record<number, DroneBrain> = world?.droneBrain ?? {};
+  const droneCount = Object.keys(droneBrain).length;
+  const haulers = Object.values(droneBrain).filter((b) => b.role === "hauler").length;
+  const builders = Object.values(droneBrain).filter((b) => b.role === "builder").length;
+  const maintainers = Object.values(droneBrain).filter((b) => b.role === "maintainer").length;
+
+  const taskRequests: TaskRequest[] = world?.taskRequests ?? [];
+  const maintenanceRequests: MaintenanceRequest[] = world?.maintenanceRequests ?? [];
+  const producer: Record<number, Producer> = world?.producer ?? {};
+  const powerLink: Record<number, PowerLink> = world?.powerLink ?? {};
+  const entityType: Record<number, string> = world?.entityType ?? {};
+  const position: Record<number, Position> = world?.position ?? {};
 
   return (
     <div className="w-72 bg-gradient-to-b from-slate-900 to-slate-950 border-l-2 border-nano-purple-600/20 flex flex-col slide-in-right shadow-2xl">
@@ -207,17 +222,17 @@ export function AIPanel() {
                     ⚠️ Heat critical: {Math.floor(snapshot.heatRatio * 100)}%
                   </div>
                 )}
-                {world.taskRequests.length > 10 && (
+                {taskRequests.length > 10 && (
                   <div className="bg-yellow-900/30 border border-yellow-800 rounded p-2 text-yellow-300">
-                    ⚠️ High task backlog: {world.taskRequests.length} pending
+                    ⚠️ High task backlog: {taskRequests.length} pending
                   </div>
                 )}
-                {Object.values(world.producer).some((p) => !p.active) && (
+                {Object.values(producer).some((p) => !p.active) && (
                   <div className="bg-orange-900/30 border border-orange-800 rounded p-2 text-orange-300">
                     ⚠️ Some producers starved
                   </div>
                 )}
-                {Object.entries(world.powerLink).some(([id, link]) => !link.connectedToGrid && world.entityType[Number(id)] !== "Drone") && (
+                {Object.entries(powerLink).some(([id, link]) => !link.connectedToGrid && entityType[Number(id)] !== "Drone") && (
                   <div className="bg-red-900/30 border border-red-800 rounded p-2 text-red-300">
                     ⚠️ Buildings offline: not connected to power grid
                   </div>
@@ -225,9 +240,9 @@ export function AIPanel() {
                 {snapshot &&
                   snapshot.heatRatio < 0.5 &&
                   droneCount > 0 &&
-                  world.taskRequests.length <= 10 &&
-                  !Object.values(world.producer).some((p) => !p.active) &&
-                  !Object.entries(world.powerLink).some(([id, link]) => !link.connectedToGrid && world.entityType[Number(id)] !== "Drone") && (
+                  taskRequests.length <= 10 &&
+                  !Object.values(producer).some((p) => !p.active) &&
+                  !Object.entries(powerLink).some(([id, link]) => !link.connectedToGrid && entityType[Number(id)] !== "Drone") && (
                     <div className="bg-green-900/30 border border-green-800 rounded p-2 text-green-300">
                       ✓ All systems nominal
                     </div>
@@ -240,25 +255,25 @@ export function AIPanel() {
               <div className="text-xs text-neutral-500 mb-2">Bottleneck Analysis</div>
               <div className="space-y-2">
                 {(() => {
-                  const starvedProducers = Object.entries(world.producer)
+                  const starvedProducers = Object.entries(producer)
                     .filter(([_, p]) => !p.active)
                     .map(([id]) => {
                       const entityId = Number(id);
-                      const type = world.entityType[entityId];
-                      const pos = world.position[entityId];
-                      const link = world.powerLink[entityId];
+                      const type = entityType[entityId];
+                      const pos = position[entityId];
+                      const link = powerLink[entityId];
                       return { id: entityId, type, pos, offline: link && !link.online };
                     });
                   
-                  const offlineBuildings = Object.entries(world.powerLink)
+                  const offlineBuildings = Object.entries(powerLink)
                     .filter(([id, link]) => {
                       const entityId = Number(id);
-                      return !link.connectedToGrid && world.entityType[entityId] !== "Drone" && world.entityType[entityId] !== "PowerVein";
+                      return !link.connectedToGrid && entityType[entityId] !== "Drone" && entityType[entityId] !== "PowerVein";
                     })
                     .map(([id]) => {
                       const entityId = Number(id);
-                      const type = world.entityType[entityId];
-                      const pos = world.position[entityId];
+                      const type = entityType[entityId];
+                      const pos = position[entityId];
                       return { id: entityId, type, pos };
                     });
 
@@ -316,8 +331,8 @@ export function AIPanel() {
                   <div className="flex justify-between text-xs mb-1">
                     <span className="text-neutral-400">Production Efficiency</span>
                     <span className="text-white">
-                      {Object.values(world.producer).filter((p) => p.active).length}/
-                      {Object.keys(world.producer).length}
+                      {Object.values(producer).filter((p) => p.active).length}/
+                      {Object.keys(producer).length}
                     </span>
                   </div>
                   <div className="w-full bg-neutral-700 rounded-full h-1.5">
@@ -325,9 +340,9 @@ export function AIPanel() {
                       className="bg-emerald-500 h-1.5 rounded-full"
                       style={{
                         width: `${
-                          Object.keys(world.producer).length > 0
-                            ? (Object.values(world.producer).filter((p) => p.active).length /
-                                Object.keys(world.producer).length) *
+                          Object.keys(producer).length > 0
+                            ? (Object.values(producer).filter((p) => p.active).length /
+                                Object.keys(producer).length) *
                               100
                             : 0
                         }%`,
@@ -340,7 +355,7 @@ export function AIPanel() {
                   <div className="flex justify-between text-xs mb-1">
                     <span className="text-neutral-400">Drone Utilization</span>
                     <span className="text-white">
-                      {Object.values(world.droneBrain).filter((b) => b.state !== "idle").length}/
+                      {Object.values(droneBrain).filter((b) => b.state !== "idle").length}/
                       {droneCount}
                     </span>
                   </div>
@@ -350,7 +365,7 @@ export function AIPanel() {
                       style={{
                         width: `${
                           droneCount > 0
-                            ? (Object.values(world.droneBrain).filter((b) => b.state !== "idle")
+                            ? (Object.values(droneBrain).filter((b) => b.state !== "idle")
                                 .length /
                                 droneCount) *
                               100
@@ -419,12 +434,12 @@ export function AIPanel() {
                     🔧 Consider building more Coolers to manage heat
                   </div>
                 )}
-                {world.taskRequests.length > 10 && droneCount < 5 && (
+                {taskRequests.length > 10 && droneCount < 5 && (
                   <div className="bg-neutral-800 rounded p-2 text-neutral-300">
                     🔧 Fabricate more drones to handle task backlog
                   </div>
                 )}
-                {Object.values(world.producer).some((p) => !p.active) && (
+                {Object.values(producer).some((p) => !p.active) && (
                   <div className="bg-neutral-800 rounded p-2 text-neutral-300">
                     🔧 Check resource supply chains for starved producers
                   </div>
