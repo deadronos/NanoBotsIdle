@@ -9,6 +9,8 @@ let lastHeatCheckTime = 0;
 let ambientStarted = false;
 const AUTOSAVE_INTERVAL = 30000; // 30 seconds
 const HEAT_CHECK_INTERVAL = 1000; // Check heat warnings every second
+const CRITICAL_HEAT_RATIO = 1.5; // 150% heat - cascade failure
+const WARNING_HEAT_RATIO = 1.0; // 100% heat - warning threshold
 
 export function startSimLoop() {
   if (animationFrameId !== null) return; // Already running
@@ -46,10 +48,10 @@ export function startSimLoop() {
     
     // Heat warnings
     if (currentTime - lastHeatCheckTime > HEAT_CHECK_INTERVAL) {
-      if (heatRatio > 1.5) {
+      if (heatRatio > CRITICAL_HEAT_RATIO) {
         // Cascade failure - critical alarm
         AudioManager.play("heatCritical");
-      } else if (heatRatio > 1.0) {
+      } else if (heatRatio > WARNING_HEAT_RATIO) {
         // Over safe capacity - warning
         AudioManager.play("heatWarning");
       }

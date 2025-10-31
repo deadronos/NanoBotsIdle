@@ -13,8 +13,7 @@ export type SoundType =
   | "unlockAchieved"
   | "overclockEnable"
   | "overclockDisable"
-  | "forkProcess"
-  | "ambientHum";
+  | "forkProcess";
 
 export interface AudioSettings {
   masterVolume: number; // 0-1
@@ -24,6 +23,8 @@ export interface AudioSettings {
 }
 
 class AudioManagerClass {
+  private static readonly MIN_GAIN_VALUE = 0.001; // Minimum for exponential ramp
+
   private context: AudioContext | null = null;
   private settings: AudioSettings = {
     masterVolume: 0.5,
@@ -137,7 +138,7 @@ class AudioManagerClass {
     // Exponential ramp needs to avoid zero
     const fadeEnd = now + duration - decay;
     if (fadeEnd > now + attack) {
-      gainNode.gain.exponentialRampToValueAtTime(0.001, fadeEnd);
+      gainNode.gain.exponentialRampToValueAtTime(AudioManagerClass.MIN_GAIN_VALUE, fadeEnd);
     }
     gainNode.gain.linearRampToValueAtTime(0, now + duration);
 
