@@ -35,6 +35,7 @@ describe("Building Placement and Cost Validation", () => {
         milestones: [],
       },
       taskRequests: [],
+      builderTargets: {},
       grid: {
         width: 64,
         height: 64,

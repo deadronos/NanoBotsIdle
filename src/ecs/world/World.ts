@@ -8,6 +8,7 @@ import { DroneBrain } from "../components/DroneBrain";
 import { Path } from "../components/Path";
 import { Overclockable } from "../components/Overclockable";
 import { CompileEmitter } from "../components/CompileEmitter";
+import { Recyclable } from "../components/Recyclable";
 import { ResourceName } from "../../types/resources";
 import { UnlockState, ProgressionMilestone } from "../../types/unlocks";
 
@@ -39,6 +40,7 @@ export interface World {
   path: Record<EntityId, Path>;
   overclockable: Record<EntityId, Overclockable>;
   compileEmitter: Record<EntityId, CompileEmitter>;
+  recyclable?: Record<EntityId, Recyclable>; // Optional: for recycling/refund mechanics
 
   // Entity metadata
   entityType: Record<EntityId, string>;
@@ -60,6 +62,9 @@ export interface World {
 
   // Task requests waiting for haulers
   taskRequests: TaskRequest[];
+
+  // Builder coordination: track which entities are already being built
+  builderTargets: Record<EntityId, EntityId>; // maps target entity -> builder drone
 
   // Pathfinding grid
   grid: GridData;

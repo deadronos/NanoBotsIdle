@@ -12,6 +12,7 @@ export interface BehaviorProfile {
   prefetchCriticalInputs: boolean;
   buildRadius: number;
   congestionAvoidance: number;
+  avoidDuplicateGhostTargets?: boolean; // Builder coordination to avoid duplicate work
 }
 
 export interface DroneBrain {
