@@ -4,7 +4,6 @@ import { degradationSystem, getDegradationEfficiencyMultiplier } from "../ecs/sy
 import { maintenancePlanningSystem } from "../ecs/systems/maintenancePlanningSystem";
 import { droneAssignmentSystem } from "../ecs/systems/droneAssignmentSystem";
 import { movementSystem } from "../ecs/systems/movementSystem";
-import { productionSystem } from "../ecs/systems/productionSystem";
 import { DEFAULT_UNLOCK_STATE } from "../types/unlocks";
 import { Recipe } from "../types/buildings";
 
