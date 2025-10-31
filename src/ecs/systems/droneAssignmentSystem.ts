@@ -97,14 +97,16 @@ export function droneAssignmentSystem(world: World, _dt: number) {
 
     // Handle maintainer assignment
     if (brain.role === "maintainer" && brain.state === "idle") {
-      if (world.maintenanceRequests.length === 0) return;
+      if (world.maintenanceRequests.length === 0) {
+        return; // Continue to next drone in forEach
+      }
 
       // Pick first available maintenance request (already sorted by priority)
       const request = world.maintenanceRequests[0];
 
       // Check if another maintainer is already working on this building
       if (world.maintainerTargets[request.targetEntity]) {
-        return; // Skip, already assigned
+        return; // Continue to next drone - this request will be handled by another maintainer
       }
 
       // Assign this maintainer to the maintenance task

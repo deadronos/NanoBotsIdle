@@ -3,6 +3,9 @@ import { World } from "../world/World";
 const DRONE_SPEED = 2.0; // tiles per second
 
 // Track maintenance work progress for drones currently maintaining
+// NOTE: Module-level state is used here for simplicity. In a multi-world scenario,
+// this should be moved to World state or a component-based tracking system.
+// For the current single-world game design, this works correctly.
 const maintenanceProgress: Record<number, number> = {};
 
 export function movementSystem(world: World, dt: number) {

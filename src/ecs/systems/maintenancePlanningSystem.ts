@@ -30,20 +30,15 @@ export function maintenancePlanningSystem(world: World, _dt: number) {
       return;
     }
 
-    // Check if there's already a maintenance request for this building
-    const existingRequest = world.maintenanceRequests.find(
-      (req) => req.targetEntity === entityId
-    );
-
-    // Skip if recently requested
-    if (existingRequest && currentTime - existingRequest.createdAt < MAINTENANCE_REQUEST_COOLDOWN) {
-      return;
-    }
-
     // Check if a maintainer is already working on this building
     if (world.maintainerTargets[entityId]) {
       return;
     }
+
+    // Check if there's already a maintenance request for this building
+    const existingRequest = world.maintenanceRequests.find(
+      (req) => req.targetEntity === entityId
+    );
 
     // Calculate priority based on wear level and building importance
     let priorityScore = degradable.wear; // Base priority on wear (0.3-1.0)
@@ -62,8 +57,14 @@ export function maintenancePlanningSystem(world: World, _dt: number) {
 
     // Create or update maintenance request
     if (existingRequest) {
-      existingRequest.priorityScore = priorityScore;
-      existingRequest.createdAt = currentTime;
+      // Update priority if wear has increased, but respect cooldown for timestamp
+      if (currentTime - existingRequest.createdAt >= MAINTENANCE_REQUEST_COOLDOWN) {
+        existingRequest.priorityScore = priorityScore;
+        existingRequest.createdAt = currentTime;
+      } else {
+        // Still update priority if it's higher (building degrading faster)
+        existingRequest.priorityScore = Math.max(existingRequest.priorityScore, priorityScore);
+      }
     } else {
       world.maintenanceRequests.push({
         targetEntity: entityId,
