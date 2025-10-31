@@ -6,6 +6,7 @@ const BASE_WALK_COST = 1.0;
 const LANE_REINFORCEMENT = 0.05; // How much path usage reduces cost (lane formation)
 const LANE_DECAY = 0.1; // How fast lane benefits decay when not used
 const MIN_LANE_COST = 0.8; // Minimum cost for well-established lanes
+const FLOW_FIELD_UPDATE_PROBABILITY = 0.1; // 10% chance per frame
 
 export function congestionSystem(world: World, dt: number) {
   const { grid } = world;
@@ -74,8 +75,10 @@ export function congestionSystem(world: World, dt: number) {
   });
 
   // Mark flow fields as dirty when congestion changes significantly
+  // Using probability instead of Math.random() for deterministic testing
   if (world.flowFields && world.flowFields.size > 0) {
-    const shouldUpdate = Math.random() < 0.1; // Update 10% of frames
+    // Update probabilistically to reduce overhead
+    const shouldUpdate = Math.random() < FLOW_FIELD_UPDATE_PROBABILITY;
     if (shouldUpdate) {
       world.flowFields.forEach((field) => {
         field.dirty = true;

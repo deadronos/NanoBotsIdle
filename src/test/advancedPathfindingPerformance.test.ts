@@ -256,8 +256,7 @@ describe("Advanced Pathfinding Performance", () => {
     // First pathfinding pass
     pathfindingSystem(world, 0.1);
 
-    // Check that flow fields were created for the target
-    const flowFieldKey = "50,50";
+    // Check that flow fields can be created for the target
     // Note: Current implementation doesn't populate flowFields yet
     // This test documents expected behavior for future optimization
     expect(world.flowFields.size).toBeGreaterThanOrEqual(0);
@@ -265,7 +264,7 @@ describe("Advanced Pathfinding Performance", () => {
 
   it("should not cause frame drops with dense swarms", () => {
     // Simulate 60 FPS game loop with 80 drones
-    const targetFrameTime = 16.67; // ~60 FPS
+    // Target would be 16.67ms per frame but current A* is slower
 
     for (let i = 1; i <= 80; i++) {
       const x = 15 + (i % 16) * 2;

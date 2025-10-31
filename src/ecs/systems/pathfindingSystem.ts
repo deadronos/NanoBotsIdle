@@ -1,6 +1,9 @@
 import { World } from "../world/World";
 import { findPath } from "./astar";
 import { calculateFlowField } from "./flowFieldSystem";
+import { FlowField } from "../components/FlowField";
+
+const FLOW_FIELD_CACHE_DURATION_MS = 1000;
 
 /**
  * Pathfinding system that generates paths for drones.
@@ -11,7 +14,7 @@ export function pathfindingSystem(world: World, _dt: number) {
   // Mark flow fields as dirty if congestion has changed significantly
   const currentTime = Date.now();
   world.flowFields.forEach((field) => {
-    if (currentTime - field.lastUpdated > 1000) {
+    if (currentTime - field.lastUpdated > FLOW_FIELD_CACHE_DURATION_MS) {
       field.dirty = true;
     }
   });
@@ -69,7 +72,7 @@ export function getOrCreateFlowField(
   targetX: number,
   targetY: number,
   congestionWeight: number
-): import("../components/FlowField").FlowField {
+): FlowField {
   const key = `${Math.round(targetX)},${Math.round(targetY)}`;
   
   let field = world.flowFields.get(key);

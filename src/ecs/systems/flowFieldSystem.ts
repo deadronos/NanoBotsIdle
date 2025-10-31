@@ -30,6 +30,7 @@ export function calculateFlowField(
   const queue: QueueItem[] = [{ idx: targetIdx, cost: 0 }];
 
   // Calculate cost to reach each cell from the target
+  // TODO: Replace array sort with binary heap for O(log n) priority queue operations
   while (queue.length > 0) {
     // Find minimum cost item
     queue.sort((a, b) => a.cost - b.cost);
