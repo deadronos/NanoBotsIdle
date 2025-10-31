@@ -3,6 +3,7 @@ import { BuildingType, Recipe } from "../types/buildings";
 import { getDroneFabricationCost } from "../sim/balance";
 import { DroneRole } from "../types/drones";
 import { BehaviorProfile } from "../ecs/components/DroneBrain";
+import { AudioManager } from "../audio/AudioManager";
 
 // Building recipes
 const RECIPES: Record<BuildingType, Recipe | null> = {
@@ -126,6 +127,10 @@ export function placeBuilding(
   }
 
   console.log(`Placed ${buildingType} at (${x}, ${y})`);
+  
+  // Play building placement sound
+  AudioManager.play("buildingPlace");
+  
   return true;
 }
 
@@ -180,5 +185,9 @@ export function fabricateDrone(
   world.powerLink[dId] = { demand: 0.1, priority: 0, online: true, connectedToGrid: true };
 
   console.log(`Fabricated ${role} drone`);
+  
+  // Play drone spawn sound
+  AudioManager.play("droneSpawn");
+  
   return true;
 }

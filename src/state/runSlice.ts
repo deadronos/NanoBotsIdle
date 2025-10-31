@@ -7,6 +7,7 @@ import { BuildingType } from "../types/buildings";
 import { placeBuilding } from "./buildingActions";
 import forkModulesData from "../data/forkModules.json";
 import { ForkModule, ForkModulesData, RunBehaviorContext, DEFAULT_RUN_BEHAVIOR_CONTEXT } from "../types/forkModules";
+import { AudioManager } from "../audio/AudioManager";
 
 const modulesData = forkModulesData as ForkModulesData;
 
@@ -193,6 +194,9 @@ export const createRunSlice: StateCreator<RunSlice & MetaSlice, [], [], RunSlice
     const world = get().world;
     world.globals.overclockEnabled = on;
     set({ overclockArmed: on });
+    
+    // Play overclock sound
+    AudioManager.play(on ? "overclockEnable" : "overclockDisable");
   },
 
   scrapEntity: (entityId: number) => {
@@ -286,6 +290,9 @@ export const createRunSlice: StateCreator<RunSlice & MetaSlice, [], [], RunSlice
       forkPoints: state.forkPoints + earnedPoints,
     });
     
+    // Play fork process sound
+    AudioManager.play("forkProcess");
+    
     console.log(`Fork Process complete: sacrificed ${droneCount} drones, earned ${earnedPoints} fork points`);
   },
 
@@ -325,6 +332,9 @@ export const createRunSlice: StateCreator<RunSlice & MetaSlice, [], [], RunSlice
       overclockArmed: false,
       scrapBonusShards: 0,
     });
+    
+    // Play prestige celebration sound
+    AudioManager.play("prestigeComplete");
   },
 
   getAvailableForkModules: () => {

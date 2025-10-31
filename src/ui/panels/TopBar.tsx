@@ -1,6 +1,7 @@
 import { useState, useRef } from "react";
 import { useGameStore } from "../../state/store";
 import { hasSave, exportSave, getSaveMetadata, importSave } from "../../state/persistence";
+import { SettingsPanel } from "./SettingsPanel";
 
 export function TopBar() {
   const snapshot = useGameStore((s) => s.uiSnapshot);
@@ -8,6 +9,7 @@ export function TopBar() {
   const loadGame = useGameStore((s) => s.loadGame);
   const [saveStatus, setSaveStatus] = useState<"idle" | "saving" | "saved" | "error">("idle");
   const [loadStatus, setLoadStatus] = useState<"idle" | "loading" | "loaded" | "error">("idle");
+  const [showSettings, setShowSettings] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   if (!snapshot) return null;
@@ -113,9 +115,12 @@ export function TopBar() {
   const saveMetadata = getSaveMetadata();
 
   return (
-    <div className="bg-neutral-900 border-b border-neutral-800 px-6 py-3 fade-in">
-      <div className="flex items-center justify-between gap-8">
-        <div className="text-2xl font-bold text-emerald-400 transition-smooth hover:text-emerald-300">NanoFactory Evolution</div>
+    <>
+      {showSettings && <SettingsPanel onClose={() => setShowSettings(false)} />}
+      
+      <div className="bg-neutral-900 border-b border-neutral-800 px-6 py-3 fade-in">
+        <div className="flex items-center justify-between gap-8">
+          <div className="text-2xl font-bold text-emerald-400 transition-smooth hover:text-emerald-300">NanoFactory Evolution</div>
 
         <div className="flex items-center gap-6">
           {/* Heat */}
@@ -237,6 +242,13 @@ export function TopBar() {
               onChange={handleImport}
               style={{ display: "none" }}
             />
+            <button
+              onClick={() => setShowSettings(true)}
+              className="px-3 py-1 text-sm bg-neutral-700 hover:bg-neutral-600 text-white rounded transition-smooth hover-lift button-press"
+              title="Audio Settings"
+            >
+              ⚙️ Settings
+            </button>
           </div>
           {saveMetadata && (
             <div className="text-xs text-neutral-500 text-right transition-smooth">
@@ -246,5 +258,6 @@ export function TopBar() {
         </div>
       </div>
     </div>
+    </>
   );
 }
