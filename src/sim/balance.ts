@@ -37,6 +37,42 @@ export function getExtractorUpgradeCost(newTier: number): Partial<Record<Resourc
   };
 }
 
+// Get upgrade cost for any producer building tier upgrade
+export function getBuildingUpgradeCost(newTier: number, buildingType: string): Partial<Record<ResourceName, number>> {
+  let baseCost = 20;
+  let scaleA = 1.0;
+  let scaleB = 1.0;
+  let scaleC = 2;
+
+  // Different buildings have different upgrade costs
+  switch (buildingType) {
+    case "Extractor":
+      baseCost = 20;
+      break;
+    case "Assembler":
+      baseCost = 30;
+      scaleA = 1.2;
+      break;
+    case "Fabricator":
+      baseCost = 40;
+      scaleA = 1.3;
+      break;
+    case "CoreCompiler":
+      baseCost = 50;
+      scaleA = 1.5;
+      scaleB = 2.0;
+      break;
+    default:
+      baseCost = 25;
+  }
+
+  const cost = Math.floor(polyCost(newTier, baseCost, scaleA, scaleB, scaleC));
+  return {
+    Components: cost,
+    TissueMass: Math.floor(cost * 0.3),
+  };
+}
+
 // ==============================
 // 2. THROUGHPUT / PRODUCTION
 // ==============================

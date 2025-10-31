@@ -19,6 +19,7 @@ describe("Lane Emergence", () => {
       path: {},
       overclockable: {},
       compileEmitter: {},
+      storageHub: {},
       entityType: {},
       globals: {
         heatCurrent: 0,

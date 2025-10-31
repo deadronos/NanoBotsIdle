@@ -20,6 +20,7 @@ describe("Production System", () => {
       path: {},
       overclockable: {},
       compileEmitter: {},
+      storageHub: {},
       entityType: {},
       globals: {
         heatCurrent: 0,

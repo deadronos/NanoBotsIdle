@@ -71,6 +71,7 @@ export function createWorld(params: CreateWorldParams): World {
     path: {},
     overclockable: {},
     compileEmitter: {},
+    storageHub: {},
 
     entityType: {},
 

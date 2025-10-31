@@ -10,6 +10,7 @@ import { Overclockable } from "../components/Overclockable";
 import { CompileEmitter } from "../components/CompileEmitter";
 import { Recyclable } from "../components/Recyclable";
 import { FlowField } from "../components/FlowField";
+import { StorageHub } from "../components/StorageHub";
 import { ResourceName } from "../../types/resources";
 import { UnlockState, ProgressionMilestone } from "../../types/unlocks";
 
@@ -42,6 +43,7 @@ export interface World {
   overclockable: Record<EntityId, Overclockable>;
   compileEmitter: Record<EntityId, CompileEmitter>;
   recyclable?: Record<EntityId, Recyclable>; // Optional: for recycling/refund mechanics
+  storageHub: Record<EntityId, StorageHub>; // Storage buildings that provide capacity bonuses
 
   // Entity metadata
   entityType: Record<EntityId, string>;

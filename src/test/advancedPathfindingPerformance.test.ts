@@ -21,6 +21,7 @@ describe("Advanced Pathfinding Performance", () => {
       path: {},
       overclockable: {},
       compileEmitter: {},
+      storageHub: {},
       entityType: {},
       globals: {
         heatCurrent: 0,

@@ -1,6 +1,6 @@
 import { World } from "../ecs/world/World";
 import { BuildingType, Recipe } from "../types/buildings";
-import { getDroneFabricationCost } from "../sim/balance";
+import { getDroneFabricationCost, getBuildingUpgradeCost } from "../sim/balance";
 import { DroneRole } from "../types/drones";
 import { BehaviorProfile } from "../ecs/components/DroneBrain";
 import { AudioManager } from "../audio/AudioManager";
@@ -14,7 +14,20 @@ const RECIPES: Record<BuildingType, Recipe | null> = {
   Storage: null,
   PowerVein: null,
   Cooler: null,
-  CoreCompiler: null,
+  CoreCompiler: { inputs: { Components: 5, TissueMass: 2 }, outputs: { CompileShards: 1 }, batchTimeSeconds: 10 },
+};
+
+// Additional recipes for extractors and assemblers with new resources
+export const EXTRACTOR_RECIPES: Record<string, Recipe> = {
+  Carbon: { inputs: {}, outputs: { Carbon: 1 }, batchTimeSeconds: 1 },
+  Iron: { inputs: {}, outputs: { Iron: 1 }, batchTimeSeconds: 1.5 },
+  Silicon: { inputs: {}, outputs: { Silicon: 1 }, batchTimeSeconds: 2 },
+};
+
+export const ASSEMBLER_RECIPES: Record<string, Recipe> = {
+  BasicComponents: { inputs: { Carbon: 2 }, outputs: { Components: 1 }, batchTimeSeconds: 2 },
+  IronComponents: { inputs: { Iron: 2, Carbon: 1 }, outputs: { Components: 2 }, batchTimeSeconds: 3 },
+  SiliconComponents: { inputs: { Silicon: 2, Iron: 1 }, outputs: { Components: 3 }, batchTimeSeconds: 4 },
 };
 
 // Building costs
@@ -100,23 +113,33 @@ export function placeBuilding(
   // Add producer component if applicable
   const recipe = RECIPES[buildingType];
   if (recipe) {
+    // Building-specific production parameters
+    const productionParams: Record<string, { baseRate: number; heatPerSecond: number; overRateMult: number; heatMultiplier: number }> = {
+      Extractor: { baseRate: 1, heatPerSecond: 0.5, overRateMult: 2.0, heatMultiplier: 3.0 },
+      Assembler: { baseRate: 0.5, heatPerSecond: 0.7, overRateMult: 2.5, heatMultiplier: 4.0 },
+      CoreCompiler: { baseRate: 0.2, heatPerSecond: 2.0, overRateMult: 4.0, heatMultiplier: 6.0 },
+      Fabricator: { baseRate: 0.25, heatPerSecond: 1.0, overRateMult: 3.0, heatMultiplier: 5.0 },
+    };
+
+    const params = productionParams[buildingType] || { baseRate: 0.25, heatPerSecond: 1.0, overRateMult: 3.0, heatMultiplier: 5.0 };
+
     world.producer[id] = {
       recipe,
       progress: 0,
-      baseRate: buildingType === "Extractor" ? 1 : buildingType === "Assembler" ? 0.5 : 0.25,
+      baseRate: params.baseRate,
       tier: 1,
       active: true,
     };
     world.heatSource[id] = {
-      heatPerSecond: buildingType === "Extractor" ? 0.5 : buildingType === "Assembler" ? 0.7 : 1.0,
+      heatPerSecond: params.heatPerSecond,
     };
     world.overclockable[id] = {
       safeRateMult: 1.0,
-      overRateMult: buildingType === "Extractor" ? 2.0 : buildingType === "Assembler" ? 2.5 : 3.0,
-      heatMultiplier: buildingType === "Extractor" ? 3.0 : buildingType === "Assembler" ? 4.0 : 5.0,
+      overRateMult: params.overRateMult,
+      heatMultiplier: params.heatMultiplier,
     };
     world.compileEmitter[id] = {
-      throughputWeight: 1,
+      throughputWeight: buildingType === "CoreCompiler" ? 3 : 1,
       cohesionWeight: 0.5,
     };
   }
@@ -124,6 +147,15 @@ export function placeBuilding(
   // Add cooler component if Cooler
   if (buildingType === "Cooler") {
     world.heatSink[id] = { coolingPerSecond: 2.0 };
+  }
+
+  // Add storage hub component if Storage
+  if (buildingType === "Storage") {
+    world.storageHub[id] = {
+      radius: 5,
+      capacityBonus: 25,
+      haulingEfficiencyBonus: 0.15, // 15% efficiency boost
+    };
   }
 
   console.log(`Placed ${buildingType} at (${x}, ${y})`);
@@ -189,5 +221,48 @@ export function fabricateDrone(
   // Play drone spawn sound
   AudioManager.play("droneSpawn");
   
+  return true;
+}
+
+// Upgrade a building's tier
+export function upgradeBuilding(world: World, buildingId: number): boolean {
+  const buildingType = world.entityType[buildingId];
+  const producer = world.producer[buildingId];
+
+  if (!producer || !buildingType) {
+    console.log("Building is not upgradeable");
+    return false;
+  }
+
+  const newTier = producer.tier + 1;
+  const cost = getBuildingUpgradeCost(newTier, buildingType);
+
+  // Find Core inventory
+  const coreId = Object.entries(world.entityType).find(([_, type]) => type === "Core")?.[0];
+  if (!coreId) return false;
+
+  const coreInv = world.inventory[Number(coreId)];
+  if (!coreInv) return false;
+
+  // Check if we can afford it
+  for (const [resource, amount] of Object.entries(cost)) {
+    const have = coreInv.contents[resource as keyof typeof coreInv.contents] || 0;
+    const amountNum = Number(amount);
+    if (have < amountNum) {
+      console.log(`Not enough ${resource} for upgrade`);
+      return false;
+    }
+  }
+
+  // Deduct cost
+  for (const [resource, amount] of Object.entries(cost)) {
+    const amountNum = Number(amount);
+    coreInv.contents[resource as keyof typeof coreInv.contents] =
+      (coreInv.contents[resource as keyof typeof coreInv.contents] || 0) - amountNum;
+  }
+
+  // Upgrade tier
+  producer.tier = newTier;
+  console.log(`Upgraded ${buildingType} to tier ${newTier}`);
   return true;
 }

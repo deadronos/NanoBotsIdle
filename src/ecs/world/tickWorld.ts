@@ -8,6 +8,7 @@ import { heatAndPowerSystem } from "../systems/heatAndPowerSystem";
 import { compileScoringSystem } from "../systems/compileScoringSystem";
 import { congestionSystem } from "../systems/congestionSystem";
 import { unlockSystem } from "../systems/unlockSystem";
+import { storageHubSystem } from "../systems/storageHubSystem";
 
 export function tickWorld(world: World, dt: number) {
   // Update simulation time
@@ -15,6 +16,7 @@ export function tickWorld(world: World, dt: number) {
 
   // Run systems in order
   unlockSystem(world, dt); // Check for feature unlocks
+  storageHubSystem(world, dt); // Apply storage capacity bonuses
   congestionSystem(world, dt); // Track drone congestion first
   demandPlanningSystem(world, dt);
   droneAssignmentSystem(world, dt);

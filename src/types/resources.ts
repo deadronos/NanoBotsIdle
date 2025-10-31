@@ -5,4 +5,5 @@ export type ResourceName =
   | "Silicon"
   | "Components"
   | "TissueMass"
-  | "DroneFrame";
+  | "DroneFrame"
+  | "CompileShards";
