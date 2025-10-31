@@ -50,20 +50,20 @@ export function BottomBar() {
       {showMetaUpgrades && <MetaUpgradesPanel onClose={() => setShowMetaUpgrades(false)} />}
       {showForkModules && <ForkModulesPanel onClose={() => setShowForkModules(false)} />}
       
-      <div className="bg-neutral-900 border-t border-neutral-800 px-6 py-4">
+      <div className="bg-neutral-900 border-t border-neutral-800 px-6 py-4 fade-in">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
-          <div className="text-sm text-neutral-400">
+          <div className="text-sm text-neutral-400 transition-smooth">
             Phase <span className="text-xl font-bold text-white">{snapshot.currentPhase}</span>
           </div>
 
-          <div className="text-sm text-neutral-400">
+          <div className="text-sm text-neutral-400 transition-smooth">
             Banked Shards:{" "}
             <span className="text-lg font-bold text-amber-400">{Math.floor(compileShards)}</span>
           </div>
           
           {snapshot.currentPhase >= 2 && (
-            <div className="text-sm text-neutral-400">
+            <div className="text-sm text-neutral-400 transition-smooth fade-in">
               Fork Points:{" "}
               <span className="text-lg font-bold text-purple-400">{forkPoints}</span>
             </div>
@@ -73,7 +73,7 @@ export function BottomBar() {
           {compileShards >= 1 && (
             <button
               onClick={() => setShowMetaUpgrades(true)}
-              className="px-4 py-2 rounded-lg font-semibold bg-amber-600 hover:bg-amber-700 text-white transition-colors border-2 border-amber-400"
+              className="px-4 py-2 rounded-lg font-semibold bg-amber-600 hover:bg-amber-700 text-white transition-smooth hover-lift button-press border-2 border-amber-400 fade-in"
               title="View and purchase meta upgrades"
             >
               📊 META UPGRADES
@@ -84,7 +84,7 @@ export function BottomBar() {
           {forkPoints >= 1 && snapshot.currentPhase >= 2 && (
             <button
               onClick={() => setShowForkModules(true)}
-              className="px-4 py-2 rounded-lg font-semibold bg-purple-600 hover:bg-purple-700 text-white transition-colors border-2 border-purple-400"
+              className="px-4 py-2 rounded-lg font-semibold bg-purple-600 hover:bg-purple-700 text-white transition-smooth hover-lift button-press border-2 border-purple-400 fade-in"
               title="View and purchase fork behavior modules"
             >
               🧬 FORK MODULES
@@ -98,7 +98,7 @@ export function BottomBar() {
             <button
               onClick={forkProcess}
               disabled={droneCount === 0}
-              className={`px-6 py-2 rounded-lg font-semibold transition-colors ${
+              className={`px-6 py-2 rounded-lg font-semibold transition-smooth hover-lift button-press fade-in ${
                 droneCount > 0
                   ? "bg-purple-600 hover:bg-purple-700 text-white"
                   : "bg-neutral-700 text-neutral-500 cursor-not-allowed"
@@ -113,9 +113,9 @@ export function BottomBar() {
           {unlocks.overclockMode && snapshot.currentPhase >= 2 && (
             <button
               onClick={() => toggleOverclock(!snapshot.overclockEnabled)}
-              className={`px-6 py-2 rounded-lg font-semibold transition-colors ${
+              className={`px-6 py-2 rounded-lg font-semibold transition-smooth hover-lift button-press fade-in ${
                 snapshot.overclockEnabled
-                  ? "bg-red-600 hover:bg-red-700 text-white"
+                  ? "bg-red-600 hover:bg-red-700 text-white pulse-glow"
                   : "bg-orange-600 hover:bg-orange-700 text-white"
               }`}
             >
@@ -127,7 +127,7 @@ export function BottomBar() {
           {unlocks.selfTermination && snapshot.canSelfTerminate && (
             <button
               onClick={selfTerminate}
-              className="px-6 py-2 rounded-lg font-semibold bg-red-800 hover:bg-red-900 text-white border-2 border-red-500 transition-colors animate-pulse"
+              className="px-6 py-2 rounded-lg font-semibold bg-red-800 hover:bg-red-900 text-white border-2 border-red-500 transition-smooth hover-lift button-press animate-pulse fade-in"
             >
               SELF-TERMINATE ({Math.floor(snapshot.projectedShards)} Shards)
             </button>
@@ -137,7 +137,7 @@ export function BottomBar() {
           <button
             onClick={handlePrestigeClick}
             disabled={!snapshot.canPrestige && snapshot.projectedShards < 1}
-            className={`px-6 py-2 rounded-lg font-semibold transition-colors ${
+            className={`px-6 py-2 rounded-lg font-semibold transition-smooth hover-lift button-press ${
               snapshot.canPrestige || snapshot.projectedShards >= 1
                 ? "bg-emerald-600 hover:bg-emerald-700 text-white"
                 : "bg-neutral-700 text-neutral-500 cursor-not-allowed"

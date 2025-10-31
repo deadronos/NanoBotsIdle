@@ -46,16 +46,16 @@ export function BuildPanel() {
   allBuildingTypes.push("CoreCompiler");
 
   return (
-    <div className="w-64 bg-neutral-900 border-r border-neutral-800 p-4 overflow-y-auto">
-      <h2 className="text-xl font-bold text-white mb-4">Build & Resources</h2>
+    <div className="w-64 bg-neutral-900 border-r border-neutral-800 p-4 overflow-y-auto slide-in-left">
+      <h2 className="text-xl font-bold text-white mb-4 fade-in">Build & Resources</h2>
 
       {/* Core Inventory */}
       {coreInv && (
-        <div className="mb-6">
+        <div className="mb-6 fade-in">
           <h3 className="text-sm font-semibold text-neutral-400 mb-2">Core Inventory</h3>
           <div className="space-y-1 text-sm">
             {Object.entries(coreInv.contents).map(([resource, amount]) => (
-              <div key={resource} className="flex justify-between text-neutral-300">
+              <div key={resource} className="flex justify-between text-neutral-300 transition-smooth hover:bg-neutral-800 px-2 py-1 rounded">
                 <span>{resource}</span>
                 <span className="font-mono">{Math.floor(amount || 0)}</span>
               </div>
@@ -68,7 +68,7 @@ export function BuildPanel() {
       )}
 
       {/* Building Placement */}
-      <div className="mb-6">
+      <div className="mb-6 fade-in">
         <h3 className="text-sm font-semibold text-neutral-400 mb-2">Build Structures</h3>
         <div className="space-y-2">
           {allBuildingTypes.map((type) => {
@@ -79,9 +79,9 @@ export function BuildPanel() {
               <button
                 key={type}
                 onClick={() => setSelectedBuildingType(type === selectedBuildingType ? null : type)}
-                className={`w-full text-left p-2 rounded transition-colors ${
+                className={`w-full text-left p-2 rounded transition-smooth hover-lift button-press ${
                   type === selectedBuildingType
-                    ? "bg-emerald-600 text-white"
+                    ? "bg-emerald-600 text-white shadow-lg shadow-emerald-600/30"
                     : canAfford
                       ? "bg-neutral-800 hover:bg-neutral-700 text-white"
                       : "bg-neutral-800/50 text-neutral-600 cursor-not-allowed"
@@ -100,14 +100,14 @@ export function BuildPanel() {
           })}
         </div>
         {selectedBuildingType && (
-          <div className="mt-2 text-xs text-emerald-400 bg-emerald-900/30 p-2 rounded">
+          <div className="mt-2 text-xs text-emerald-400 bg-emerald-900/30 p-2 rounded fade-in pulse-glow">
             ✓ {selectedBuildingType} selected. Click on the canvas to place.
           </div>
         )}
       </div>
 
       {/* Production Overview */}
-      <div className="mb-6">
+      <div className="mb-6 fade-in">
         <h3 className="text-sm font-semibold text-neutral-400 mb-2">Production</h3>
         <div className="space-y-2 text-sm">
           {Object.entries(world.entityType)
@@ -140,11 +140,11 @@ export function BuildPanel() {
                     : "bg-neutral-500";
 
               return (
-                <div key={id} className="bg-neutral-800 rounded p-2 relative overflow-hidden">
+                <div key={id} className="bg-neutral-800 rounded p-2 relative overflow-hidden transition-smooth hover:bg-neutral-750">
                   {/* Heat effect overlay */}
                   {producer && heatRatio > 0.5 && (
                     <div
-                      className="absolute inset-0 bg-red-500 opacity-5 pointer-events-none"
+                      className="absolute inset-0 bg-red-500 opacity-5 pointer-events-none transition-opacity duration-500"
                       style={{ opacity: (heatRatio - 0.5) * 0.2 }}
                     />
                   )}
