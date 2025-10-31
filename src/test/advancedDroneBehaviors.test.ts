@@ -46,9 +46,11 @@ describe("Advanced Drone Behaviors", () => {
         simTimeSeconds: 0,
         unlocks: { ...DEFAULT_UNLOCK_STATE },
         milestones: [],
+        swarmCognition: 0,
       },
       taskRequests: [],
       builderTargets: {},
+      flowFields: new Map(),
       grid: {
         width: 64,
         height: 64,

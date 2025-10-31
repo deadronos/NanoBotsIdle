@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useGameStore } from "../../state/store";
 import { BuildingInfoPanel } from "../panels/BuildingInfoPanel";
+import { PathDebugOverlay } from "./PathDebugOverlay";
 import { AnimationManager } from "./animations";
 
 const TILE_SIZE = 12;
@@ -433,6 +434,7 @@ export function FactoryCanvas() {
           onMouseMove={handleCanvasMouseMove}
           onMouseLeave={handleCanvasMouseLeave}
         />
+        <PathDebugOverlay />
         {selectedBuildingType && (
           <div className="absolute top-4 left-4 bg-emerald-900/80 backdrop-blur px-3 py-2 rounded text-sm text-emerald-200">
             Placing: {selectedBuildingType}
