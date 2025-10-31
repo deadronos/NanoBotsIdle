@@ -90,10 +90,12 @@ export function createWorld(params: CreateWorldParams): World {
         achieved: false,
         notified: false,
       })),
+      swarmCognition: swarm.congestionAvoidanceLevel / 10, // 0-1 scale from level
     },
 
     taskRequests: [],
     builderTargets: {},
+    flowFields: new Map(),
 
     grid: {
       width: 64,

@@ -9,6 +9,7 @@ import { Path } from "../components/Path";
 import { Overclockable } from "../components/Overclockable";
 import { CompileEmitter } from "../components/CompileEmitter";
 import { Recyclable } from "../components/Recyclable";
+import { FlowField } from "../components/FlowField";
 import { ResourceName } from "../../types/resources";
 import { UnlockState, ProgressionMilestone } from "../../types/unlocks";
 
@@ -58,6 +59,7 @@ export interface World {
     simTimeSeconds: number;
     unlocks: UnlockState;
     milestones: ProgressionMilestone[];
+    swarmCognition: number; // 0-1 scale, affects congestion avoidance strength
   };
 
   // Task requests waiting for haulers
@@ -68,4 +70,7 @@ export interface World {
 
   // Pathfinding grid
   grid: GridData;
+
+  // Flow field cache for pathfinding optimization
+  flowFields: Map<string, FlowField>; // Key: "targetX,targetY"
 }
