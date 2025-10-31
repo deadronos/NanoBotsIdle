@@ -58,6 +58,9 @@ export function BuildingInfoPanel() {
     return true;
   })() : false;
 
+  // Get upgrade cost for display
+  const upgradeCost = producer ? getBuildingUpgradeCost(producer.tier + 1, entityType) : {};
+
   return (
     <div className="absolute top-4 right-4 bg-neutral-900/95 backdrop-blur border border-neutral-700 rounded-lg p-4 w-64 shadow-xl">
       <div className="flex justify-between items-start mb-3">
@@ -180,7 +183,7 @@ export function BuildingInfoPanel() {
             </button>
             <div className="mt-1 text-xs text-neutral-400">
               Cost:{" "}
-              {Object.entries(getBuildingUpgradeCost(producer.tier + 1, entityType))
+              {Object.entries(upgradeCost)
                 .map(([res, amt]) => `${amt} ${res}`)
                 .join(", ")}
             </div>
