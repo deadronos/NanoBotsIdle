@@ -27,7 +27,7 @@ export function App() {
   }, []);
 
   return (
-    <div className="h-screen flex flex-col bg-black text-white">
+    <div className="h-screen flex flex-col bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 text-white">
       <TopBar />
 
       <div className="flex-1 flex overflow-hidden">

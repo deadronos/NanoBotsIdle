@@ -50,22 +50,23 @@ export function BottomBar() {
       {showMetaUpgrades && <MetaUpgradesPanel onClose={() => setShowMetaUpgrades(false)} />}
       {showForkModules && <ForkModulesPanel onClose={() => setShowForkModules(false)} />}
       
-      <div className="bg-neutral-900 border-t border-neutral-800 px-6 py-4 fade-in">
+      <div className="bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900 border-t-2 border-nano-purple-600/30 px-8 py-5 fade-in shadow-2xl backdrop-blur-sm">
       <div className="flex items-center justify-between">
-        <div className="flex items-center gap-4">
-          <div className="text-sm text-neutral-400 transition-smooth">
-            Phase <span className="text-xl font-bold text-white">{snapshot.currentPhase}</span>
+        <div className="flex items-center gap-6">
+          <div className="text-sm text-slate-400 transition-smooth bg-slate-800/50 px-4 py-2 rounded-lg border border-slate-700/50">
+            <span className="font-semibold uppercase tracking-wider">Phase</span>{" "}
+            <span className="text-2xl font-extrabold text-nano-cyan-400">{snapshot.currentPhase}</span>
           </div>
 
-          <div className="text-sm text-neutral-400 transition-smooth">
-            Banked Shards:{" "}
-            <span className="text-lg font-bold text-amber-400">{Math.floor(compileShards)}</span>
+          <div className="text-sm text-slate-400 transition-smooth bg-slate-800/50 px-4 py-2 rounded-lg border border-slate-700/50">
+            <span className="font-semibold uppercase tracking-wider">Banked Shards:</span>{" "}
+            <span className="text-2xl font-extrabold text-nano-amber-400">{Math.floor(compileShards)}</span>
           </div>
           
           {snapshot.currentPhase >= 2 && (
-            <div className="text-sm text-neutral-400 transition-smooth fade-in">
-              Fork Points:{" "}
-              <span className="text-lg font-bold text-purple-400">{forkPoints}</span>
+            <div className="text-sm text-slate-400 transition-smooth fade-in bg-slate-800/50 px-4 py-2 rounded-lg border border-slate-700/50">
+              <span className="font-semibold uppercase tracking-wider">Fork Points:</span>{" "}
+              <span className="text-2xl font-extrabold text-nano-purple-400">{forkPoints}</span>
             </div>
           )}
           
@@ -73,7 +74,7 @@ export function BottomBar() {
           {compileShards >= 1 && (
             <button
               onClick={() => setShowMetaUpgrades(true)}
-              className="px-4 py-2 rounded-lg font-semibold bg-amber-600 hover:bg-amber-700 text-white transition-smooth hover-lift button-press border-2 border-amber-400 fade-in"
+              className="px-6 py-3 rounded-xl font-bold text-base bg-gradient-to-r from-nano-amber-600 to-nano-amber-500 hover:from-nano-amber-500 hover:to-nano-amber-400 text-white transition-all duration-200 hover-lift button-press border-2 border-nano-amber-400 fade-in shadow-glow-amber"
               title="View and purchase meta upgrades"
             >
               📊 META UPGRADES
@@ -84,7 +85,7 @@ export function BottomBar() {
           {forkPoints >= 1 && snapshot.currentPhase >= 2 && (
             <button
               onClick={() => setShowForkModules(true)}
-              className="px-4 py-2 rounded-lg font-semibold bg-purple-600 hover:bg-purple-700 text-white transition-smooth hover-lift button-press border-2 border-purple-400 fade-in"
+              className="px-6 py-3 rounded-xl font-bold text-base bg-gradient-to-r from-nano-purple-600 to-nano-purple-500 hover:from-nano-purple-500 hover:to-nano-purple-400 text-white transition-all duration-200 hover-lift button-press border-2 border-nano-purple-400 fade-in shadow-glow-purple"
               title="View and purchase fork behavior modules"
             >
               🧬 FORK MODULES
@@ -98,10 +99,10 @@ export function BottomBar() {
             <button
               onClick={forkProcess}
               disabled={droneCount === 0}
-              className={`px-6 py-2 rounded-lg font-semibold transition-smooth hover-lift button-press fade-in ${
+              className={`px-8 py-3 rounded-xl font-bold text-base transition-all duration-200 hover-lift button-press fade-in shadow-lg ${
                 droneCount > 0
-                  ? "bg-purple-600 hover:bg-purple-700 text-white"
-                  : "bg-neutral-700 text-neutral-500 cursor-not-allowed"
+                  ? "bg-gradient-to-r from-nano-purple-600 to-nano-purple-500 hover:from-nano-purple-500 hover:to-nano-purple-400 text-white border-2 border-nano-purple-400 shadow-glow-purple"
+                  : "bg-slate-700 text-slate-500 cursor-not-allowed border-2 border-slate-600"
               }`}
               title={`Sacrifice all ${droneCount} drones to evolve swarm behaviors. Earn ${Math.max(1, Math.floor(droneCount / 3))} fork point(s).`}
             >
@@ -113,13 +114,13 @@ export function BottomBar() {
           {unlocks.overclockMode && snapshot.currentPhase >= 2 && (
             <button
               onClick={() => toggleOverclock(!snapshot.overclockEnabled)}
-              className={`px-6 py-2 rounded-lg font-semibold transition-smooth hover-lift button-press fade-in ${
+              className={`px-8 py-3 rounded-xl font-bold text-base transition-all duration-200 hover-lift button-press fade-in shadow-lg border-2 ${
                 snapshot.overclockEnabled
-                  ? "bg-red-600 hover:bg-red-700 text-white pulse-glow"
-                  : "bg-orange-600 hover:bg-orange-700 text-white"
+                  ? "bg-gradient-to-r from-red-600 to-red-500 hover:from-red-500 hover:to-red-400 text-white pulse-glow border-red-400"
+                  : "bg-gradient-to-r from-orange-600 to-orange-500 hover:from-orange-500 hover:to-orange-400 text-white border-orange-400"
               }`}
             >
-              {snapshot.overclockEnabled ? "OVERCLOCK ACTIVE" : "ENABLE OVERCLOCK"}
+              {snapshot.overclockEnabled ? "🔥 OVERCLOCK ACTIVE" : "⚡ ENABLE OVERCLOCK"}
             </button>
           )}
 
@@ -127,9 +128,9 @@ export function BottomBar() {
           {unlocks.selfTermination && snapshot.canSelfTerminate && (
             <button
               onClick={selfTerminate}
-              className="px-6 py-2 rounded-lg font-semibold bg-red-800 hover:bg-red-900 text-white border-2 border-red-500 transition-smooth hover-lift button-press animate-pulse fade-in"
+              className="px-8 py-3 rounded-xl font-bold text-base bg-gradient-to-r from-red-800 to-red-900 hover:from-red-700 hover:to-red-800 text-white border-2 border-red-500 transition-all duration-200 hover-lift button-press animate-pulse fade-in shadow-lg"
             >
-              SELF-TERMINATE ({Math.floor(snapshot.projectedShards)} Shards)
+              ☠️ SELF-TERMINATE ({Math.floor(snapshot.projectedShards)} Shards)
             </button>
           )}
 
@@ -137,13 +138,13 @@ export function BottomBar() {
           <button
             onClick={handlePrestigeClick}
             disabled={!snapshot.canPrestige && snapshot.projectedShards < 1}
-            className={`px-6 py-2 rounded-lg font-semibold transition-smooth hover-lift button-press ${
+            className={`px-8 py-3 rounded-xl font-bold text-base transition-all duration-200 hover-lift button-press shadow-lg border-2 ${
               snapshot.canPrestige || snapshot.projectedShards >= 1
-                ? "bg-emerald-600 hover:bg-emerald-700 text-white"
-                : "bg-neutral-700 text-neutral-500 cursor-not-allowed"
+                ? "bg-gradient-to-r from-nano-emerald-600 to-nano-emerald-500 hover:from-nano-emerald-500 hover:to-nano-emerald-400 text-white border-nano-emerald-400 shadow-glow-emerald"
+                : "bg-slate-700 text-slate-500 cursor-not-allowed border-slate-600"
             }`}
           >
-            RECOMPILE CORE ({Math.floor(snapshot.projectedShards)} Shards)
+            🔄 RECOMPILE CORE ({Math.floor(snapshot.projectedShards)} Shards)
           </button>
         </div>
       </div>
