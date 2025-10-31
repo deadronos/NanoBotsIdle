@@ -16,8 +16,8 @@ export function AIPanel() {
   const builders = Object.values(world.droneBrain).filter((b) => b.role === "builder").length;
 
   return (
-    <div className="w-64 bg-neutral-900 border-l border-neutral-800 flex flex-col">
-      <div className="p-4 border-b border-neutral-800">
+    <div className="w-64 bg-neutral-900 border-l border-neutral-800 flex flex-col slide-in-right">
+      <div className="p-4 border-b border-neutral-800 fade-in">
         <h2 className="text-xl font-bold text-white">Swarm Intelligence</h2>
       </div>
 
@@ -25,7 +25,7 @@ export function AIPanel() {
       <div className="flex border-b border-neutral-800">
         <button
           onClick={() => setActiveTab("overview")}
-          className={`flex-1 py-2 px-3 text-sm font-medium transition-colors ${
+          className={`flex-1 py-2 px-3 text-sm font-medium transition-smooth button-press ${
             activeTab === "overview"
               ? "bg-neutral-800 text-white border-b-2 border-emerald-500"
               : "text-neutral-400 hover:text-white hover:bg-neutral-800/50"
@@ -36,7 +36,7 @@ export function AIPanel() {
         {unlocks.routingPriorities && (
           <button
             onClick={() => setActiveTab("priorities")}
-            className={`flex-1 py-2 px-3 text-sm font-medium transition-colors ${
+            className={`flex-1 py-2 px-3 text-sm font-medium transition-smooth button-press ${
               activeTab === "priorities"
                 ? "bg-neutral-800 text-white border-b-2 border-emerald-500"
                 : "text-neutral-400 hover:text-white hover:bg-neutral-800/50"
@@ -48,7 +48,7 @@ export function AIPanel() {
         {unlocks.diagnosticsTab && (
           <button
             onClick={() => setActiveTab("diagnostics")}
-            className={`flex-1 py-2 px-3 text-sm font-medium transition-colors ${
+            className={`flex-1 py-2 px-3 text-sm font-medium transition-smooth button-press ${
               activeTab === "diagnostics"
                 ? "bg-neutral-800 text-white border-b-2 border-emerald-500"
                 : "text-neutral-400 hover:text-white hover:bg-neutral-800/50"
@@ -64,18 +64,18 @@ export function AIPanel() {
         {activeTab === "overview" && (
           <>
             {/* Drone Stats */}
-            <div className="mb-6">
+            <div className="mb-6 fade-in">
               <h3 className="text-sm font-semibold text-neutral-400 mb-2">Active Drones</h3>
               <div className="space-y-1 text-sm text-neutral-300">
-                <div className="flex justify-between">
+                <div className="flex justify-between transition-smooth hover:bg-neutral-800 px-2 py-1 rounded">
                   <span>Total</span>
                   <span className="font-mono font-bold">{droneCount}</span>
                 </div>
-                <div className="flex justify-between">
+                <div className="flex justify-between transition-smooth hover:bg-neutral-800 px-2 py-1 rounded">
                   <span>🔵 Haulers</span>
                   <span className="font-mono">{haulers}</span>
                 </div>
-                <div className="flex justify-between">
+                <div className="flex justify-between transition-smooth hover:bg-neutral-800 px-2 py-1 rounded">
                   <span>🟡 Builders</span>
                   <span className="font-mono">{builders}</span>
                 </div>

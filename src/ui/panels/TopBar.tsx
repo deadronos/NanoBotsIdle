@@ -113,63 +113,63 @@ export function TopBar() {
   const saveMetadata = getSaveMetadata();
 
   return (
-    <div className="bg-neutral-900 border-b border-neutral-800 px-6 py-3">
+    <div className="bg-neutral-900 border-b border-neutral-800 px-6 py-3 fade-in">
       <div className="flex items-center justify-between gap-8">
-        <div className="text-2xl font-bold text-emerald-400">NanoFactory Evolution</div>
+        <div className="text-2xl font-bold text-emerald-400 transition-smooth hover:text-emerald-300">NanoFactory Evolution</div>
 
         <div className="flex items-center gap-6">
           {/* Heat */}
-          <div className="flex flex-col">
+          <div className="flex flex-col transition-smooth">
             <div className="text-xs text-neutral-400">Heat</div>
-            <div className={`text-lg font-semibold ${heatColor} ${isCriticalHeat ? 'animate-pulse' : ''}`}>
+            <div className={`text-lg font-semibold ${heatColor} ${isCriticalHeat ? 'animate-pulse' : 'transition-smooth'}`}>
               {Math.floor(snapshot.heatCurrent)} / {snapshot.heatSafeCap}
               <span className="text-sm ml-1">({heatPercent}%)</span>
             </div>
             {/* Heat efficiency indicator */}
-            <div className={`text-xs ${heatColor} ${heatBgColor} px-1 rounded mt-0.5`}>
+            <div className={`text-xs ${heatColor} ${heatBgColor} px-1 rounded mt-0.5 transition-all duration-500`}>
               Efficiency: {heatPenalty}%
             </div>
             {/* Critical heat warning */}
             {isCascadeFailure && (
-              <div className="text-xs text-red-500 font-bold animate-pulse">
+              <div className="text-xs text-red-500 font-bold animate-pulse fade-in">
                 ⚠️ CASCADE FAILURE
               </div>
             )}
             {isCriticalHeat && !isCascadeFailure && (
-              <div className="text-xs text-orange-500 font-bold">
+              <div className="text-xs text-orange-500 font-bold fade-in">
                 ⚠️ CRITICAL HEAT
               </div>
             )}
           </div>
 
           {/* Power */}
-          <div className="flex flex-col">
+          <div className="flex flex-col transition-smooth">
             <div className="text-xs text-neutral-400">Power</div>
-            <div className="text-lg font-semibold text-blue-400">
+            <div className="text-lg font-semibold text-blue-400 transition-smooth">
               {Math.floor(snapshot.powerDemand)} / {snapshot.powerAvailable}
             </div>
           </div>
 
           {/* Throughput */}
-          <div className="flex flex-col">
+          <div className="flex flex-col transition-smooth">
             <div className="text-xs text-neutral-400">Throughput</div>
-            <div className="text-lg font-semibold text-purple-400">
+            <div className="text-lg font-semibold text-purple-400 transition-smooth">
               {snapshot.throughput.toFixed(1)} <span className="text-sm">atoms/s</span>
             </div>
           </div>
 
           {/* Projected Shards */}
-          <div className="flex flex-col">
+          <div className="flex flex-col transition-smooth">
             <div className="text-xs text-neutral-400">Projected Shards</div>
-            <div className="text-lg font-semibold text-amber-400">
+            <div className="text-lg font-semibold text-amber-400 transition-smooth">
               {Math.floor(snapshot.projectedShards)}
             </div>
           </div>
 
           {/* Time */}
-          <div className="flex flex-col">
+          <div className="flex flex-col transition-smooth">
             <div className="text-xs text-neutral-400">Time</div>
-            <div className="text-lg font-semibold text-neutral-300">
+            <div className="text-lg font-semibold text-neutral-300 transition-smooth">
               {Math.floor(snapshot.simTimeSeconds / 60)}m {Math.floor(snapshot.simTimeSeconds % 60)}
               s
             </div>
@@ -181,7 +181,7 @@ export function TopBar() {
           <div className="flex gap-2">
             <button
               onClick={handleSave}
-              className={`px-3 py-1 text-sm rounded transition-colors ${
+              className={`px-3 py-1 text-sm rounded transition-smooth hover-lift button-press ${
                 saveStatus === "saved"
                   ? "bg-green-600 text-white"
                   : saveStatus === "error"
@@ -199,7 +199,7 @@ export function TopBar() {
             {hasSave() && (
               <button
                 onClick={handleLoad}
-                className={`px-3 py-1 text-sm rounded transition-colors ${
+                className={`px-3 py-1 text-sm rounded transition-smooth hover-lift button-press ${
                   loadStatus === "loaded"
                     ? "bg-green-600 text-white"
                     : loadStatus === "error"
@@ -217,7 +217,7 @@ export function TopBar() {
             )}
             <button
               onClick={handleExport}
-              className="px-3 py-1 text-sm bg-purple-600 hover:bg-purple-700 text-white rounded transition-colors"
+              className="px-3 py-1 text-sm bg-purple-600 hover:bg-purple-700 text-white rounded transition-smooth hover-lift button-press"
               title="Export Save to File"
               disabled={!hasSave()}
             >
@@ -225,7 +225,7 @@ export function TopBar() {
             </button>
             <button
               onClick={handleImportClick}
-              className="px-3 py-1 text-sm bg-indigo-600 hover:bg-indigo-700 text-white rounded transition-colors"
+              className="px-3 py-1 text-sm bg-indigo-600 hover:bg-indigo-700 text-white rounded transition-smooth hover-lift button-press"
               title="Import Save from File"
             >
               📥 Import
@@ -239,7 +239,7 @@ export function TopBar() {
             />
           </div>
           {saveMetadata && (
-            <div className="text-xs text-neutral-500 text-right">
+            <div className="text-xs text-neutral-500 text-right transition-smooth">
               Last save: {new Date(saveMetadata.timestamp).toLocaleString()}
             </div>
           )}
