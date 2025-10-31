@@ -14,6 +14,7 @@ export function AIPanel() {
   const droneCount = Object.keys(world.droneBrain).length;
   const haulers = Object.values(world.droneBrain).filter((b) => b.role === "hauler").length;
   const builders = Object.values(world.droneBrain).filter((b) => b.role === "builder").length;
+  const maintainers = Object.values(world.droneBrain).filter((b) => b.role === "maintainer").length;
 
   return (
     <div className="w-64 bg-neutral-900 border-l border-neutral-800 flex flex-col slide-in-right">
@@ -79,16 +80,24 @@ export function AIPanel() {
                   <span>🟡 Builders</span>
                   <span className="font-mono">{builders}</span>
                 </div>
+                <div className="flex justify-between transition-smooth hover:bg-neutral-800 px-2 py-1 rounded">
+                  <span>🟢 Maintainers</span>
+                  <span className="font-mono">{maintainers}</span>
+                </div>
               </div>
             </div>
 
             {/* Task Queue */}
             <div className="mb-6">
               <h3 className="text-sm font-semibold text-neutral-400 mb-2">Task Queue</h3>
-              <div className="text-sm text-neutral-300">
+              <div className="text-sm text-neutral-300 space-y-1">
                 <div className="flex justify-between">
-                  <span>Pending Tasks</span>
+                  <span>Hauling Tasks</span>
                   <span className="font-mono">{world.taskRequests.length}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span>Maintenance Tasks</span>
+                  <span className="font-mono">{world.maintenanceRequests.length}</span>
                 </div>
               </div>
             </div>

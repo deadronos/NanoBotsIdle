@@ -1,5 +1,6 @@
 import { World } from "../world/World";
 import { getProducerOutputPerSec } from "../../sim/balance";
+import { getDegradationEfficiencyMultiplier } from "./degradationSystem";
 
 export function productionSystem(world: World, dt: number) {
   Object.entries(world.producer).forEach(([idStr, producer]) => {
@@ -36,7 +37,10 @@ export function productionSystem(world: World, dt: number) {
     const rateMult =
       world.globals.overclockEnabled && overclockable ? overclockable.overRateMult : 1.0;
 
-    const effectiveRate = outputRate * rateMult;
+    // Apply degradation efficiency penalty
+    const degradationMult = getDegradationEfficiencyMultiplier(world, id);
+
+    const effectiveRate = outputRate * rateMult * degradationMult;
 
     // Progress towards completion
     const progressDelta = (effectiveRate * dt) / producer.recipe.batchTimeSeconds;

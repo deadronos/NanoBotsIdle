@@ -84,5 +84,38 @@ export function droneAssignmentSystem(world: World, _dt: number) {
       }
       brain.targetEntity = null;
     }
+
+    // Clean up maintainer targets when maintainer finishes or becomes idle
+    // This must happen BEFORE assignment so we don't reassign immediately
+    if (brain.role === "maintainer" && brain.state === "idle" && brain.targetEntity !== null) {
+      // Remove this maintainer's target reservation
+      if (world.maintainerTargets[brain.targetEntity] === droneId) {
+        delete world.maintainerTargets[brain.targetEntity];
+      }
+      brain.targetEntity = null;
+    }
+
+    // Handle maintainer assignment
+    if (brain.role === "maintainer" && brain.state === "idle") {
+      if (world.maintenanceRequests.length === 0) return;
+
+      // Pick first available maintenance request (already sorted by priority)
+      const request = world.maintenanceRequests[0];
+
+      // Check if another maintainer is already working on this building
+      if (world.maintainerTargets[request.targetEntity]) {
+        return; // Skip, already assigned
+      }
+
+      // Assign this maintainer to the maintenance task
+      brain.state = "maintaining";
+      brain.targetEntity = request.targetEntity;
+
+      // Register this maintainer as working on this target
+      world.maintainerTargets[request.targetEntity] = droneId;
+
+      // Remove maintenance request from queue
+      world.maintenanceRequests.shift();
+    }
   });
 }

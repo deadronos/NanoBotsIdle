@@ -2,11 +2,58 @@ import { World } from "../world/World";
 
 const DRONE_SPEED = 2.0; // tiles per second
 
+// Track maintenance work progress for drones currently maintaining
+const maintenanceProgress: Record<number, number> = {};
+
 export function movementSystem(world: World, dt: number) {
   Object.entries(world.droneBrain).forEach(([idStr, brain]) => {
     const id = Number(idStr);
     const pos = world.position[id];
     const path = world.path[id];
+
+    // Handle maintainer drones performing work at target
+    if (brain.role === "maintainer" && brain.state === "maintaining" && brain.targetEntity !== null) {
+      const targetPos = world.position[brain.targetEntity];
+      const degradable = world.degradable[brain.targetEntity];
+
+      if (!targetPos || !degradable) {
+        // Invalid target, go idle
+        brain.state = "idle";
+        brain.targetEntity = null;
+        delete maintenanceProgress[id];
+        return;
+      }
+
+      // Check if drone is at the target location
+      const dx = targetPos.x - pos.x;
+      const dy = targetPos.y - pos.y;
+      const dist = Math.sqrt(dx * dx + dy * dy);
+
+      if (dist < 1.5) {
+        // Close enough to perform maintenance
+        // Initialize progress if not exists
+        if (maintenanceProgress[id] === undefined) {
+          maintenanceProgress[id] = 0;
+        }
+
+        // Perform maintenance work
+        maintenanceProgress[id] += dt;
+
+        // Check if maintenance is complete
+        if (maintenanceProgress[id] >= degradable.maintenanceTime) {
+          // Maintenance complete - restore building condition
+          degradable.wear = Math.max(0, degradable.wear - 0.6); // Reduce wear by 60%
+          
+          // Clean up
+          brain.state = "idle";
+          brain.targetEntity = null;
+          delete maintenanceProgress[id];
+        }
+        
+        return; // Don't move while performing maintenance
+      }
+      // If not at target, fall through to movement logic below
+    }
 
     if (!pos || !path || path.idx >= path.nodes.length) return;
 

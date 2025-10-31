@@ -20,6 +20,7 @@ describe("Congestion System", () => {
       overclockable: {},
       compileEmitter: {},
       storageHub: {},
+      degradable: {},
       entityType: {},
       globals: {
         heatCurrent: 0,
@@ -37,6 +38,8 @@ describe("Congestion System", () => {
       },
       taskRequests: [],
       builderTargets: {},
+      maintenanceRequests: [],
+      maintainerTargets: {},
       flowFields: new Map(),
       grid: {
         width: 10,

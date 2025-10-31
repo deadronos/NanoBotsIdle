@@ -72,6 +72,7 @@ export function createWorld(params: CreateWorldParams): World {
     overclockable: {},
     compileEmitter: {},
     storageHub: {},
+    degradable: {},
 
     entityType: {},
 
@@ -95,7 +96,9 @@ export function createWorld(params: CreateWorldParams): World {
     },
 
     taskRequests: [],
+    maintenanceRequests: [],
     builderTargets: {},
+    maintainerTargets: {},
     flowFields: new Map(),
 
     grid: {
@@ -151,6 +154,12 @@ export function createWorld(params: CreateWorldParams): World {
     throughputWeight: 1,
     cohesionWeight: 0.2,
   };
+  world.degradable[extractorId] = {
+    wear: 0,
+    wearRate: 0.0001, // Slow degradation for extractors
+    maintenanceTime: 5,
+    maxEfficiencyPenalty: 0.2, // 20% max penalty
+  };
 
   // Create starting Assembler
   const assemblerId = makeEntity(world, "Assembler");
@@ -174,6 +183,12 @@ export function createWorld(params: CreateWorldParams): World {
     throughputWeight: 1,
     cohesionWeight: 0.4,
   };
+  world.degradable[assemblerId] = {
+    wear: 0,
+    wearRate: 0.00015, // Moderate degradation
+    maintenanceTime: 6,
+    maxEfficiencyPenalty: 0.25, // 25% max penalty
+  };
 
   // Create starting Fabricator
   const fabId = makeEntity(world, "Fabricator");
@@ -196,6 +211,12 @@ export function createWorld(params: CreateWorldParams): World {
   world.compileEmitter[fabId] = {
     throughputWeight: 1,
     cohesionWeight: 0.6,
+  };
+  world.degradable[fabId] = {
+    wear: 0,
+    wearRate: 0.0002, // Faster degradation for complex buildings
+    maintenanceTime: 8,
+    maxEfficiencyPenalty: 0.3, // 30% max penalty
   };
 
   // Spawn starting drones

@@ -22,6 +22,7 @@ describe("Advanced Pathfinding Performance", () => {
       overclockable: {},
       compileEmitter: {},
       storageHub: {},
+      degradable: {},
       entityType: {},
       globals: {
         heatCurrent: 0,
@@ -39,6 +40,8 @@ describe("Advanced Pathfinding Performance", () => {
       },
       taskRequests: [],
       builderTargets: {},
+      maintenanceRequests: [],
+      maintainerTargets: {},
       flowFields: new Map(),
       grid: {
         width: 64,

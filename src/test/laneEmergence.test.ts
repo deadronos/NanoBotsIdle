@@ -20,6 +20,7 @@ describe("Lane Emergence", () => {
       overclockable: {},
       compileEmitter: {},
       storageHub: {},
+      degradable: {},
       entityType: {},
       globals: {
         heatCurrent: 0,
@@ -37,6 +38,8 @@ describe("Lane Emergence", () => {
       },
       taskRequests: [],
       builderTargets: {},
+      maintenanceRequests: [],
+      maintainerTargets: {},
       flowFields: new Map(),
       grid: {
         width: 10,
