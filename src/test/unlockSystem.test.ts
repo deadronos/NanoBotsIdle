@@ -20,6 +20,7 @@ describe("Unlock System", () => {
       path: {},
       overclockable: {},
       compileEmitter: {},
+      storageHub: {},
       entityType: {},
       globals: {
         heatCurrent: 0,

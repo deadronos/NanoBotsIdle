@@ -20,6 +20,7 @@ describe("Building Placement and Cost Validation", () => {
       path: {},
       overclockable: {},
       compileEmitter: {},
+      storageHub: {},
       entityType: {},
       globals: {
         heatCurrent: 0,

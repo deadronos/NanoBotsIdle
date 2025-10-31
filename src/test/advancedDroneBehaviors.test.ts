@@ -32,6 +32,7 @@ describe("Advanced Drone Behaviors", () => {
       path: {},
       overclockable: {},
       compileEmitter: {},
+      storageHub: {},
       recyclable: {},
       entityType: {},
       globals: {
