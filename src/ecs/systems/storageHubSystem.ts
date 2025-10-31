@@ -8,7 +8,11 @@ import { World } from "../world/World";
  */
 export function storageHubSystem(world: World, _dt: number) {
   // For each building with inventory, calculate total capacity bonus from nearby Storage hubs
-  Object.entries(world.inventory).forEach(([idStr, inv]) => {
+  // guard against missing world.inventory or world.storageHub
+  const inventories = world.inventory || {};
+  const storageHubs = world.storageHub || {};
+
+  Object.entries(inventories).forEach(([idStr, inv]) => {
     const id = Number(idStr);
     const pos = world.position[id];
     if (!pos) return;
@@ -21,7 +25,7 @@ export function storageHubSystem(world: World, _dt: number) {
     
     // Sum up bonuses from all Storage hubs in range
     let totalBonus = 0;
-    Object.entries(world.storageHub).forEach(([hubIdStr, hub]) => {
+    Object.entries(storageHubs).forEach(([hubIdStr, hub]) => {
       const hubId = Number(hubIdStr);
       const hubPos = world.position[hubId];
       if (!hubPos) return;
