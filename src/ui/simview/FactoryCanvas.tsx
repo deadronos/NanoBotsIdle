@@ -44,6 +44,8 @@ export function FactoryCanvas() {
         // Add construction particles
         animationManager?.addConstructionParticles(gridX * TILE_SIZE, gridY * TILE_SIZE);
         // Start construction animation
+        // Note: Linear search is acceptable here as building count is typically small (<100)
+        // and placement is an infrequent user action
         const newBuilding = snapshot?.buildings.find((b) => b.x === gridX && b.y === gridY);
         if (newBuilding) {
           animationManager?.startBuildingAnimation(newBuilding.id, 'construction', 1000);
@@ -304,11 +306,32 @@ export function FactoryCanvas() {
         }
       });
 
-      // Draw particles
+      // Draw particles with proper alpha handling
       const particles = animationManager?.getParticles() || [];
       particles.forEach(particle => {
+        // Convert color to rgba format with alpha
+        let particleColor = particle.color;
         const alpha = particle.life / particle.maxLife;
-        ctx.fillStyle = particle.color.replace(')', `, ${alpha})`).replace('rgb', 'rgba');
+        
+        // Handle different color formats
+        if (particleColor.startsWith('#')) {
+          // Convert hex to rgb
+          const r = parseInt(particleColor.slice(1, 3), 16);
+          const g = parseInt(particleColor.slice(3, 5), 16);
+          const b = parseInt(particleColor.slice(5, 7), 16);
+          particleColor = `rgba(${r}, ${g}, ${b}, ${alpha})`;
+        } else if (particleColor.startsWith('rgb(')) {
+          // Convert rgb to rgba
+          particleColor = particleColor.replace('rgb', 'rgba').replace(')', `, ${alpha})`);
+        } else if (particleColor.startsWith('rgba(')) {
+          // Already rgba, replace alpha
+          particleColor = particleColor.replace(/[\d.]+\)$/, `${alpha})`);
+        } else {
+          // Fallback to white with alpha
+          particleColor = `rgba(255, 255, 255, ${alpha})`;
+        }
+        
+        ctx.fillStyle = particleColor;
         ctx.beginPath();
         ctx.arc(particle.x, particle.y, particle.size, 0, Math.PI * 2);
         ctx.fill();
@@ -326,11 +349,17 @@ export function FactoryCanvas() {
 
       // Cascading failure effect for critical heat
       if (snapshot.heatRatio > 0.9) {
+        // Save current transform
+        ctx.save();
+        
         // Screen shake effect (subtle)
         const shakeIntensity = (snapshot.heatRatio - 0.9) * 10;
         const shakeX = (Math.random() - 0.5) * shakeIntensity;
         const shakeY = (Math.random() - 0.5) * shakeIntensity;
         ctx.translate(shakeX, shakeY);
+        
+        // Restore transform before drawing vignette
+        ctx.restore();
         
         // Vignette effect
         const gradient = ctx.createRadialGradient(
@@ -341,8 +370,6 @@ export function FactoryCanvas() {
         gradient.addColorStop(1, 'rgba(0, 0, 0, 0.5)');
         ctx.fillStyle = gradient;
         ctx.fillRect(0, 0, canvas.width, canvas.height);
-        
-        ctx.setTransform(1, 0, 0, 1, 0, 0);
       }
 
       // Draw ghost building

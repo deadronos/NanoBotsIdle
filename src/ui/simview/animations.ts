@@ -77,13 +77,14 @@ export class AnimationManager {
     for (let i = 0; i < 3; i++) {
       const angle = Math.random() * Math.PI * 2;
       const speed = 10 + Math.random() * 20;
+      const maxLife = 1.0;
       this.addParticle({
         x,
         y,
         vx: Math.cos(angle) * speed,
         vy: Math.sin(angle) * speed,
         life: 0.5 + Math.random() * 0.5,
-        maxLife: 1,
+        maxLife: maxLife,
         color,
         size: 1 + Math.random() * 2,
         type: 'production'
