@@ -17,19 +17,21 @@ export function AIPanel() {
   const maintainers = Object.values(world.droneBrain).filter((b) => b.role === "maintainer").length;
 
   return (
-    <div className="w-64 bg-neutral-900 border-l border-neutral-800 flex flex-col slide-in-right">
-      <div className="p-4 border-b border-neutral-800 fade-in">
-        <h2 className="text-xl font-bold text-white">Swarm Intelligence</h2>
+    <div className="w-72 bg-gradient-to-b from-slate-900 to-slate-950 border-l-2 border-nano-purple-600/20 flex flex-col slide-in-right shadow-2xl">
+      <div className="p-6 border-b-2 border-slate-800 fade-in bg-gradient-to-r from-slate-900 to-slate-800">
+        <h2 className="text-2xl font-extrabold text-transparent bg-gradient-to-r from-nano-purple-400 to-nano-cyan-400 bg-clip-text">
+          Swarm Intelligence
+        </h2>
       </div>
 
       {/* Tabs */}
-      <div className="flex border-b border-neutral-800">
+      <div className="flex border-b-2 border-slate-800 bg-slate-900/50">
         <button
           onClick={() => setActiveTab("overview")}
-          className={`flex-1 py-2 px-3 text-sm font-medium transition-smooth button-press ${
+          className={`flex-1 py-3 px-4 text-sm font-bold transition-all duration-200 button-press ${
             activeTab === "overview"
-              ? "bg-neutral-800 text-white border-b-2 border-emerald-500"
-              : "text-neutral-400 hover:text-white hover:bg-neutral-800/50"
+              ? "bg-gradient-to-b from-slate-800 to-slate-900 text-white border-b-4 border-nano-emerald-500 shadow-lg"
+              : "text-slate-400 hover:text-white hover:bg-slate-800/50"
           }`}
         >
           Overview
@@ -37,10 +39,10 @@ export function AIPanel() {
         {unlocks.routingPriorities && (
           <button
             onClick={() => setActiveTab("priorities")}
-            className={`flex-1 py-2 px-3 text-sm font-medium transition-smooth button-press ${
+            className={`flex-1 py-3 px-4 text-sm font-bold transition-all duration-200 button-press ${
               activeTab === "priorities"
-                ? "bg-neutral-800 text-white border-b-2 border-emerald-500"
-                : "text-neutral-400 hover:text-white hover:bg-neutral-800/50"
+                ? "bg-gradient-to-b from-slate-800 to-slate-900 text-white border-b-4 border-nano-emerald-500 shadow-lg"
+                : "text-slate-400 hover:text-white hover:bg-slate-800/50"
             }`}
           >
             Priorities
@@ -49,10 +51,10 @@ export function AIPanel() {
         {unlocks.diagnosticsTab && (
           <button
             onClick={() => setActiveTab("diagnostics")}
-            className={`flex-1 py-2 px-3 text-sm font-medium transition-smooth button-press ${
+            className={`flex-1 py-3 px-4 text-sm font-bold transition-all duration-200 button-press ${
               activeTab === "diagnostics"
-                ? "bg-neutral-800 text-white border-b-2 border-emerald-500"
-                : "text-neutral-400 hover:text-white hover:bg-neutral-800/50"
+                ? "bg-gradient-to-b from-slate-800 to-slate-900 text-white border-b-4 border-nano-emerald-500 shadow-lg"
+                : "text-slate-400 hover:text-white hover:bg-slate-800/50"
             }`}
           >
             Diagnostics
@@ -61,43 +63,52 @@ export function AIPanel() {
       </div>
 
       {/* Tab Content */}
-      <div className="flex-1 overflow-y-auto p-4">
+      <div className="flex-1 overflow-y-auto p-6">
         {activeTab === "overview" && (
           <>
             {/* Drone Stats */}
-            <div className="mb-6 fade-in">
-              <h3 className="text-sm font-semibold text-neutral-400 mb-2">Active Drones</h3>
-              <div className="space-y-1 text-sm text-neutral-300">
-                <div className="flex justify-between transition-smooth hover:bg-neutral-800 px-2 py-1 rounded">
-                  <span>Total</span>
-                  <span className="font-mono font-bold">{droneCount}</span>
+            <div className="mb-8 fade-in">
+              <h3 className="text-sm font-bold text-nano-cyan-400 mb-3 uppercase tracking-wider">Active Drones</h3>
+              <div className="space-y-2 text-sm text-slate-200 bg-slate-800/50 rounded-lg p-4 border border-slate-700/50">
+                <div className="flex justify-between transition-smooth hover:bg-slate-700/50 px-3 py-2 rounded-md">
+                  <span className="font-semibold">Total</span>
+                  <span className="font-mono font-extrabold text-nano-cyan-400 text-lg">{droneCount}</span>
                 </div>
-                <div className="flex justify-between transition-smooth hover:bg-neutral-800 px-2 py-1 rounded">
-                  <span>🔵 Haulers</span>
-                  <span className="font-mono">{haulers}</span>
+                <div className="flex justify-between transition-smooth hover:bg-slate-700/50 px-3 py-2 rounded-md items-center">
+                  <span className="flex items-center gap-2">
+                    <span className="w-2 h-2 rounded-full bg-blue-500 animate-pulse"></span>
+                    🔵 Haulers
+                  </span>
+                  <span className="font-mono font-bold text-blue-400">{haulers}</span>
                 </div>
-                <div className="flex justify-between transition-smooth hover:bg-neutral-800 px-2 py-1 rounded">
-                  <span>🟡 Builders</span>
-                  <span className="font-mono">{builders}</span>
+                <div className="flex justify-between transition-smooth hover:bg-slate-700/50 px-3 py-2 rounded-md items-center">
+                  <span className="flex items-center gap-2">
+                    <span className="w-2 h-2 rounded-full bg-yellow-500 animate-pulse"></span>
+                    🟡 Builders
+                  </span>
+                  <span className="font-mono font-bold text-yellow-400">{builders}</span>
                 </div>
-                <div className="flex justify-between transition-smooth hover:bg-neutral-800 px-2 py-1 rounded">
-                  <span>🟢 Maintainers</span>
-                  <span className="font-mono">{maintainers}</span>
+                <div className="flex justify-between transition-smooth hover:bg-slate-700/50 px-3 py-2 rounded-md items-center">
+                  <span className="flex items-center gap-2">
+                    <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
+                    🟢 Maintainers
+                  </span>
+                  <span className="font-mono font-bold text-green-400">{maintainers}</span>
                 </div>
               </div>
             </div>
 
             {/* Task Queue */}
-            <div className="mb-6">
-              <h3 className="text-sm font-semibold text-neutral-400 mb-2">Task Queue</h3>
-              <div className="text-sm text-neutral-300 space-y-1">
-                <div className="flex justify-between">
-                  <span>Hauling Tasks</span>
-                  <span className="font-mono">{world.taskRequests.length}</span>
+            <div className="mb-8">
+              <h3 className="text-sm font-bold text-nano-purple-400 mb-3 uppercase tracking-wider">Task Queue</h3>
+              <div className="text-sm text-slate-200 space-y-2 bg-slate-800/50 rounded-lg p-4 border border-slate-700/50">
+                <div className="flex justify-between hover:bg-slate-700/50 px-3 py-2 rounded-md transition-smooth">
+                  <span className="font-semibold">Hauling Tasks</span>
+                  <span className="font-mono font-bold text-nano-cyan-400">{world.taskRequests.length}</span>
                 </div>
-                <div className="flex justify-between">
-                  <span>Maintenance Tasks</span>
-                  <span className="font-mono">{world.maintenanceRequests.length}</span>
+                <div className="flex justify-between hover:bg-slate-700/50 px-3 py-2 rounded-md transition-smooth">
+                  <span className="font-semibold">Maintenance Tasks</span>
+                  <span className="font-mono font-bold text-nano-emerald-400">{world.maintenanceRequests.length}</span>
                 </div>
               </div>
             </div>
@@ -105,18 +116,18 @@ export function AIPanel() {
             {/* Phase Info */}
             {snapshot && (
               <div className="mb-6">
-                <h3 className="text-sm font-semibold text-neutral-400 mb-2">
+                <h3 className="text-sm font-bold text-nano-amber-400 mb-3 uppercase tracking-wider">
                   Phase {snapshot.currentPhase}
                 </h3>
-                <div className="text-xs text-neutral-500">
+                <div className="text-sm text-slate-300 bg-gradient-to-br from-slate-800/70 to-slate-900/70 rounded-lg p-4 border-2 border-nano-amber-500/30">
                   {snapshot.currentPhase === 1 && (
-                    <p>Bootstrap: Build your initial production chain</p>
+                    <p className="leading-relaxed">Bootstrap: Build your initial production chain</p>
                   )}
                   {snapshot.currentPhase === 2 && (
-                    <p>Networked Logistics: Optimize your swarm's behavior</p>
+                    <p className="leading-relaxed">Networked Logistics: Optimize your swarm's behavior</p>
                   )}
                   {snapshot.currentPhase === 3 && (
-                    <p>Overclock: Push to the limit and prepare for recompile</p>
+                    <p className="leading-relaxed">Overclock: Push to the limit and prepare for recompile</p>
                   )}
                 </div>
               </div>
