@@ -133,7 +133,12 @@ class AudioManagerClass {
     const now = this.context.currentTime;
     gainNode.gain.setValueAtTime(0, now);
     gainNode.gain.linearRampToValueAtTime(volume, now + attack);
-    gainNode.gain.exponentialRampToValueAtTime(0.01, now + duration - decay);
+    
+    // Exponential ramp needs to avoid zero
+    const fadeEnd = now + duration - decay;
+    if (fadeEnd > now + attack) {
+      gainNode.gain.exponentialRampToValueAtTime(0.001, fadeEnd);
+    }
     gainNode.gain.linearRampToValueAtTime(0, now + duration);
 
     oscillator.connect(gainNode);
