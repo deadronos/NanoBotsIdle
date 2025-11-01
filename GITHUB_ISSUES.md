@@ -54,6 +54,12 @@ Implement autonomous drone movement for resource hauling between buildings with 
 - Multiple drones don't deadlock
 - Visual feedback shows drone cargo state
 
+**Notes / Subtasks (recommend split)**:
+- A) Hauler assignment & task requests (task queue, priority scoring)
+- B) Movement & transfer mechanics (pickup/dropoff atomic transfer)
+- C) Pathfinding MVP (A* grid with congestion cost)
+- D) Congestion metric & hauling efficiency automated tests (see new test issue)
+
 **Technical Notes**:
 See `src/ecs/systems/pathfindingSystem.ts` and `src/ecs/systems/movementSystem.ts`
 
@@ -108,10 +114,205 @@ Implement game state persistence to localStorage with migration support for vers
 - Meta upgrades saved separately from run state
 - Migration handles old save formats gracefully
 
+**Expanded Acceptance (concrete checks)**
+- Autosave persists `meta` and `run` state separately on a 30s interval by default (configurable).
+- `serializeWorld()` and `deserializeWorld()` support a schema version header; migration functions handle forward/backward compatibility in tests.
+- Unit test: saving a sample world and loading it back produces an equivalent `meta` state and a run state compatible with a newer schema (migration test case).
+
 **Technical Notes**:
 See design docs in `01-technical-scaffolding.md` for state structure
 
 ---
+
+### Issue #22: Core ECS bootstrap & tick loop (Milestone 0.0)
+**Labels**: `enhancement`, `core-systems`, `Phase-0`, `MVP`
+**Milestone**: Phase 0 - Foundation
+**Priority**: P0 (Critical)
+
+**Description**:
+Create the foundational ECS bootstrap and deterministic tick loop so systems can be developed and tested incrementally.
+
+**Tasks**:
+- [ ] Implement `src/ecs/world/tickWorld.ts` with ordered system stubs
+- [ ] Add no-op system implementations (DemandPlanning, DroneAssignment, Pathfinding, Movement, Production, HeatAndPower, CompileScoring, uiSnapshot)
+- [ ] Add a lightweight test harness that can tick a world for N steps
+- [ ] Document call order and how to register new systems
+
+**Acceptance Criteria**:
+- tickWorld invokes systems in the documented order deterministically for given dt values
+- Unit test verifies systems are called in order using the harness
+
+---
+
+### Issue #23: Implement `createWorld(meta)` bootstrap (Milestone 0.0)
+**Labels**: `enhancement`, `core-systems`, `Phase-0`, `MVP`
+**Milestone**: Phase 0 - Foundation
+**Priority**: P0 (Critical)
+
+**Description**:
+Implement `src/ecs/world/createWorld.ts` according to `01-technical-drafts.md` so runs can be created from `meta` upgrades.
+
+**Tasks**:
+- [ ] Implement world shape and component stores
+- [ ] Spawn Core, starting Extractor, Assembler, Fabricator, and starting drones per `meta` settings
+- [ ] Apply `bio` passive cooling, `swarm` starting specialists, and `compiler` seed values
+- [ ] Add unit test that validates created world contains required entities and inventories
+
+**Acceptance Criteria**:
+- createWorld(meta) produces a valid World object with Core and starting entities matching meta parameters
+
+---
+
+### Issue #24: uiSnapshotSystem and snapshot throttle (Milestone 0.0)
+**Labels**: `enhancement`, `ui`, `Phase-0`, `MVP`
+**Milestone**: Phase 0 - Foundation
+**Priority**: P0 (Critical)
+
+**Description**:
+Implement `uiSnapshotSystem(world)` which derives a lightweight UI state and writes it to the Zustand store at a configurable throttle (default 10Hz).
+
+**Tasks**:
+- [ ] Define `UISnapshot` shape (TopBar, entity list for canvas, bottlenecks, phase)
+- [ ] Implement snapshot producer and writer to `useGameStore` (or a lightweight bridge)
+- [ ] Implement throttling config (10Hz default; adjustable for debug/perf)
+- [ ] Add tests that assert snapshot shape and throttle behaviour
+
+**Acceptance Criteria**:
+- UISnapshot contains required fields and is updated at configured rates; React can consume it without per-tick rerenders
+
+---
+
+### Issue #25: Sim balance unit tests (Milestone 0.0)
+**Labels**: `testing`, `sim`, `Phase-0`
+**Milestone**: Phase 0 - Foundation
+**Priority**: P0 (Critical)
+
+**Description**:
+Add unit tests for core balance helpers in `src/sim/balance.ts`.
+
+**Tasks**:
+- [ ] Test `polyCost()` across sample levels and ensure monotonic growth
+- [ ] Test `getProducerOutputPerSec()` for zero/edge heat ratios
+- [ ] Test `getHaulingEffectiveRate()` against known cases
+- [ ] Test `getCompileShardEstimate()` returns finite, positive outputs for sample inputs
+
+**Acceptance Criteria**:
+- All tests run in CI (`npm test`) and validate numeric stability and edge cases
+
+---
+
+### Issue #26: Pathfinding MVP (A* grid + congestion) (Milestone 0.1)
+**Labels**: `core-systems`, `optimization`, `Phase-0`
+**Milestone**: Phase 0 - Foundation
+**Priority**: P0 (Critical)
+
+**Description**:
+Provide a minimal A* pathfinding system with tile-level congestion cost to unblock early hauling and movement logic.
+
+**Tasks**:
+- [ ] Implement `src/ecs/systems/pathfindingSystem.ts` using A* over grid
+- [ ] Add congestion cost layer and API for updating tile congestion
+- [ ] Add debug overlay to visualize computed paths
+- [ ] Automated test verifying path avoids high-cost tiles when alternative exists
+
+**Acceptance Criteria**:
+- Drones can compute routes avoiding congested tiles; tests validate behavior
+
+---
+
+### Issue #27: Save/Load migration & schema tests (Milestone 0.0)
+**Labels**: `persistence`, `testing`, `Phase-0`
+**Milestone**: Phase 0 - Foundation
+**Priority**: P1 (High)
+
+**Description**:
+Extend Issue #4 with schema versioning and migration unit tests.
+
+**Tasks**:
+- [ ] Implement schema header for saved blobs
+- [ ] Create migration helpers to move older schemas forward
+- [ ] Unit tests for backward compatibility and migration
+
+**Acceptance Criteria**:
+- Migration unit tests pass and autosave can restore older-format saves into current runtime
+
+---
+
+### Issue #28: CompileScoring instrumentation & debug export (Milestone 0.1)
+**Labels**: `debug`, `sim`, `Phase-1`
+**Milestone**: Phase 1 - Progression
+**Priority**: P1 (High)
+
+**Description**:
+Add detailed debug-export (JSON) for compile scoring metrics (peakThroughput, cohesionScore, stressSecondsAccum) to aid testability and shard-projection validation.
+
+**Tasks**:
+- [ ] Implement debug export endpoint (local file/console or dev-only UI)
+- [ ] Wire projection numbers in TopBar to the exported values for verification
+- [ ] Add unit tests that assert exported numbers match internal counters
+
+**Acceptance Criteria**:
+- Exported debug JSON is produced at run end and is usable to assert scoring calculations in tests
+
+---
+
+### Issue #29: Testing scaffold (Vitest) & core tests (Milestone 0.0)
+**Labels**: `testing`, `infra`, `Phase-0`
+**Milestone**: Phase 0 - Foundation
+**Priority**: P0 (Critical)
+
+**Description**:
+Ensure the repository has a test runner configured and add core tests for the ECS bootstrap, `createWorld`, and balance helpers.
+
+**Tasks**:
+- [ ] Ensure `vitest` is configured via `vitest.config.ts`
+- [ ] Add core unit tests and a `npm test` script
+- [ ] Run tests in CI (or document how to run locally)
+
+**Acceptance Criteria**:
+- `npm test` runs the added tests and they pass locally
+
+---
+
+### Issue #30: Playwright smoke test - main flow (Milestone 0.1)
+**Labels**: `testing`, `e2e`, `Phase-0`
+**Milestone**: Phase 0 - Foundation
+**Priority**: P1 (High)
+
+**Description**:
+Add a minimal Playwright smoke test covering run start, place extractor, observe production, open prestige modal.
+
+**Tasks**:
+- [ ] Add Playwright dependency and basic config
+- [ ] Implement smoke test steps for main flow
+- [ ] Add test to CI or document how to run locally
+
+**Acceptance Criteria**:
+- Smoke test runs and completes against a dev server
+
+---
+
+### Issue #31: Performance harness & benchmarks (Milestone 0.2)
+**Labels**: `optimization`, `performance`, `Phase-1`
+**Milestone**: Phase 1 - Progression
+**Priority**: P1 (High)
+
+**Description**:
+Create reproducible benchmarks for pathfinding/movement/production to validate performance targets (e.g., 50+ drones without UI frame spikes).
+
+**Tasks**:
+- [ ] Implement a headless simulation harness to spawn many drones and measure tick time
+- [ ] Add performance targets and automated measurements
+- [ ] Profile and optimize bottlenecks
+
+**Acceptance Criteria**:
+- Benchmark reports show tick times under target thresholds for target entity counts
+
+---
+
+### Process note
+When creating GitHub issues from these templates, also create corresponding `memory/tasks/TASKNNN-*.md` and `memory/designs/DESNNN-*.md` entries (see `AGENTS.md`) to keep the Memory Bank synchronized with work.
+
 
 ## Phase 1: Three-Phase Progression
 
@@ -614,4 +815,4 @@ Create GitHub milestones to track:
 6. Assign to appropriate team members
 7. Add to project board if using GitHub Projects
 
-**Note**: The user will need to create these issues manually in the GitHub web interface, as the toolset doesn't support direct issue creation.
+
