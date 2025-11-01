@@ -4,7 +4,7 @@ import { createWorld, allocateEntityId } from "../world/createWorld";
 import { createUISnapshotSystem, snapshotForWorld } from "./uiSnapshotSystem";
 
 const createSampleWorld = () => {
-  const world = createWorld();
+  const world = createWorld({ spawnEntities: false });
 
   const coreId = allocateEntityId(world);
   world.entityType[coreId] = "core";

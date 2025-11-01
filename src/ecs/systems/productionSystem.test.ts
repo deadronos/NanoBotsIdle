@@ -8,7 +8,7 @@ const runTick = (world: ReturnType<typeof createWorld>, dt = 1): void => {
 
 describe("productionSystem", () => {
   it("produces resources for active producers without inputs", () => {
-    const world = createWorld();
+    const world = createWorld({ spawnEntities: false });
     const entityId = allocateEntityId(world);
 
     world.inventory[entityId] = { capacity: 10, contents: {} };
@@ -29,7 +29,7 @@ describe("productionSystem", () => {
   });
 
   it("limits production based on input availability", () => {
-    const world = createWorld();
+    const world = createWorld({ spawnEntities: false });
     const entityId = allocateEntityId(world);
 
     world.inventory[entityId] = {
@@ -53,7 +53,7 @@ describe("productionSystem", () => {
   });
 
   it("prevents production when capacity is exhausted and caps progress", () => {
-    const world = createWorld();
+    const world = createWorld({ spawnEntities: false });
     const entityId = allocateEntityId(world);
 
     world.inventory[entityId] = {

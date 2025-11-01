@@ -13,7 +13,7 @@ const runSystems = (world: ReturnType<typeof createWorld>): void => {
 
 describe("drone hauling integration", () => {
   it("assigns a hauler drone to move resources from source to destination", () => {
-    const world = createWorld();
+    const world = createWorld({ spawnEntities: false });
     world.grid = {
       width: 5,
       height: 1,
