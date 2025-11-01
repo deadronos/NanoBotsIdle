@@ -22,6 +22,7 @@ export const createSaveBlob = (state: GameState): GameSaveBlob => ({
     projectedCompileShards: state.projectedCompileShards,
     currentPhase: state.currentPhase,
     globals: clone(state.world.globals),
+    world: clone(state.world),
     snapshot: clone(state.uiSnapshot),
   },
 });

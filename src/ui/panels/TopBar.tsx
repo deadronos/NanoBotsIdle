@@ -1,6 +1,7 @@
 import { useMemo } from "react";
 
 import { useGameStore } from "../../state/store";
+import { SaveControls } from "./SaveControls";
 
 const formatNumber = (value: number): string =>
   Number.isFinite(value) ? value.toLocaleString() : "0";
@@ -47,8 +48,11 @@ export const TopBar = () => {
           ))}
         </div>
       </div>
-      <div className="text-xs uppercase tracking-wide text-slate-400">
-        Sim Time: {formatNumber(snapshot.simTimeSeconds)}s
+      <div className="flex items-center gap-4">
+        <SaveControls />
+        <div className="text-xs uppercase tracking-wide text-slate-400">
+          Sim Time: {formatNumber(snapshot.simTimeSeconds)}s
+        </div>
       </div>
     </header>
   );
