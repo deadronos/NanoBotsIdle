@@ -75,11 +75,15 @@ const deriveSnapshot = (
     const id = Number(idStr);
     const position = world.position[id];
 
+    const inventory = world.inventory[id];
+    const cargo = inventory ? { ...inventory.contents } : undefined;
+
     return {
       id,
       x: clampFinite(position?.x ?? 0),
       y: clampFinite(position?.y ?? 0),
       role: brain.role,
+      cargo,
     };
   });
 
@@ -95,6 +99,9 @@ const deriveSnapshot = (
       const powerState = world.powerLink[id];
       const heatSource = world.heatSource[id];
 
+      const inventory = world.inventory[id];
+      const invSnapshot = inventory ? { ...inventory.contents } : undefined;
+
       return {
         id,
         x: clampFinite(position?.x ?? 0),
@@ -103,6 +110,7 @@ const deriveSnapshot = (
         tier: producer?.tier,
         online: powerState?.online ?? true,
         heat: heatSource?.heatPerSecond,
+        inventory: invSnapshot,
       };
     });
 

@@ -46,4 +46,6 @@ export interface World {
   taskRequests: TaskRequest[];
   pathRequests: PathRequest[];
   grid: GridData;
+  // Optional per-cell traversal penalty updated by congestion system
+  cellTraversalPenalty?: Record<string, number>;
 }
