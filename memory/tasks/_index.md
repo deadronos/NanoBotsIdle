@@ -8,7 +8,7 @@ This index lists task files in `memory/tasks/`. It should be updated whenever ta
 
 ## PENDING
 
-- None yet
+- [TASK021] Statistics & Analytics - store per-run summaries and provide exports (JSON/CSV)
 
 ## COMPLETED
 

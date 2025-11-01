@@ -8,7 +8,7 @@ This index lists design files in `memory/designs/`. It should be updated wheneve
 
 ## PENDING
 
-- None yet
+- [DES021] Statistics & Analytics - per-run summaries, UI graphs, export (JSON/CSV)
 
 ## COMPLETED
 
