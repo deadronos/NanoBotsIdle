@@ -37,9 +37,13 @@ const deriveViewBox = (
     return { minX: -50, minY: -50, width: 100, height: 100 };
   }
 
-  const margin = 10;
-  const width = Math.max(20, maxX - minX + margin * 2);
-  const height = Math.max(20, maxY - minY + margin * 2);
+  // Increase margin and minimum view size to avoid extreme zoom when few
+  // entities are clustered closely together. World units are small (2-unit
+  // offsets between buildings), so a larger minimum keeps SVG units
+  // proportional to on-screen pixels.
+  const margin = 20;
+  const width = Math.max(80, maxX - minX + margin * 2);
+  const height = Math.max(80, maxY - minY + margin * 2);
 
   return {
     minX: minX - margin,
@@ -98,19 +102,21 @@ export const FactoryCanvas = () => {
 
         {snapshot.buildings.map((building) => (
           <g key={`building-${building.id}`}>
+            {/* Draw buildings at a smaller, grid-friendly size (about 1.2 units)
+                so they don't overlap when centers are ~2 units apart. */}
             <rect
-              x={building.x - 2.5}
-              y={building.y - 2.5}
-              width={5}
-              height={5}
+              x={building.x - 0.6}
+              y={building.y - 0.6}
+              width={1.2}
+              height={1.2}
               fill={buildingColor(building.type)}
               opacity={building.online === false ? 0.4 : 0.9}
-              rx={0.8}
+              rx={0.25}
             />
             <text
               x={building.x}
-              y={building.y + 4}
-              fontSize={2.2}
+              y={building.y + 1.2}
+              fontSize={0.8}
               textAnchor="middle"
               fill="#cbd5f5"
             >
@@ -121,11 +127,11 @@ export const FactoryCanvas = () => {
 
         {snapshot.drones.map((drone) => (
           <g key={`drone-${drone.id}`}>
-            <circle cx={drone.x} cy={drone.y} r={1.2} fill="#38f8c9" />
+            <circle cx={drone.x} cy={drone.y} r={0.4} fill="#38f8c9" />
             <text
               x={drone.x}
-              y={drone.y - 2}
-              fontSize={1.8}
+              y={drone.y - 0.8}
+              fontSize={0.6}
               textAnchor="middle"
               fill="#bfdbfe"
             >
