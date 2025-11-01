@@ -8,8 +8,6 @@ This index lists task files in `memory/tasks/`. It should be updated whenever ta
 
 ## PENDING
 
-- [TASK001] Core production chain - implement core production chain systems
-- [TASK002] Drone hauling system - implement hauling and logistics for drones
 - [TASK003] Basic UI controls - build basic UI controls and panels
 - [TASK004] Save/load system - implement persistent saves and migration
 - [TASK005] Phase 1 bootstrap progression - implement early game progression
@@ -29,17 +27,18 @@ This index lists task files in `memory/tasks/`. It should be updated whenever ta
 - [TASK019] Extended meta trees - expand meta progression trees
 - [TASK020] Challenge modes - add optional challenge modes
 - [TASK021] Statistics & Analytics - store per-run summaries and provide exports (JSON/CSV)
-- [TASK022] Core ECS bootstrap tick loop - implement ECS tick/bootstrap
 - [TASK023] CreateWorld bootstrap - implement world creation bootstrap
 - [TASK024] UISnapshot throttle - implement UI snapshot throttle
 - [TASK025] Sim balance unit tests - write unit tests for balance logic
-- [TASK026] Pathfinding MVP - create pathfinding MVP
 - [TASK027] Save/load migration schema tests - write migration tests
 - [TASK028] Compile scoring instrumentation - add compile scoring telemetry
 
 ## COMPLETED
 
-- None yet
+- [TASK001] Core production chain - implement core production chain systems
+- [TASK002] Drone hauling system - implement hauling and logistics for drones
+- [TASK022] Core ECS bootstrap tick loop - implement ECS tick/bootstrap
+- [TASK026] Pathfinding MVP - create pathfinding MVP
 
 ## ABANDONED
 
