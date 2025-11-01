@@ -1,5 +1,6 @@
 import { useGameStore } from "../../state/store";
 import { MetaUpgrade } from "../../types/metaUpgrades";
+import DraggableModal from "../components/DraggableModal";
 
 interface UpgradeTreeProps {
   title: string;
@@ -123,15 +124,16 @@ export function MetaUpgradesPanel({ onClose }: MetaUpgradesPanelProps) {
   const totalPrestiges = useGameStore((s) => s.totalPrestiges);
 
   return (
-    <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-8">
-      <div className="bg-neutral-900 border-2 border-amber-500 rounded-lg w-full max-w-7xl max-h-full overflow-hidden flex flex-col">
-        {/* Header */}
-        <div className="border-b border-neutral-800 px-6 py-4 flex items-center justify-between">
+    <DraggableModal
+      onClose={onClose}
+      // large modal
+      maxWidthClass="max-w-7xl"
+      maxHeightClass="max-h-[90vh]"
+      title={(
+        <div className="w-full flex items-center justify-between gap-6">
           <div>
             <h2 className="text-2xl font-bold text-amber-400">Meta Upgrade Trees</h2>
-            <p className="text-sm text-neutral-400 mt-1">
-              Permanent upgrades that persist across runs
-            </p>
+            <p className="text-sm text-neutral-400 mt-1">Permanent upgrades that persist across runs</p>
           </div>
           <div className="flex items-center gap-6">
             <div className="text-right">
@@ -142,44 +144,33 @@ export function MetaUpgradesPanel({ onClose }: MetaUpgradesPanelProps) {
               <div className="text-xs text-neutral-400">Total Prestiges</div>
               <div className="text-2xl font-bold text-emerald-400">{totalPrestiges}</div>
             </div>
-            <button
-              onClick={onClose}
-              className="text-3xl text-neutral-400 hover:text-white transition-colors"
-              title="Close"
-            >
-              ×
-            </button>
           </div>
         </div>
-        
-        {/* Upgrade trees */}
-        <div className="flex-1 overflow-y-auto p-6">
-          <div className="flex gap-6 h-full">
-            <UpgradeTree
-              title="Swarm Cognition"
-              treeKey="swarmCognition"
-              color="text-purple-400"
-            />
-            <UpgradeTree
-              title="Bio-Structure"
-              treeKey="bioStructure"
-              color="text-green-400"
-            />
-            <UpgradeTree
-              title="Compiler Optimization"
-              treeKey="compilerOptimization"
-              color="text-blue-400"
-            />
-          </div>
-        </div>
-        
-        {/* Footer help text */}
-        <div className="border-t border-neutral-800 px-6 py-3 bg-neutral-800/50">
-          <p className="text-xs text-neutral-400">
-            💡 Tip: Upgrades unlock in tiers. Complete lower tiers and reach prestige milestones to unlock higher tiers.
-          </p>
-        </div>
+      )}
+    >
+      <div className="flex gap-6 h-full">
+        <UpgradeTree
+          title="Swarm Cognition"
+          treeKey="swarmCognition"
+          color="text-purple-400"
+        />
+        <UpgradeTree
+          title="Bio-Structure"
+          treeKey="bioStructure"
+          color="text-green-400"
+        />
+        <UpgradeTree
+          title="Compiler Optimization"
+          treeKey="compilerOptimization"
+          color="text-blue-400"
+        />
       </div>
-    </div>
+
+      <div className="border-t border-neutral-800 px-6 py-3 bg-neutral-800/50 mt-4">
+        <p className="text-xs text-neutral-400">
+          💡 Tip: Upgrades unlock in tiers. Complete lower tiers and reach prestige milestones to unlock higher tiers.
+        </p>
+      </div>
+    </DraggableModal>
   );
 }

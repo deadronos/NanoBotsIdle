@@ -56,6 +56,26 @@ export const useGameStore = create<GameState>()((set, get, api) => ({
           firstPrioritySet: false,
         };
       }
+      // Defensive: ensure milestones is an array (older saves or manual edits may store as object)
+      if (
+        saveData.run.world.globals &&
+        saveData.run.world.globals.milestones &&
+        !Array.isArray(saveData.run.world.globals.milestones)
+      ) {
+        try {
+          const vals = Object.values(saveData.run.world.globals.milestones as any);
+          // Ensure flags exist on each milestone
+          saveData.run.world.globals.milestones = vals.map((m: any) => ({
+            achieved: false,
+            notified: false,
+            ...(m || {}),
+          }));
+        } catch (e) {
+          // Fallback: ensure it's at least an empty array
+          saveData.run.world.globals.milestones = [];
+        }
+      }
+
       set({
         ...saveData.meta,
         ...saveData.run,

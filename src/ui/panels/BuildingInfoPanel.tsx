@@ -1,4 +1,5 @@
 import { useGameStore } from "../../state/store";
+import DraggableModal from "../components/DraggableModal";
 
 export function BuildingInfoPanel() {
   const world = useGameStore((s) => s.world);
@@ -18,16 +19,9 @@ export function BuildingInfoPanel() {
   if (!entityType) return null;
 
   return (
-    <div className="absolute top-4 right-4 bg-neutral-900/95 backdrop-blur border border-neutral-700 rounded-lg p-4 w-64 shadow-xl">
+    <DraggableModal onClose={() => setSelectedEntity(null)} maxWidthClass="max-w-sm" maxHeightClass="max-h-[70vh]">
       <div className="flex justify-between items-start mb-3">
         <h3 className="text-lg font-bold text-white">{entityType}</h3>
-        <button
-          onClick={() => setSelectedEntity(null)}
-          className="text-neutral-400 hover:text-white transition-colors"
-          title="Close"
-        >
-          ✕
-        </button>
       </div>
 
       {/* Position */}
@@ -72,7 +66,7 @@ export function BuildingInfoPanel() {
               <div className="text-xs space-y-1">
                 {Object.entries(producer.recipe.inputs).length > 0 && (
                   <div className="text-neutral-300">
-                    Input:{" "}
+                    Input: {" "}
                     {Object.entries(producer.recipe.inputs)
                       .map(([res, amt]) => `${amt} ${res}`)
                       .join(", ")}
@@ -80,7 +74,7 @@ export function BuildingInfoPanel() {
                 )}
                 {Object.entries(producer.recipe.outputs).length > 0 && (
                   <div className="text-emerald-400">
-                    Output:{" "}
+                    Output: {" "}
                     {Object.entries(producer.recipe.outputs)
                       .map(([res, amt]) => `${amt} ${res}`)
                       .join(", ")}
@@ -154,6 +148,6 @@ export function BuildingInfoPanel() {
           </div>
         </div>
       )}
-    </div>
+    </DraggableModal>
   );
 }

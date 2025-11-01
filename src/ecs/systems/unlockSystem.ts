@@ -1,5 +1,5 @@
 import { World } from "../world/World";
-import { UNLOCK_TRIGGERS } from "../../types/unlocks";
+import { UNLOCK_TRIGGERS, ProgressionMilestone } from "../../types/unlocks";
 
 /**
  * UnlockSystem checks for unlock conditions and triggers new features
@@ -51,7 +51,15 @@ export function unlockSystem(world: World, _deltaTime: number): void {
   }
 
   // Check progression milestones
-  for (const milestone of world.globals.milestones) {
+  // Check progression milestones (defensive: saved data may store this as an object)
+  const milestones: ProgressionMilestone[] = Array.isArray(world.globals.milestones)
+    ? (world.globals.milestones as ProgressionMilestone[])
+    : typeof world.globals.milestones === "object" && world.globals.milestones !== null
+    ? (Object.values(world.globals.milestones) as ProgressionMilestone[])
+    : [];
+
+  for (const milestone of milestones) {
+    if (!milestone) continue;
     if (!milestone.achieved && world.globals.simTimeSeconds >= milestone.timeSeconds) {
       milestone.achieved = true;
       console.log(`[MILESTONE] ${milestone.name}: ${milestone.description}`);

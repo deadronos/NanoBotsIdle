@@ -9,6 +9,7 @@ import {
   getSaveMetadata,
   SaveData,
 } from "../state/persistence";
+import { tickWorld } from "../ecs/world/tickWorld";
 import { createWorld } from "../ecs/world/createWorld";
 import { MetaSlice } from "../state/metaSlice";
 
@@ -135,6 +136,48 @@ describe("Persistence System", () => {
 
       const loadedData = loadGame();
       expect(loadedData).toBeNull();
+    });
+
+    it("should tolerate world.globals.milestones stored as an object and not throw when ticking", () => {
+      // Create a fresh world then deliberately corrupt the milestones shape
+      const world = createWorld({
+        swarm: {
+          congestionAvoidanceLevel: 0,
+          prefetchUnlocked: false,
+          startingSpecialists: { hauler: 0, builder: 0, maintainer: 0 },
+          multiDropUnlocked: false,
+        },
+        bio: {
+          startingRadius: 4,
+          startingExtractorTier: 1,
+          passiveCoolingBonus: 0,
+          startingCoreInventory: {},
+        },
+        compiler: {
+          compileYieldMult: 1.0,
+          overclockEfficiencyBonus: 0,
+          recycleBonus: 0,
+          startingForkPoints: 0,
+        },
+      });
+
+      // Simulate an old or manually edited save that stores milestones as an object map
+      (world.globals as any).milestones = {
+        milestone_2min: {
+          id: "milestone_2min",
+          name: "Bootstrap Phase",
+          description: "Your first factory is operational",
+          timeSeconds: 0,
+        },
+      };
+
+      // Ensure ticking the world does not throw (unlockSystem will iterate defensively)
+      expect(() => tickWorld(world, 1)).not.toThrow();
+
+      // After ticking, the milestone value should have been updated (achieved flag added)
+      const mv = (world.globals as any).milestones["milestone_2min"];
+      expect(mv).toBeDefined();
+      expect(mv.achieved === true || mv.achieved === false).toBe(true);
     });
   });
 
