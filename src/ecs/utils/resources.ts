@@ -2,13 +2,17 @@ import type { ResourceName, ResourceQuantityMap } from "../../types/resources";
 
 export const sumQuantityMap = (
   quantities: ResourceQuantityMap | undefined,
-): number =>
-  quantities
-    ? Object.values(quantities).reduce(
-        (total, amount) => total + (amount ?? 0),
-        0,
-      )
-    : 0;
+): number => {
+  if (!quantities) {
+    return 0;
+  }
+
+  let total = 0;
+  for (const amount of Object.values(quantities)) {
+    total += amount ?? 0;
+  }
+  return total;
+};
 
 export const getResourceAmount = (
   contents: ResourceQuantityMap,

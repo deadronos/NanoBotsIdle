@@ -22,13 +22,13 @@ const assignTaskToDrone = (
   task: TaskRequest,
   droneId: EntityId,
   drone: DroneBrain,
-): void => {
+): boolean => {
   ensureRemainingField(task);
   const dronePosition = getPosition(world, droneId);
   const sourcePosition = getPosition(world, task.payload.sourceId);
 
   if (!dronePosition || !sourcePosition) {
-    return;
+    return false;
   }
 
   clearPathForEntity(world, droneId);
@@ -45,6 +45,7 @@ const assignTaskToDrone = (
     sourcePosition,
     "pickup",
   );
+  return true;
 };
 
 export const droneAssignmentSystem: System = {
@@ -71,8 +72,8 @@ export const droneAssignmentSystem: System = {
       }
 
       const [droneId, drone] = nextDroneEntry;
-      assignTaskToDrone(world, task, droneId, drone);
-      if (task.status !== "assigned") {
+      const wasAssigned = assignTaskToDrone(world, task, droneId, drone);
+      if (!wasAssigned) {
         idleDroneEntries.unshift([droneId, drone]);
       }
     }
