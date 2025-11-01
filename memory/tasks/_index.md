@@ -28,10 +28,6 @@ This index lists task files in `memory/tasks/`. It should be updated whenever ta
 - [TASK020] Challenge modes - add optional challenge modes
 - [TASK021] Statistics & Analytics - store per-run summaries and provide exports (JSON/CSV)
 - [TASK023] CreateWorld bootstrap - implement world creation bootstrap
-- [TASK024] UISnapshot throttle - implement UI snapshot throttle
-- [TASK025] Sim balance unit tests - write unit tests for balance logic
-- [TASK027] Save/load migration schema tests - write migration tests
-- [TASK028] Compile scoring instrumentation - add compile scoring telemetry
 
 ## COMPLETED
 
@@ -39,6 +35,10 @@ This index lists task files in `memory/tasks/`. It should be updated whenever ta
 - [TASK002] Drone hauling system - implement hauling and logistics for drones
 - [TASK022] Core ECS bootstrap tick loop - implement ECS tick/bootstrap
 - [TASK026] Pathfinding MVP - create pathfinding MVP
+- [TASK024] UISnapshot throttle - implement UI snapshot throttle
+- [TASK025] Sim balance unit tests - write unit tests for balance logic
+- [TASK027] Save/load migration schema tests - write migration tests
+- [TASK028] Compile scoring instrumentation - add compile scoring telemetry
 
 ## ABANDONED
 

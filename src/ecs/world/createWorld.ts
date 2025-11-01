@@ -15,9 +15,11 @@ const createInitialGlobals = (): WorldGlobals => ({
   powerDemand: 0,
   overclockEnabled: false,
   peakThroughput: 0,
+  throughputPerSec: 0,
   cohesionScore: 0,
   stressSecondsAccum: 0,
   simTimeSeconds: 0,
+  projectedShards: 0,
 });
 
 export const createWorld = (initialEntityId: EntityId = 0): World => ({

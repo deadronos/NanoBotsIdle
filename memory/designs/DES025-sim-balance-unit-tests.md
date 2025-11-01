@@ -1,7 +1,8 @@
 # DES025 - Sim balance unit tests
 
-**Status:** Draft
+**Status:** Completed
 **Created:** 2025-11-01
+**Updated:** 2025-11-01
 **Issue:** GitHub Issue #25
 
 ## Motivation / Summary

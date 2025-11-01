@@ -22,9 +22,11 @@ export interface WorldGlobals {
   powerDemand: number;
   overclockEnabled: boolean;
   peakThroughput: number;
+  throughputPerSec: number;
   cohesionScore: number;
   stressSecondsAccum: number;
   simTimeSeconds: number;
+  projectedShards: number;
 }
 
 export interface World {

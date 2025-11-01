@@ -1,7 +1,8 @@
 # DES027 - Save/Load migration & schema tests
 
-**Status:** Draft
+**Status:** Completed
 **Created:** 2025-11-01
+**Updated:** 2025-11-01
 **Issue:** GitHub Issue #27
 
 ## Motivation / Summary

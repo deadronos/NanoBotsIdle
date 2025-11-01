@@ -1,7 +1,8 @@
 # DES024 - uiSnapshotSystem and snapshot throttle
 
-**Status:** Draft
+**Status:** Completed
 **Created:** 2025-11-01
+**Updated:** 2025-11-01
 **Issue:** GitHub Issue #24
 
 ## Motivation / Summary

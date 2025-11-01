@@ -25,6 +25,7 @@ describe("productionSystem", () => {
     expect(world.inventory[entityId].contents.Iron).toBe(2);
     expect(world.producer[entityId].progress).toBe(0);
     expect(world.globals.peakThroughput).toBeGreaterThan(0);
+    expect(world.globals.throughputPerSec).toBeGreaterThan(0);
   });
 
   it("limits production based on input availability", () => {
@@ -48,6 +49,7 @@ describe("productionSystem", () => {
     expect(world.inventory[entityId].contents.Carbon).toBeCloseTo(1);
     expect(world.inventory[entityId].contents.Iron).toBe(1);
     expect(world.producer[entityId].progress).toBeGreaterThan(0);
+    expect(world.globals.throughputPerSec).toBeGreaterThan(0);
   });
 
   it("prevents production when capacity is exhausted and caps progress", () => {
@@ -70,5 +72,6 @@ describe("productionSystem", () => {
 
     expect(world.inventory[entityId].contents.Iron).toBe(2);
     expect(world.producer[entityId].progress).toBeLessThanOrEqual(1);
+    expect(world.globals.throughputPerSec).toBe(0);
   });
 });

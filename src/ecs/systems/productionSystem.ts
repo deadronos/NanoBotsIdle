@@ -96,15 +96,15 @@ const updateProducer = (
   entityId: EntityId,
   producer: Producer,
   dt: number,
-): void => {
+): number => {
   const inventory = getInventoryForEntity(world, entityId);
   if (!inventory) {
-    return;
+    return 0;
   }
 
   const outputPerSec = getProducerOutputPerSec(producer, world.globals);
   if (outputPerSec <= 0) {
-    return;
+    return 0;
   }
 
   producer.progress = Math.min(
@@ -114,7 +114,7 @@ const updateProducer = (
 
   const availableBatches = Math.floor(producer.progress);
   if (availableBatches <= 0) {
-    return;
+    return 0;
   }
 
   const capacityLimit = computeMaxBatchesByCapacity(inventory, producer.recipe);
@@ -127,7 +127,7 @@ const updateProducer = (
 
   if (!Number.isFinite(batchesToProcess) || batchesToProcess <= 0) {
     producer.progress = Math.min(producer.progress, 1);
-    return;
+    return 0;
   }
 
   consumeInputs(inventory, producer.recipe, batchesToProcess);
@@ -136,10 +136,8 @@ const updateProducer = (
 
   const totalOutputs = sumQuantityMap(producer.recipe.outputs);
   const throughput = (totalOutputs * batchesToProcess) / Math.max(dt, 1e-6);
-  world.globals.peakThroughput = Math.max(
-    world.globals.peakThroughput,
-    throughput,
-  );
+
+  return throughput;
 };
 
 export const productionSystem: System = {
@@ -149,10 +147,23 @@ export const productionSystem: System = {
       [string, Producer]
     >;
 
+    let throughputThisTick = 0;
+
     for (const [rawEntityId, producer] of producerEntries) {
       const entityId = Number(rawEntityId) as EntityId;
-      updateProducer(world, entityId, producer, dt);
+      const throughput = updateProducer(world, entityId, producer, dt);
+      throughputThisTick += throughput;
     }
+
+    if (!Number.isFinite(throughputThisTick)) {
+      throughputThisTick = 0;
+    }
+
+    world.globals.throughputPerSec = Math.max(0, throughputThisTick);
+    world.globals.peakThroughput = Math.max(
+      world.globals.peakThroughput,
+      world.globals.throughputPerSec,
+    );
   },
 };
 

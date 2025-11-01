@@ -31,15 +31,14 @@ This index lists design files in `memory/designs/`. It should be updated wheneve
 - [DES021] Statistics & Analytics - per-run summaries, UI graphs, export (JSON/CSV)
 - [DES022] Core ECS bootstrap tick loop - simulation tick and bootstrap design
 - [DES023] CreateWorld bootstrap - world creation and initial seeding
-- [DES024] UISnapshot throttle - UI snapshotting and throttling approach
-- [DES025] Sim balance unit tests - testing strategy for balance code
 - [DES026] Pathfinding MVP - minimal viable pathfinding implementation
-- [DES027] Save/load migration schema tests - testing migrations for saves
-- [DES028] Compile scoring instrumentation - telemetry and scoring instrumentation
 
 ## COMPLETED
 
-- None yet
+- [DES024] UISnapshot throttle - UI snapshotting and throttling approach
+- [DES025] Sim balance unit tests - testing strategy for balance code
+- [DES027] Save/load migration schema tests - testing migrations for saves
+- [DES028] Compile scoring instrumentation - telemetry and scoring instrumentation
 
 ## ABANDONED
 
