@@ -66,12 +66,12 @@ describe("balance helpers", () => {
     const optimalRate = getHaulingEffectiveRate({
       haulerCount: 10,
       basePerDrone: 2,
-      optimalDensity: 20,
+      optimalDensity: 10,
     });
     const congestedRate = getHaulingEffectiveRate({
       haulerCount: 40,
       basePerDrone: 2,
-      optimalDensity: 20,
+      optimalDensity: 10,
     });
 
     expect(optimalRate).toBeGreaterThan(0);

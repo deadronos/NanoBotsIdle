@@ -1,4 +1,43 @@
 import { describe, expect, it } from "vitest";
+import { createWorld, allocateEntityId } from "../world/createWorld";
+import { snapshotForWorld } from "./uiSnapshotSystem";
+
+describe("uiSnapshotSystem snapshotForWorld", () => {
+  it("includes building inventory and drone cargo in snapshot", () => {
+    const world = createWorld({ spawnEntities: false });
+
+    // create a building
+    const buildingId = allocateEntityId(world);
+    world.entityType[buildingId] = "building" as any;
+    world.position[buildingId] = { x: 0, y: 0 };
+    world.inventory[buildingId] = { capacity: 20, contents: { Iron: 3 } };
+
+    // create a drone
+    const droneId = allocateEntityId(world);
+    world.entityType[droneId] = "drone" as any;
+    world.position[droneId] = { x: 1, y: 0 };
+    world.inventory[droneId] = { capacity: 5, contents: { Iron: 2 } };
+    world.droneBrain[droneId] = {
+      role: "hauler",
+      state: "idle",
+      currentTaskId: undefined,
+      pendingPathId: undefined,
+      moveProgress: 0,
+      speed: 1,
+    };
+
+    const snapshot = snapshotForWorld(world);
+
+    const building = snapshot.buildings.find((b) => b.id === buildingId);
+    expect(building).toBeDefined();
+    expect(building?.inventory?.Iron).toBe(3);
+
+    const drone = snapshot.drones.find((d) => d.id === droneId);
+    expect(drone).toBeDefined();
+    expect(drone?.cargo?.Iron).toBe(2);
+  });
+});
+import { describe, expect, it } from "vitest";
 
 import { createWorld, allocateEntityId } from "../world/createWorld";
 import { createUISnapshotSystem, snapshotForWorld } from "./uiSnapshotSystem";

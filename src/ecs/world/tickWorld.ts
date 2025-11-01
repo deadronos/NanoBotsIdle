@@ -1,6 +1,7 @@
 import { compileScoringSystem } from "../systems/compileScoringSystem";
 import { demandPlanningSystem } from "../systems/demandPlanningSystem";
 import { droneAssignmentSystem } from "../systems/droneAssignmentSystem";
+import { congestionSystem } from "../systems/congestionSystem";
 import { heatAndPowerSystem } from "../systems/heatAndPowerSystem";
 import { movementSystem } from "../systems/movementSystem";
 import { pathfindingSystem } from "../systems/pathfindingSystem";
@@ -12,10 +13,11 @@ import type { World } from "./World";
 const DEFAULT_SYSTEMS: readonly System[] = Object.freeze([
   demandPlanningSystem,
   droneAssignmentSystem,
+  congestionSystem,
   pathfindingSystem,
   movementSystem,
-  productionSystem,
   heatAndPowerSystem,
+  productionSystem,
   compileScoringSystem,
   uiSnapshotSystem,
 ]);

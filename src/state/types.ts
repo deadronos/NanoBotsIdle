@@ -22,6 +22,8 @@ export interface UISnapshot {
     x: number;
     y: number;
     role: string;
+    // Cargo contents keyed by resource name
+    cargo?: Record<string, number>;
   }>;
   buildings: Array<{
     id: number;
@@ -31,6 +33,8 @@ export interface UISnapshot {
     tier?: number;
     online?: boolean;
     heat?: number;
+    // Inventory snapshot (resource => amount)
+    inventory?: Record<string, number>;
   }>;
 }
 

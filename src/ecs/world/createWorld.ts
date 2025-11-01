@@ -61,6 +61,7 @@ const createEmptyWorld = (initialEntityId: EntityId): World => ({
   taskRequests: [],
   pathRequests: [],
   grid: createDefaultGrid(),
+  cellTraversalPenalty: {},
 });
 
 const createDefaultSpecialists = (): StartingSpecialists => ({
@@ -497,6 +498,16 @@ const populateWorld = (world: World, meta: CreateWorldMeta): void => {
   spawnFabricator(world, centerX, centerY);
   spawnDrones(world, centerX, centerY, meta.swarm);
 
+  // Make grid traversal cost consult world.cellTraversalPenalty if present.
+  // This allows congestion / occupancy to dynamically influence A* traversal cost.
+  const originalGetTraversal = world.grid.getTraversalCost;
+  world.grid.getTraversalCost = (x: number, y: number) => {
+    const key = `${x},${y}`;
+    const penalty = world.cellTraversalPenalty?.[key] ?? 0;
+    const base = typeof originalGetTraversal === "function" ? originalGetTraversal(x, y) : 0;
+    return Math.max(0, base + (penalty ?? 0));
+  };
+
   updateAggregatePower(world);
 };
 
@@ -535,6 +546,7 @@ export const resetWorld = (world: World): void => {
   world.taskRequests = [];
   world.pathRequests = [];
   world.grid = createDefaultGrid();
+  world.cellTraversalPenalty = {};
 };
 
 export const isValidEntityId = (entityId: EntityId): boolean =>

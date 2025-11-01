@@ -137,6 +137,34 @@ export const FactoryCanvas = () => {
             >
               {drone.role.charAt(0).toUpperCase()}
             </text>
+            {drone.cargo && Object.keys(drone.cargo).length > 0 && (
+              (() => {
+                const entries = Object.entries(drone.cargo);
+                const [res, amt] = entries[0];
+                return (
+                  <g>
+                    <rect
+                      x={drone.x - 0.6}
+                      y={drone.y + 0.4}
+                      width={1.2}
+                      height={0.6}
+                      rx={0.1}
+                      fill="#111827"
+                      opacity={0.8}
+                    />
+                    <text
+                      x={drone.x}
+                      y={drone.y + 0.8}
+                      fontSize={0.5}
+                      textAnchor="middle"
+                      fill="#fef3c7"
+                    >
+                      {`${res}: ${amt}`}
+                    </text>
+                  </g>
+                );
+              })()
+            )}
           </g>
         ))}
       </svg>
