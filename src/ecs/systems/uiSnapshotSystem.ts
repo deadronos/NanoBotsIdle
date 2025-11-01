@@ -138,15 +138,11 @@ const deriveSnapshot = (
 const createDefaultPublisher =
   () =>
   (snapshot: UISnapshot): void => {
-    useGameStore.setState(
-      {
-        uiSnapshot: snapshot,
-        projectedCompileShards: Math.max(0, snapshot.projectedShards),
-        currentPhase: snapshot.currentPhase,
-      },
-      false,
-      "uiSnapshotSystem/publish",
-    );
+    useGameStore.setState({
+      uiSnapshot: snapshot,
+      projectedCompileShards: Math.max(0, snapshot.projectedShards),
+      currentPhase: snapshot.currentPhase,
+    }, false);
   };
 
 const sanitizeRate = (rateHz: number | undefined): number => {

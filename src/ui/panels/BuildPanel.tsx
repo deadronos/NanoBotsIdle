@@ -1,4 +1,5 @@
 import { useGameStore } from "../../state/store";
+import { startPlacement, cancelPlacement, applyUpgrade, setPlacementMessage } from "../../state/actions";
 
 interface BuildOption {
   id: string;
@@ -30,9 +31,19 @@ const PanelSection = ({ title, items }: { title: string; items: BuildOption[] })
           key={item.id}
           type="button"
           className="w-full rounded-md border border-slate-700 bg-slate-900/60 px-3 py-2 text-left transition hover:border-slate-500 hover:bg-slate-800/70"
-          onClick={() =>
-            console.warn("[BuildPanel] build action not yet implemented", item.id)
-          }
+          onClick={() => {
+            // If this is an upgrade ID, apply to selected building, else start placement
+            if (title === "Upgrades") {
+              const state = useGameStore.getState();
+              if (!state.selectedEntity) {
+                setPlacementMessage("Select a building to apply upgrade");
+                return;
+              }
+              applyUpgrade(item.id);
+              return;
+            }
+            startPlacement(item.id);
+          }}
         >
           <div className="text-sm font-semibold text-slate-50">{item.label}</div>
           <div className="text-xs text-slate-400">{item.description}</div>
@@ -44,6 +55,7 @@ const PanelSection = ({ title, items }: { title: string; items: BuildOption[] })
 
 export const BuildPanel = () => {
   const forkPoints = useGameStore((state) => state.forkPoints);
+  const placementType = useGameStore((state) => state.placementState.activeType);
 
   return (
     <div className="flex h-full flex-col gap-6">
@@ -54,6 +66,12 @@ export const BuildPanel = () => {
 
       <PanelSection title="Structures" items={structureOptions} />
       <PanelSection title="Upgrades" items={upgrades} />
+      {placementType && (
+        <div className="mt-3 text-xs text-slate-400">
+          <div>Placing: <span className="font-semibold text-slate-100">{placementType}</span></div>
+          <div className="mt-1">Left-click canvas to place; right-click queued ghost to remove. <button className="ml-2 underline" onClick={() => cancelPlacement()}>Cancel</button></div>
+        </div>
+      )}
     </div>
   );
 };

@@ -6,7 +6,7 @@ import type {
   MetaSlice,
   SwarmCognitionUpgrades,
 } from "./types";
-import { warnUnimplemented } from "./utils";
+// unused util removed
 
 const defaultSwarmCognition = (): SwarmCognitionUpgrades => ({
   congestionAvoidanceLevel: 0,
@@ -19,6 +19,8 @@ const defaultCompilerOptimization = (): CompilerOptimizationUpgrades => ({
   overclockEfficiencyBonus: 0,
   recycleBonus: 0,
 });
+
+import { getUpgradeCost } from "../sim/buildCosts";
 
 export const createMetaSlice: StateCreator<GameState, [], [], MetaSlice> = (
   set,
@@ -34,8 +36,16 @@ export const createMetaSlice: StateCreator<GameState, [], [], MetaSlice> = (
     passiveCoolingBonus: 0,
   },
   compilerOptimization: defaultCompilerOptimization(),
-  spendShards: (tree, upgradeId) => {
+  spendShards: (_tree, upgradeId) => {
     const state = get();
-    warnUnimplemented("spendShards not yet implemented", tree, upgradeId, state);
+    const cost = getUpgradeCost(upgradeId).shards ?? 0;
+    if (!Number.isFinite(cost) || cost <= 0) {
+      return true;
+    }
+    if (state.compileShardsBanked >= cost) {
+      set({ compileShardsBanked: Math.max(0, state.compileShardsBanked - cost) });
+      return true;
+    }
+    return false;
   },
 });

@@ -428,6 +428,51 @@ const spawnFabricator = (
   return fabricatorId;
 };
 
+/**
+ * Spawn a building of the given type at the provided world coordinates.
+ * This is a canonical helper used by UI placement logic.
+ */
+export const spawnBuildingAt = (
+  world: World,
+  type: string,
+  x: number,
+  y: number,
+): EntityId => {
+  const t = type.toLowerCase();
+  // Use existing specialized spawners when possible; they expect a center
+  // anchor so call them with x,y as center offsets.
+  switch (t) {
+    case "extractor":
+      return spawnExtractor(world, x, y, { swarm: createDefaultSwarm(), bio: createDefaultBio(), compiler: createDefaultCompiler() });
+    case "assembler":
+      return spawnAssembler(world, x, y);
+    case "fabricator":
+      return spawnFabricator(world, x, y);
+    case "cooler": {
+      const id = registerEntity(world, "building");
+      world.position[id] = { x, y };
+      world.inventory[id] = createInventory(40);
+      world.heatSink[id] = { coolingPerSecond: 1 };
+      world.powerLink[id] = { demand: 0.5, priority: 2, online: true };
+      return id;
+    }
+    case "storage": {
+      const id = registerEntity(world, "building");
+      world.position[id] = { x, y };
+      world.inventory[id] = createInventory(200);
+      world.powerLink[id] = { demand: 0.2, priority: 3, online: true };
+      return id;
+    }
+    default: {
+      const id = registerEntity(world, "building");
+      world.position[id] = { x, y };
+      world.inventory[id] = createInventory(60);
+      world.powerLink[id] = { demand: 0.5, priority: 3, online: true };
+      return id;
+    }
+  }
+};
+
 const spawnDrone = (
   world: World,
   centerX: number,

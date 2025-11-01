@@ -6,6 +6,7 @@ import { heatAndPowerSystem } from "../systems/heatAndPowerSystem";
 import { movementSystem } from "../systems/movementSystem";
 import { pathfindingSystem } from "../systems/pathfindingSystem";
 import productionSystem from "../systems/productionSystem";
+import { ghostPlacementSystem } from "../systems/ghostPlacementSystem";
 import { uiSnapshotSystem } from "../systems/uiSnapshotSystem";
 import type { System, SystemList } from "../systems/System";
 import type { World } from "./World";
@@ -19,6 +20,7 @@ const DEFAULT_SYSTEMS: readonly System[] = Object.freeze([
   heatAndPowerSystem,
   productionSystem,
   compileScoringSystem,
+  ghostPlacementSystem,
   uiSnapshotSystem,
 ]);
 

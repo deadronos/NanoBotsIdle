@@ -23,7 +23,7 @@ export interface UISnapshot {
     y: number;
     role: string;
     // Cargo contents keyed by resource name
-    cargo?: Record<string, number>;
+    cargo?: Record<string, number | undefined>;
   }>;
   buildings: Array<{
     id: number;
@@ -34,8 +34,20 @@ export interface UISnapshot {
     online?: boolean;
     heat?: number;
     // Inventory snapshot (resource => amount)
-    inventory?: Record<string, number>;
+    inventory?: Record<string, number | undefined>;
   }>;
+}
+
+export interface GhostEntry {
+  id: string;
+  type: string;
+  x: number;
+  y: number;
+  createdAt: number;
+}
+
+export interface PlacementState {
+  activeType: string | null;
 }
 
 export interface StartingSpecialists {
@@ -68,7 +80,7 @@ export interface MetaSlice {
   swarmCognition: SwarmCognitionUpgrades;
   bioStructure: BioStructureUpgrades;
   compilerOptimization: CompilerOptimizationUpgrades;
-  spendShards(tree: "swarm" | "bio" | "compiler", upgradeId: string): void;
+  spendShards(tree: "swarm" | "bio" | "compiler", upgradeId: string): boolean;
 }
 
 export interface RunSlice {
@@ -79,8 +91,18 @@ export interface RunSlice {
   selectedEntity: EntityId | null;
   currentPhase: Phase;
   overclockArmed: boolean;
-  placeBuilding(type: string, x: number, y: number): void;
+  ghostQueue: GhostEntry[];
+  placementState: PlacementState;
+  placementMessage: string | null;
+  removePlacementMessage(): void;
+  setPlacementMessage(msg: string | null): void;
+  placeBuilding(type: string, x: number, y: number): boolean;
   queueGhostBuilding(type: string, x: number, y: number): void;
+  startPlacement(type: string | null): void;
+  cancelPlacement(): void;
+  confirmPlacementAt(x: number, y: number): void;
+  removeQueuedGhost(id: string): void;
+  applyUpgrade(upgradeId: string, targetEntityId?: EntityId | null): void;
   triggerFork(): void;
   toggleOverclock(on: boolean): void;
   prestigeNow(): void;

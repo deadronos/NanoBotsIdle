@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { createWorld, allocateEntityId } from "../world/createWorld";
-import { snapshotForWorld } from "./uiSnapshotSystem";
+import { createUISnapshotSystem, snapshotForWorld } from "./uiSnapshotSystem";
 
 describe("uiSnapshotSystem snapshotForWorld", () => {
   it("includes building inventory and drone cargo in snapshot", () => {
@@ -37,10 +37,6 @@ describe("uiSnapshotSystem snapshotForWorld", () => {
     expect(drone?.cargo?.Iron).toBe(2);
   });
 });
-import { describe, expect, it } from "vitest";
-
-import { createWorld, allocateEntityId } from "../world/createWorld";
-import { createUISnapshotSystem, snapshotForWorld } from "./uiSnapshotSystem";
 
 const createSampleWorld = () => {
   const world = createWorld({ spawnEntities: false });
