@@ -73,4 +73,19 @@ describe("createWorld", () => {
     expect(Object.keys(world.producer)).toHaveLength(0);
     expect(world.globals.heatSafeCap).toBe(0);
   });
+
+  it('createWorld() returns at least one hauler by default', () => {
+    const world = createWorld();
+
+    const haulers = Object.values(world.droneBrain).filter(
+      (d) => d.role === "hauler",
+    ).length;
+    expect(haulers).toBeGreaterThanOrEqual(1);
+  });
+
+  it('createWorld({ spawnEntities: false }) returns zero drones', () => {
+    const world = createWorld({ spawnEntities: false });
+
+    expect(Object.keys(world.droneBrain).length).toBe(0);
+  });
 });
