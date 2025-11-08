@@ -197,7 +197,7 @@ export const FactoryCanvas = () => {
                 stroke="#ffffff"
                 strokeOpacity={0.08}
                 className={recentlyCreated ? "ghost-pop" : ""}
-                style={{ transformOrigin: "center center" }}
+                transform-origin="center center"
               >
                 {recentlyCreated && (
                   <>
