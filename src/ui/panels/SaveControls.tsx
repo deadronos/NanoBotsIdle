@@ -1,6 +1,8 @@
 import React, { useRef } from "react";
 import { saveAll, loadAll, clearSaves, exportSave, importSave, applySaveToStore } from "../../state/saveManager";
 import { useGameStore } from "../../state/store";
+import { createWorld } from "../../ecs/world/createWorld";
+import { createInitialSnapshot } from "../../state/runSlice";
 import { useToast } from "../ToastProvider";
 
 const buttonBase =
@@ -36,7 +38,22 @@ export const SaveControls = () => {
   const handleClear = () => {
     if (!confirm("Clear saved data from localStorage?")) return;
     clearSaves();
-    push("Saves cleared", "info");
+    // Also reset the in-memory world to a fresh run so clearing saves doesn't leave
+    // the running session in a possibly corrupted or empty state.
+    try {
+      const fresh = createWorld();
+      // setWorld and setUISnapshot are provided by the run slice
+      const store = useGameStore.getState();
+      if (store.setWorld) store.setWorld(fresh as any);
+      if (store.setUISnapshot) store.setUISnapshot(createInitialSnapshot());
+    } catch (err) {
+      // best-effort: don't block the UI if reset fails
+      // log for debugging
+      // eslint-disable-next-line no-console
+      console.warn("Failed to reset world after clearing saves:", err);
+    }
+
+    push("Saves cleared and runtime reset", "info");
   };
 
   const handleExport = () => {
