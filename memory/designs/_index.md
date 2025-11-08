@@ -33,6 +33,9 @@ This index lists design files in `memory/designs/`. It should be updated wheneve
 - [DES023] CreateWorld bootstrap - world creation and initial seeding
 - [DES026] Pathfinding MVP - minimal viable pathfinding implementation
 
+- [DES029] Congestion & traffic management - congestion modeling, reservation and rerouting
+- [DES030] Heat & Power system - thermal model, power distribution, overclock interactions
+
 ## COMPLETED
 
 - [DES024] UISnapshot throttle - UI snapshotting and throttling approach
