@@ -568,6 +568,9 @@ export const createWorld = (params?: CreateWorldParams): World => {
 
   if (normalized.spawnEntities) {
     populateWorld(world, normalized.meta);
+    // Ensure a minimal set of drones exist to avoid softlocks (e.g., no haulers present)
+    // This safety check is intentionally small and conservative.
+    ensureMinimumDrones(world);
   }
 
   return world;
@@ -596,3 +599,27 @@ export const resetWorld = (world: World): void => {
 
 export const isValidEntityId = (entityId: EntityId): boolean =>
   entityId !== INVALID_ENTITY_ID && entityId >= 0;
+
+export const ensureMinimumDrones = (world: World): void => {
+  const gridWidthRaw = world.grid?.width;
+  const gridHeightRaw = world.grid?.height;
+  const gw = Number(gridWidthRaw ?? NaN);
+  const gh = Number(gridHeightRaw ?? NaN);
+  const gridWidth = Number.isFinite(gw) ? Math.max(1, Math.floor(gw)) : DEFAULT_GRID_SIZE;
+  const gridHeight = Number.isFinite(gh) ? Math.max(1, Math.floor(gh)) : DEFAULT_GRID_SIZE;
+  const centerX = Math.floor(gridWidth / 2);
+  const centerY = Math.floor(gridHeight / 2);
+
+  const drones = Object.values(world.droneBrain ?? {});
+  const haulerCount = drones.filter((d) => d.role === "hauler").length;
+  const builderCount = drones.filter((d) => d.role === "builder").length;
+
+  if (haulerCount === 0) {
+    spawnDrone(world, centerX, centerY, "hauler", 0);
+  }
+  if (builderCount === 0) {
+    spawnDrone(world, centerX, centerY, "builder", 0);
+  }
+
+  updateAggregatePower(world);
+};

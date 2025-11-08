@@ -6,6 +6,7 @@ import {
 } from "./persistence";
 import { CURRENT_SCHEMA_VERSION } from "./migrations";
 import { useGameStore } from "./store";
+import { ensureMinimumDrones } from "../ecs/world/createWorld";
 import { stopSimulation, startSimulation } from "../sim/simLoop";
 import pako from "pako";
 
@@ -212,11 +213,69 @@ export const applySaveToStore = async (): Promise<boolean> => {
     if (run.world && typeof run.world === "object") {
       // run.world should be a full serializable World object
       store.setWorld(run.world as any);
+
+      // Defensive normalization for potentially malformed save blobs
+      try {
+        const w = useGameStore.getState().world as any;
+        // Compute a safe nextEntityId from existing entity maps to avoid collisions
+        try {
+          const idsFromEntityType = Object.keys(w.entityType || {}).map((s) => Number(s));
+          const idsFromPosition = Object.keys(w.position || {}).map((s) => Number(s));
+          const allIds = idsFromEntityType.concat(idsFromPosition).filter(Number.isFinite);
+          const maxId = allIds.length ? Math.max(...allIds) : -1;
+          if (!Number.isFinite(Number(w.nextEntityId))) {
+            w.nextEntityId = Math.max(0, maxId + 1);
+          }
+        } catch (inner) {
+          if (!Number.isFinite(Number(w.nextEntityId))) w.nextEntityId = 0;
+        }
+
+        if (!w.grid || typeof w.grid !== "object") {
+          const width = 64;
+          const height = 64;
+          w.grid = {
+            width,
+            height,
+            isWalkable: (x: number, y: number) => x >= 0 && x < width && y >= 0 && y < height,
+            getTraversalCost: () => 1,
+          };
+        } else {
+          const gw = Number(w.grid.width);
+          const gh = Number(w.grid.height);
+          const width = Number.isFinite(gw) && gw > 0 ? Math.floor(gw) : 64;
+          const height = Number.isFinite(gh) && gh > 0 ? Math.floor(gh) : 64;
+          w.grid.width = width;
+          w.grid.height = height;
+          if (typeof w.grid.getTraversalCost !== "function") w.grid.getTraversalCost = () => 1;
+          if (typeof w.grid.isWalkable !== "function") w.grid.isWalkable = (x: number, y: number) => x >= 0 && x < width && y >= 0 && y < height;
+        }
+      } catch (e) {
+        console.warn("Failed to normalize loaded world:", e);
+      }
+
+      try {
+        ensureMinimumDrones(useGameStore.getState().world);
+      } catch (err) {
+        console.warn("ensureMinimumDrones failed while applying saved world:", err);
+      }
     } else if (run.globals && typeof run.globals === "object") {
       // Merge globals into existing world object to preserve entities
       const currentWorld = store.world;
       currentWorld.globals = { ...currentWorld.globals, ...run.globals };
       store.setWorld(currentWorld);
+
+      try {
+        const w = useGameStore.getState().world as any;
+        if (!Number.isFinite(Number(w?.nextEntityId))) w.nextEntityId = 0;
+      } catch (e) {
+        // best-effort normalization
+      }
+
+      try {
+        ensureMinimumDrones(useGameStore.getState().world);
+      } catch (err) {
+        console.warn("ensureMinimumDrones failed while merging saved globals:", err);
+      }
     }
 
     // Apply UI snapshot
