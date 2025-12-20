@@ -29,6 +29,10 @@ export class PlayerController {
   private yaw = 0;
   private pitch = 0;
 
+  private handleKeyDown?: (e: KeyboardEvent) => void;
+  private handleKeyUp?: (e: KeyboardEvent) => void;
+  private handleMouseMove?: (e: MouseEvent) => void;
+
   private input: InputState = {
     forward: false, back: false, left: false, right: false, jump: false, sprint: false,
   };
@@ -60,6 +64,23 @@ export class PlayerController {
   async requestPointerLock(): Promise<void> {
     if (document.pointerLockElement === this.domElement) return;
     this.domElement.requestPointerLock();
+  }
+
+  clearInput(): void {
+    this.input = {
+      forward: false,
+      back: false,
+      left: false,
+      right: false,
+      jump: false,
+      sprint: false
+    };
+  }
+
+  dispose(): void {
+    if (this.handleKeyDown) window.removeEventListener("keydown", this.handleKeyDown);
+    if (this.handleKeyUp) window.removeEventListener("keyup", this.handleKeyUp);
+    if (this.handleMouseMove) window.removeEventListener("mousemove", this.handleMouseMove);
   }
 
   teleportToSafeSpawn(): void {
@@ -238,35 +259,40 @@ export class PlayerController {
   }
 
   private bindInput(): void {
-    window.addEventListener("keydown", (e) => {
+    this.handleKeyDown = (e) => {
       if (e.code === "KeyW") this.input.forward = true;
       if (e.code === "KeyS") this.input.back = true;
       if (e.code === "KeyA") this.input.left = true;
       if (e.code === "KeyD") this.input.right = true;
       if (e.code === "Space") this.input.jump = true;
       if (e.code === "ShiftLeft" || e.code === "ShiftRight") this.input.sprint = true;
-    });
+    };
 
-    window.addEventListener("keyup", (e) => {
+    this.handleKeyUp = (e) => {
       if (e.code === "KeyW") this.input.forward = false;
       if (e.code === "KeyS") this.input.back = false;
       if (e.code === "KeyA") this.input.left = false;
       if (e.code === "KeyD") this.input.right = false;
       if (e.code === "Space") this.input.jump = false;
       if (e.code === "ShiftLeft" || e.code === "ShiftRight") this.input.sprint = false;
-    });
+    };
+
+    window.addEventListener("keydown", this.handleKeyDown);
+    window.addEventListener("keyup", this.handleKeyUp);
   }
 
   private bindMouseLook(): void {
     const clampPitch = (p: number) => Math.max(-Math.PI / 2 + 0.01, Math.min(Math.PI / 2 - 0.01, p));
 
-    window.addEventListener("mousemove", (e) => {
+    this.handleMouseMove = (e) => {
       if (document.pointerLockElement !== this.domElement) return;
       const sens = 0.0022;
       this.yaw -= e.movementX * sens;
       this.pitch -= e.movementY * sens;
       this.pitch = clampPitch(this.pitch);
-    });
+    };
+
+    window.addEventListener("mousemove", this.handleMouseMove);
   }
 }
 

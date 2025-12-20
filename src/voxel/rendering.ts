@@ -26,18 +26,18 @@ export function createChunkMeshes(scene: THREE.Scene, world: World, material: TH
     return cm;
   }
 
-function pruneRemovedChunks() {
-  for (const [k, cm] of meshes) {
-    if (world.getChunkByKey(k)) continue;
-    scene.remove(cm.mesh);
-    cm.mesh.geometry.dispose();
-    meshes.delete(k);
-    pending.delete(k);
+  function pruneRemovedChunks() {
+    for (const [k, cm] of meshes) {
+      if (world.getChunkByKey(k)) continue;
+      scene.remove(cm.mesh);
+      cm.mesh.geometry.dispose();
+      meshes.delete(k);
+      pending.delete(k);
+    }
   }
-}
 
-function sync() {
-  pruneRemovedChunks();
+  function sync() {
+    pruneRemovedChunks();
 
     // Create/update meshes for chunks that have built geometry.
     for (const k of world.getChunkKeys()) {
@@ -71,5 +71,14 @@ function sync() {
     }
   }
 
-  return { sync };
+  function dispose() {
+    for (const [, cm] of meshes) {
+      scene.remove(cm.mesh);
+      cm.mesh.geometry.dispose();
+    }
+    meshes.clear();
+    pending.clear();
+  }
+
+  return { sync, dispose };
 }

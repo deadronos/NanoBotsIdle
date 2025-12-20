@@ -1,15 +1,27 @@
-# TS VoxelCraft (Minecraft-ish starter)
+# NanoBots Idle - Voxel Frontier
 
-A compact voxel world in **TypeScript** + **Three.js**, built for the browser.
+A React 19 + React Three Fiber sandbox that grows a Minecraft-style voxel world in the browser.
 
 Features included:
-- Chunked voxel storage (16×64×16) + infinite streaming (loads/unloads chunks as you move)
-- Procedural terrain (simple fBm/value noise)
-- Face culling mesh generation
-- Pointer-lock first-person camera
-- Basic AABB collisions (walk/jump/sprint)
-- DDA voxel picking + block break/place
-- Tiny in-code texture atlas (no assets required)
+- Infinite chunk streaming with pruning (16x72x16 chunks)
+- Procedural terrain with beaches, water, trees, and bedrock
+- Chunk meshing with face culling
+- Pointer-lock first-person controller (walk, sprint, jump)
+- DDA voxel picking with break/place
+- Inventory, hotbar, and batch crafting recipes
+- Day/night light cycle and fog atmosphere
+- In-code pixel atlas (no external art required)
+
+## Controls
+
+- WASD move
+- Space jump
+- Shift sprint
+- 1-9 hotbar
+- E inventory
+- Left click break
+- Right click place
+- Esc unlock pointer
 
 ## Run
 
@@ -20,14 +32,11 @@ npm run dev
 
 Then open the local URL printed by Vite.
 
-## Next upgrades (if you want it closer to “Minecraft”)
+## Next upgrades
 
-- Greedy meshing (reduce triangles dramatically)
-- Real lighting (sunlight propagation + torches)
-- Transparent block sorting (water/leaves)
-- Chunk streaming + unloading
-- Save/load (localStorage, IndexedDB)
-- Mobs + AI
-- UI: inventory, crafting, hotbar icons
+- Greedy meshing and occlusion optimization
+- Lighting propagation and torch glow
+- Item drops, durability, and tools
+- Save/load (IndexedDB)
+- Mobs, biomes, and structures
 - Multiplayer (authoritative server)
-

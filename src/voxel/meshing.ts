@@ -62,23 +62,31 @@ const FACES: Face[] = [
   },
 ];
 
-function isFaceVisible(world: World, wx: number, wy: number, wz: number, nx: number, ny: number, nz: number): boolean {
+function isFaceVisible(
+  world: World,
+  wx: number,
+  wy: number,
+  wz: number,
+  nx: number,
+  ny: number,
+  nz: number,
+  selfId: BlockId
+): boolean {
   const b = world.getBlock(wx + nx, wy + ny, wz + nz);
-  const def = BLOCKS[b];
-  // Visible if neighbor is air or non-solid (water/leaves are considered "non-occluding" in this simple starter).
-  return b === BlockId.Air || !def.solid;
+  if (b === BlockId.Air) return true;
+  const neighbor = BLOCKS[b];
+  if (b === selfId && neighbor.transparent) return false;
+  const occludes = neighbor.occludes ?? neighbor.solid;
+  // Visible if neighbor does not occlude faces (water/leaves/glass/torch).
+  return !occludes;
 }
 
 function tileForFace(id: BlockId, face: Face): number {
   const def = BLOCKS[id];
   const t = def.tile;
-  // @ts-expect-error we model partial tiles per face via keys
   if (face.name === "py" && t.top != null) return t.top;
-  // @ts-expect-error
   if (face.name === "ny" && t.bottom != null) return t.bottom;
-  // @ts-expect-error
   if (t.side != null && (face.name === "px" || face.name === "nx" || face.name === "pz" || face.name === "nz")) return t.side;
-  // @ts-expect-error
   return t.all ?? 0;
 }
 
@@ -108,7 +116,7 @@ export function buildChunkGeometry(world: World, chunk: Chunk): BuiltGeometry {
         const wz = baseZ + z;
 
         for (const face of FACES) {
-          if (!isFaceVisible(world, wx, y, wz, face.o[0], face.o[1], face.o[2])) continue;
+          if (!isFaceVisible(world, wx, y, wz, face.o[0], face.o[1], face.o[2], id)) continue;
 
           const tile = tileForFace(id, face);
           const tx = tile % tilesPerRow;

@@ -2,19 +2,38 @@
 import { fbm2, hash2 } from "./noise";
 import { buildChunkGeometry, type BuiltGeometry } from "./meshing";
 
-export const BLOCKS = [
+type BlockTile = {
+  all?: number;
+  top?: number;
+  side?: number;
+  bottom?: number;
+};
+
+export type BlockDef = {
+  name: string;
+  solid: boolean;
+  tile: BlockTile;
+  transparent?: boolean;
+  occludes?: boolean;
+  breakable?: boolean;
+};
+
+export const BLOCKS: BlockDef[] = [
   // index matches BlockId enum
-  { name: "Air", solid: false, tile: { all: 0 } },
+  { name: "Air", solid: false, tile: { all: 0 }, occludes: false, transparent: true },
   { name: "Grass", solid: true, tile: { top: 1, side: 2, bottom: 3 } },
   { name: "Dirt", solid: true, tile: { all: 3 } },
   { name: "Stone", solid: true, tile: { all: 4 } },
-  { name: "Water", solid: false, tile: { all: 5 }, transparent: true },
+  { name: "Water", solid: false, tile: { all: 5 }, transparent: true, occludes: false },
   { name: "Sand", solid: true, tile: { all: 6 } },
   { name: "Wood", solid: true, tile: { side: 7, top: 8, bottom: 8 } },
-  { name: "Leaves", solid: true, tile: { all: 9 }, transparent: true },
-] as const;
-
-export type BlockDef = typeof BLOCKS[number];
+  { name: "Leaves", solid: true, tile: { all: 9 }, transparent: true, occludes: false },
+  { name: "Planks", solid: true, tile: { all: 10 } },
+  { name: "Brick", solid: true, tile: { all: 11 } },
+  { name: "Glass", solid: true, tile: { all: 12 }, transparent: true, occludes: false },
+  { name: "Torch", solid: false, tile: { all: 13 }, transparent: true, occludes: false },
+  { name: "Bedrock", solid: true, tile: { all: 14 }, breakable: false },
+];
 
 export enum BlockId {
   Air = 0,
@@ -24,12 +43,19 @@ export enum BlockId {
   Water = 4,
   Sand = 5,
   Wood = 6,
-  Leaves = 7
+  Leaves = 7,
+  Planks = 8,
+  Brick = 9,
+  Glass = 10,
+  Torch = 11,
+  Bedrock = 12
 }
 
 export function blockIdToName(id: BlockId): string {
   return BLOCKS[id]?.name ?? "Unknown";
 }
+
+export const BLOCK_ID_LIST = BLOCKS.map((_, index) => index as BlockId);
 
 export type ChunkSize = { x: number; y: number; z: number };
 
@@ -110,11 +136,11 @@ export class World {
     this.chunks.set(k, c);
     this.dirty.add(k);
     // When a new chunk appears, its neighbors may need rebuild to hide/show border faces.
-this.dirty.add(this.key(cx - 1, cz));
-this.dirty.add(this.key(cx + 1, cz));
-this.dirty.add(this.key(cx, cz - 1));
-this.dirty.add(this.key(cx, cz + 1));
-return c;
+    this.dirty.add(this.key(cx - 1, cz));
+    this.dirty.add(this.key(cx + 1, cz));
+    this.dirty.add(this.key(cx, cz - 1));
+    this.dirty.add(this.key(cx, cz + 1));
+    return c;
   }
 
   generateInitialArea(centerCx: number, centerCz: number): void {
@@ -137,35 +163,34 @@ return c;
     }
   }
 
-
-hasChunkKey(k: ChunkKey): boolean {
-  return this.chunks.has(k);
-}
-
-/**
- * Keep memory bounded by unloading chunks far away.
- * Uses Chebyshev distance in chunk space.
- */
-pruneFarChunks(wx: number, wz: number): void {
-  const cx = Math.floor(wx / this.chunkSize.x);
-  const cz = Math.floor(wz / this.chunkSize.z);
-
-  // Keep a slightly larger radius than viewDistance so borders don't thrash.
-  const keep = this.viewDistanceChunks + 2;
-
-  for (const [k, c] of this.chunks) {
-    const dx = Math.abs(c.cx - cx);
-    const dz = Math.abs(c.cz - cz);
-    if (dx <= keep && dz <= keep) continue;
-
-    // Drop from world. Rendering layer will dispose meshes on next sync.
-    this.chunks.delete(k);
-    this.dirty.delete(k);
-
-    // Release CPU references to geometry (GPU resource disposal happens in renderer on mesh removal).
-    c.built = null;
+  hasChunkKey(k: ChunkKey): boolean {
+    return this.chunks.has(k);
   }
-}
+
+  /**
+   * Keep memory bounded by unloading chunks far away.
+   * Uses Chebyshev distance in chunk space.
+   */
+  pruneFarChunks(wx: number, wz: number): void {
+    const cx = Math.floor(wx / this.chunkSize.x);
+    const cz = Math.floor(wz / this.chunkSize.z);
+
+    // Keep a slightly larger radius than viewDistance so borders don't thrash.
+    const keep = this.viewDistanceChunks + 2;
+
+    for (const [k, c] of this.chunks) {
+      const dx = Math.abs(c.cx - cx);
+      const dz = Math.abs(c.cz - cz);
+      if (dx <= keep && dz <= keep) continue;
+
+      // Drop from world. Rendering layer will dispose meshes on next sync.
+      this.chunks.delete(k);
+      this.dirty.delete(k);
+
+      // Release CPU references to geometry (GPU resource disposal happens in renderer on mesh removal).
+      c.built = null;
+    }
+  }
 
   getBlock(wx: number, wy: number, wz: number): BlockId {
     const { cx, cz, lx, lz } = this.worldToChunk(wx, wz);
@@ -227,6 +252,10 @@ pruneFarChunks(wx: number, wz: number): void {
     return this.chunks.get(k);
   }
 
+  getChunkCount(): number {
+    return this.chunks.size;
+  }
+
   worldToChunk(wx: number, wz: number): { cx: number; cz: number; lx: number; lz: number } {
     const cx = Math.floor(wx / this.chunkSize.x);
     const cz = Math.floor(wz / this.chunkSize.z);
@@ -282,6 +311,7 @@ pruneFarChunks(wx: number, wz: number): void {
   }
 
   private terrainBlockAt(y: number, height: number, nearSea: boolean): BlockId {
+    if (y === 0) return BlockId.Bedrock;
     if (y > height) {
       if (y <= this.seaLevel) return BlockId.Water;
       return BlockId.Air;
@@ -321,7 +351,7 @@ pruneFarChunks(wx: number, wz: number): void {
           const py = top + dy;
           const pz = lz + dz;
           if (py < 0 || py >= sy) continue;
-          // Only place within this chunk. (Edges will look clipped—fine for starter.)
+          // Only place within this chunk. (Edges will look clipped - fine for starter.)
           if (px < 0 || pz < 0 || px >= c.size.x || pz >= c.size.z) continue;
           const existing = c.getLocal(px, py, pz);
           if (existing === BlockId.Air) c.setLocal(px, py, pz, BlockId.Leaves);

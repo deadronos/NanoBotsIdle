@@ -59,6 +59,11 @@ export function createAtlasTexture(renderer: RendererLike, blocks: readonly Bloc
   paintTile(7, "#8a5a2e", "#6f4522"); // wood side
   paintTile(8, "#a06c3a", "#6f4522"); // wood top/bottom
   paintTile(9, "rgba(65,160,75,0.75)", "rgba(255,255,255,0.18)"); // leaves
+  paintTile(10, "#c99753", "#b07b42"); // planks
+  paintTile(11, "#b84e4b", "#923634"); // brick
+  paintTile(12, "rgba(160,210,230,0.65)", "rgba(255,255,255,0.22)"); // glass
+  paintTile(13, "#f2c86d", "#a36d32"); // torch
+  paintTile(14, "#4b4b4f", "#2f2f33"); // bedrock
 
   // optional: paint the rest as debug checker.
   for (let t = 10; t < tilesPerRow * tilesPerRow; t++) {
