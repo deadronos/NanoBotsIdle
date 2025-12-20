@@ -1,11 +1,11 @@
 ---
-mode: agent
+agent: agent
 description: 'Website exploration for testing using Playwright MCP'
 tools:
   [
     'changes',
-    'codebase',
-    'editFiles',
+    'search/codebase',
+    'edit/editFiles',
     'fetch',
     'findTestFiles',
     'problems',
@@ -13,9 +13,9 @@ tools:
     'runTasks',
     'runTests',
     'search',
-    'searchResults',
-    'terminalLastCommand',
-    'terminalSelection',
+    'search/searchResults',
+    'runCommands/terminalLastCommand',
+    'runCommands/terminalSelection',
     'testFailure',
     'playwright',
   ]

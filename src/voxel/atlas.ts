@@ -1,0 +1,80 @@
+import * as THREE from "three";
+import type { BlockDef } from "./World";
+
+export type Atlas = {
+  canvas: HTMLCanvasElement;
+  texture: THREE.CanvasTexture;
+};
+
+type RendererLike = { capabilities: { getMaxAnisotropy: () => number } };
+
+/**
+ * Build a tiny pixel atlas on the fly so you can run without assets.
+ * Tile IDs are hardcoded in World.ts.
+ */
+export function createAtlasTexture(renderer: RendererLike, blocks: readonly BlockDef[]): Atlas {
+  const tilesPerRow = 16;
+  const tilePx = 16;
+  const sizePx = tilesPerRow * tilePx;
+
+  const canvas = document.createElement("canvas");
+  canvas.width = sizePx;
+  canvas.height = sizePx;
+
+  const ctx = canvas.getContext("2d")!;
+  ctx.imageSmoothingEnabled = false;
+
+  // Tile 0 = fully transparent.
+  ctx.clearRect(0, 0, sizePx, sizePx);
+
+  function paintTile(tile: number, base: string, accent?: string) {
+    const x0 = (tile % tilesPerRow) * tilePx;
+    const y0 = Math.floor(tile / tilesPerRow) * tilePx;
+
+    ctx.fillStyle = base;
+    ctx.fillRect(x0, y0, tilePx, tilePx);
+
+    // Add a small pixel noise pattern to feel more "blocky".
+    if (accent) {
+      ctx.fillStyle = accent;
+      for (let i = 0; i < 22; i++) {
+        const px = x0 + ((i * 7 + tile * 13) % tilePx);
+        const py = y0 + ((i * 11 + tile * 17) % tilePx);
+        ctx.fillRect(px, py, 1, 1);
+      }
+    }
+
+    // Subtle border
+    ctx.strokeStyle = "rgba(0,0,0,0.25)";
+    ctx.strokeRect(x0 + 0.5, y0 + 0.5, tilePx - 1, tilePx - 1);
+  }
+
+  // Define a few tiles used by World.ts.
+  paintTile(1, "#3ca53c", "#2f7f2f"); // grass top
+  paintTile(2, "#3b8f2f", "#2b6a23"); // grass side
+  paintTile(3, "#7a4f2b", "#5f3c20"); // dirt
+  paintTile(4, "#8f8f93", "#6f6f74"); // stone
+  paintTile(5, "rgba(50,120,220,0.65)", "rgba(255,255,255,0.25)"); // water
+  paintTile(6, "#d8c07b", "#b49c58"); // sand
+  paintTile(7, "#8a5a2e", "#6f4522"); // wood side
+  paintTile(8, "#a06c3a", "#6f4522"); // wood top/bottom
+  paintTile(9, "rgba(65,160,75,0.75)", "rgba(255,255,255,0.18)"); // leaves
+
+  // optional: paint the rest as debug checker.
+  for (let t = 10; t < tilesPerRow * tilesPerRow; t++) {
+    const x0 = (t % tilesPerRow) * tilePx;
+    const y0 = Math.floor(t / tilesPerRow) * tilePx;
+    ctx.fillStyle = (t % 2 === 0) ? "rgba(255,0,255,0.06)" : "rgba(0,255,255,0.06)";
+    ctx.fillRect(x0, y0, tilePx, tilePx);
+  }
+
+  const texture = new THREE.CanvasTexture(canvas);
+  texture.magFilter = THREE.NearestFilter;
+  texture.minFilter = THREE.NearestMipMapNearestFilter;
+  texture.anisotropy = renderer.capabilities.getMaxAnisotropy();
+  texture.wrapS = THREE.ClampToEdgeWrapping;
+  texture.wrapT = THREE.ClampToEdgeWrapping;
+  texture.needsUpdate = true;
+
+  return { canvas, texture };
+}
