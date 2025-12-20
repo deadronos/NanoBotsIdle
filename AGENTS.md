@@ -2,7 +2,6 @@
 
 Read these first:
 
-
 - Repo-wide coding context: `.github/copilot-instructions.md` (#file:copilot-instructions.md)
 - Spec workflow: `.github/instructions/spec-driven-workflow-v1.instructions.md` (#file:spec-driven-workflow-v1.instructions.md)
 - Memory Bank rules + structure: `.github/instructions/memory-bank.instructions.md` (#file:memory-bank.instructions.md)
@@ -11,7 +10,6 @@ This repo is a browser-based voxel sandbox built with React 19 + React Three Fib
 The project has a few easy-to-break invariants (block IDs, chunk rebuild boundaries, atlas tile IDs). This file exists to keep agents from “fixing” the game into a broken or slow state.
 
 ## Where to start (code navigation)
-
 
 - App entry: `src/main.tsx` → `src/ui/App.tsx`
 - Rendering root: `src/game/GameCanvas.tsx` (R3F `<Canvas/>` + sky)
@@ -28,7 +26,6 @@ The project has a few easy-to-break invariants (block IDs, chunk rebuild boundar
 
 ## Runtime architecture (what talks to what)
 
-
 - `GameScene` creates a long-lived `World` instance via `useMemo` and keeps it out of Zustand.
 - Each frame (`useFrame`) the scene:
   1. Streams chunks in/out: `world.ensureChunksAround(...)` and `world.pruneFarChunks(...)`
@@ -43,7 +40,6 @@ This separation is intentional:
 - Heavy objects (`World`, chunk buffers, `THREE.*`, geometries, materials) stay in `GameScene` and refs.
 
 ## Developer workflows (local)
-
 
 - Dev server: `npm run dev` (fixed port 5173 via `vite.config.ts`)
 - Production build: `npm run build` (TypeScript build + Vite)
@@ -95,7 +91,6 @@ Keep `tilesPerRow` consistent across those files.
 
 ## Input / pointer-lock flow (UI + player)
 
-
 - `PlayerController` binds keyboard/mouse look; pointer lock is requested on the canvas element.
 - `GameScene` sets `requestPointerLock` into Zustand so UI can trigger it.
 - `src/ui/components/Hud.tsx` toggles inventory on `E`:
@@ -131,7 +126,6 @@ Notes for this repo:
 - If you add a test runner, document it in `README.md` and keep tests fast.
 
 ## What to avoid
-
 
 - Don’t move `World` into Zustand (it breaks the intended state separation and can cause perf/regression issues).
 - Don’t remove the per-frame rebuild/swap caps unless you replace them with an equivalent bounded strategy.

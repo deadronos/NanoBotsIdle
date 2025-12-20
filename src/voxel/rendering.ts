@@ -1,5 +1,6 @@
 import * as THREE from "three";
-import type { World, ChunkKey } from "./World";
+
+import type { ChunkKey, World } from "./World";
 
 export type ChunkMesh = {
   key: ChunkKey;

@@ -12,7 +12,9 @@ export default function StartOverlay({ onStart }: StartOverlayProps) {
         <button className="action" onClick={onStart}>
           Start
         </button>
-        <div className="hint">Tip: You can craft planks, bricks, glass, and torches from the inventory screen.</div>
+        <div className="hint">
+          Tip: You can craft planks, bricks, glass, and torches from the inventory screen.
+        </div>
       </div>
     </div>
   );

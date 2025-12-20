@@ -1,5 +1,7 @@
 import * as THREE from "three";
-import { World, Chunk, BlockId, BLOCKS } from "./World";
+
+import type { Chunk, World } from "./World";
+import { BlockId, BLOCKS } from "./World";
 
 export type BuiltGeometry = {
   geometry: THREE.BufferGeometry;
@@ -20,45 +22,105 @@ type Face = {
 const FACES: Face[] = [
   {
     name: "px",
-    v: [[1,0,0],[1,1,0],[1,1,1],[1,0,1]],
-    n: [1,0,0],
-    o: [1,0,0],
-    uv: [[0,0],[0,1],[1,1],[1,0]],
+    v: [
+      [1, 0, 0],
+      [1, 1, 0],
+      [1, 1, 1],
+      [1, 0, 1],
+    ],
+    n: [1, 0, 0],
+    o: [1, 0, 0],
+    uv: [
+      [0, 0],
+      [0, 1],
+      [1, 1],
+      [1, 0],
+    ],
   },
   {
     name: "nx",
-    v: [[0,0,1],[0,1,1],[0,1,0],[0,0,0]],
-    n: [-1,0,0],
-    o: [-1,0,0],
-    uv: [[0,0],[0,1],[1,1],[1,0]],
+    v: [
+      [0, 0, 1],
+      [0, 1, 1],
+      [0, 1, 0],
+      [0, 0, 0],
+    ],
+    n: [-1, 0, 0],
+    o: [-1, 0, 0],
+    uv: [
+      [0, 0],
+      [0, 1],
+      [1, 1],
+      [1, 0],
+    ],
   },
   {
     name: "py",
-    v: [[0,1,1],[1,1,1],[1,1,0],[0,1,0]],
-    n: [0,1,0],
-    o: [0,1,0],
-    uv: [[0,0],[1,0],[1,1],[0,1]],
+    v: [
+      [0, 1, 1],
+      [1, 1, 1],
+      [1, 1, 0],
+      [0, 1, 0],
+    ],
+    n: [0, 1, 0],
+    o: [0, 1, 0],
+    uv: [
+      [0, 0],
+      [1, 0],
+      [1, 1],
+      [0, 1],
+    ],
   },
   {
     name: "ny",
-    v: [[0,0,0],[1,0,0],[1,0,1],[0,0,1]],
-    n: [0,-1,0],
-    o: [0,-1,0],
-    uv: [[0,0],[1,0],[1,1],[0,1]],
+    v: [
+      [0, 0, 0],
+      [1, 0, 0],
+      [1, 0, 1],
+      [0, 0, 1],
+    ],
+    n: [0, -1, 0],
+    o: [0, -1, 0],
+    uv: [
+      [0, 0],
+      [1, 0],
+      [1, 1],
+      [0, 1],
+    ],
   },
   {
     name: "pz",
-    v: [[1,0,1],[1,1,1],[0,1,1],[0,0,1]],
-    n: [0,0,1],
-    o: [0,0,1],
-    uv: [[0,0],[0,1],[1,1],[1,0]],
+    v: [
+      [1, 0, 1],
+      [1, 1, 1],
+      [0, 1, 1],
+      [0, 0, 1],
+    ],
+    n: [0, 0, 1],
+    o: [0, 0, 1],
+    uv: [
+      [0, 0],
+      [0, 1],
+      [1, 1],
+      [1, 0],
+    ],
   },
   {
     name: "nz",
-    v: [[0,0,0],[0,1,0],[1,1,0],[1,0,0]],
-    n: [0,0,-1],
-    o: [0,0,-1],
-    uv: [[0,0],[0,1],[1,1],[1,0]],
+    v: [
+      [0, 0, 0],
+      [0, 1, 0],
+      [1, 1, 0],
+      [1, 0, 0],
+    ],
+    n: [0, 0, -1],
+    o: [0, 0, -1],
+    uv: [
+      [0, 0],
+      [0, 1],
+      [1, 1],
+      [1, 0],
+    ],
   },
 ];
 
@@ -70,7 +132,7 @@ function isFaceVisible(
   nx: number,
   ny: number,
   nz: number,
-  selfId: BlockId
+  selfId: BlockId,
 ): boolean {
   const b = world.getBlock(wx + nx, wy + ny, wz + nz);
   if (b === BlockId.Air) return true;
@@ -86,7 +148,11 @@ function tileForFace(id: BlockId, face: Face): number {
   const t = def.tile;
   if (face.name === "py" && t.top != null) return t.top;
   if (face.name === "ny" && t.bottom != null) return t.bottom;
-  if (t.side != null && (face.name === "px" || face.name === "nx" || face.name === "pz" || face.name === "nz")) return t.side;
+  if (
+    t.side != null &&
+    (face.name === "px" || face.name === "nx" || face.name === "pz" || face.name === "nz")
+  )
+    return t.side;
   return t.all ?? 0;
 }
 
@@ -110,8 +176,6 @@ export function buildChunkGeometry(world: World, chunk: Chunk): BuiltGeometry {
       for (let x = 0; x < sx; x++) {
         const id = chunk.getLocal(x, y, z);
         if (id === BlockId.Air) continue;
-
-        const def = BLOCKS[id];
         const wx = baseX + x;
         const wz = baseZ + z;
 
@@ -137,8 +201,12 @@ export function buildChunkGeometry(world: World, chunk: Chunk): BuiltGeometry {
 
           // Two triangles: 0-1-2, 0-2-3
           indices.push(
-            vertCount + 0, vertCount + 1, vertCount + 2,
-            vertCount + 0, vertCount + 2, vertCount + 3,
+            vertCount + 0,
+            vertCount + 1,
+            vertCount + 2,
+            vertCount + 0,
+            vertCount + 2,
+            vertCount + 3,
           );
 
           vertCount += 4;

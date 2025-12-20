@@ -1,6 +1,6 @@
 import { INVENTORY_BLOCKS, tileForBlockIcon } from "../../game/items";
-import { RECIPES, type Recipe } from "../../game/recipes";
-import { blockIdToName, type BlockId } from "../../voxel/World";
+import { type Recipe, RECIPES } from "../../game/recipes";
+import { type BlockId, blockIdToName } from "../../voxel/World";
 import { iconStyle } from "../utils";
 
 type InventoryOverlayProps = {
@@ -18,7 +18,7 @@ export default function InventoryOverlay({
   selectedSlot,
   onAssignSlot,
   onCraft,
-  onClose
+  onClose,
 }: InventoryOverlayProps) {
   return (
     <div className="overlay">
@@ -59,28 +59,32 @@ export default function InventoryOverlay({
 
           <div className="recipes">
             {RECIPES.map((recipe) => {
-              const canCraft = recipe.input.every((input) => (inventory[input.id] ?? 0) >= input.count);
+              const canCraft = recipe.input.every(
+                (input) => (inventory[input.id] ?? 0) >= input.count,
+              );
               return (
                 <div key={recipe.id} className={`recipe-card ${canCraft ? "ready" : ""}`}>
                   <div className="recipe-name">{recipe.name}</div>
                   <div className="recipe-row">
                     {recipe.input.map((input) => (
                       <div key={`${recipe.id}-${input.id}`} className="recipe-item">
-                        <div className="item-icon" style={iconStyle(tileForBlockIcon(input.id), atlasUrl)} />
+                        <div
+                          className="item-icon"
+                          style={iconStyle(tileForBlockIcon(input.id), atlasUrl)}
+                        />
                         <div className="slot-count">{input.count}</div>
                       </div>
                     ))}
                     <div className="recipe-arrow">-&gt;</div>
                     <div className="recipe-item">
-                      <div className="item-icon" style={iconStyle(tileForBlockIcon(recipe.output.id), atlasUrl)} />
+                      <div
+                        className="item-icon"
+                        style={iconStyle(tileForBlockIcon(recipe.output.id), atlasUrl)}
+                      />
                       <div className="slot-count">{recipe.output.count}</div>
                     </div>
                   </div>
-                  <button
-                    className="action"
-                    disabled={!canCraft}
-                    onClick={() => onCraft(recipe)}
-                  >
+                  <button className="action" disabled={!canCraft} onClick={() => onCraft(recipe)}>
                     Craft
                   </button>
                 </div>

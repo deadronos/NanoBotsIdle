@@ -1,4 +1,5 @@
 import { useMemo } from "react";
+
 import { tileForBlockIcon } from "../../game/items";
 import type { BlockId } from "../../voxel/World";
 import { iconStyle } from "../utils";
@@ -11,10 +12,14 @@ type HotbarProps = {
 };
 
 export default function Hotbar({ hotbar, selectedSlot, inventory, atlasUrl }: HotbarProps) {
-  const hotbarSlots = useMemo(() => hotbar.map((id) => ({
-    id,
-    tile: tileForBlockIcon(id)
-  })), [hotbar]);
+  const hotbarSlots = useMemo(
+    () =>
+      hotbar.map((id) => ({
+        id,
+        tile: tileForBlockIcon(id),
+      })),
+    [hotbar],
+  );
 
   return (
     <div className="hotbar">

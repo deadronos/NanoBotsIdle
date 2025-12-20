@@ -3,6 +3,7 @@
 A React 19 + React Three Fiber sandbox that grows a Minecraft-style voxel world in the browser.
 
 Features included:
+
 - Infinite chunk streaming with pruning (16x72x16 chunks)
 - Procedural terrain with beaches, water, trees, and bedrock
 - Chunk meshing with face culling

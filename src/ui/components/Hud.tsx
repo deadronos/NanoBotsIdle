@@ -1,4 +1,5 @@
 import { useEffect } from "react";
+
 import { useGameStore } from "../../game/store";
 import Crosshair from "./Crosshair";
 import Hotbar from "./Hotbar";
@@ -71,9 +72,7 @@ export default function Hud() {
         />
       )}
 
-      {!pointerLocked && !uiOpen && (
-        <StartOverlay onStart={() => requestPointerLock?.()} />
-      )}
+      {!pointerLocked && !uiOpen && <StartOverlay onStart={() => requestPointerLock?.()} />}
     </div>
   );
 }

@@ -1,5 +1,7 @@
 import * as THREE from "three";
-import { World, BlockId, BLOCKS } from "./World";
+
+import type { World } from "./World";
+import { BlockId, BLOCKS } from "./World";
 
 type PlayerControllerOpts = {
   camera: THREE.PerspectiveCamera;
@@ -34,7 +36,12 @@ export class PlayerController {
   private handleMouseMove?: (e: MouseEvent) => void;
 
   private input: InputState = {
-    forward: false, back: false, left: false, right: false, jump: false, sprint: false,
+    forward: false,
+    back: false,
+    left: false,
+    right: false,
+    jump: false,
+    sprint: false,
   };
 
   // Physics params
@@ -73,7 +80,7 @@ export class PlayerController {
       left: false,
       right: false,
       jump: false,
-      sprint: false
+      sprint: false,
     };
   }
 
@@ -116,9 +123,14 @@ export class PlayerController {
     const bMin = new THREE.Vector3(bx, by, bz);
     const bMax = new THREE.Vector3(bx + 1, by + 1, bz + 1);
 
-    return (min.x < bMax.x && max.x > bMin.x)
-      && (min.y < bMax.y && max.y > bMin.y)
-      && (min.z < bMax.z && max.z > bMin.z);
+    return (
+      min.x < bMax.x &&
+      max.x > bMin.x &&
+      min.y < bMax.y &&
+      max.y > bMin.y &&
+      min.z < bMax.z &&
+      max.z > bMin.z
+    );
   }
 
   update(dt: number): void {
@@ -215,7 +227,7 @@ export class PlayerController {
           if (!aabbIntersects(min, max, bMin, bMax)) continue;
 
           if (axis === "x") {
-            const leftPen = bMax.x - min.x;  // push +x
+            const leftPen = bMax.x - min.x; // push +x
             const rightPen = max.x - bMin.x; // push -x
             if (leftPen < rightPen) {
               this.position.x += leftPen + 1e-4;
@@ -237,9 +249,10 @@ export class PlayerController {
             this.velocity.z = 0;
             min.z = this.position.z - this.halfW;
             max.z = this.position.z + this.halfW;
-          } else { // y
+          } else {
+            // y
             const downPen = bMax.y - min.y; // push +y
-            const upPen = max.y - bMin.y;   // push -y
+            const upPen = max.y - bMin.y; // push -y
             if (downPen < upPen) {
               // we're below the block (rare)
               this.position.y += downPen + 1e-4;
@@ -282,7 +295,8 @@ export class PlayerController {
   }
 
   private bindMouseLook(): void {
-    const clampPitch = (p: number) => Math.max(-Math.PI / 2 + 0.01, Math.min(Math.PI / 2 - 0.01, p));
+    const clampPitch = (p: number) =>
+      Math.max(-Math.PI / 2 + 0.01, Math.min(Math.PI / 2 - 0.01, p));
 
     this.handleMouseMove = (e) => {
       if (document.pointerLockElement !== this.domElement) return;
@@ -296,8 +310,18 @@ export class PlayerController {
   }
 }
 
-function aabbIntersects(aMin: THREE.Vector3, aMax: THREE.Vector3, bMin: THREE.Vector3, bMax: THREE.Vector3): boolean {
-  return (aMin.x < bMax.x && aMax.x > bMin.x)
-    && (aMin.y < bMax.y && aMax.y > bMin.y)
-    && (aMin.z < bMax.z && aMax.z > bMin.z);
+function aabbIntersects(
+  aMin: THREE.Vector3,
+  aMax: THREE.Vector3,
+  bMin: THREE.Vector3,
+  bMax: THREE.Vector3,
+): boolean {
+  return (
+    aMin.x < bMax.x &&
+    aMax.x > bMin.x &&
+    aMin.y < bMax.y &&
+    aMax.y > bMin.y &&
+    aMin.z < bMax.z &&
+    aMax.z > bMin.z
+  );
 }

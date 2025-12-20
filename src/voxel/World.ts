@@ -1,6 +1,6 @@
 /* Voxel world + chunk storage + terrain generation. */
-import { fbm2, hash2 } from "./noise";
 import { buildChunkGeometry, type BuiltGeometry } from "./meshing";
+import { fbm2, hash2 } from "./noise";
 
 type BlockTile = {
   all?: number;
@@ -48,7 +48,7 @@ export enum BlockId {
   Brick = 9,
   Glass = 10,
   Torch = 11,
-  Bedrock = 12
+  Bedrock = 12,
 }
 
 export function blockIdToName(id: BlockId): string {
@@ -83,7 +83,7 @@ export class Chunk {
   }
 
   idx(x: number, y: number, z: number): number {
-    const { x: sx, y: sy, z: sz } = this.size;
+    const { x: sx, z: sz } = this.size;
     return x + sx * (z + sz * y); // x-major, then z, then y
   }
 
@@ -269,7 +269,7 @@ export class World {
   chunkToWorld(cx: number, cz: number, lx: number, lz: number): { wx: number; wz: number } {
     return {
       wx: cx * this.chunkSize.x + lx,
-      wz: cz * this.chunkSize.z + lz
+      wz: cz * this.chunkSize.z + lz,
     };
   }
 
@@ -331,7 +331,7 @@ export class World {
     // Avoid trees underwater.
     if (y <= this.seaLevel + 1) return;
 
-    const trunkH = 4 + (hash2(wx + 99, wz - 17, this.seed) * 3) | 0;
+    const trunkH = (4 + hash2(wx + 99, wz - 17, this.seed) * 3) | 0;
 
     // Trunk
     for (let i = 0; i < trunkH; i++) {

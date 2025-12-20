@@ -1,5 +1,5 @@
 import type { GameStats } from "../../game/store";
-import { blockIdToName, type BlockId } from "../../voxel/World";
+import { type BlockId, blockIdToName } from "../../voxel/World";
 import { timeLabel } from "../utils";
 
 type StatsPanelProps = {
@@ -17,7 +17,8 @@ export default function StatsPanel({ stats, targetBlock }: StatsPanelProps) {
         <div>{stats.fps}</div>
         <div>Pos</div>
         <div>
-          {stats.position.x.toFixed(1)}, {stats.position.y.toFixed(1)}, {stats.position.z.toFixed(1)}
+          {stats.position.x.toFixed(1)}, {stats.position.y.toFixed(1)},{" "}
+          {stats.position.z.toFixed(1)}
         </div>
         <div>Chunks</div>
         <div>{stats.chunkCount}</div>

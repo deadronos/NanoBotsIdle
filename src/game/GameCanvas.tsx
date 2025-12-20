@@ -1,5 +1,6 @@
-import { Canvas } from "@react-three/fiber";
 import { Sky } from "@react-three/drei";
+import { Canvas } from "@react-three/fiber";
+
 import GameScene from "./GameScene";
 import { useGameStore } from "./store";
 
@@ -9,7 +10,7 @@ function SkyDome() {
   const sunPosition: [number, number, number] = [
     Math.cos(angle) * 90,
     Math.sin(angle) * 120,
-    Math.sin(angle) * 90
+    Math.sin(angle) * 90,
   ];
 
   return (

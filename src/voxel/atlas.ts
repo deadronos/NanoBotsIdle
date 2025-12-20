@@ -1,4 +1,5 @@
 import * as THREE from "three";
+
 import type { BlockDef } from "./World";
 
 export type Atlas = {
@@ -13,6 +14,7 @@ type RendererLike = { capabilities: { getMaxAnisotropy: () => number } };
  * Tile IDs are hardcoded in World.ts.
  */
 export function createAtlasTexture(renderer: RendererLike, blocks: readonly BlockDef[]): Atlas {
+  void blocks;
   const tilesPerRow = 16;
   const tilePx = 16;
   const sizePx = tilesPerRow * tilePx;
@@ -69,7 +71,7 @@ export function createAtlasTexture(renderer: RendererLike, blocks: readonly Bloc
   for (let t = 10; t < tilesPerRow * tilesPerRow; t++) {
     const x0 = (t % tilesPerRow) * tilePx;
     const y0 = Math.floor(t / tilesPerRow) * tilePx;
-    ctx.fillStyle = (t % 2 === 0) ? "rgba(255,0,255,0.06)" : "rgba(0,255,255,0.06)";
+    ctx.fillStyle = t % 2 === 0 ? "rgba(255,0,255,0.06)" : "rgba(0,255,255,0.06)";
     ctx.fillRect(x0, y0, tilePx, tilePx);
   }
 

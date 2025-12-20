@@ -10,7 +10,7 @@ export const INVENTORY_BLOCKS: BlockId[] = [
   BlockId.Planks,
   BlockId.Brick,
   BlockId.Glass,
-  BlockId.Torch
+  BlockId.Torch,
 ];
 
 export function isPlaceableBlock(id: BlockId): boolean {

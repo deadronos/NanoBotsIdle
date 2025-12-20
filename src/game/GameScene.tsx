@@ -1,11 +1,12 @@
-import { useEffect, useMemo, useRef } from "react";
 import { useFrame, useThree } from "@react-three/fiber";
+import { useEffect, useMemo, useRef } from "react";
 import * as THREE from "three";
-import { BlockId, BLOCKS, World } from "../voxel/World";
-import { PlayerController } from "../voxel/PlayerController";
+
 import { createAtlasTexture } from "../voxel/atlas";
 import { pickBlockDDA } from "../voxel/picking";
+import { PlayerController } from "../voxel/PlayerController";
 import { createChunkMeshes } from "../voxel/rendering";
+import { BlockId, BLOCKS, World } from "../voxel/World";
 import { isPlaceableBlock } from "./items";
 import { useGameStore } from "./store";
 
@@ -18,7 +19,7 @@ export default function GameScene() {
     const w = new World({
       seed: 1337,
       viewDistanceChunks: 8,
-      chunkSize: { x: 16, y: 72, z: 16 }
+      chunkSize: { x: 16, y: 72, z: 16 },
     });
     w.generateInitialArea(0, 0);
     return w;
@@ -27,7 +28,9 @@ export default function GameScene() {
   const playerRef = useRef<PlayerController | null>(null);
   const chunkMeshesRef = useRef<ReturnType<typeof createChunkMeshes> | null>(null);
   const highlightRef = useRef<THREE.LineSegments | null>(null);
-  const lightsRef = useRef<{ ambient: THREE.AmbientLight; sun: THREE.DirectionalLight } | null>(null);
+  const lightsRef = useRef<{ ambient: THREE.AmbientLight; sun: THREE.DirectionalLight } | null>(
+    null,
+  );
   const skyColor = useRef(new THREE.Color());
   const timeRef = useRef(0);
   const fpsRef = useRef({ acc: 0, frames: 0, fps: 0 });
@@ -65,7 +68,7 @@ export default function GameScene() {
     const material = new THREE.MeshLambertMaterial({
       map: atlas.texture,
       transparent: true,
-      alphaTest: 0.5
+      alphaTest: 0.5,
     });
 
     chunkMeshesRef.current = createChunkMeshes(scene, world, material);
@@ -73,7 +76,11 @@ export default function GameScene() {
     const box = new THREE.BoxGeometry(1.01, 1.01, 1.01);
     const edges = new THREE.EdgesGeometry(box);
     box.dispose();
-    const highlightMat = new THREE.LineBasicMaterial({ color: 0xfdf7da, transparent: true, opacity: 0.85 });
+    const highlightMat = new THREE.LineBasicMaterial({
+      color: 0xfdf7da,
+      transparent: true,
+      opacity: 0.85,
+    });
     const highlight = new THREE.LineSegments(edges, highlightMat);
     highlight.visible = false;
     scene.add(highlight);
@@ -93,7 +100,7 @@ export default function GameScene() {
     const player = new PlayerController({
       camera: camera as THREE.PerspectiveCamera,
       world,
-      domElement: gl.domElement
+      domElement: gl.domElement,
     });
     player.teleportToSafeSpawn();
     playerRef.current = player;
@@ -218,7 +225,7 @@ export default function GameScene() {
         fps: fpsRef.current.fps,
         position: { x: pos.x, y: pos.y, z: pos.z },
         chunkCount: world.getChunkCount(),
-        timeOfDay
+        timeOfDay,
       });
       statsTimerRef.current = 0;
     }

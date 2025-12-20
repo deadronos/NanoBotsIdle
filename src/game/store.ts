@@ -1,5 +1,6 @@
 import { create } from "zustand";
-import { BlockId, BLOCK_ID_LIST } from "../voxel/World";
+
+import { BLOCK_ID_LIST, BlockId } from "../voxel/World";
 import type { Recipe } from "./recipes";
 
 export type Vec3 = { x: number; y: number; z: number };
@@ -50,7 +51,7 @@ const seededInventory: Record<number, number> = {
   [BlockId.Planks]: 0,
   [BlockId.Brick]: 0,
   [BlockId.Glass]: 0,
-  [BlockId.Torch]: 0
+  [BlockId.Torch]: 0,
 };
 
 const defaultHotbar: BlockId[] = [
@@ -62,7 +63,7 @@ const defaultHotbar: BlockId[] = [
   BlockId.Planks,
   BlockId.Glass,
   BlockId.Brick,
-  BlockId.Leaves
+  BlockId.Leaves,
 ];
 
 export const useGameStore = create<GameStore>((set, get) => ({
@@ -77,7 +78,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
     fps: 0,
     position: { x: 0, y: 0, z: 0 },
     chunkCount: 0,
-    timeOfDay: 0
+    timeOfDay: 0,
   },
   targetBlock: null,
   setPointerLocked: (locked) => set({ pointerLocked: locked }),
@@ -120,5 +121,5 @@ export const useGameStore = create<GameStore>((set, get) => ({
     return true;
   },
   setStats: (partial) => set({ stats: { ...get().stats, ...partial } }),
-  setTargetBlock: (id) => set({ targetBlock: id })
+  setTargetBlock: (id) => set({ targetBlock: id }),
 }));

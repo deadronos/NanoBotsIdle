@@ -9,7 +9,7 @@ export function iconStyle(tile: number, atlasUrl?: string) {
   return {
     backgroundImage: `url(${atlasUrl})`,
     backgroundPosition: `-${x}px -${y}px`,
-    backgroundSize: `${atlasPx}px ${atlasPx}px`
+    backgroundSize: `${atlasPx}px ${atlasPx}px`,
   } as const;
 }
 
