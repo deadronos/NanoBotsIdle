@@ -2,15 +2,18 @@
 
 ## Current focus
 
-Backfilling project documentation so AI agents and maintainers can quickly understand the architecture, invariants, and workflows.
+Completing UI migration (hotbar/crosshair, tabs/scroll) and adding a Miniplex ECS PoC for player/time-of-day snapshots.
 
 ## Recently added/updated
 
-- `.github/copilot-instructions.md`: concise, repo-specific Copilot guidance.
-- `AGENTS.md`: extended agent guide referencing Copilot instructions and the Memory Bank.
-- `/memory/*`: core Memory Bank files for project brief, patterns, and requirements.
+- `memory/designs/DESIGN002-ui-sim-decoupling.md`: design for UI migration + fixed-step loop.
+- `memory/tasks/TASK003-ui-sim-ecs.md`: task tracking for the UI/simulation work.
+- `memory/requirements.md`: added EARS requirements for UI migration + fixed-step loop.
 
 ## Next steps
 
-- Decide whether to add a test runner (e.g., Vitest) to make the default TDD workflow easy to apply.
-- If/when tests exist, document the command(s) and where to place them.
+- Add Tailwind + shadcn UI primitives and refactor HUD/inventory overlays.
+- Implement fixed-step simulation loop with interpolation.
+- Add unit tests around fixed-step accumulator logic.
+- Add Miniplex ECS PoC and finish hotbar/crosshair UI migration.
+- Document the Minecraft-like feature gap list and decide whether to adopt ECS beyond PoC.
