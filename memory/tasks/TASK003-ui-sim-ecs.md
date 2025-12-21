@@ -1,6 +1,6 @@
 # TASK003 - UI refresh + fixed-step simulation + ECS evaluation
 
-**Status:** In Progress  
+**Status:** Completed  
 **Added:** 2025-12-21  
 **Updated:** 2025-12-21
 
@@ -32,7 +32,7 @@ Plan and execute:
 
 ## Progress Tracking
 
-**Overall Status:** In Progress - 98%
+**Overall Status:** Completed - 100%
 
 ### Subtasks
 
@@ -45,6 +45,7 @@ Plan and execute:
 | 1.5 | Fixed-step unit tests                      | Complete     | 2025-12-21 | Vitest coverage added         |
 | 1.6 | ECS/Immer + feature-gap documentation      | Complete     | 2025-12-21 | Roadmap drafted               |
 | 1.7 | ECS PoC + hotbar/crosshair UI migration    | Complete     | 2025-12-21 | Miniplex + Tabs/ScrollArea    |
+| 1.8 | ECS systems expansion + lighting central   | Complete     | 2025-12-21 | Systems + lighting config     |
 
 ## Progress Log
 
@@ -55,3 +56,4 @@ Plan and execute:
 - Implemented fixed-step simulation with camera interpolation and added unit tests.
 - Completed ECS PoC for player/time-of-day and finished hotbar/crosshair UI migration.
 - Drafted Minecraft-like feature roadmap document.
+- Expanded ECS with systems/registry, centralized lighting config, and added persistence milestones.

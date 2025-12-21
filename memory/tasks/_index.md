@@ -2,8 +2,7 @@
 
 ## In Progress
 
-- [TASK003] UI refresh + fixed-step simulation + ECS evaluation
-  - Goal: migrate HUD/inventory to shadcn UI, add fixed-step sim loop, and document ECS/Immer decisions.
+- (none)
 
 ## Pending
 
@@ -14,6 +13,7 @@
 ## Completed
 
 - [TASK001] Backfill Memory Bank documentation
+- [TASK003] UI refresh + fixed-step simulation + ECS evaluation
 
 ## Abandoned
 

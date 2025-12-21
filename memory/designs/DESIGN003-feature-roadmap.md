@@ -13,6 +13,12 @@ A staged roadmap for expanding NanoBots Idle into a fuller Minecraft-style sandb
 ## Phase 1: Survival basics (short term)
 
 - Persistence: save/load world state (IndexedDB).
+  - Milestone 1: Save/load modified chunks + player position.
+    - Acceptance: after placing/breaking blocks and reloading, the same block edits and player spawn position are restored.
+  - Milestone 2: Persist inventory/hotbar + time-of-day.
+    - Acceptance: inventory counts, selected hotbar slot, and time-of-day survive reload.
+  - Milestone 3: Autosave cadence + manual save.
+    - Acceptance: periodic autosave does not stutter gameplay; manual save reports success/failure.
 - Lighting propagation + torches (block light level, daylight curve).
 - Tools + durability (break speed modifiers, tool crafting).
 - Item drops (pickups, stack limits).

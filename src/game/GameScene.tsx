@@ -7,7 +7,7 @@ import { pickBlockDDA } from "../voxel/picking";
 import { PlayerController } from "../voxel/PlayerController";
 import { createChunkMeshes } from "../voxel/rendering";
 import { BlockId, BLOCKS, World } from "../voxel/World";
-import { createGameEcs, getTimeOfDay, stepGameEcs } from "./ecs/gameEcs";
+import { createGameEcs, getLightingState, getTimeOfDay, stepGameEcs } from "./ecs/gameEcs";
 import { advanceFixedStep } from "./sim/fixedStep";
 import { isPlaceableBlock } from "./items";
 import { useGameStore } from "./store";
@@ -252,18 +252,36 @@ export default function GameScene() {
     const ambient = lightsRef.current?.ambient;
     const sun = lightsRef.current?.sun;
 
-    if (ambient && sun) {
-      ambient.intensity = 0.2 + sunPhase * 0.5;
-      sun.intensity = 0.15 + sunPhase * 0.9;
-      const angle = timeOfDay * Math.PI * 2;
-      sun.position.set(Math.cos(angle) * 120, 30 + sunPhase * 160, Math.sin(angle) * 120);
+    const lightingState = getLightingState(ecs);
+    if (ambient && sun && lightingState) {
+      ambient.intensity = lightingState.ambientIntensity;
+      sun.intensity = lightingState.sunIntensity;
+      sun.position.set(
+        lightingState.sunPosition.x,
+        lightingState.sunPosition.y,
+        lightingState.sunPosition.z,
+      );
+      skyColor.current.setHSL(
+        lightingState.skyHsl.h,
+        lightingState.skyHsl.s,
+        lightingState.skyHsl.l,
+      );
+      scene.background = skyColor.current;
+      if (scene.fog) scene.fog.color.copy(skyColor.current);
+    } else if (!lightingState) {
+      // fallback to legacy values if ECS lighting is unavailable
+      if (ambient && sun) {
+        ambient.intensity = 0.2 + sunPhase * 0.5;
+        sun.intensity = 0.15 + sunPhase * 0.9;
+        const angle = timeOfDay * Math.PI * 2;
+        sun.position.set(Math.cos(angle) * 120, 30 + sunPhase * 160, Math.sin(angle) * 120);
+      }
+      const baseHue = 0.58;
+      const lightness = 0.22 + sunPhase * 0.5;
+      skyColor.current.setHSL(baseHue, 0.52, lightness);
+      scene.background = skyColor.current;
+      if (scene.fog) scene.fog.color.copy(skyColor.current);
     }
-
-    const baseHue = 0.58;
-    const lightness = 0.22 + sunPhase * 0.5;
-    skyColor.current.setHSL(baseHue, 0.52, lightness);
-    scene.background = skyColor.current;
-    if (scene.fog) scene.fog.color.copy(skyColor.current);
   });
 
   return null;
