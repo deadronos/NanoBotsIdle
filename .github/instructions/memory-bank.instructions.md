@@ -84,7 +84,7 @@ flowchart TD
    - Current status
    - Known issues
 
-7. `tasks/` folder
+7. `tasks/` folder (and `designs/` folder too )
    - Contains individual markdown files for each task
    - Each task has its own dedicated file with format `TASKID-taskname.md`
    - Task IDs must remain unique across both `memory/tasks` and `memory/tasks/COMPLETED`; check both directories before allocating a number because completed tasks may be archived there.

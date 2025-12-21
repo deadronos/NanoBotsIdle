@@ -1,161 +1,47 @@
-# NanoFactory Evolution - Copilot Instructions
+# NanoBotsIdle Copilot instructions
 
-## Repository Overview
+## Project map (read these first)
+- Entry point: `src/main.tsx` renders `src/ui/App.tsx`.
+- Rendering + game loop: `src/game/GameCanvas.tsx` (R3F `<Canvas/>`) and `src/game/GameScene.tsx` (`useFrame` tick).
+- Core voxel engine: `src/voxel/World.ts` (chunks + terrain), `src/voxel/meshing.ts` (face-culling mesher), `src/voxel/rendering.ts` (chunk mesh sync), `src/voxel/picking.ts` (3D DDA raycast), `src/voxel/PlayerController.ts` (pointer-lock FPS controller).
+- UI: `src/ui/components/*` backed by Zustand store `src/game/store.ts`.
 
-NanoFactory Evolution is a bio-inspired nanofactory idle game built with React 19, TypeScript, and an Entity Component System (ECS) architecture. Players manage swarms of autonomous drones, optimize production chains, and balance heat management while pushing their factory to its limits.
+## How the runtime is wired
+- `GameScene` owns the long-lived `World` instance via `useMemo` (not in Zustand). Each frame it:
+  - streams chunks: `world.ensureChunksAround()` + `world.pruneFarChunks()`
+  - rebuilds geometry: `world.rebuildDirtyChunks()` (bounded work)
+  - swaps meshes: `createChunkMeshes(...).sync()` (bounded work)
+  - updates player physics: `player.update(dt)`
+  - updates UI stats + target block via `useGameStore` setters.
 
-### Tech Stack
-- **Frontend**: React 19 with functional components and hooks
-- **Language**: TypeScript (strict mode)
-- **State Management**: Zustand
-- **Styling**: Tailwind CSS v4
-- **Build Tool**: Vite
-- **Architecture**: ECS (Entity Component System) - separates data (components) from logic (systems) for scalable game architecture
+## State & UI conventions (Zustand)
+- Use `useGameStore(selector)` in UI components; avoid subscribing to the entire store.
+- Store is for UI + lightweight game state only (inventory/hotbar/stats/target/pointer lock). Keep heavy objects (`World`, `THREE.*`, geometries) out of Zustand.
+- Pointer lock flow: `GameScene` sets `requestPointerLock` in store; `Hud` uses it and toggles inventory with `E` (`document.exitPointerLock()` when UI opens).
 
-## Development Commands
+## World/chunk invariants (easy to break)
+- `BlockId` enum values MUST match indices in `BLOCKS` (`src/voxel/World.ts`).
+- If you add a new block, update all of:
+  - `BLOCKS` + `BlockId` in `src/voxel/World.ts`
+  - hotbar / seeded inventory in `src/game/store.ts`
+  - `INVENTORY_BLOCKS` + `tileForBlockIcon` behavior in `src/game/items.ts`
+  - atlas tile painting in `src/voxel/atlas.ts` (tile IDs are hardcoded)
+  - optionally crafting in `src/game/recipes.ts`.
+- When changing a block in-world, always call both:
+  - `world.setBlock(...)`
+  - `world.markDirtyAt(...)` (handles neighbor chunk rebuild when editing edges).
 
-### Setup
-```bash
-npm install
-```
+## Performance guardrails (keep these limits)
+- Chunk rebuild work is capped per frame in `World.rebuildDirtyChunks()` (`maxPerFrame = 4`).
+- Mesh swaps are capped per frame in `src/voxel/rendering.ts` (`maxPerFrame = 6`).
+- `GameCanvas` intentionally uses `gl={{ antialias: false, powerPreference: "high-performance" }}` and `dpr={[1,2]}`.
 
-### Development
-```bash
-npm run dev        # Start development server with hot reload
-```
+## Dev workflows
+- Vite dev server: `npm run dev` (fixed port `5173`, see `vite.config.ts`).
+- Production build: `npm run build` (TypeScript project build + Vite).
+- Preview build: `npm run preview`.
 
-### Build
-```bash
-npm run build      # TypeScript compilation + Vite production build
-```
-
-### Preview
-```bash
-npm run preview    # Preview production build locally
-```
-
-## Project Structure
-
-```
-src/
-├── ecs/           # Entity Component System (components, systems)
-├── sim/           # Simulation logic (game loop, balance)
-├── state/         # Zustand state management
-├── types/         # TypeScript type definitions
-└── ui/            # React components
-    ├── panels/    # UI panels (BuildPanel, TopBar, etc.)
-    └── simview/   # Canvas rendering components
-```
-
-## Code Style & Best Practices
-
-### React Development
-- Use functional components with hooks (React 19 features)
-- Follow component composition patterns
-- Implement proper TypeScript types for all props and state
-- See `.github/instructions/reactjs.instructions.md` for detailed guidelines
-
-### TypeScript
-- Use strict mode (configured in `tsconfig.json`)
-- Define interfaces for all data structures
-- Leverage type inference where appropriate
-- Avoid `any` types
-
-### State Management
-- Use Zustand for global state
-- Keep component state local when possible
-- Follow immutable update patterns
-
-### ECS Architecture
-- Components are pure data containers (no logic)
-- Systems operate on entities with specific component combinations
-- Maintain separation between simulation and UI layers
-
-### Styling
-- Use Tailwind CSS utility classes
-- Follow mobile-first responsive design
-- Maintain consistent spacing and color schemes
-
-## Testing
-
-**Note**: This repository currently does not have a test framework configured. When adding tests:
-- Consider using Vitest (aligns well with Vite build tool) or React Testing Library
-- Test both simulation logic and UI components
-- Ensure tests are focused and maintainable
-- Add test scripts to `package.json`
-
-## Important Files
-
-### Configuration
-- `vite.config.ts` - Vite build configuration
-- `tsconfig.json` - TypeScript compiler options
-- `tailwind.config.js` - Tailwind CSS configuration
-- `package.json` - Dependencies and scripts
-
-### Game Design Documents
-- `01-*.md` files contain comprehensive game design documentation
-- Reference these for understanding game mechanics and intended behavior
-
-## Detailed Instructions
-
-This repository includes comprehensive instruction files in `.github/instructions/`:
-
-- **reactjs.instructions.md** - React development standards
-- **spec-driven-workflow-v1.instructions.md** - Development workflow
-- **memory-bank.instructions.md** - Project context management
-- **self-explanatory-code-commenting.instructions.md** - Code documentation standards
-- **nodejs-javascript-vitest.instructions.md** - Node.js best practices
-- **playwright-typescript.instructions.md** - Testing with Playwright
-- **markdown.instructions.md** - Documentation standards
-- **powershell.instructions.md** - PowerShell scripting
-
-Refer to these files for detailed guidance on specific aspects of development.
-
-## Pull Request Guidelines
-
-When creating pull requests:
-
-1. **Clear Description**: Explain what changes were made and why
-2. **Reference Issues**: Link to related GitHub issues
-3. **Build Verification**: Ensure `npm run build` succeeds
-4. **Code Quality**: Follow TypeScript and React best practices
-5. **Minimal Changes**: Make focused, surgical changes to address specific issues
-6. **Documentation**: Update relevant documentation if needed
-
-## Game Context
-
-Understanding the game helps make better decisions:
-
-- **Three-Phase Progression**: Bootstrap → Networked Logistics → Overclock
-- **Production Chain**: Extractors → Assemblers → Fabricators → Drones
-- **Prestige System**: "Recompile Core" resets runs for Compile Shards
-- **Heat Management**: Balance production throughput against rising heat
-- **Emergent Behavior**: Drones autonomously pathfind, avoid congestion, optimize routes
-
-## Common Tasks
-
-### Adding New Buildings
-1. Define type in `src/types/buildings.ts`
-2. Add ECS components as needed
-3. Update building logic in relevant systems
-4. Add UI elements in `src/ui/panels/BuildPanel.tsx`
-
-### Modifying Game Balance
-- Edit `src/sim/balance.ts`
-- Reference design documents for intended balance
-- Test changes with `npm run dev`
-
-### UI Changes
-- Components are in `src/ui/`
-- Use Tailwind utility classes
-- Maintain responsive design
-- Follow React 19 best practices
-
-## Notes for AI Agents
-
-- This is an active game development project with detailed design docs
-- ECS architecture means logic is spread across systems, not components
-- The codebase uses modern React patterns (no class components)
-- Game state is managed through Zustand stores
-- Simulation runs independently from React render cycles
-- Always preserve existing game mechanics unless explicitly asked to change them
+## Texture/atlas conventions
+- The block atlas is generated at runtime: `createAtlasTexture()` in `src/voxel/atlas.ts`.
+- UI icons use the same atlas via `atlasUrl` (data URL) + `iconStyle()` in `src/ui/utils.ts`.
+- Keep `tilesPerRow = 16` consistent between `atlas.ts`, `meshing.ts`, and `ui/utils.ts`.

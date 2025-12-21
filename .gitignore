@@ -23,13 +23,45 @@ dist-ssr
 *.sln
 *.sw?
 
-# Test coverage
-coverage
-*.lcov
-.nyc_output
+# Environment files
+.env
+.env.local
+.env.*
+!.env.example
 
-# Vitest
-.vitest
+# TypeScript
+*.tsbuildinfo
 
-# ESLint cache
+# Build caches & temporary files
+node_modules/.cache
+.cache
+build
+.vite
+.parcel-cache
+node_modules/.vite
+
+# Test & coverage
+coverage/
+.nyc_output/
+playwright-report/
+cypress/videos/
+cypress/screenshots/
+
+# Lint & formatter caches
 .eslintcache
+
+# OS generated files
+Thumbs.db
+desktop.ini
+ehthumbs.db
+
+# Secrets / certificates
+*.key
+*.pem
+*.p12
+*.pfx
+*.crt
+*.cer
+
+# Misc
+*.tgz

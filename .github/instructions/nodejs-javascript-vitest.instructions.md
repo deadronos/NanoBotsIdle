@@ -1,22 +1,34 @@
 ---
 description: 'Guidelines for writing Node.js and JavaScript code with Vitest testing'
-applyTo: '**/*.js, **/*.mjs,**/*.cjs'
+applyTo: '**/*.js, **/*.mjs, **/*.cjs'
 ---
 
-# Node.js + Vitest — Short Guide
+# Code Generation Guidelines
 
-Receipt: "Write Node.js code (ESM, Node 20+), add Vitest tests."
+## Coding standards
 
-Plan: 1) Async/await, small pure functions. 2) 2–3 Vitest cases (happy + edge).
+- Use JavaScript with ES2022 features and Node.js (20+) ESM modules
+- Use Node.js built-in modules and avoid external dependencies where possible
+- Ask the user if you require any additional dependencies before adding them
+- Always use async/await for asynchronous code, and use 'node:util' promisify function to avoid callbacks
+- Keep the code simple and maintainable
+- Use descriptive variable and function names
+- Do not add comments unless absolutely necessary, the code should be self-explanatory
+- Never use `null`, always use `undefined` for optional values
+- Prefer functions over classes
 
-Checklist:
+## Testing
 
-- [ ] No new deps unless justified
-- [ ] All state via canonical GameState if simulation
-- [ ] Tests: happy path + edge
+- Use Vitest for testing
+- Write tests for all new features and bug fixes
+- Ensure tests cover edge cases and error handling
+- NEVER change the original code to make it easier to test, instead, write tests that cover the original code as it is
 
-Repo notes (SpaceAutoBattler):
+## Documentation
 
-- Run `npm run typecheck` and `npm test` after edits; CI enforces these gates. Avoid changing files outside `src/` (no edits to `dist/`).
+- When adding new features or making significant changes, update the README.md file where necessary
 
-End.
+## User interactions
+
+- Ask questions if you are unsure about the implementation details, design choices, or need clarification on the requirements
+- Always answer in the same language as the question, but use english for the generated content like code, comments or docs

@@ -1,25 +1,20 @@
 # Tasks Index
 
-This index lists task files in `memory/tasks/`. It should be updated whenever task files are created, modified, or have their status changed.
+## In Progress
 
-## IN PROGRESS
+- (none)
 
-- None yet
+## Pending
 
-## PENDING
+- [TASK002] Add a test runner (Vitest) for logic tests
+  - Goal: make the repo’s default “TDD when in doubt” workflow frictionless.
+  - Notes: keep tests focused on pure logic (`World` math/indexing, DDA picking, crafting rules).
 
-- None yet
+## Completed
 
-## COMPLETED
+- [TASK001] Backfill Memory Bank documentation
+- [TASK003] UI refresh + fixed-step simulation + ECS evaluation
 
-- None yet
+## Abandoned
 
-## ABANDONED
-
-- None yet
-
-Guidelines:
-
-- Entries should be one line each and follow the format: `- [TASK001] Short title - one-line summary`.
-- When a task file's status changes (e.g., to `COMPLETED`), move the entry to the appropriate section.
-- Keep this file up-to-date to help ensure unique `TASKNNN` numbering.
+- (none)

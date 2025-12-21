@@ -1,108 +1,132 @@
-# Agent Guidance for Contributors
+# AI agents: how to work effectively in this repo
 
-This document provides guidance for AI agents and human contributors who are implementing code, features, or documentation in this repository. Follow this guide in addition to the project's `.github` instruction files — they contain the authoritative workflows and templates.
+Read these first:
 
-## Quick reference
+- Repo-wide coding context: `.github/copilot-instructions.md` (#file:copilot-instructions.md)
+- Spec workflow: `.github/instructions/spec-driven-workflow-v1.instructions.md` (#file:spec-driven-workflow-v1.instructions.md)
+- Memory Bank rules + structure: `.github/instructions/memory-bank.instructions.md` (#file:memory-bank.instructions.md)
 
-- Read the repository-level guidance in `.github/copilot-instructions.md` early in your workflow. If you haven't considered it already, start there.
+This repo is a browser-based voxel sandbox built with React 19 + React Three Fiber (Three.js) + Zustand.
+The project has a few easy-to-break invariants (block IDs, chunk rebuild boundaries, atlas tile IDs). This file exists to keep agents from “fixing” the game into a broken or slow state.
 
-- For medium-to-high impact code or feature changes, follow the instructions in:
-  - `.github/instructions/memory-bank.instructions.md`
-  - `.github/instructions/spec-driven-workflow-v1.instructions.md`
+## Where to start (code navigation)
 
-These files describe the Memory Bank conventions and the Spec-Driven Workflow used by the project. They are required reading for design, planning, and task tracking.
+- App entry: `src/main.tsx` → `src/ui/App.tsx`
+- Rendering root: `src/game/GameCanvas.tsx` (R3F `<Canvas/>` + sky)
+- Game loop + world ownership: `src/game/GameScene.tsx` (`useFrame` tick)
+- Voxel engine:
+  - World + terrain + chunks: `src/voxel/World.ts`
+  - Meshing (face culling): `src/voxel/meshing.ts`
+  - Mesh sync / disposal: `src/voxel/rendering.ts`
+  - Picking (3D DDA raycast): `src/voxel/picking.ts`
+  - Player physics + pointer lock: `src/voxel/PlayerController.ts`
+- UI + state:
+  - Zustand store: `src/game/store.ts`
+  - HUD + overlays: `src/ui/components/*`
 
-## Index files for designs and tasks
+## Runtime architecture (what talks to what)
 
-Both `memory/designs/` and `memory/tasks/` MUST contain an `_index.md` file that lists the files in the folder grouped by status:
+- `GameScene` creates a long-lived `World` instance via `useMemo` and keeps it out of Zustand.
+- Each frame (`useFrame`) the scene:
+  1. Streams chunks in/out: `world.ensureChunksAround(...)` and `world.pruneFarChunks(...)`
+  2. Rebuilds dirty chunk CPU geometry: `world.rebuildDirtyChunks()`
+  3. Swaps GPU meshes incrementally: `createChunkMeshes(...).sync()`
+  4. Updates player physics: `player.update(dt)`
+  5. Pushes lightweight stats + target block into Zustand for the UI
 
-- IN PROGRESS
-- PENDING
-- COMPLETED
-- ABANDONED
+This separation is intentional:
 
-These `_index.md` files should be created if missing and updated every time a design or task file is created, modified, or has its status changed. For example, when a task file's status changes to `COMPLETED`, its listing should be moved to the `COMPLETED` section of `memory/tasks/_index.md`.
+- Zustand is UI/light state only.
+- Heavy objects (`World`, chunk buffers, `THREE.*`, geometries, materials) stay in `GameScene` and refs.
 
-Keep `_index.md` entries concise: `- [TASK001] Short title - one-line summary` (or `DES001` for designs).
+## Developer workflows (local)
 
-Having these index files makes it easy for reviewers and agents to find current work and to pick unique numeric IDs for new files.
+- Dev server: `npm run dev` (fixed port 5173 via `vite.config.ts`)
+- Production build: `npm run build` (TypeScript build + Vite)
+- Preview build: `npm run preview`
 
-## Memory Bank: where to store designs and tasks
+There is currently no test runner configured in `package.json`.
 
-This project uses a Memory Bank under the `memory/` folder to store design artifacts, implementation plans, and ongoing task tracking. Use these folders and file formats so others and automated agents can find and reuse your work.
+## Non-negotiable invariants (common foot-guns)
 
-- Designs:
-  - Location: `memory/designs/` (may contain subfolders such as `COMPLETED/`).
-  - File format: `DESNNN-title.md` where `NNN` is a 3-digit unique design number starting at `001` (e.g. `DES001-add-heat-system.md`).
-  - Each design file should contain: short motivation, EARS-style requirements, high-level architecture, interfaces/data models, and an implementation task list or references to tasks in `memory/tasks/`.
-  - If a design is finished, move or copy it to `memory/designs/COMPLETED/` and mark its status in the file header.
+### Block IDs must align everywhere
 
-- Tasks / Implementation Plans:
-  - Location: `memory/tasks/` (may contain subfolders such as `COMPLETED/`).
-  - File format: `TASKNNN-title.md` where `NNN` is a 3-digit unique task number starting at `001` (e.g. `TASK001-implement-thermal-model.md`).
-  - Each task file should follow the project's `memory/tasks` template: a status header, original request, thought process, step-by-step implementation plan, and a progress log.
-  - Tasks should reference the design they implement (use the `DESNNN` filename) and include acceptance criteria so reviewers and automated checks can validate work.
+In `src/voxel/World.ts`:
 
-### Numbering and uniqueness
+- `BlockId` enum numeric values MUST match indices in `BLOCKS`.
 
-- Numbers (the `NNN` in `DESNNN` and `TASKNNN`) must be unique across the `memory/designs` (and its subfolders) and `memory/tasks` (and its subfolders) respectively. Before creating a new file:
-  1. Check existing files in the target folder and `COMPLETED/` subfolder for used numbers.
-  2. Pick the smallest available 3-digit number (starting at `001`).
-  3. Update any index file (for example `memory/tasks/_index.md`) if present.
+If you add/remove/reorder blocks, you typically must update:
 
-### Minimum contents: design and task templates
+- `src/voxel/World.ts`: `BLOCKS`, `BlockId`, and anything keyed by those IDs
+- `src/game/store.ts`: `seededInventory`, `defaultHotbar`
+- `src/game/items.ts`: `INVENTORY_BLOCKS`, `tileForBlockIcon`, `isPlaceableBlock`
+- `src/voxel/atlas.ts`: tile painting (tile IDs are hardcoded)
+- `src/game/recipes.ts`: crafting recipes (if relevant)
 
-Design (`DESNNN-title.md`) — minimum sections:
+### World edits must mark chunks dirty
 
-- Title and status (Draft/In Review/Approved/Completed)
-- Short motivation and scope
-- Requirements (EARS-style) — 2–5 testable requirements
-- High-level design (components, data flow, diagrams or ASCII art)
-- Public interfaces and data models (types, schemas)
-- Acceptance criteria (how to verify)
-- Implementation tasks (linked `TASKNNN` entries)
+When changing the world in response to player actions or tools, do BOTH:
 
-Task (`TASKNNN-title.md`) — minimum sections:
+- `world.setBlock(...)`
+- `world.markDirtyAt(...)` (ensures neighbor chunk rebuild when editing at chunk edges)
 
-- Status, Added and Updated dates
-- Original request / Link to design (`DESNNN`)
-- Implementation plan (step-by-step)
-- Tests and validation steps
-- Progress log entries with dates
+### Performance guardrails exist on purpose
 
-## When to use Spec-Driven Workflow
+These caps keep the game smooth:
 
-- Use the Spec-Driven Workflow (`.github/instructions/spec-driven-workflow-v1.instructions.md`) for any change that is medium or high risk/impact (feature additions, changes to simulation logic, balancing, public APIs, major UI changes).
-- For small or trivial fixes (typos, small UI copy changes, minor refactors) you may skip the full design process but still update `memory/` where appropriate.
+- `World.rebuildDirtyChunks()` caps rebuilds per frame (`maxPerFrame = 4`)
+- `createChunkMeshes(...).sync()` caps mesh swaps per frame (`maxPerFrame = 6`)
 
-## Practical process (recommended)
+Avoid “optimize by rebuilding everything” changes; preserve bounded-per-frame work.
 
-1. Read `.github/copilot-instructions.md` and the two instruction files mentioned above.
-2. Create a `DESNNN-*.md` design for non-trivial changes in `memory/designs/` following the Design template.
-3. From the design produce one or more `TASKNNN-*.md` task files in `memory/tasks/` with clear acceptance criteria.
-4. Use the task file as the single source of truth while implementing. Add progress log entries as you work. Update status and dates frequently.
-5. When code changes are ready, create a focused branch and a PR. In the PR description include:
-   - The `DESNNN` design reference and any relevant task `TASKNNN` references
-   - 2–5 testable requirements and how they were validated
-   - Commands to reproduce the change locally
-6. After merge, mark tasks/designs as `Completed` and move files to `COMPLETED/` subfolders as appropriate.
+### Atlas contract is shared by voxel + UI
 
-## Reviews and automation
+The texture atlas is generated at runtime:
 
-- Reviewers should verify that changes match the acceptance criteria in the linked `TASKNNN` and `DESNNN` files.
-- CI / automation may depend on the `memory/` files — keep them accurate. If you add tests, update any relevant test configuration or `vitest.config.ts` as needed.
+- `createAtlasTexture()` in `src/voxel/atlas.ts`
+- Mesh UVs assume `tilesPerRow = 16` in `src/voxel/meshing.ts`
+- UI icons assume the same tile layout in `src/ui/utils.ts`
 
-## Notes and tips
+Keep `tilesPerRow` consistent across those files.
 
-- Keep designs concise — focus on why and what, not implementation minutiae. Use the task files for step-by-step work.
-- Use descriptive, kebab-case titles for filenames (lowercase with `-` separators).
-- When in doubt, prefer creating a minimal `DESNNN` and a tiny `TASKNNN` PoC task rather than making untracked large changes.
+## Input / pointer-lock flow (UI + player)
 
-## Contacts and further reading
+- `PlayerController` binds keyboard/mouse look; pointer lock is requested on the canvas element.
+- `GameScene` sets `requestPointerLock` into Zustand so UI can trigger it.
+- `src/ui/components/Hud.tsx` toggles inventory on `E`:
+  - opening UI calls `document.exitPointerLock()`
+  - closing UI calls `requestPointerLock?.()`
 
-- Start with: `.github/copilot-instructions.md`
-- Memory Bank rules: `.github/instructions/memory-bank.instructions.md`
-- Spec-driven workflow: `.github/instructions/spec-driven-workflow-v1.instructions.md`
+## Spec-driven workflow + Memory Bank (required for non-trivial work)
 
----
-Generated guidance — update as project conventions evolve.
+Follow the spec loop described in #file:spec-driven-workflow-v1.instructions.md.
+
+All long-lived project memory lives in `/memory` (present in this repo):
+
+- `/memory/designs/` for design docs
+- `/memory/tasks/` for task tracking
+
+When starting a non-trivial change:
+
+- Create/update a task file under `/memory/tasks/` and list it in `/memory/tasks/_index.md`.
+- Keep the task updated as you implement.
+
+## “If in doubt, do TDD” rule
+
+When behavior is unclear or you’re changing logic that could regress:
+
+1. Write a **meaningful failing test first** (captures the intended behavior).
+2. Make the test pass with the smallest correct change.
+3. Refine/clean up while tests keep passing.
+
+Notes for this repo:
+
+- Prefer tests around pure logic (world math, chunk indexing, crafting/inventory rules, raycast edge cases).
+- Avoid brittle rendering tests unless necessary (Three/R3F can be harder to test).
+- If you add a test runner, document it in `README.md` and keep tests fast.
+
+## What to avoid
+
+- Don’t move `World` into Zustand (it breaks the intended state separation and can cause perf/regression issues).
+- Don’t remove the per-frame rebuild/swap caps unless you replace them with an equivalent bounded strategy.
+- Don’t reorder `BLOCKS`/`BlockId` without updating all dependent lists and atlas tiles.
