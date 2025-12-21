@@ -32,7 +32,7 @@ Plan and execute:
 
 ## Progress Tracking
 
-**Overall Status:** In Progress - 95%
+**Overall Status:** In Progress - 98%
 
 ### Subtasks
 
@@ -43,7 +43,7 @@ Plan and execute:
 | 1.3 | Refactor HUD/inventory/start overlays      | Complete     | 2025-12-21 | Stats/start/inventory updated |
 | 1.4 | Fixed-step sim + interpolation             | Complete     | 2025-12-21 | Fixed-step + camera interp    |
 | 1.5 | Fixed-step unit tests                      | Complete     | 2025-12-21 | Vitest coverage added         |
-| 1.6 | ECS/Immer + feature-gap documentation      | In Progress  | 2025-12-21 | Feature-gap doc pending       |
+| 1.6 | ECS/Immer + feature-gap documentation      | Complete     | 2025-12-21 | Roadmap drafted               |
 | 1.7 | ECS PoC + hotbar/crosshair UI migration    | Complete     | 2025-12-21 | Miniplex + Tabs/ScrollArea    |
 
 ## Progress Log
@@ -54,3 +54,4 @@ Plan and execute:
 - Added Tailwind + shadcn primitives and refactored HUD/inventory/start overlays.
 - Implemented fixed-step simulation with camera interpolation and added unit tests.
 - Completed ECS PoC for player/time-of-day and finished hotbar/crosshair UI migration.
+- Drafted Minecraft-like feature roadmap document.

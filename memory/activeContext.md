@@ -2,7 +2,7 @@
 
 ## Current focus
 
-Completing UI migration (hotbar/crosshair, tabs/scroll) and adding a Miniplex ECS PoC for player/time-of-day snapshots.
+Expanding the Miniplex ECS PoC for player/time-of-day snapshots and documenting the feature roadmap.
 
 ## Recently added/updated
 
@@ -17,3 +17,4 @@ Completing UI migration (hotbar/crosshair, tabs/scroll) and adding a Miniplex EC
 - Add unit tests around fixed-step accumulator logic.
 - Add Miniplex ECS PoC and finish hotbar/crosshair UI migration.
 - Document the Minecraft-like feature gap list and decide whether to adopt ECS beyond PoC.
+- Expand ECS with reusable systems/queries and keep heavy objects out.

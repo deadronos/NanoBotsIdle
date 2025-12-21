@@ -7,7 +7,7 @@ import { pickBlockDDA } from "../voxel/picking";
 import { PlayerController } from "../voxel/PlayerController";
 import { createChunkMeshes } from "../voxel/rendering";
 import { BlockId, BLOCKS, World } from "../voxel/World";
-import { createGameEcs, stepGameEcs } from "./ecs/gameEcs";
+import { createGameEcs, getTimeOfDay, stepGameEcs } from "./ecs/gameEcs";
 import { advanceFixedStep } from "./sim/fixedStep";
 import { isPlaceableBlock } from "./items";
 import { useGameStore } from "./store";
@@ -236,8 +236,8 @@ export default function GameScene() {
 
     statsTimerRef.current += delta;
     if (statsTimerRef.current >= 0.2) {
-      const pos = ecs.player.position;
-      const timeOfDay = (ecs.time.seconds / ecs.time.dayLength) % 1;
+      const pos = ecs.entities.player.position;
+      const timeOfDay = getTimeOfDay(ecs);
       setStats({
         fps: fpsRef.current.fps,
         position: { x: pos.x, y: pos.y, z: pos.z },
@@ -247,7 +247,7 @@ export default function GameScene() {
       statsTimerRef.current = 0;
     }
 
-    const timeOfDay = (ecs.time.seconds / ecs.time.dayLength) % 1;
+    const timeOfDay = getTimeOfDay(ecs);
     const sunPhase = Math.sin(timeOfDay * Math.PI * 2) * 0.5 + 0.5;
     const ambient = lightsRef.current?.ambient;
     const sun = lightsRef.current?.sun;

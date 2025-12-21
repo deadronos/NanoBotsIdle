@@ -14,6 +14,7 @@
 - Hotbar/crosshair migrated to Tailwind styling; inventory uses shadcn Tabs + ScrollArea.
 - Fixed-step simulation accumulator with camera interpolation.
 - Miniplex ECS PoC tracks player/time-of-day snapshots.
+- Feature roadmap drafted for Minecraft-like expansion.
 - Vitest tests in place (smoke + fixed-step accumulator).
 
 ## What’s missing / open areas
