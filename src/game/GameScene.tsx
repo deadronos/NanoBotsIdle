@@ -7,11 +7,16 @@ import { pickBlockDDA } from "../voxel/picking";
 import { PlayerController } from "../voxel/PlayerController";
 import { createChunkMeshes } from "../voxel/rendering";
 import { BlockId, BLOCKS, World } from "../voxel/World";
+import { createGameEcs, getLightingState, getTimeOfDay, stepGameEcs } from "./ecs/gameEcs";
+import { advanceFixedStep } from "./sim/fixedStep";
 import { isPlaceableBlock } from "./items";
 import { useGameStore } from "./store";
 
 const MAX_PICK_DISTANCE = 7;
 const DAY_LENGTH_SECONDS = 140;
+const FIXED_STEP_SECONDS = 1 / 60;
+const MAX_SIM_STEPS = 5;
+const MAX_FRAME_DELTA = 0.1;
 
 export default function GameScene() {
   const { scene, camera, gl } = useThree();
@@ -31,11 +36,14 @@ export default function GameScene() {
   const lightsRef = useRef<{ ambient: THREE.AmbientLight; sun: THREE.DirectionalLight } | null>(
     null,
   );
+  const ecs = useMemo(() => createGameEcs(DAY_LENGTH_SECONDS), []);
   const skyColor = useRef(new THREE.Color());
-  const timeRef = useRef(0);
+  const simAccumulatorRef = useRef(0);
   const fpsRef = useRef({ acc: 0, frames: 0, fps: 0 });
   const statsTimerRef = useRef(0);
   const lastTargetRef = useRef<BlockId | null>(null);
+  const rayOriginRef = useRef(new THREE.Vector3());
+  const rayDirRef = useRef(new THREE.Vector3());
 
   const setAtlasUrl = useGameStore((state) => state.setAtlasUrl);
   const setPointerLocked = useGameStore((state) => state.setPointerLocked);
@@ -131,8 +139,8 @@ export default function GameScene() {
       const player = playerRef.current;
       if (!player) return;
 
-      const origin = player.cameraWorldPosition();
-      const dir = player.cameraWorldDirection();
+      const origin = rayOriginRef.current.copy(camera.position);
+      const dir = camera.getWorldDirection(rayDirRef.current);
       const hit = pickBlockDDA(world, origin, dir, MAX_PICK_DISTANCE);
       if (!hit) return;
 
@@ -174,24 +182,33 @@ export default function GameScene() {
       el.removeEventListener("mousedown", handleMouseDown);
       el.removeEventListener("contextmenu", preventContextMenu);
     };
-  }, [gl.domElement, world]);
+  }, [camera, gl.domElement, world]);
 
   useFrame((_, delta) => {
     const player = playerRef.current;
     if (!player) return;
 
-    const dt = Math.min(0.033, delta);
-    timeRef.current += dt;
+    const frameDt = Math.min(MAX_FRAME_DELTA, delta);
+    const sim = advanceFixedStep(
+      simAccumulatorRef.current,
+      frameDt,
+      FIXED_STEP_SECONDS,
+      MAX_SIM_STEPS,
+      (stepDt) => {
+        player.update(stepDt);
+        stepGameEcs(ecs, stepDt, player);
+      },
+    );
+    simAccumulatorRef.current = sim.accumulator;
+    player.syncCamera(sim.alpha);
 
     world.ensureChunksAround(player.position.x, player.position.z);
     world.pruneFarChunks(player.position.x, player.position.z);
     world.rebuildDirtyChunks();
     chunkMeshesRef.current?.sync();
 
-    player.update(dt);
-
-    const origin = player.cameraWorldPosition();
-    const dir = player.cameraWorldDirection();
+    const origin = rayOriginRef.current.copy(camera.position);
+    const dir = camera.getWorldDirection(rayDirRef.current);
     const hit = pickBlockDDA(world, origin, dir, MAX_PICK_DISTANCE);
 
     const highlight = highlightRef.current;
@@ -209,7 +226,7 @@ export default function GameScene() {
       setTargetBlock(hit?.id ?? null);
     }
 
-    fpsRef.current.acc += dt;
+    fpsRef.current.acc += delta;
     fpsRef.current.frames += 1;
     if (fpsRef.current.acc >= 0.5) {
       fpsRef.current.fps = Math.round(fpsRef.current.frames / fpsRef.current.acc);
@@ -217,10 +234,10 @@ export default function GameScene() {
       fpsRef.current.frames = 0;
     }
 
-    statsTimerRef.current += dt;
+    statsTimerRef.current += delta;
     if (statsTimerRef.current >= 0.2) {
-      const pos = player.position;
-      const timeOfDay = (timeRef.current / DAY_LENGTH_SECONDS) % 1;
+      const pos = ecs.entities.player.position;
+      const timeOfDay = getTimeOfDay(ecs);
       setStats({
         fps: fpsRef.current.fps,
         position: { x: pos.x, y: pos.y, z: pos.z },
@@ -230,23 +247,41 @@ export default function GameScene() {
       statsTimerRef.current = 0;
     }
 
-    const timeOfDay = (timeRef.current / DAY_LENGTH_SECONDS) % 1;
+    const timeOfDay = getTimeOfDay(ecs);
     const sunPhase = Math.sin(timeOfDay * Math.PI * 2) * 0.5 + 0.5;
     const ambient = lightsRef.current?.ambient;
     const sun = lightsRef.current?.sun;
 
-    if (ambient && sun) {
-      ambient.intensity = 0.2 + sunPhase * 0.5;
-      sun.intensity = 0.15 + sunPhase * 0.9;
-      const angle = timeOfDay * Math.PI * 2;
-      sun.position.set(Math.cos(angle) * 120, 30 + sunPhase * 160, Math.sin(angle) * 120);
+    const lightingState = getLightingState(ecs);
+    if (ambient && sun && lightingState) {
+      ambient.intensity = lightingState.ambientIntensity;
+      sun.intensity = lightingState.sunIntensity;
+      sun.position.set(
+        lightingState.sunPosition.x,
+        lightingState.sunPosition.y,
+        lightingState.sunPosition.z,
+      );
+      skyColor.current.setHSL(
+        lightingState.skyHsl.h,
+        lightingState.skyHsl.s,
+        lightingState.skyHsl.l,
+      );
+      scene.background = skyColor.current;
+      if (scene.fog) scene.fog.color.copy(skyColor.current);
+    } else if (!lightingState) {
+      // fallback to legacy values if ECS lighting is unavailable
+      if (ambient && sun) {
+        ambient.intensity = 0.2 + sunPhase * 0.5;
+        sun.intensity = 0.15 + sunPhase * 0.9;
+        const angle = timeOfDay * Math.PI * 2;
+        sun.position.set(Math.cos(angle) * 120, 30 + sunPhase * 160, Math.sin(angle) * 120);
+      }
+      const baseHue = 0.58;
+      const lightness = 0.22 + sunPhase * 0.5;
+      skyColor.current.setHSL(baseHue, 0.52, lightness);
+      scene.background = skyColor.current;
+      if (scene.fog) scene.fog.color.copy(skyColor.current);
     }
-
-    const baseHue = 0.58;
-    const lightness = 0.22 + sunPhase * 0.5;
-    skyColor.current.setHSL(baseHue, 0.52, lightness);
-    scene.background = skyColor.current;
-    if (scene.fog) scene.fog.color.copy(skyColor.current);
   });
 
   return null;

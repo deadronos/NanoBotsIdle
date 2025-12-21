@@ -30,6 +30,7 @@ export class PlayerController {
   // Camera angles
   private yaw = 0;
   private pitch = 0;
+  private prevPosition = new THREE.Vector3(0, 30, 0);
 
   private handleKeyDown?: (e: KeyboardEvent) => void;
   private handleKeyUp?: (e: KeyboardEvent) => void;
@@ -101,7 +102,8 @@ export class PlayerController {
     }
     this.position.set(spawnX + 0.5, y + 2.2, spawnZ + 0.5);
     this.velocity.set(0, 0, 0);
-    this.syncCamera();
+    this.capturePreviousState();
+    this.syncCamera(1);
   }
 
   cameraWorldPosition(): THREE.Vector3 {
@@ -134,6 +136,7 @@ export class PlayerController {
   }
 
   update(dt: number): void {
+    this.capturePreviousState();
     // Movement input in world space (XZ plane)
     const moveDir = new THREE.Vector3();
     const forward = new THREE.Vector3(Math.sin(this.yaw), 0, Math.cos(this.yaw) * -1); // camera forward projected
@@ -193,14 +196,20 @@ export class PlayerController {
 
     // Safety clamp
     if (this.position.y < -10) this.teleportToSafeSpawn();
-
-    this.syncCamera();
   }
 
-  private syncCamera(): void {
-    const eye = this.cameraWorldPosition();
-    this.camera.position.copy(eye);
+  syncCamera(alpha: number): void {
+    const t = Math.min(Math.max(alpha, 0), 1);
+    const interpX = lerp(this.prevPosition.x, this.position.x, t);
+    const interpY = lerp(this.prevPosition.y, this.position.y, t);
+    const interpZ = lerp(this.prevPosition.z, this.position.z, t);
+
+    this.camera.position.set(interpX, interpY + this.height * 0.92, interpZ);
     this.camera.rotation.set(this.pitch, this.yaw, 0, "YXZ");
+  }
+
+  private capturePreviousState(): void {
+    this.prevPosition.copy(this.position);
   }
 
   private resolveCollisionsAxis(axis: "x" | "y" | "z"): void {
@@ -324,4 +333,8 @@ function aabbIntersects(
     aMin.z < bMax.z &&
     aMax.z > bMin.z
   );
+}
+
+function lerp(a: number, b: number, t: number): number {
+  return a + (b - a) * t;
 }

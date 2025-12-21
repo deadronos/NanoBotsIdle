@@ -13,6 +13,7 @@
 ## Completed
 
 - [TASK001] Backfill Memory Bank documentation
+- [TASK003] UI refresh + fixed-step simulation + ECS evaluation
 
 ## Abandoned
 
