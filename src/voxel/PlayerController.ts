@@ -263,14 +263,14 @@ export class PlayerController {
             const downPen = bMax.y - min.y; // push +y
             const upPen = max.y - bMin.y; // push -y
             if (downPen < upPen) {
-              // we're below the block (rare)
+              // landed on block
               this.position.y += downPen + 1e-4;
+              if (this.velocity.y < 0) this.onGround = true;
               this.velocity.y = Math.max(0, this.velocity.y);
             } else {
-              // landed on block
+              // hit head on block
               this.position.y -= upPen + 1e-4;
-              if (this.velocity.y < 0) this.onGround = true;
-              this.velocity.y = 0;
+              if (this.velocity.y > 0) this.velocity.y = 0;
             }
             min.y = this.position.y;
             max.y = this.position.y + this.height;
