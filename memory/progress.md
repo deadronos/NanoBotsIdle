@@ -17,15 +17,19 @@
 - Fixed-step simulation accumulator with camera interpolation.
 - Miniplex ECS PoC tracks player/time-of-day snapshots.
 - ECS expanded with systems/registry for mobs/items/particles and centralized lighting state.
+- Block lighting (sun + torch) with bounded propagation and vertex-lit meshing.
+- Mob spawn system gated by light thresholds and spawn caps.
 - Feature roadmap drafted for Minecraft-like expansion.
 - Vitest tests in place (smoke + fixed-step accumulator).
 - Generation tests cover determinism, order independence, and ore depth ranges.
+- Lighting and mob spawn tests cover propagation, sunlight occlusion, and spawn rules.
 
 ## What’s missing / open areas
 
 - Expanded automated tests for world math, chunk indexing, and picking edge cases.
 - Persistence (save/load).
 - Greedy meshing, occlusion optimizations, and more advanced lighting.
+- Mob rendering/AI beyond basic wander.
 
 ## Known constraints
 

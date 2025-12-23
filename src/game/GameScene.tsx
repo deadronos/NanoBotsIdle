@@ -51,7 +51,10 @@ export default function GameScene() {
   const lightsRef = useRef<{ ambient: THREE.AmbientLight; sun: THREE.DirectionalLight } | null>(
     null,
   );
-  const ecs = useMemo(() => createGameEcs(DAY_LENGTH_SECONDS), []);
+  const ecs = useMemo(
+    () => createGameEcs(DAY_LENGTH_SECONDS, undefined, { voxelWorld: world, seed: world.seed }),
+    [world],
+  );
   const skyColor = useRef(new THREE.Color());
   const highlightColorsRef = useRef({
     base: new THREE.Color(0xfdf7da),
@@ -92,6 +95,7 @@ export default function GameScene() {
 
       world.setBlock(hit.block.x, hit.block.y, hit.block.z, BlockId.Air);
       world.markDirtyAt(hit.block.x, hit.block.y, hit.block.z);
+      world.handleBlockChanged(hit.block.x, hit.block.y, hit.block.z, hit.id, BlockId.Air);
 
       const rng = new SeededRng(world.seed).fork(
         `drop:${hit.block.x},${hit.block.y},${hit.block.z},${hit.id}`,
@@ -177,6 +181,7 @@ export default function GameScene() {
       map: atlas.texture,
       transparent: true,
       alphaTest: 0.5,
+      vertexColors: true,
     });
 
     chunkMeshesRef.current = createChunkMeshes(scene, world, material);
@@ -280,6 +285,7 @@ export default function GameScene() {
 
         world.setBlock(px, py, pz, selected);
         world.markDirtyAt(px, py, pz);
+        world.handleBlockChanged(px, py, pz, existing, selected);
       }
     };
 
@@ -322,6 +328,7 @@ export default function GameScene() {
 
     world.ensureChunksAround(player.position.x, player.position.z);
     world.pruneFarChunks(player.position.x, player.position.z);
+    world.processLightQueue();
     world.rebuildDirtyChunks();
     chunkMeshesRef.current?.sync();
 

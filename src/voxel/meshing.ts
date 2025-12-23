@@ -156,6 +156,32 @@ function tileForFace(id: BlockId, face: Face): number {
   return t.all ?? 0;
 }
 
+function sampleVertexLight(
+  world: World,
+  wx: number,
+  wy: number,
+  wz: number,
+  face: Face,
+  v: [number, number, number],
+): number {
+  switch (face.name) {
+    case "px":
+      return world.getLightAt(wx + 1, wy + v[1], wz + v[2]);
+    case "nx":
+      return world.getLightAt(wx - 1, wy + v[1], wz + v[2]);
+    case "py":
+      return world.getLightAt(wx + v[0], wy + 1, wz + v[2]);
+    case "ny":
+      return world.getLightAt(wx + v[0], wy - 1, wz + v[2]);
+    case "pz":
+      return world.getLightAt(wx + v[0], wy + v[1], wz + 1);
+    case "nz":
+      return world.getLightAt(wx + v[0], wy + v[1], wz - 1);
+    default:
+      return world.getLightAt(wx, wy, wz);
+  }
+}
+
 export function buildChunkGeometry(world: World, chunk: Chunk): BuiltGeometry {
   const { x: sx, y: sy, z: sz } = chunk.size;
   const baseX = chunk.cx * sx;
@@ -165,6 +191,7 @@ export function buildChunkGeometry(world: World, chunk: Chunk): BuiltGeometry {
   const normals: number[] = [];
   const uvs: number[] = [];
   const indices: number[] = [];
+  const colors: number[] = [];
 
   const tilesPerRow = 16; // must match atlas.ts
   const tileSize = 1 / tilesPerRow;
@@ -199,6 +226,10 @@ export function buildChunkGeometry(world: World, chunk: Chunk): BuiltGeometry {
             const u = (tx + THREE.MathUtils.lerp(inset, 1 - inset, uv[0])) * tileSize;
             const vv = (ty + THREE.MathUtils.lerp(inset, 1 - inset, uv[1])) * tileSize;
             uvs.push(u, 1 - vv);
+
+            const light = sampleVertexLight(world, wx, y, wz, face, v);
+            const brightness = light / 15;
+            colors.push(brightness, brightness, brightness);
           }
 
           // Two triangles: 0-1-2, 0-2-3
@@ -221,6 +252,7 @@ export function buildChunkGeometry(world: World, chunk: Chunk): BuiltGeometry {
   geometry.setAttribute("position", new THREE.Float32BufferAttribute(positions, 3));
   geometry.setAttribute("normal", new THREE.Float32BufferAttribute(normals, 3));
   geometry.setAttribute("uv", new THREE.Float32BufferAttribute(uvs, 2));
+  geometry.setAttribute("color", new THREE.Float32BufferAttribute(colors, 3));
   geometry.setIndex(indices);
   geometry.computeBoundingSphere();
 
