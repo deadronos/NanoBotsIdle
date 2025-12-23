@@ -139,8 +139,8 @@ export class PlayerController {
     this.capturePreviousState();
     // Movement input in world space (XZ plane)
     const moveDir = new THREE.Vector3();
-    const forward = new THREE.Vector3(Math.sin(this.yaw), 0, Math.cos(this.yaw) * -1); // camera forward projected
-    const right = new THREE.Vector3(forward.z, 0, -forward.x);
+    const forward = new THREE.Vector3(-Math.sin(this.yaw), 0, Math.cos(this.yaw) * -1); // camera forward projected
+    const right = new THREE.Vector3(-forward.z, 0, forward.x);
 
     if (this.input.forward) moveDir.add(forward);
     if (this.input.back) moveDir.sub(forward);
