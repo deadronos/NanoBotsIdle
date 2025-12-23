@@ -4,6 +4,8 @@
 
 - [TASK008] Performance optimization plan and reusable systems
   - Goal: reduce frame time and GC by introducing reusable scheduler, pooling, and batching systems.
+- [TASK009] Config centralization under /src/config
+  - Goal: centralize runtime tunables to reduce scattered constants.
 
 ## Pending
 

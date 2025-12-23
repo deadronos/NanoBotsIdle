@@ -50,3 +50,8 @@ These requirements describe **existing** behavior observed in the codebase.
 
 15. WHEN background work exceeds the per-frame budget, THE SYSTEM SHALL throttle chunk generation, lighting, and mesh swaps to preserve responsiveness.
     - Acceptance: no long-frame spikes during rapid movement; work continues over multiple frames.
+
+## Planned changes (config centralization)
+
+16. WHEN a configurable parameter is used across subsystems, THE SYSTEM SHALL define it once under `/src/config` and import it where needed.
+    - Acceptance: atlas tile sizes, simulation step values, and rendering settings are sourced from config modules.
