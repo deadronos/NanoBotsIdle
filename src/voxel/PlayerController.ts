@@ -1,5 +1,6 @@
 import * as THREE from "three";
 
+import { PLAYER_INPUT, PLAYER_PHYSICS } from "../config/player";
 import type { World } from "./World";
 import { BlockId, BLOCKS } from "./World";
 
@@ -46,17 +47,17 @@ export class PlayerController {
   };
 
   // Physics params
-  private gravity = -24;
-  private walkSpeed = 6.0;
-  private sprintMult = 1.6;
-  private jumpSpeed = 8.2;
-  private friction = 10.0;
-  private airControl = 0.15;
+  private gravity = PLAYER_PHYSICS.gravity;
+  private walkSpeed = PLAYER_PHYSICS.walkSpeed;
+  private sprintMult = PLAYER_PHYSICS.sprintMultiplier;
+  private jumpSpeed = PLAYER_PHYSICS.jumpSpeed;
+  private friction = PLAYER_PHYSICS.friction;
+  private airControl = PLAYER_PHYSICS.airControl;
 
   // Collider (AABB)
   // Like Minecraft: width ~0.6, height ~1.8
-  private halfW = 0.3;
-  private height = 1.78;
+  private halfW = PLAYER_PHYSICS.halfWidth;
+  private height = PLAYER_PHYSICS.height;
 
   private onGround = false;
 
@@ -316,7 +317,7 @@ export class PlayerController {
 
     this.handleMouseMove = (e) => {
       if (document.pointerLockElement !== this.domElement) return;
-      const sens = 0.0022;
+      const sens = PLAYER_INPUT.mouseSensitivity;
       this.yaw -= e.movementX * sens;
       this.pitch -= e.movementY * sens;
       this.pitch = clampPitch(this.pitch);

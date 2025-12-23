@@ -1,5 +1,6 @@
 import * as THREE from "three";
 
+import { TILE_SIZE, TILES_PER_ROW } from "../config/atlas";
 import type { Chunk, World } from "./World";
 import { BlockId, BLOCKS } from "./World";
 
@@ -286,9 +287,6 @@ export function buildChunkGeometry(
     return Math.max(neighbor.sunLight[idx], neighbor.blockLight[idx]);
   };
 
-  const tilesPerRow = 16; // must match atlas.ts
-  const tileSize = 1 / tilesPerRow;
-
   let vertCount = 0;
   let posIndex = 0;
   let normIndex = 0;
@@ -310,8 +308,8 @@ export function buildChunkGeometry(
           if (!isFaceVisible(getBlockLocal, x, y, z, face, id)) continue;
 
           const tile = tileForFace(id, face);
-          const tx = tile % tilesPerRow;
-          const ty = Math.floor(tile / tilesPerRow);
+          const tx = tile % TILES_PER_ROW;
+          const ty = Math.floor(tile / TILES_PER_ROW);
 
           positions = ensureFloatCapacity(positions, posIndex + 12);
           normals = ensureFloatCapacity(normals, normIndex + 12);
@@ -331,8 +329,8 @@ export function buildChunkGeometry(
             const uv = face.uv[i]!;
             // Atlas UV: add tiny inset to reduce bleeding.
             const inset = 0.001;
-            const u = (tx + THREE.MathUtils.lerp(inset, 1 - inset, uv[0])) * tileSize;
-            const vv = (ty + THREE.MathUtils.lerp(inset, 1 - inset, uv[1])) * tileSize;
+            const u = (tx + THREE.MathUtils.lerp(inset, 1 - inset, uv[0])) * TILE_SIZE;
+            const vv = (ty + THREE.MathUtils.lerp(inset, 1 - inset, uv[1])) * TILE_SIZE;
             uvs[uvIndex++] = u;
             uvs[uvIndex++] = 1 - vv;
 

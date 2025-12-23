@@ -1,5 +1,6 @@
 import * as THREE from "three";
 
+import { PARTICLES } from "../config/particles";
 import { BlockId } from "../voxel/World";
 import { BLOCK_COLORS, DEFAULT_BLOCK_COLOR } from "./blockColors";
 
@@ -22,9 +23,9 @@ export class BreakParticleSystem {
   private material: THREE.PointsMaterial;
   private points: THREE.Points;
   private maxParticles: number;
-  private gravity = -6;
+  private gravity = PARTICLES.gravity;
 
-  constructor(scene: THREE.Scene, maxParticles = 180) {
+  constructor(scene: THREE.Scene, maxParticles = PARTICLES.maxParticles) {
     this.maxParticles = maxParticles;
     this.positions = new Float32Array(maxParticles * 3);
     this.colors = new Float32Array(maxParticles * 3);
@@ -32,11 +33,11 @@ export class BreakParticleSystem {
     this.geometry.setAttribute("position", new THREE.BufferAttribute(this.positions, 3));
     this.geometry.setAttribute("color", new THREE.BufferAttribute(this.colors, 3));
     this.material = new THREE.PointsMaterial({
-      size: 0.08,
+      size: PARTICLES.size,
       vertexColors: true,
       transparent: true,
-      opacity: 0.9,
-      depthWrite: false,
+      opacity: PARTICLES.opacity,
+      depthWrite: PARTICLES.depthWrite,
     });
     this.points = new THREE.Points(this.geometry, this.material);
     scene.add(this.points);

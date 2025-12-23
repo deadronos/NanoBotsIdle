@@ -1,5 +1,6 @@
 /* Voxel world + chunk storage + terrain generation. */
 import { buildChunkGeometry, type BuiltGeometry, type MeshBuffers } from "./meshing";
+import { PERF } from "../config/perf";
 import { SeededRng } from "./generation/rng";
 import { fbm2, fbm3, hash2 } from "./noise";
 import { LightQueue, type LightLayer } from "./lighting";
@@ -237,6 +238,11 @@ export type WorldOptions = {
   viewDistanceChunks: number;
   chunkSize: ChunkSize;
   generation?: Partial<WorldGenerationConfig>;
+  seaLevel?: number;
+  perf?: {
+    maxLightOpsPerFrame?: number;
+    maxChunkRebuildsPerFrame?: number;
+  };
 };
 
 export type ChunkKey = string; // "cx,cz"
@@ -316,16 +322,22 @@ export class World {
   private dirty = new Set<ChunkKey>();
   private generation: WorldGenerationConfig;
   private lightQueue = new LightQueue();
-  private maxLightOpsPerFrame = 2048;
+  private maxLightOpsPerFrame: number;
+  private maxChunkRebuildsPerFrame: number;
 
   // Terrain knobs.
-  private seaLevel = 18;
+  private seaLevel: number;
 
   constructor(opts: WorldOptions) {
     this.seed = opts.seed;
     this.viewDistanceChunks = opts.viewDistanceChunks;
     this.chunkSize = opts.chunkSize;
     this.generation = resolveGenerationConfig(opts.generation);
+    this.seaLevel = Number.isFinite(opts.seaLevel) ? Math.max(0, opts.seaLevel) : 18;
+    this.maxLightOpsPerFrame =
+      opts.perf?.maxLightOpsPerFrame ?? PERF.maxLightOpsPerFrame;
+    this.maxChunkRebuildsPerFrame =
+      opts.perf?.maxChunkRebuildsPerFrame ?? PERF.maxChunkRebuildsPerFrame;
   }
 
   key(cx: number, cz: number): ChunkKey {
@@ -461,7 +473,7 @@ export class World {
     if (this.dirty.size === 0) return;
 
     // Limit rebuild work per frame to keep it smooth.
-    const maxPerFrame = 4;
+    const maxPerFrame = this.maxChunkRebuildsPerFrame;
     let done = 0;
 
     for (const k of this.dirty) {

@@ -1,5 +1,6 @@
 import * as THREE from "three";
 
+import { INSTANCED_BATCHES } from "../../config/rendering";
 import type { GameEcs, GameEntity } from "./gameEcs";
 import { BLOCK_COLORS, DEFAULT_BLOCK_COLOR } from "../blockColors";
 import { InstanceBatch } from "../instancedBatch";
@@ -13,17 +14,27 @@ export type EcsInstancedRenderers = {
 export function createEcsInstancedRenderers(
   scene: THREE.Scene,
 ): EcsInstancedRenderers {
-  const mobGeometry = new THREE.BoxGeometry(0.6, 1.0, 0.6);
-  const mobMaterial = new THREE.MeshLambertMaterial({ color: 0xf1c27d });
+  const mobGeometry = new THREE.BoxGeometry(
+    INSTANCED_BATCHES.mobs.size.x,
+    INSTANCED_BATCHES.mobs.size.y,
+    INSTANCED_BATCHES.mobs.size.z,
+  );
+  const mobMaterial = new THREE.MeshLambertMaterial({
+    color: INSTANCED_BATCHES.mobs.color,
+  });
   const mobBatch = new InstanceBatch(scene, mobGeometry, mobMaterial, {
-    capacity: 64,
+    capacity: INSTANCED_BATCHES.mobs.capacity,
     useColors: false,
   });
 
-  const itemGeometry = new THREE.BoxGeometry(0.35, 0.35, 0.35);
+  const itemGeometry = new THREE.BoxGeometry(
+    INSTANCED_BATCHES.items.size,
+    INSTANCED_BATCHES.items.size,
+    INSTANCED_BATCHES.items.size,
+  );
   const itemMaterial = new THREE.MeshLambertMaterial({ vertexColors: true });
   const itemBatch = new InstanceBatch(scene, itemGeometry, itemMaterial, {
-    capacity: 128,
+    capacity: INSTANCED_BATCHES.items.capacity,
     useColors: true,
   });
 

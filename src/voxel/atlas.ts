@@ -1,5 +1,6 @@
 import * as THREE from "three";
 
+import { ATLAS_PX, TILE_PX, TILES_PER_ROW } from "../config/atlas";
 import type { BlockDef } from "./World";
 
 export type Atlas = {
@@ -15,40 +16,37 @@ type RendererLike = { capabilities: { getMaxAnisotropy: () => number } };
  */
 export function createAtlasTexture(renderer: RendererLike, blocks: readonly BlockDef[]): Atlas {
   void blocks;
-  const tilesPerRow = 16;
-  const tilePx = 16;
-  const sizePx = tilesPerRow * tilePx;
 
   const canvas = document.createElement("canvas");
-  canvas.width = sizePx;
-  canvas.height = sizePx;
+  canvas.width = ATLAS_PX;
+  canvas.height = ATLAS_PX;
 
   const ctx = canvas.getContext("2d")!;
   ctx.imageSmoothingEnabled = false;
 
   // Tile 0 = fully transparent.
-  ctx.clearRect(0, 0, sizePx, sizePx);
+  ctx.clearRect(0, 0, ATLAS_PX, ATLAS_PX);
 
   function paintTile(tile: number, base: string, accent?: string) {
-    const x0 = (tile % tilesPerRow) * tilePx;
-    const y0 = Math.floor(tile / tilesPerRow) * tilePx;
+    const x0 = (tile % TILES_PER_ROW) * TILE_PX;
+    const y0 = Math.floor(tile / TILES_PER_ROW) * TILE_PX;
 
     ctx.fillStyle = base;
-    ctx.fillRect(x0, y0, tilePx, tilePx);
+    ctx.fillRect(x0, y0, TILE_PX, TILE_PX);
 
     // Add a small pixel noise pattern to feel more "blocky".
     if (accent) {
       ctx.fillStyle = accent;
       for (let i = 0; i < 22; i++) {
-        const px = x0 + ((i * 7 + tile * 13) % tilePx);
-        const py = y0 + ((i * 11 + tile * 17) % tilePx);
+        const px = x0 + ((i * 7 + tile * 13) % TILE_PX);
+        const py = y0 + ((i * 11 + tile * 17) % TILE_PX);
         ctx.fillRect(px, py, 1, 1);
       }
     }
 
     // Subtle border
     ctx.strokeStyle = "rgba(0,0,0,0.25)";
-    ctx.strokeRect(x0 + 0.5, y0 + 0.5, tilePx - 1, tilePx - 1);
+    ctx.strokeRect(x0 + 0.5, y0 + 0.5, TILE_PX - 1, TILE_PX - 1);
   }
 
   // Define a few tiles used by World.ts.
@@ -72,11 +70,11 @@ export function createAtlasTexture(renderer: RendererLike, blocks: readonly Bloc
   paintTile(18, "#8f8f93", "#5bd0d0"); // diamond ore
 
   // optional: paint the rest as debug checker.
-  for (let t = 10; t < tilesPerRow * tilesPerRow; t++) {
-    const x0 = (t % tilesPerRow) * tilePx;
-    const y0 = Math.floor(t / tilesPerRow) * tilePx;
+  for (let t = 10; t < TILES_PER_ROW * TILES_PER_ROW; t++) {
+    const x0 = (t % TILES_PER_ROW) * TILE_PX;
+    const y0 = Math.floor(t / TILES_PER_ROW) * TILE_PX;
     ctx.fillStyle = t % 2 === 0 ? "rgba(255,0,255,0.06)" : "rgba(0,255,255,0.06)";
-    ctx.fillRect(x0, y0, tilePx, tilePx);
+    ctx.fillRect(x0, y0, TILE_PX, TILE_PX);
   }
 
   const texture = new THREE.CanvasTexture(canvas);

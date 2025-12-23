@@ -1,5 +1,6 @@
 import * as THREE from "three";
 
+import { PERF } from "../config/perf";
 import type { BuiltGeometry } from "./meshing";
 import type { ChunkKey, World } from "./World";
 
@@ -52,7 +53,7 @@ export function createChunkMeshes(scene: THREE.Scene, world: World, material: TH
 
     // Limit mesh swaps per frame.
     let done = 0;
-    const maxPerFrame = 6;
+    const maxPerFrame = PERF.maxMeshSwapsPerFrame;
 
     for (const k of pending) {
       const c = world.getChunkByKey(k);

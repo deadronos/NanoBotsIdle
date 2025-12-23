@@ -1,6 +1,13 @@
 import type { Query, With } from "miniplex";
 import { World as EcsWorld } from "miniplex";
 
+import {
+  ECS_ITEM_DEFAULTS,
+  ECS_LIGHTING,
+  ECS_MOB_DEFAULTS,
+  ECS_MOB_SPAWN,
+  ECS_PARTICLE_DEFAULTS,
+} from "../../config/ecs";
 import type { PlayerController } from "../../voxel/PlayerController";
 import { SeededRng } from "../../voxel/generation/rng";
 import { BlockId, BLOCKS, type World as VoxelWorld } from "../../voxel/World";
@@ -69,30 +76,6 @@ export type MobSpawnState = {
   rng: SeededRng;
 };
 
-export const DEFAULT_LIGHTING_CONFIG: LightingConfig = {
-  baseHue: 0.58,
-  saturation: 0.52,
-  lightnessBase: 0.22,
-  lightnessScale: 0.5,
-  ambientBase: 0.2,
-  ambientScale: 0.5,
-  sunBase: 0.15,
-  sunScale: 0.9,
-  sunOrbitRadius: 120,
-  sunHeightBase: 30,
-  sunHeightScale: 160,
-};
-
-export const DEFAULT_MOB_SPAWN_CONFIG: MobSpawnConfig = {
-  spawnInterval: 4,
-  spawnAttempts: 6,
-  maxMobs: 18,
-  maxMobsPerChunk: 3,
-  minDistance: 12,
-  maxDistance: 48,
-  lightThreshold: 7,
-};
-
 export type GameEntity = {
   kind: EntityKind;
   player?: true;
@@ -157,8 +140,8 @@ export function createGameEcs(
 ): GameEcs {
   const config: GameEcsConfig = {
     dayLength,
-    lighting: { ...DEFAULT_LIGHTING_CONFIG, ...lighting },
-    mobs: { ...DEFAULT_MOB_SPAWN_CONFIG, ...options?.mobs },
+    lighting: { ...ECS_LIGHTING, ...lighting },
+    mobs: { ...ECS_MOB_SPAWN, ...options?.mobs },
   };
   const world = new EcsWorld<GameEntity>();
   const registry = createEntityRegistry(config);
@@ -325,8 +308,8 @@ function createEntityRegistry(config: GameEcsConfig): EntityRegistry {
       mob: {
         type: "critter",
         wanderTimer: 0,
-        wanderInterval: 2.5,
-        speed: 1.2,
+        wanderInterval: ECS_MOB_DEFAULTS.wanderInterval,
+        speed: ECS_MOB_DEFAULTS.speed,
       },
       ...init,
     }),
@@ -343,13 +326,17 @@ function createEntityRegistry(config: GameEcsConfig): EntityRegistry {
     particle: (init) => ({
       kind: "particle",
       position: { x: 0, y: 0, z: 0 },
-      velocity: { x: 0, y: 0.8, z: 0 },
+      velocity: {
+        x: ECS_PARTICLE_DEFAULTS.velocity.x,
+        y: ECS_PARTICLE_DEFAULTS.velocity.y,
+        z: ECS_PARTICLE_DEFAULTS.velocity.z,
+      },
       particle: {
         type: "dust",
       },
       lifetime: {
         age: 0,
-        ttl: 1.2,
+        ttl: ECS_PARTICLE_DEFAULTS.ttl,
       },
       ...init,
     }),
@@ -459,7 +446,8 @@ function mobMovementSystem(ecs: GameEcs, dt: number) {
 function itemBobSystem(ecs: GameEcs, dt: number) {
   for (const entity of ecs.queries.items) {
     if (!entity.item) continue;
-    entity.item.bobPhase = (entity.item.bobPhase + dt * 1.4) % (Math.PI * 2);
+    entity.item.bobPhase =
+      (entity.item.bobPhase + dt * ECS_ITEM_DEFAULTS.bobSpeed) % (Math.PI * 2);
   }
 }
 
