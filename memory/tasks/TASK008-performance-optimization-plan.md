@@ -1,0 +1,51 @@
+# [TASK008] - Performance optimization plan and reusable systems
+
+**Status:** In Progress  
+**Added:** 2025-12-23  
+**Updated:** 2025-12-23
+
+## Original Request
+
+take a hard look at all current implementation, how can we optimize performance?
+instanced rendering or more? caching/resuse/pooling?
+
+aim to suggest systems that can be reusable as components and systems are added
+
+dont code yet, plan
+
+## Thought Process
+
+- Focus on the current hot paths: chunk streaming, meshing, lighting propagation, and per-frame allocations.
+- Identify optimizations that are reusable as new systems are added (scheduler, pools, render batches).
+- Prioritize changes that reduce CPU time and GC, then draw calls.
+- Keep existing invariants intact (chunk rebuild caps, block ID alignment, atlas layout).
+
+## Implementation Plan
+
+1. Establish a baseline by profiling chunk meshing, lighting, and mesh swap costs. Record draw calls and frame time.
+2. Design and implement a frame-budget scheduler for background jobs (generation, lighting, mesh swaps).
+3. Replace per-frame streaming scans with chunk-boundary-triggered updates.
+4. Add geometry and typed-array pooling; update chunk mesh swap to reuse buffers.
+5. Optimize meshing (greedy meshing or chunk-local neighbor cache) and measure improvements.
+6. Create a reusable instance batching system for items, mobs, and particles.
+7. Consider worker offload for chunk generation/meshing if main-thread cost remains high.
+
+## Progress Tracking
+
+**Overall Status:** In Progress - 15%
+
+### Subtasks
+
+| ID | Description | Status | Updated | Notes |
+| --- | --- | --- | --- | --- |
+| 1.1 | Review current hot paths (meshing, lighting, streaming, allocations) | Complete | 2025-12-23 | Focused on `World`, `meshing`, `rendering`, `GameScene` |
+| 1.2 | Draft reusable optimization systems (scheduler, pools, batches) | Complete | 2025-12-23 | Documented in DESIGN007 |
+| 1.3 | Define phased plan and acceptance targets | In Progress | 2025-12-23 | Needs perf baseline validation |
+
+## Progress Log
+
+### 2025-12-23
+
+- Audited current performance hot paths and identified main sources of CPU and GC cost.
+- Drafted DESIGN007 to capture reusable optimization systems and phased plan.
+- Added initial planned requirements for performance optimization.

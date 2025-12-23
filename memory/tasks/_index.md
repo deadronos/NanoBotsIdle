@@ -2,7 +2,8 @@
 
 ## In Progress
 
-- (none)
+- [TASK008] Performance optimization plan and reusable systems
+  - Goal: reduce frame time and GC by introducing reusable scheduler, pooling, and batching systems.
 
 ## Pending
 

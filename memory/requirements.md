@@ -36,3 +36,17 @@ These requirements describe **existing** behavior observed in the codebase.
 
 11. WHEN the ECS PoC runs, THE SYSTEM SHALL track player/time-of-day snapshots inside a Miniplex world without storing heavy rendering objects.
     - Acceptance: Miniplex world stores plain data and is updated each fixed-step tick.
+
+## Planned changes (performance optimization)
+
+12. WHEN the player crosses a chunk boundary, THE SYSTEM SHALL recompute streaming sets and enqueue chunk jobs once per boundary change to avoid per-frame scanning.
+    - Acceptance: streaming work is triggered only on chunk boundary transitions or view distance changes.
+
+13. WHEN a chunk mesh is rebuilt, THE SYSTEM SHALL reuse buffer allocations and update geometry attributes instead of disposing and reallocating each time.
+    - Acceptance: allocation counters show stable reuse during repeated edits in a region.
+
+14. WHEN multiple identical renderables (items, mobs, particles) are present, THE SYSTEM SHALL batch them using instanced rendering or a shared points pipeline to keep draw calls bounded.
+    - Acceptance: draw call count grows sublinearly with entity count in devtools.
+
+15. WHEN background work exceeds the per-frame budget, THE SYSTEM SHALL throttle chunk generation, lighting, and mesh swaps to preserve responsiveness.
+    - Acceptance: no long-frame spikes during rapid movement; work continues over multiple frames.
