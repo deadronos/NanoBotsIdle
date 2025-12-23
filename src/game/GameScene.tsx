@@ -14,6 +14,7 @@ import { BreakParticleSystem } from "./BreakParticles";
 import { createSfxPlayer } from "./audio";
 import { createGameEcs, getLightingState, getTimeOfDay, stepGameEcs } from "./ecs/gameEcs";
 import { isPlaceableBlock } from "./items";
+import { perfStats } from "./perf";
 import { advanceFixedStep } from "./sim/fixedStep";
 import { useGameStore } from "./store";
 
@@ -313,17 +314,36 @@ export default function GameScene() {
     const player = playerRef.current;
     if (!player) return;
 
+    const perfEnabled = perfStats.enabled;
+    const frameStart = perfEnabled ? performance.now() : 0;
+
     const frameDt = Math.min(MAX_FRAME_DELTA, delta);
-    const sim = advanceFixedStep(
-      simAccumulatorRef.current,
-      frameDt,
-      FIXED_STEP_SECONDS,
-      MAX_SIM_STEPS,
-      (stepDt) => {
-        player.update(stepDt);
-        stepGameEcs(ecs, stepDt, player);
-      },
-    );
+    let sim;
+    if (perfEnabled) {
+      const start = performance.now();
+      sim = advanceFixedStep(
+        simAccumulatorRef.current,
+        frameDt,
+        FIXED_STEP_SECONDS,
+        MAX_SIM_STEPS,
+        (stepDt) => {
+          player.update(stepDt);
+          stepGameEcs(ecs, stepDt, player);
+        },
+      );
+      perfStats.add("simMs", performance.now() - start);
+    } else {
+      sim = advanceFixedStep(
+        simAccumulatorRef.current,
+        frameDt,
+        FIXED_STEP_SECONDS,
+        MAX_SIM_STEPS,
+        (stepDt) => {
+          player.update(stepDt);
+          stepGameEcs(ecs, stepDt, player);
+        },
+      );
+    }
     simAccumulatorRef.current = sim.accumulator;
     player.syncCamera(sim.alpha);
 
@@ -335,9 +355,29 @@ export default function GameScene() {
       world.ensureChunksAround(player.position.x, player.position.z);
       world.pruneFarChunks(player.position.x, player.position.z);
     }
-    world.processLightQueue();
-    world.rebuildDirtyChunks();
-    chunkMeshesRef.current?.sync();
+    if (perfEnabled) {
+      const start = performance.now();
+      world.processLightQueue();
+      perfStats.add("lightMs", performance.now() - start);
+    } else {
+      world.processLightQueue();
+    }
+
+    if (perfEnabled) {
+      const start = performance.now();
+      world.rebuildDirtyChunks();
+      perfStats.add("meshBuildMs", performance.now() - start);
+    } else {
+      world.rebuildDirtyChunks();
+    }
+
+    if (perfEnabled) {
+      const start = performance.now();
+      chunkMeshesRef.current?.sync();
+      perfStats.add("meshSwapMs", performance.now() - start);
+    } else {
+      chunkMeshesRef.current?.sync();
+    }
 
     const origin = rayOriginRef.current.copy(camera.position);
     const dir = camera.getWorldDirection(rayDirRef.current);
@@ -473,6 +513,10 @@ export default function GameScene() {
       skyColor.current.setHSL(baseHue, 0.52, lightness);
       scene.background = skyColor.current;
       if (scene.fog) scene.fog.color.copy(skyColor.current);
+    }
+
+    if (perfEnabled) {
+      perfStats.recordFrame(performance.now() - frameStart);
     }
   });
 

@@ -32,7 +32,7 @@ dont code yet, plan
 
 ## Progress Tracking
 
-**Overall Status:** In Progress - 55%
+**Overall Status:** In Progress - 70%
 
 ### Subtasks
 
@@ -44,8 +44,9 @@ dont code yet, plan
 | 2.1 | Chunk-boundary streaming trigger | Complete | 2025-12-23 | Avoids per-frame streaming scans |
 | 2.2 | Reuse mesh buffers and update renderer swaps | Complete | 2025-12-23 | Mesh buffers reused per chunk |
 | 2.3 | Reduce per-frame allocations (picking, particles, controller) | Complete | 2025-12-23 | Pooling + vector reuse |
-| 2.4 | Frame-budget scheduler | Not Started | 2025-12-23 | Pending design integration |
-| 2.5 | Instanced batching for entities | Not Started | 2025-12-23 | Pending entity renderers |
+| 2.4 | Perf instrumentation + baseline capture | Complete | 2025-12-23 | Playwright baseline recorded |
+| 2.5 | Frame-budget scheduler | Not Started | 2025-12-23 | Pending design integration |
+| 2.6 | Instanced batching for entities | Not Started | 2025-12-23 | Pending entity renderers |
 
 ## Progress Log
 
@@ -57,3 +58,5 @@ dont code yet, plan
 - Implemented chunk-boundary streaming trigger to avoid per-frame scans.
 - Switched chunk meshing to reuse typed-array buffers and updated renderer to reuse geometry.
 - Reduced allocation churn in picking, break particles, and player movement.
+- Added perf instrumentation + Playwright baseline capture flow (headful required for WebGL here).
+- Baseline snapshot written to `.agent_work/perf-baseline.json` (frameMs avg ~106ms, meshBuild avg ~14.6ms, light avg ~89ms).
