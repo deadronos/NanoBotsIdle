@@ -133,7 +133,7 @@ export default function GameScene() {
         hit.block.y + 0.5,
         hit.block.z + 0.5,
       );
-      particlesRef.current?.spawnBurst(burstPos, hit.id, 18);
+      particlesRef.current?.spawnBurst(burstPos, hit.id, GAMEPLAY.miningBreakBurstCount);
       sfxRef.current?.playBreak();
     },
     [world],
@@ -164,18 +164,22 @@ export default function GameScene() {
         hit.block.y + 0.5,
         hit.block.z + 0.5,
       );
-      particlesRef.current?.spawnBurst(chipPos, hit.id, 3);
+      particlesRef.current?.spawnBurst(chipPos, hit.id, GAMEPLAY.miningStartBurstCount);
     },
     [finishMiningBlock, setMining],
   );
 
   useEffect(() => {
-    const fog = new THREE.FogExp2(0x8cc9ff, 0.0038);
+    const fog = new THREE.FogExp2(FOG.color, FOG.density);
     scene.fog = fog;
 
-    const ambient = new THREE.AmbientLight(0xffffff, 0.45);
-    const sun = new THREE.DirectionalLight(0xffffff, 0.75);
-    sun.position.set(80, 140, 50);
+    const ambient = new THREE.AmbientLight(0xffffff, DEFAULT_LIGHTS.ambientIntensity);
+    const sun = new THREE.DirectionalLight(0xffffff, DEFAULT_LIGHTS.sunIntensity);
+    sun.position.set(
+      DEFAULT_LIGHTS.sunPosition.x,
+      DEFAULT_LIGHTS.sunPosition.y,
+      DEFAULT_LIGHTS.sunPosition.z,
+    );
     sun.castShadow = false;
 
     scene.add(ambient, sun);
@@ -200,13 +204,13 @@ export default function GameScene() {
 
     chunkMeshesRef.current = createChunkMeshes(scene, world, material);
 
-    const box = new THREE.BoxGeometry(1.01, 1.01, 1.01);
+    const box = new THREE.BoxGeometry(HIGHLIGHT.boxScale, HIGHLIGHT.boxScale, HIGHLIGHT.boxScale);
     const edges = new THREE.EdgesGeometry(box);
     box.dispose();
     const highlightMat = new THREE.LineBasicMaterial({
-      color: 0xfdf7da,
+      color: HIGHLIGHT.baseColor,
       transparent: true,
-      opacity: 0.85,
+      opacity: HIGHLIGHT.baseOpacity,
     });
     const highlight = new THREE.LineSegments(edges, highlightMat);
     highlight.visible = false;
@@ -273,7 +277,7 @@ export default function GameScene() {
 
       const origin = rayOriginRef.current.copy(camera.position);
       const dir = camera.getWorldDirection(rayDirRef.current);
-      const hit = pickBlockDDA(world, origin, dir, MAX_PICK_DISTANCE);
+      const hit = pickBlockDDA(world, origin, dir, GAMEPLAY.maxPickDistance);
 
       const state = useGameStore.getState();
 
@@ -332,15 +336,15 @@ export default function GameScene() {
     const perfEnabled = perfStats.enabled;
     const frameStart = perfEnabled ? performance.now() : 0;
 
-    const frameDt = Math.min(MAX_FRAME_DELTA, delta);
+    const frameDt = Math.min(SIMULATION.maxFrameDelta, delta);
     let sim;
     if (perfEnabled) {
       const start = performance.now();
       sim = advanceFixedStep(
         simAccumulatorRef.current,
         frameDt,
-        FIXED_STEP_SECONDS,
-        MAX_SIM_STEPS,
+        SIMULATION.fixedStepSeconds,
+        SIMULATION.maxSimSteps,
         (stepDt) => {
           player.update(stepDt);
           stepGameEcs(ecs, stepDt, player);
@@ -351,8 +355,8 @@ export default function GameScene() {
       sim = advanceFixedStep(
         simAccumulatorRef.current,
         frameDt,
-        FIXED_STEP_SECONDS,
-        MAX_SIM_STEPS,
+        SIMULATION.fixedStepSeconds,
+        SIMULATION.maxSimSteps,
         (stepDt) => {
           player.update(stepDt);
           stepGameEcs(ecs, stepDt, player);
@@ -394,7 +398,7 @@ export default function GameScene() {
 
     const origin = rayOriginRef.current.copy(camera.position);
     const dir = camera.getWorldDirection(rayDirRef.current);
-    const hit = pickBlockDDA(world, origin, dir, MAX_PICK_DISTANCE);
+    const hit = pickBlockDDA(world, origin, dir, GAMEPLAY.maxPickDistance);
 
     const miningSession = miningRef.current;
     if (miningInputRef.current) {
