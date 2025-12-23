@@ -59,13 +59,17 @@ export default function GameScene() {
     null,
   );
   const ecs = useMemo(
-    () => createGameEcs(DAY_LENGTH_SECONDS, undefined, { voxelWorld: world, seed: world.seed }),
+    () =>
+      createGameEcs(SIMULATION.dayLengthSeconds, undefined, {
+        voxelWorld: world,
+        seed: world.seed,
+      }),
     [world],
   );
   const skyColor = useRef(new THREE.Color());
   const highlightColorsRef = useRef({
-    base: new THREE.Color(0xfdf7da),
-    mining: new THREE.Color(0xffc57a),
+    base: new THREE.Color(HIGHLIGHT.baseColor),
+    mining: new THREE.Color(HIGHLIGHT.miningColor),
   });
   const simAccumulatorRef = useRef(0);
   const fpsRef = useRef({ acc: 0, frames: 0, fps: 0 });
