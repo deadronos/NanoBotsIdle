@@ -32,7 +32,7 @@ dont code yet, plan
 
 ## Progress Tracking
 
-**Overall Status:** In Progress - 15%
+**Overall Status:** In Progress - 55%
 
 ### Subtasks
 
@@ -40,7 +40,12 @@ dont code yet, plan
 | --- | --- | --- | --- | --- |
 | 1.1 | Review current hot paths (meshing, lighting, streaming, allocations) | Complete | 2025-12-23 | Focused on `World`, `meshing`, `rendering`, `GameScene` |
 | 1.2 | Draft reusable optimization systems (scheduler, pools, batches) | Complete | 2025-12-23 | Documented in DESIGN007 |
-| 1.3 | Define phased plan and acceptance targets | In Progress | 2025-12-23 | Needs perf baseline validation |
+| 1.3 | Define phased plan and acceptance targets | Complete | 2025-12-23 | Documented in DESIGN007 |
+| 2.1 | Chunk-boundary streaming trigger | Complete | 2025-12-23 | Avoids per-frame streaming scans |
+| 2.2 | Reuse mesh buffers and update renderer swaps | Complete | 2025-12-23 | Mesh buffers reused per chunk |
+| 2.3 | Reduce per-frame allocations (picking, particles, controller) | Complete | 2025-12-23 | Pooling + vector reuse |
+| 2.4 | Frame-budget scheduler | Not Started | 2025-12-23 | Pending design integration |
+| 2.5 | Instanced batching for entities | Not Started | 2025-12-23 | Pending entity renderers |
 
 ## Progress Log
 
@@ -49,3 +54,6 @@ dont code yet, plan
 - Audited current performance hot paths and identified main sources of CPU and GC cost.
 - Drafted DESIGN007 to capture reusable optimization systems and phased plan.
 - Added initial planned requirements for performance optimization.
+- Implemented chunk-boundary streaming trigger to avoid per-frame scans.
+- Switched chunk meshing to reuse typed-array buffers and updated renderer to reuse geometry.
+- Reduced allocation churn in picking, break particles, and player movement.

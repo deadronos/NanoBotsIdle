@@ -26,6 +26,8 @@ const BLOCK_COLORS: Partial<Record<BlockId, THREE.Color>> = {
 
 export class BreakParticleSystem {
   private particles: Particle[] = [];
+  private nextParticles: Particle[] = [];
+  private particlePool: Particle[] = [];
   private positions: Float32Array;
   private colors: Float32Array;
   private geometry: THREE.BufferGeometry;
@@ -56,24 +58,21 @@ export class BreakParticleSystem {
     const baseColor = BLOCK_COLORS[blockId] ?? DEFAULT_COLOR;
     for (let i = 0; i < count; i++) {
       if (this.particles.length >= this.maxParticles) break;
-      const velocity = new THREE.Vector3(
+      const particle = this.particlePool.pop() ?? createParticle();
+      particle.position.set(
+        position.x + (Math.random() - 0.5) * 0.4,
+        position.y + (Math.random() - 0.5) * 0.4,
+        position.z + (Math.random() - 0.5) * 0.4,
+      );
+      particle.velocity.set(
         (Math.random() - 0.5) * 2,
         1.2 + Math.random() * 1.4,
         (Math.random() - 0.5) * 2,
       );
-      this.particles.push({
-        position: position.clone().add(
-          new THREE.Vector3(
-            (Math.random() - 0.5) * 0.4,
-            (Math.random() - 0.5) * 0.4,
-            (Math.random() - 0.5) * 0.4,
-          ),
-        ),
-        velocity,
-        age: 0,
-        ttl: 0.7 + Math.random() * 0.5,
-        color: baseColor.clone(),
-      });
+      particle.age = 0;
+      particle.ttl = 0.7 + Math.random() * 0.5;
+      particle.color.copy(baseColor);
+      this.particles.push(particle);
     }
   }
 
@@ -83,11 +82,15 @@ export class BreakParticleSystem {
       return;
     }
 
-    const next: Particle[] = [];
+    const next = this.nextParticles;
+    next.length = 0;
     let idx = 0;
     for (const particle of this.particles) {
       particle.age += dt;
-      if (particle.age >= particle.ttl) continue;
+      if (particle.age >= particle.ttl) {
+        this.particlePool.push(particle);
+        continue;
+      }
       particle.velocity.y += this.gravity * dt;
       particle.position.addScaledVector(particle.velocity, dt);
       particle.velocity.multiplyScalar(0.96);
@@ -105,7 +108,9 @@ export class BreakParticleSystem {
       next.push(particle);
     }
 
+    const prev = this.particles;
     this.particles = next;
+    this.nextParticles = prev;
     this.geometry.setDrawRange(0, idx);
     this.geometry.attributes.position.needsUpdate = true;
     this.geometry.attributes.color.needsUpdate = true;
@@ -116,4 +121,14 @@ export class BreakParticleSystem {
     this.geometry.dispose();
     this.material.dispose();
   }
+}
+
+function createParticle(): Particle {
+  return {
+    position: new THREE.Vector3(),
+    velocity: new THREE.Vector3(),
+    age: 0,
+    ttl: 0,
+    color: new THREE.Color(),
+  };
 }

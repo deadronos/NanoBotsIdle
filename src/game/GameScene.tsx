@@ -64,6 +64,7 @@ export default function GameScene() {
   const fpsRef = useRef({ acc: 0, frames: 0, fps: 0 });
   const statsTimerRef = useRef(0);
   const lastTargetRef = useRef<BlockId | null>(null);
+  const lastChunkRef = useRef<{ cx: number; cz: number } | null>(null);
   const rayOriginRef = useRef(new THREE.Vector3());
   const rayDirRef = useRef(new THREE.Vector3());
   const miningRef = useRef<MiningSession | null>(null);
@@ -326,8 +327,14 @@ export default function GameScene() {
     simAccumulatorRef.current = sim.accumulator;
     player.syncCamera(sim.alpha);
 
-    world.ensureChunksAround(player.position.x, player.position.z);
-    world.pruneFarChunks(player.position.x, player.position.z);
+    const currentCx = Math.floor(player.position.x / world.chunkSize.x);
+    const currentCz = Math.floor(player.position.z / world.chunkSize.z);
+    const lastChunk = lastChunkRef.current;
+    if (!lastChunk || lastChunk.cx !== currentCx || lastChunk.cz !== currentCz) {
+      lastChunkRef.current = { cx: currentCx, cz: currentCz };
+      world.ensureChunksAround(player.position.x, player.position.z);
+      world.pruneFarChunks(player.position.x, player.position.z);
+    }
     world.processLightQueue();
     world.rebuildDirtyChunks();
     chunkMeshesRef.current?.sync();

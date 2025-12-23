@@ -1,5 +1,5 @@
 /* Voxel world + chunk storage + terrain generation. */
-import { buildChunkGeometry, type BuiltGeometry } from "./meshing";
+import { buildChunkGeometry, type BuiltGeometry, type MeshBuffers } from "./meshing";
 import { SeededRng } from "./generation/rng";
 import { fbm2, fbm3, hash2 } from "./noise";
 import { LightQueue, type LightLayer } from "./lighting";
@@ -276,6 +276,7 @@ export class Chunk {
   sunLight: Uint8Array;
   blockLight: Uint8Array;
   built: BuiltGeometry | null = null;
+  meshBuffers?: MeshBuffers;
   dirty = true;
 
   constructor(cx: number, cz: number, size: ChunkSize) {
@@ -470,7 +471,9 @@ export class World {
         continue;
       }
 
-      c.built = buildChunkGeometry(this, c);
+      const built = buildChunkGeometry(this, c, c.meshBuffers);
+      c.built = built;
+      c.meshBuffers = built.buffers;
       c.dirty = false;
       this.dirty.delete(k);
 

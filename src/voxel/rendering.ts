@@ -1,5 +1,6 @@
 import * as THREE from "three";
 
+import type { BuiltGeometry } from "./meshing";
 import type { ChunkKey, World } from "./World";
 
 export type ChunkMesh = {
@@ -62,8 +63,8 @@ export function createChunkMeshes(scene: THREE.Scene, world: World, material: TH
 
       const cm = ensureMeshForChunkKey(k);
 
-      cm.mesh.geometry.dispose();
-      cm.mesh.geometry = c.built.geometry;
+      updateGeometry(cm.mesh.geometry, c.built);
+      c.built = null;
 
       pending.delete(k);
 
@@ -82,4 +83,51 @@ export function createChunkMeshes(scene: THREE.Scene, world: World, material: TH
   }
 
   return { sync, dispose };
+}
+
+function updateGeometry(geometry: THREE.BufferGeometry, built: BuiltGeometry): void {
+  const { buffers, vertexCount, indexCount } = built;
+  const positions = buffers.positions.subarray(0, vertexCount * 3);
+  const normals = buffers.normals.subarray(0, vertexCount * 3);
+  const uvs = buffers.uvs.subarray(0, vertexCount * 2);
+  const colors = buffers.colors.subarray(0, vertexCount * 3);
+  const indices = buffers.indices.subarray(0, indexCount);
+
+  updateAttribute(geometry, "position", positions, 3);
+  updateAttribute(geometry, "normal", normals, 3);
+  updateAttribute(geometry, "uv", uvs, 2);
+  updateAttribute(geometry, "color", colors, 3);
+  updateIndex(geometry, indices);
+
+  geometry.setDrawRange(0, indexCount);
+  geometry.computeBoundingSphere();
+}
+
+function updateAttribute(
+  geometry: THREE.BufferGeometry,
+  name: string,
+  array: Float32Array,
+  itemSize: number,
+): void {
+  const existing = geometry.getAttribute(name);
+  if (existing instanceof THREE.BufferAttribute && existing.array.length >= array.length) {
+    (existing.array as Float32Array).set(array);
+    existing.needsUpdate = true;
+    return;
+  }
+  geometry.setAttribute(name, new THREE.BufferAttribute(array, itemSize));
+}
+
+function updateIndex(geometry: THREE.BufferGeometry, array: Uint32Array): void {
+  const existing = geometry.getIndex();
+  if (
+    existing instanceof THREE.BufferAttribute &&
+    existing.array instanceof Uint32Array &&
+    existing.array.length >= array.length
+  ) {
+    (existing.array as Uint32Array).set(array);
+    existing.needsUpdate = true;
+    return;
+  }
+  geometry.setIndex(new THREE.BufferAttribute(array, 1));
 }

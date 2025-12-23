@@ -60,6 +60,13 @@ export class PlayerController {
 
   private onGround = false;
 
+  private tmpMoveDir = new THREE.Vector3();
+  private tmpForward = new THREE.Vector3();
+  private tmpRight = new THREE.Vector3();
+  private tmpDesiredVel = new THREE.Vector3();
+  private tmpHorizVel = new THREE.Vector3();
+  private tmpNext = new THREE.Vector3();
+
   constructor(opts: PlayerControllerOpts) {
     this.camera = opts.camera;
     this.world = opts.world;
@@ -138,9 +145,9 @@ export class PlayerController {
   update(dt: number): void {
     this.capturePreviousState();
     // Movement input in world space (XZ plane)
-    const moveDir = new THREE.Vector3();
-    const forward = new THREE.Vector3(-Math.sin(this.yaw), 0, Math.cos(this.yaw) * -1); // camera forward projected
-    const right = new THREE.Vector3(-forward.z, 0, forward.x);
+    const moveDir = this.tmpMoveDir.set(0, 0, 0);
+    const forward = this.tmpForward.set(-Math.sin(this.yaw), 0, Math.cos(this.yaw) * -1); // camera forward projected
+    const right = this.tmpRight.set(-forward.z, 0, forward.x);
 
     if (this.input.forward) moveDir.add(forward);
     if (this.input.back) moveDir.sub(forward);
@@ -153,8 +160,8 @@ export class PlayerController {
     const speed = this.walkSpeed * (this.input.sprint ? this.sprintMult : 1);
 
     // Horizontal velocity change.
-    const desiredVel = moveDir.multiplyScalar(speed);
-    const horizVel = new THREE.Vector3(this.velocity.x, 0, this.velocity.z);
+    const desiredVel = this.tmpDesiredVel.copy(moveDir).multiplyScalar(speed);
+    const horizVel = this.tmpHorizVel.set(this.velocity.x, 0, this.velocity.z);
 
     if (this.onGround) {
       // Friction towards desired velocity.
@@ -179,7 +186,7 @@ export class PlayerController {
     this.velocity.y += this.gravity * dt;
 
     // Integrate with axis-separated collision resolution.
-    const next = this.position.clone().add(this.velocity.clone().multiplyScalar(dt));
+    const next = this.tmpNext.copy(this.velocity).multiplyScalar(dt).add(this.position);
     this.onGround = false;
 
     // X
