@@ -9,6 +9,8 @@ export type ResolvedDrop = {
   count: number;
 };
 
+type NormalizedDropEntry = Omit<DropEntry, "chance"> & { chance: number };
+
 const DEFAULT_HARDNESS = 1;
 const BASE_BREAK_SECONDS = 0.75;
 const INEFFECTIVE_MULTIPLIER = 3.5;
@@ -83,12 +85,13 @@ export function resolveDrops(
   return drops;
 }
 
-function normalizeDropEntry(entry: DropEntry): DropEntry | null {
+function normalizeDropEntry(entry: DropEntry): NormalizedDropEntry | null {
   if (!entry) return null;
   const min = Number.isFinite(entry.min) ? Math.floor(entry.min) : 0;
   const max = Number.isFinite(entry.max) ? Math.floor(entry.max) : min;
   const low = Math.max(0, Math.min(min, max));
   const high = Math.max(0, Math.max(min, max));
-  const chance = Number.isFinite(entry.chance) ? Math.min(1, Math.max(0, entry.chance)) : 1;
+  const rawChance = entry.chance ?? 1;
+  const chance = Number.isFinite(rawChance) ? Math.min(1, Math.max(0, rawChance)) : 1;
   return { ...entry, min: low, max: high, chance };
 }
