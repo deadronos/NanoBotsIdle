@@ -2,6 +2,11 @@ import { useFrame, useThree } from "@react-three/fiber";
 import { useCallback, useEffect, useMemo, useRef } from "react";
 import * as THREE from "three";
 
+import { GAMEPLAY } from "../config/gameplay";
+import { PERF } from "../config/perf";
+import { DEFAULT_LIGHTS, FOG, HIGHLIGHT } from "../config/rendering";
+import { SIMULATION } from "../config/simulation";
+import { WORLD, WORLD_GENERATION_OVERRIDES } from "../config/world";
 import { createAtlasTexture } from "../voxel/atlas";
 import { SeededRng } from "../voxel/generation/rng";
 import { computeBreakTime, resolveDrops } from "../voxel/mining";
@@ -20,14 +25,6 @@ import { FrameBudgetScheduler } from "./scheduler";
 import { advanceFixedStep } from "./sim/fixedStep";
 import { useGameStore } from "./store";
 
-const MAX_PICK_DISTANCE = 7;
-const DAY_LENGTH_SECONDS = 140;
-const FIXED_STEP_SECONDS = 1 / 60;
-const MAX_SIM_STEPS = 5;
-const MAX_FRAME_DELTA = 0.1;
-const MINING_HIT_INTERVAL = 0.25;
-const BACKGROUND_BUDGET_MS = 6;
-
 type MiningSession = {
   block: { x: number; y: number; z: number };
   blockId: BlockId;
@@ -41,9 +38,15 @@ export default function GameScene() {
   const { scene, camera, gl } = useThree();
   const world = useMemo(() => {
     const w = new World({
-      seed: 1337,
-      viewDistanceChunks: 8,
-      chunkSize: { x: 16, y: 72, z: 16 },
+      seed: WORLD.seed,
+      viewDistanceChunks: WORLD.viewDistanceChunks,
+      chunkSize: WORLD.chunkSize,
+      generation: WORLD_GENERATION_OVERRIDES,
+      seaLevel: WORLD.seaLevel,
+      perf: {
+        maxLightOpsPerFrame: PERF.maxLightOpsPerFrame,
+        maxChunkRebuildsPerFrame: PERF.maxChunkRebuildsPerFrame,
+      },
     });
     w.generateInitialArea(0, 0);
     return w;
