@@ -1,6 +1,6 @@
 import * as THREE from "three";
 
-import { PLAYER_INPUT, PLAYER_PHYSICS } from "../config/player";
+import { PLAYER_CAMERA, PLAYER_INPUT, PLAYER_PHYSICS, PLAYER_SPAWN } from "../config/player";
 import type { World } from "./World";
 import { BlockId, BLOCKS } from "./World";
 
@@ -101,14 +101,14 @@ export class PlayerController {
 
   teleportToSafeSpawn(): void {
     // find a solid block in center chunk and spawn above it.
-    const spawnX = 8;
-    const spawnZ = 8;
-    let y = 50;
-    for (; y > 2; y--) {
+    const spawnX = PLAYER_SPAWN.x;
+    const spawnZ = PLAYER_SPAWN.z;
+    let y = PLAYER_SPAWN.scanStartY;
+    for (; y > PLAYER_SPAWN.minY; y--) {
       const below = this.world.getBlock(spawnX, y - 1, spawnZ);
       if (below !== BlockId.Air && BLOCKS[below].solid) break;
     }
-    this.position.set(spawnX + 0.5, y + 2.2, spawnZ + 0.5);
+    this.position.set(spawnX + 0.5, y + PLAYER_SPAWN.offsetY, spawnZ + 0.5);
     this.velocity.set(0, 0, 0);
     this.capturePreviousState();
     this.syncCamera(1);
@@ -116,7 +116,9 @@ export class PlayerController {
 
   cameraWorldPosition(): THREE.Vector3 {
     // Camera at eye height
-    return this.position.clone().add(new THREE.Vector3(0, this.height * 0.92, 0));
+    return this.position
+      .clone()
+      .add(new THREE.Vector3(0, this.height * PLAYER_CAMERA.eyeHeightFactor, 0));
   }
 
   cameraWorldDirection(): THREE.Vector3 {
@@ -203,7 +205,7 @@ export class PlayerController {
     this.resolveCollisionsAxis("y");
 
     // Safety clamp
-    if (this.position.y < -10) this.teleportToSafeSpawn();
+    if (this.position.y < PLAYER_SPAWN.fallResetY) this.teleportToSafeSpawn();
   }
 
   syncCamera(alpha: number): void {
@@ -212,7 +214,11 @@ export class PlayerController {
     const interpY = lerp(this.prevPosition.y, this.position.y, t);
     const interpZ = lerp(this.prevPosition.z, this.position.z, t);
 
-    this.camera.position.set(interpX, interpY + this.height * 0.92, interpZ);
+    this.camera.position.set(
+      interpX,
+      interpY + this.height * PLAYER_CAMERA.eyeHeightFactor,
+      interpZ,
+    );
     this.camera.rotation.set(this.pitch, this.yaw, 0, "YXZ");
   }
 

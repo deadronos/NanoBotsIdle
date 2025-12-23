@@ -333,7 +333,8 @@ export class World {
     this.viewDistanceChunks = opts.viewDistanceChunks;
     this.chunkSize = opts.chunkSize;
     this.generation = resolveGenerationConfig(opts.generation);
-    this.seaLevel = Number.isFinite(opts.seaLevel) ? Math.max(0, opts.seaLevel) : 18;
+    const seaLevel = opts.seaLevel ?? 18;
+    this.seaLevel = Number.isFinite(seaLevel) ? Math.max(0, seaLevel) : 18;
     this.maxLightOpsPerFrame =
       opts.perf?.maxLightOpsPerFrame ?? PERF.maxLightOpsPerFrame;
     this.maxChunkRebuildsPerFrame =

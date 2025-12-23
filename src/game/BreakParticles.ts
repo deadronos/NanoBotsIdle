@@ -49,17 +49,17 @@ export class BreakParticleSystem {
       if (this.particles.length >= this.maxParticles) break;
       const particle = this.particlePool.pop() ?? createParticle();
       particle.position.set(
-        position.x + (Math.random() - 0.5) * 0.4,
-        position.y + (Math.random() - 0.5) * 0.4,
-        position.z + (Math.random() - 0.5) * 0.4,
+        position.x + (Math.random() - 0.5) * PARTICLES.burst.jitter,
+        position.y + (Math.random() - 0.5) * PARTICLES.burst.jitter,
+        position.z + (Math.random() - 0.5) * PARTICLES.burst.jitter,
       );
       particle.velocity.set(
-        (Math.random() - 0.5) * 2,
-        1.2 + Math.random() * 1.4,
-        (Math.random() - 0.5) * 2,
+        (Math.random() - 0.5) * PARTICLES.burst.velocityXZ,
+        PARTICLES.burst.velocityYBase + Math.random() * PARTICLES.burst.velocityYRange,
+        (Math.random() - 0.5) * PARTICLES.burst.velocityXZ,
       );
       particle.age = 0;
-      particle.ttl = 0.7 + Math.random() * 0.5;
+      particle.ttl = PARTICLES.burst.ttlBase + Math.random() * PARTICLES.burst.ttlRange;
       particle.color.copy(baseColor);
       this.particles.push(particle);
     }
@@ -82,7 +82,7 @@ export class BreakParticleSystem {
       }
       particle.velocity.y += this.gravity * dt;
       particle.position.addScaledVector(particle.velocity, dt);
-      particle.velocity.multiplyScalar(0.96);
+      particle.velocity.multiplyScalar(PARTICLES.burst.damping);
 
       const fade = 1 - particle.age / particle.ttl;
       const posIndex = idx * 3;

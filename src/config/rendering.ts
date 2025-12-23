@@ -1,6 +1,6 @@
 export const RENDERING = {
   gl: { antialias: false, powerPreference: "high-performance" } as const,
-  dpr: [1, 2] as const,
+  dpr: [1, 2] as [number, number],
   camera: { fov: 75, near: 0.05, far: 900, position: [8, 24, 8] as const },
 };
 

@@ -4,8 +4,6 @@
 
 - [TASK008] Performance optimization plan and reusable systems
   - Goal: reduce frame time and GC by introducing reusable scheduler, pooling, and batching systems.
-- [TASK009] Config centralization under /src/config
-  - Goal: centralize runtime tunables to reduce scattered constants.
 
 ## Pending
 
@@ -21,6 +19,7 @@
 - [TASK005] Implement DESIGN004 Ores + Cave Generation
 - [TASK006] Implement DESIGN005 mining tools + progress
 - [TASK007] Implement DESIGN006 torches lighting + mob spawning
+- [TASK009] Config centralization under /src/config
 
 ## Abandoned
 

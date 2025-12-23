@@ -23,19 +23,21 @@ Expose nearly every somewhat configurable parameter in appropriate files in a `/
 
 ## Progress Tracking
 
-**Overall Status:** In Progress - 10%
+**Overall Status:** Completed - 100%
 
 ### Subtasks
 
 | ID | Description | Status | Updated | Notes |
 | --- | --- | --- | --- | --- |
 | 1.1 | Draft design and requirements for config centralization | Complete | 2025-12-23 | DESIGN008 + requirements updated |
-| 1.2 | Create config modules | Not Started | 2025-12-23 |  |
-| 1.3 | Wire config imports across runtime files | Not Started | 2025-12-23 |  |
-| 1.4 | Validate build + update docs | Not Started | 2025-12-23 |  |
+| 1.2 | Create config modules | Complete | 2025-12-23 | Added atlas/world/sim/gameplay/player/rendering/perf/ecs/particles |
+| 1.3 | Wire config imports across runtime files | Complete | 2025-12-23 | Game, voxel, UI refactors completed |
+| 1.4 | Validate build + update docs | Complete | 2025-12-23 | `npm run build` |
 
 ## Progress Log
 
 ### 2025-12-23
 
 - Drafted DESIGN008 and added planned requirements for config centralization.
+- Added `/src/config` modules for major tunables and wired imports across runtime files.
+- Updated lighting tests to use config and validated with `npm run build`.
