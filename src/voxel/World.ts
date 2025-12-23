@@ -29,6 +29,7 @@ export type BlockDef = {
   requiredToolType?: ToolType;
   requiredTier?: number;
   dropTable?: DropEntry[];
+  renderFaces?: "all" | "top";
 };
 
 export enum BlockId {
@@ -78,6 +79,7 @@ export const BLOCKS: BlockDef[] = [
     transparent: true,
     occludes: false,
     hardness: 0,
+    renderFaces: "top",
   },
   { name: "Sand", solid: true, tile: { all: 6 }, hardness: 0.7 },
   { name: "Wood", solid: true, tile: { side: 7, top: 8, bottom: 8 }, hardness: 1.8 },

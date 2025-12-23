@@ -176,10 +176,12 @@ export function buildChunkGeometry(world: World, chunk: Chunk): BuiltGeometry {
       for (let x = 0; x < sx; x++) {
         const id = chunk.getLocal(x, y, z);
         if (id === BlockId.Air) continue;
+        const def = BLOCKS[id];
         const wx = baseX + x;
         const wz = baseZ + z;
 
         for (const face of FACES) {
+          if (def.renderFaces === "top" && face.name !== "py") continue;
           if (!isFaceVisible(world, wx, y, wz, face.o[0], face.o[1], face.o[2], id)) continue;
 
           const tile = tileForFace(id, face);
