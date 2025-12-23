@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-require-imports, @typescript-eslint/no-var-requires */
 // Bridge legacy .eslintrc.cjs to ESLint flat config using FlatCompat
 const { FlatCompat } = require("@eslint/eslintrc");
 // The FlatCompat helper requires the core recommended config from @eslint/js
