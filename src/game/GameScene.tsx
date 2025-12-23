@@ -8,8 +8,8 @@ import { PlayerController } from "../voxel/PlayerController";
 import { createChunkMeshes } from "../voxel/rendering";
 import { BlockId, BLOCKS, World } from "../voxel/World";
 import { createGameEcs, getLightingState, getTimeOfDay, stepGameEcs } from "./ecs/gameEcs";
-import { advanceFixedStep } from "./sim/fixedStep";
 import { isPlaceableBlock } from "./items";
+import { advanceFixedStep } from "./sim/fixedStep";
 import { useGameStore } from "./store";
 
 const MAX_PICK_DISTANCE = 7;
@@ -236,7 +236,7 @@ export default function GameScene() {
 
     statsTimerRef.current += delta;
     if (statsTimerRef.current >= 0.2) {
-      const pos = ecs.entities.player.position;
+      const pos = ecs.entities.player.position ?? { x: 0, y: 0, z: 0 };
       const timeOfDay = getTimeOfDay(ecs);
       setStats({
         fps: fpsRef.current.fps,
