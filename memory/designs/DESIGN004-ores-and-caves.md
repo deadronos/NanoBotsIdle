@@ -55,9 +55,60 @@ HeightmapPass → CavePass → StrataPass → OrePass → FeaturePass (trees, bu
 
 Both passes are deterministic using the world seed and the chunk coordinates.
 
+## Modular architecture (DRY patterns)
+
+Introduce a small, reusable generation framework so future features (biomes, structures, fluids) plug in without duplicating seed logic or coordinate math.
+
+**GenerationPipeline**
+- Owns ordered `GenerationPass[]`, runs them in a fixed order.
+- Provides a shared `GenerationContext` with seeded RNG, world coords helpers, and config.
+
+```ts
+type GenerationPass = {
+  id: string;
+  run(ctx: GenerationContext, chunk: Chunk): void;
+};
+
+type GenerationContext = {
+  seed: number;
+  options: WorldGenerationConfig;
+  chunkPos: { cx: number; cz: number };
+  rng: SeededRng;
+  toWorldX: (lx: number) => number;
+  toWorldZ: (lz: number) => number;
+  inChunk: (wx: number, wy: number, wz: number) => boolean;
+};
+```
+
+**Seeded RNG (order independent)**
+- Provide `rng.fork(salt: string | number)` so each pass uses a stable salt and does not depend on previous passes.
+- Avoid `Math.random` so generation stays deterministic and testable.
+
+**Feature seeds for seam consistency**
+- Use world-space anchored seeds (hashed by world coords + seed) so features that cross chunk borders generate the same in either chunk.
+- Example: generate tunnel seeds on a coarse grid in world space, then apply them to any chunk they intersect.
+
 ### Parameters / Config
 
-Add to `WorldOptions` (or a `WorldGenerationConfig` nested struct):
+Add a top-level `WorldGenerationConfig` so defaults and overrides are centralized.
+
+```ts
+type WorldGenerationConfig = {
+  caves: {
+    enabled: boolean;
+    noiseScale: number;
+    threshold: number;
+    minY: number;
+    maxY: number;
+    protectSurface: boolean;
+  };
+  ores: OreConfig[];
+};
+```
+
+Add to `WorldOptions` as `generation?: WorldGenerationConfig`.
+
+Legacy-style fields if keeping a flatter config:
 
 - cavesEnabled: boolean
 - caveNoiseScale: number
@@ -97,6 +148,19 @@ Pros: simple, GPU friendly, deterministic. Cons: noisy wide cave shapes; conside
 - Each attempt picks (x,y,z) uniformly in chunk within ore min/max; if that block is replaceable, start a vein using a small random-walk limited to `veinSize` placing ore blocks along the path.
 - Use seeded RNG based on (seed,cx,cz,oreId,attemptIndex) to ensure deterministic placement independent of generation order.
 
+## Interfaces and utilities
+
+**Replaceable rules**
+- Prefer `BlockDef.tags` or a shared helper `isReplaceable(blockId, replaceableTagsOrIds)` so ore logic stays generic.
+- Default to a `stoneLike` tag instead of hard-coded IDs to reduce maintenance when blocks are added.
+
+**Noise helpers**
+- Place noise utilities in `src/voxel/generation/noise.ts` and keep them pure.
+- Prefer functions that accept world coordinates to avoid chunk seam issues.
+
+**Config validation**
+- Clamp invalid ranges (minY > maxY) and fall back to defaults instead of throwing in hot loops.
+
 ---
 
 ## Integration & repository invariants
@@ -117,7 +181,7 @@ Pros: simple, GPU friendly, deterministic. Cons: noisy wide cave shapes; conside
 
 ## Tasks (implementation plan, recommended small steps)
 
-1. **Config & types** — Add `OreConfig` and cave options to `WorldOptions`. Add docs and small unit tests. (0.5–1 day)
+1. **Generation framework + config** — Add `GenerationPass`, `GenerationContext`, `GenerationPipeline`, `WorldGenerationConfig`, and `SeededRng` with `fork`. Add docs and small unit tests. (0.5–1 day)
 2. **Block additions** — Add ore blocks (Coal, Iron, Gold, Diamond) to `BLOCKS` + atlas tiles and inventory icons; add brief unit test to assert tile exists. (0.5 day)
 3. **CavePass implementation** — Implement `generateCavesInto(c: Chunk)` with deterministic noise thresholding; add unit tests for determinism and seam integrity. (1–2 days)
 4. **OrePass implementation** — Implement `generateOresInto(c: Chunk)` with seeded attempts + random-walk veins; add distribution and seam tests. (1–2 days)

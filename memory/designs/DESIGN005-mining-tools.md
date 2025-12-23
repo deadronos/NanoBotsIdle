@@ -40,6 +40,7 @@ Add mining mechanics that respect per-block hardness and provide tools with tier
 
 - Add `hardness?: number` to `BlockDef` (default: 1). Hardness is a positive float; higher is slower to dig.
 - Optionally add a `dropTable?: DropEntry[]` to `BlockDef`.
+- Add `requiredToolType?: ToolType` and `requiredTier?: number` (or a `tags?: string[]` based matcher) so tool effectiveness is data-driven.
 
 ```ts
 type DropEntry = { itemId: string; min: number; max: number; chance?: number }; // flexible for later items
@@ -50,9 +51,11 @@ type DropEntry = { itemId: string; min: number; max: number; chance?: number }; 
 - Introduce a lightweight `Item` / `Tool` model (keep compatibility with `inventory` in `useGameStore`):
 
 ```ts
+type ToolType = 'pickaxe' | 'axe' | 'shovel' | 'hand';
+
 type ToolDef = {
   id: string; // example: 'pick_wood', 'pick_stone'
-  toolType: 'pickaxe'|'axe'|'shovel'|'hand';
+  toolType: ToolType;
   tier: number;            // hand=0, wood=1, stone=2, ...
   efficiency: number;      // multiplier to reduce break-time
   durability: number;      // starting durability
@@ -68,6 +71,28 @@ Implementation options for inventory:
 - Add actions: `startMining(targetBlockCoord, selectedTool?)`, `stopMining()`. Track `miningProgress` (0..1) in PlayerController or ECS.
 - When `miningProgress >= 1` remove block, spawn drops via `spawnItem(ecs, {itemId,...})`, and call `consumeDurability(tool, amount=1)`.
 
+## Modular architecture (DRY patterns)
+
+**Mining rules module**
+- Centralize mining math and drop resolution in a pure module (for example `src/voxel/mining.ts`).
+- Suggested interface:
+
+```ts
+type MiningRules = {
+  computeBreakTime: (blockId: BlockId, toolId?: string) => number;
+  isToolEffective: (blockId: BlockId, toolId?: string) => boolean;
+  resolveDrops: (blockId: BlockId, toolId?: string, rng: SeededRng) => DropEntry[];
+};
+```
+
+**Registries and tags**
+- Store all `ToolDef` in a registry map keyed by id to avoid scattered constants.
+- Prefer `BlockDef.tags` or `requiredToolType` + `requiredTier` to keep tool matching DRY instead of per-block logic.
+
+**Mining session state**
+- Track a `MiningSession` per player (target, progress, lastHitTime, toolId) so input handling and rules stay separate.
+- Emit a single `onBlockMined` event for UI/FX/inventory updates to avoid duplication.
+
 ---
 
 ## UI & UX
@@ -78,8 +103,16 @@ Implementation options for inventory:
 
 ---
 
+## Integration notes
+
+- On completion, always call both `world.setBlock(...)` and `world.markDirtyAt(...)` to keep chunk rebuilds correct.
+- Keep UI state in Zustand; keep mining rules and world edits in `GameScene` / `PlayerController`.
+
+--- 
+
 ## Tests
 
+- MiningRules unit tests for `computeBreakTime`, `isToolEffective`, and `resolveDrops`.
 - Break-time calculation unit tests for combinations of block.hardness and tool.efficiency.
 - Integration test: player starts mining a block, holds action until break — ensure block removed and drop spawned.
 - Tool durability tests: durability decreases per break and item removed at zero.
@@ -88,8 +121,8 @@ Implementation options for inventory:
 
 ## Implementation plan (small steps)
 
-1. **Block hardness** — Add `hardness` to `BlockDef` and set sane defaults for existing blocks (dirt/gravel/grass=0.5–1, stone=3, bedrock=Infinity / breakable=false). (0.5 day)
-2. **Drop table** — Add basic drop configs for ores and common blocks. (0.5 day)
+1. **Mining data model + rules** — Add `hardness`, `requiredToolType`, and `requiredTier` to `BlockDef`, then implement `MiningRules` with unit tests. Set sane defaults (dirt/gravel/grass=0.5–1, stone=3, bedrock=Infinity / breakable=false). (0.5–1 day)
+2. **Drop table** — Add basic drop configs for ores and common blocks, and wire `resolveDrops` to use them. (0.5 day)
 3. **Item model (tools)** — Add minimal `tools` bag in `useGameStore` and create a small registry of `ToolDef`s with tiers and efficiencies. Add demo tools to seeded inventory. (1 day)
 4. **Mining progress state** — Implement `startMining/stopMining` event handlers in `GameScene`/`PlayerController` and keep progress ticked in fixed-step. (1 day)
 5. **UI & FX** — Add break-progress overlay, sounds, and break particles triggered on completion. (1 day)

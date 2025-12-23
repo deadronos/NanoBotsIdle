@@ -43,6 +43,33 @@ Introduce a lightweight block lighting system (sunlight + block light) with torc
 
 - Add `World.getLightAt(x,y,z): number` helper returning combined light (max of sun and block light) for gameplay queries.
 
+## Modular architecture (DRY patterns)
+
+**LightSystem layers**
+- Represent light as a `LightLayer` enum (`sun`, `block`) and reuse the same queue + BFS logic for both.
+- Keep storage and propagation separate so algorithms stay testable.
+
+```ts
+type LightLayer = 'sun' | 'block';
+
+type LightUpdate = {
+  layer: LightLayer;
+  type: 'add' | 'remove';
+  pos: Vec3;
+  level: number;
+};
+```
+
+**Shared propagation helpers**
+- `propagateAdd(layer, pos, level)` and `propagateRemove(layer, pos, level)` operate on a `LightStorage` interface.
+- `LightStorage` abstracts `getLightAt`/`setLightAt` and occlusion checks so the same algorithm works for sunlight and block light.
+
+**Event fan-out**
+- Use a single `onBlockChanged` hook (block id, old id, pos) to trigger light updates and mesh dirtying instead of duplicating logic.
+
+**Spawn rules**
+- Put spawn filters in a pure `canSpawnAt(world, pos, rule)` function so `mobSpawnSystem` stays small and data-driven.
+
 ### Propagation algorithm (recommended)
 
 - Use two independent light systems:
@@ -75,22 +102,23 @@ Introduce a lightweight block lighting system (sunlight + block light) with torc
 - **Light propagation tests**: set up small synthetic chunk(s) and assert expected sun/block light arrays after placing/removing torches and blocks.
 - **Edge/Boundary tests**: toggling a block at chunk border must propagate correctly to neighbor chunk's light arrays.
 - **Mob spawn tests**: create low-light areas and ensure spawns occur only when conditions are met and spawn counts obey caps.
+- **Rule tests**: verify `canSpawnAt` and light add/remove helpers are deterministic and independent of processing order.
 
 ---
 
 ## Implementation plan (small steps)
 
-1. **Per-chunk light arrays** — Add `chunk.sunLight` and `chunk.blockLight` as `Uint8Array` sized to `size.x * size.y * size.z`. Add helper accessors in `World` (e.g., `getBlockLightAt` and `setBlockLightAt`). (0.5–1 day)
+1. **LightSystem core** — Add `LightLayer`, `LightStorage`, and per-chunk arrays (`chunk.sunLight`, `chunk.blockLight`), plus helper accessors in `World`. (0.5–1 day)
 
 2. **Torch config** — Extend `BlockDef` with `emitLight?: number`. Set `Torch` (existing block) to `emitLight: 14`. Update atlas/tooltip if desired. (0.25 day)
 
-3. **Block light BFS** — Implement `propagateBlockLightFrom(sourcePos, level)` with bounded queue and a global `lightUpdateQueue` for incremental updates. Add unit tests for propagation and removal (flood-fill + re-filling). (1–2 days)
+3. **Shared light BFS** — Implement `propagateAdd`/`propagateRemove` with a bounded queue and a global `lightUpdateQueue` for incremental updates. Add unit tests for propagation and removal (flood-fill + re-filling). (1–2 days)
 
 4. **Sunlight pass** — Add initial top-down sunlight initialization for new chunks and support incremental updates on block changes that expose/occlude columns. (1 day)
 
 5. **Mesh integration** — Update `buildChunkGeometry` to include vertex color attributes based on per-block lighting; toggle `material.vertexColors = true`. Rebuild chunk when lighting changes or provide a fast vertex attribute update path. (1–2 days)
 
-6. **Mob spawn system** — Implement `mobSpawnSystem` in ECS with configurable thresholds, caps, and spawn frequency. Use `spawnMob()` to add entities. (1–2 days)
+6. **Mob spawn system** — Implement `mobSpawnSystem` in ECS with configurable thresholds, caps, and spawn frequency. Use a `canSpawnAt` rule helper and `spawnMob()` to add entities. (1–2 days)
 
 7. **Testing & tuning** — Add unit/integration tests and tune `maxLightOpsPerFrame` and spawn params. (1 day)
 

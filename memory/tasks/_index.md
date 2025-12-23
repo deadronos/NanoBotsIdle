@@ -14,6 +14,7 @@
 
 - [TASK001] Backfill Memory Bank documentation
 - [TASK003] UI refresh + fixed-step simulation + ECS evaluation
+- [TASK004] Refine DESIGN004-006 for modular, DRY patterns
 
 ## Abandoned
 
