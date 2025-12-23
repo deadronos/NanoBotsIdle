@@ -1,7 +1,9 @@
 import type { Query, With } from "miniplex";
-import { World } from "miniplex";
+import { World as EcsWorld } from "miniplex";
 
 import type { PlayerController } from "../../voxel/PlayerController";
+import { SeededRng } from "../../voxel/generation/rng";
+import { BlockId, BLOCKS, type World as VoxelWorld } from "../../voxel/World";
 
 export type Vec3 = { x: number; y: number; z: number };
 
@@ -52,6 +54,21 @@ export type LightingConfig = {
   sunHeightScale: number;
 };
 
+export type MobSpawnConfig = {
+  spawnInterval: number;
+  spawnAttempts: number;
+  maxMobs: number;
+  maxMobsPerChunk: number;
+  minDistance: number;
+  maxDistance: number;
+  lightThreshold: number;
+};
+
+export type MobSpawnState = {
+  timer: number;
+  rng: SeededRng;
+};
+
 export const DEFAULT_LIGHTING_CONFIG: LightingConfig = {
   baseHue: 0.58,
   saturation: 0.52,
@@ -64,6 +81,16 @@ export const DEFAULT_LIGHTING_CONFIG: LightingConfig = {
   sunOrbitRadius: 120,
   sunHeightBase: 30,
   sunHeightScale: 160,
+};
+
+export const DEFAULT_MOB_SPAWN_CONFIG: MobSpawnConfig = {
+  spawnInterval: 4,
+  spawnAttempts: 6,
+  maxMobs: 18,
+  maxMobsPerChunk: 3,
+  minDistance: 12,
+  maxDistance: 48,
+  lightThreshold: 7,
 };
 
 export type GameEntity = {
@@ -86,10 +113,15 @@ export type EntityRegistry = Record<EntityKind, EntityFactory>;
 export type GameEcsConfig = {
   dayLength: number;
   lighting: LightingConfig;
+  mobs: MobSpawnConfig;
 };
 
 export type GameEcs = {
-  world: World<GameEntity>;
+  world: EcsWorld<GameEntity>;
+  voxelWorld?: VoxelWorld;
+  spawn: {
+    mobs: MobSpawnState;
+  };
   config: GameEcsConfig;
   registry: EntityRegistry;
   entities: {
@@ -111,13 +143,32 @@ export type GameEcs = {
 
 export type EcsSystem = (ecs: GameEcs, dt: number, controller: PlayerController) => void;
 
-export function createGameEcs(dayLength: number, lighting?: Partial<LightingConfig>): GameEcs {
+export type GameEcsOptions = {
+  lighting?: Partial<LightingConfig>;
+  mobs?: Partial<MobSpawnConfig>;
+  voxelWorld?: VoxelWorld;
+  seed?: number;
+};
+
+export function createGameEcs(
+  dayLength: number,
+  lighting?: Partial<LightingConfig>,
+  options?: GameEcsOptions,
+): GameEcs {
   const config: GameEcsConfig = {
     dayLength,
     lighting: { ...DEFAULT_LIGHTING_CONFIG, ...lighting },
+    mobs: { ...DEFAULT_MOB_SPAWN_CONFIG, ...options?.mobs },
   };
-  const world = new World<GameEntity>();
+  const world = new EcsWorld<GameEntity>();
   const registry = createEntityRegistry(config);
+  const seed = options?.seed ?? options?.voxelWorld?.seed ?? 1337;
+  const spawn = {
+    mobs: {
+      timer: 0,
+      rng: new SeededRng(seed).fork("mob-spawn"),
+    },
+  };
 
   const player = world.add(registry.player());
   const time = world.add(registry.time());
@@ -136,6 +187,7 @@ export function createGameEcs(dayLength: number, lighting?: Partial<LightingConf
   const systems: EcsSystem[] = [
     timeSystem,
     playerSnapshotSystem,
+    mobSpawnSystem,
     mobWanderSystem,
     mobMovementSystem,
     itemBobSystem,
@@ -146,6 +198,8 @@ export function createGameEcs(dayLength: number, lighting?: Partial<LightingConf
 
   return {
     world,
+    voxelWorld: options?.voxelWorld,
+    spawn,
     config,
     registry,
     entities: { player, time, lighting: lightingEntity },
@@ -189,6 +243,22 @@ export function getTimeOfDay(ecs: GameEcs): number {
 
 export function getLightingState(ecs: GameEcs): LightingState | undefined {
   return ecs.entities.lighting.lighting;
+}
+
+export function canSpawnAt(
+  world: VoxelWorld,
+  wx: number,
+  wy: number,
+  wz: number,
+  lightThreshold: number,
+): boolean {
+  if (wy <= 0 || wy >= world.chunkSize.y) return false;
+  const block = world.getBlock(wx, wy, wz);
+  if (block !== BlockId.Air) return false;
+  const below = world.getBlock(wx, wy - 1, wz);
+  if (!BLOCKS[below]?.solid) return false;
+  const light = world.getLightAt(wx, wy, wz);
+  return light < lightThreshold;
 }
 
 export function createLightingState(
@@ -305,6 +375,64 @@ function playerSnapshotSystem(ecs: GameEcs, _dt: number, controller: PlayerContr
   }
 }
 
+export function mobSpawnSystem(ecs: GameEcs, dt: number) {
+  const world = ecs.voxelWorld;
+  if (!world) return;
+
+  const state = ecs.spawn.mobs;
+  const config = ecs.config.mobs;
+  state.timer += dt;
+  if (state.timer < config.spawnInterval) return;
+  state.timer -= config.spawnInterval;
+
+  const player = ecs.entities.player.position;
+  if (!player) return;
+
+  let mobCount = 0;
+  const mobCounts = new Map<string, number>();
+  for (const entity of ecs.queries.mobs) {
+    const pos = entity.position;
+    if (!pos) continue;
+    mobCount += 1;
+    const { cx, cz } = world.worldToChunk(Math.floor(pos.x), Math.floor(pos.z));
+    const key = world.key(cx, cz);
+    mobCounts.set(key, (mobCounts.get(key) ?? 0) + 1);
+  }
+
+  if (mobCount >= config.maxMobs) return;
+
+  const minDistSq = config.minDistance * config.minDistance;
+  const maxDist = Math.max(config.minDistance, config.maxDistance);
+
+  for (let attempt = 0; attempt < config.spawnAttempts; attempt++) {
+    if (mobCount >= config.maxMobs) break;
+    const angle = state.rng.range(0, Math.PI * 2);
+    const radius = state.rng.range(config.minDistance, maxDist);
+    const tx = Math.floor(player.x + Math.cos(angle) * radius);
+    const tz = Math.floor(player.z + Math.sin(angle) * radius);
+    const dx = tx + 0.5 - player.x;
+    const dz = tz + 0.5 - player.z;
+    if (dx * dx + dz * dz < minDistSq) continue;
+
+    const { cx, cz } = world.worldToChunk(tx, tz);
+    const chunk = world.getChunk(cx, cz);
+    if (!chunk) continue;
+    const key = world.key(cx, cz);
+    if ((mobCounts.get(key) ?? 0) >= config.maxMobsPerChunk) continue;
+
+    const spawnY = findSpawnY(world, tx, tz);
+    if (spawnY == null) continue;
+    if (!canSpawnAt(world, tx, spawnY, tz, config.lightThreshold)) continue;
+
+    spawnMob(ecs, {
+      position: { x: tx + 0.5, y: spawnY, z: tz + 0.5 },
+      velocity: { x: 0, y: 0, z: 0 },
+    });
+    mobCount += 1;
+    mobCounts.set(key, (mobCounts.get(key) ?? 0) + 1);
+  }
+}
+
 function mobWanderSystem(ecs: GameEcs, dt: number) {
   for (const entity of ecs.queries.mobs) {
     const mob = entity.mob;
@@ -364,4 +492,15 @@ function lightingSystem(ecs: GameEcs, _dt: number) {
     if (!entity.lighting) continue;
     updateLightingState(entity.lighting, timeOfDay, ecs.config.lighting);
   }
+}
+
+function findSpawnY(world: VoxelWorld, wx: number, wz: number): number | null {
+  const maxY = world.chunkSize.y - 1;
+  for (let y = maxY; y >= 1; y--) {
+    const block = world.getBlock(wx, y, wz);
+    if (block !== BlockId.Air) continue;
+    const below = world.getBlock(wx, y - 1, wz);
+    if (BLOCKS[below]?.solid) return y;
+  }
+  return null;
 }

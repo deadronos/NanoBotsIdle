@@ -2,6 +2,7 @@
 import { buildChunkGeometry, type BuiltGeometry } from "./meshing";
 import { SeededRng } from "./generation/rng";
 import { fbm2, fbm3, hash2 } from "./noise";
+import { LightQueue, type LightLayer } from "./lighting";
 import type { ToolType } from "./tools";
 
 type BlockTile = {
@@ -22,6 +23,7 @@ export type BlockDef = {
   name: string;
   solid: boolean;
   tile: BlockTile;
+  emitLight?: number;
   transparent?: boolean;
   occludes?: boolean;
   breakable?: boolean;
@@ -105,6 +107,7 @@ export const BLOCKS: BlockDef[] = [
     name: "Torch",
     solid: false,
     tile: { all: 13 },
+    emitLight: 14,
     transparent: true,
     occludes: false,
     hardness: 0.2,
@@ -270,6 +273,8 @@ export class Chunk {
   readonly cz: number;
   readonly size: ChunkSize;
   blocks: Uint8Array;
+  sunLight: Uint8Array;
+  blockLight: Uint8Array;
   built: BuiltGeometry | null = null;
   dirty = true;
 
@@ -278,6 +283,8 @@ export class Chunk {
     this.cz = cz;
     this.size = size;
     this.blocks = new Uint8Array(size.x * size.y * size.z);
+    this.sunLight = new Uint8Array(size.x * size.y * size.z);
+    this.blockLight = new Uint8Array(size.x * size.y * size.z);
   }
 
   idx(x: number, y: number, z: number): number {
@@ -307,6 +314,8 @@ export class World {
   private chunks = new Map<ChunkKey, Chunk>();
   private dirty = new Set<ChunkKey>();
   private generation: WorldGenerationConfig;
+  private lightQueue = new LightQueue();
+  private maxLightOpsPerFrame = 2048;
 
   // Terrain knobs.
   private seaLevel = 18;
@@ -334,6 +343,9 @@ export class World {
     const c = new Chunk(cx, cz, this.chunkSize);
     this.generateTerrainInto(c);
     this.chunks.set(k, c);
+    this.initializeChunkLighting(c);
+    this.queueBlockLightSourcesNearChunk(cx, cz);
+    this.queueSunlightSourcesNearChunk(cx, cz);
     this.dirty.add(k);
     // When a new chunk appears, its neighbors may need rebuild to hide/show border faces.
     this.dirty.add(this.key(cx - 1, cz));
@@ -421,6 +433,29 @@ export class World {
     if (edgeZ1) this.dirty.add(this.key(cx, cz + 1));
   }
 
+  getLightAt(wx: number, wy: number, wz: number): number {
+    const sun = this.getLightLayer("sun", wx, wy, wz);
+    const block = this.getLightLayer("block", wx, wy, wz);
+    return Math.max(sun, block);
+  }
+
+  getLight(layer: LightLayer, wx: number, wy: number, wz: number): number {
+    return this.getLightLayer(layer, wx, wy, wz);
+  }
+
+  setLight(layer: LightLayer, wx: number, wy: number, wz: number, level: number): boolean {
+    return this.setLightLayer(layer, wx, wy, wz, level);
+  }
+
+  isTransparent(wx: number, wy: number, wz: number): boolean {
+    return this.isTransparentAt(wx, wy, wz);
+  }
+
+  processLightQueue(maxOps = this.maxLightOpsPerFrame): void {
+    if (!this.lightQueue.hasPending()) return;
+    this.lightQueue.process(this, maxOps, (x, y, z) => this.markDirtyAt(x, y, z));
+  }
+
   rebuildDirtyChunks(): void {
     if (this.dirty.size === 0) return;
 
@@ -444,6 +479,180 @@ export class World {
     }
   }
 
+  handleBlockChanged(wx: number, wy: number, wz: number, oldId: BlockId, newId: BlockId): void {
+    if (oldId === newId) return;
+    const oldDef = BLOCKS[oldId];
+    const newDef = BLOCKS[newId];
+    const oldOccludes = this.blockOccludes(oldId);
+    const newOccludes = this.blockOccludes(newId);
+
+    const oldEmit = oldDef?.emitLight ?? 0;
+    const newEmit = newDef?.emitLight ?? 0;
+
+    if (oldEmit > 0) {
+      const prev = this.getLightLayer("block", wx, wy, wz);
+      if (prev > 0) {
+        if (this.setLightLayer("block", wx, wy, wz, 0)) {
+          this.markDirtyAt(wx, wy, wz);
+        }
+        this.lightQueue.enqueueRemove("block", wx, wy, wz, prev);
+      }
+    }
+
+    if (!oldOccludes && newOccludes) {
+      const prev = this.getLightLayer("block", wx, wy, wz);
+      if (prev > 0) {
+        if (this.setLightLayer("block", wx, wy, wz, 0)) {
+          this.markDirtyAt(wx, wy, wz);
+        }
+        this.lightQueue.enqueueRemove("block", wx, wy, wz, prev);
+      }
+    }
+
+    if (oldOccludes && !newOccludes) {
+      this.queueNeighborBlockLight(wx, wy, wz);
+    }
+
+    if (newEmit > 0) {
+      if (this.setLightLayer("block", wx, wy, wz, newEmit)) {
+        this.markDirtyAt(wx, wy, wz);
+      }
+      this.lightQueue.enqueueAdd("block", wx, wy, wz, newEmit);
+    }
+
+    if (oldOccludes !== newOccludes) {
+      this.updateSunlightColumn(wx, wz);
+    }
+  }
+
+  private initializeChunkLighting(chunk: Chunk): void {
+    const { x: sx, y: sy, z: sz } = chunk.size;
+    const stride = sx * sz;
+    for (let z = 0; z < sz; z++) {
+      for (let x = 0; x < sx; x++) {
+        let blocked = false;
+        for (let y = sy - 1; y >= 0; y--) {
+          const idx = x + sx * z + stride * y;
+          const id = chunk.blocks[idx] as BlockId;
+          const occludes = this.blockOccludes(id);
+          if (occludes) {
+            blocked = true;
+            chunk.sunLight[idx] = 0;
+            continue;
+          }
+          chunk.sunLight[idx] = blocked ? 0 : 15;
+        }
+      }
+    }
+
+    for (let y = 0; y < sy; y++) {
+      for (let z = 0; z < sz; z++) {
+        for (let x = 0; x < sx; x++) {
+          const idx = x + sx * z + stride * y;
+          const id = chunk.blocks[idx] as BlockId;
+          const emit = BLOCKS[id]?.emitLight ?? 0;
+          if (emit <= 0) continue;
+          chunk.blockLight[idx] = emit;
+        }
+      }
+    }
+  }
+
+  private updateSunlightColumn(wx: number, wz: number): void {
+    const { cx, cz, lx, lz } = this.worldToChunk(wx, wz);
+    const chunk = this.getChunk(cx, cz);
+    if (!chunk) return;
+    const { x: sx, y: sy, z: sz } = chunk.size;
+    if (lx < 0 || lx >= sx || lz < 0 || lz >= sz) return;
+
+    const stride = sx * sz;
+    let blocked = false;
+    for (let y = sy - 1; y >= 0; y--) {
+      const idx = lx + sx * lz + stride * y;
+      const id = chunk.blocks[idx] as BlockId;
+      const occludes = this.blockOccludes(id);
+      if (occludes) {
+        blocked = true;
+      }
+      const next = blocked || occludes ? 0 : 15;
+      const prev = chunk.sunLight[idx];
+      if (prev === next) continue;
+      chunk.sunLight[idx] = next;
+      this.markDirtyAt(wx, y, wz);
+      if (next > prev) {
+        this.lightQueue.enqueueAdd("sun", wx, y, wz, next);
+      } else {
+        this.lightQueue.enqueueRemove("sun", wx, y, wz, prev);
+      }
+    }
+  }
+
+  private queueNeighborBlockLight(wx: number, wy: number, wz: number): void {
+    const neighbors: Array<readonly [number, number, number]> = [
+      [1, 0, 0],
+      [-1, 0, 0],
+      [0, 1, 0],
+      [0, -1, 0],
+      [0, 0, 1],
+      [0, 0, -1],
+    ];
+    for (const [dx, dy, dz] of neighbors) {
+      const nx = wx + dx;
+      const ny = wy + dy;
+      const nz = wz + dz;
+      const level = this.getLightLayer("block", nx, ny, nz);
+      if (level > 1) {
+        this.lightQueue.enqueueAdd("block", nx, ny, nz, level);
+      }
+    }
+  }
+
+  private queueBlockLightSourcesNearChunk(cx: number, cz: number): void {
+    for (let dz = -1; dz <= 1; dz++) {
+      for (let dx = -1; dx <= 1; dx++) {
+        const chunk = this.getChunk(cx + dx, cz + dz);
+        if (!chunk) continue;
+        const { x: sx, y: sy, z: sz } = chunk.size;
+        const stride = sx * sz;
+        const baseX = chunk.cx * sx;
+        const baseZ = chunk.cz * sz;
+        for (let y = 0; y < sy; y++) {
+          for (let z = 0; z < sz; z++) {
+            for (let x = 0; x < sx; x++) {
+              const idx = x + sx * z + stride * y;
+              const id = chunk.blocks[idx] as BlockId;
+              const emit = BLOCKS[id]?.emitLight ?? 0;
+              if (emit <= 0) continue;
+              this.lightQueue.enqueueAdd("block", baseX + x, y, baseZ + z, emit);
+            }
+          }
+        }
+      }
+    }
+  }
+
+  private queueSunlightSourcesNearChunk(cx: number, cz: number): void {
+    for (let dz = -1; dz <= 1; dz++) {
+      for (let dx = -1; dx <= 1; dx++) {
+        const chunk = this.getChunk(cx + dx, cz + dz);
+        if (!chunk) continue;
+        const { x: sx, y: sy, z: sz } = chunk.size;
+        const stride = sx * sz;
+        const baseX = chunk.cx * sx;
+        const baseZ = chunk.cz * sz;
+        for (let y = 0; y < sy; y++) {
+          for (let z = 0; z < sz; z++) {
+            for (let x = 0; x < sx; x++) {
+              const idx = x + sx * z + stride * y;
+              if (chunk.sunLight[idx] !== 15) continue;
+              this.lightQueue.enqueueAdd("sun", baseX + x, y, baseZ + z, 15);
+            }
+          }
+        }
+      }
+    }
+  }
+
   getChunkKeys(): IterableIterator<ChunkKey> {
     return this.chunks.keys();
   }
@@ -454,6 +663,42 @@ export class World {
 
   getChunkCount(): number {
     return this.chunks.size;
+  }
+
+  private getLightLayer(layer: LightLayer, wx: number, wy: number, wz: number): number {
+    if (wy < 0 || wy >= this.chunkSize.y) return 0;
+    const { cx, cz, lx, lz } = this.worldToChunk(wx, wz);
+    const chunk = this.getChunk(cx, cz);
+    if (!chunk) return 0;
+    const idx = chunk.idx(lx, wy, lz);
+    return layer === "sun" ? chunk.sunLight[idx] : chunk.blockLight[idx];
+  }
+
+  private setLightLayer(layer: LightLayer, wx: number, wy: number, wz: number, level: number): boolean {
+    if (wy < 0 || wy >= this.chunkSize.y) return false;
+    const { cx, cz, lx, lz } = this.worldToChunk(wx, wz);
+    const chunk = this.getChunk(cx, cz);
+    if (!chunk) return false;
+    const idx = chunk.idx(lx, wy, lz);
+    const target = layer === "sun" ? chunk.sunLight : chunk.blockLight;
+    const prev = target[idx];
+    if (prev === level) return false;
+    target[idx] = level;
+    return true;
+  }
+
+  private isTransparentAt(wx: number, wy: number, wz: number): boolean {
+    if (wy < 0 || wy >= this.chunkSize.y) return false;
+    const { cx, cz, lx, lz } = this.worldToChunk(wx, wz);
+    const chunk = this.getChunk(cx, cz);
+    if (!chunk) return false;
+    const id = chunk.getLocal(lx, wy, lz);
+    return !this.blockOccludes(id);
+  }
+
+  private blockOccludes(id: BlockId): boolean {
+    const def = BLOCKS[id];
+    return def ? (def.occludes ?? def.solid) : true;
   }
 
   worldToChunk(wx: number, wz: number): { cx: number; cz: number; lx: number; lz: number } {

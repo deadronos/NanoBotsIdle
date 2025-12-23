@@ -17,6 +17,7 @@
 - [TASK004] Refine DESIGN004-006 for modular, DRY patterns
 - [TASK005] Implement DESIGN004 Ores + Cave Generation
 - [TASK006] Implement DESIGN005 mining tools + progress
+- [TASK007] Implement DESIGN006 torches lighting + mob spawning
 
 ## Abandoned
 
