@@ -1,3 +1,4 @@
+import { MINING } from "../config/gameplay";
 import { SeededRng } from "./generation/rng";
 import { BlockId, BLOCKS, type DropEntry } from "./World";
 import { getToolDef, type ToolId } from "./tools";
@@ -11,17 +12,12 @@ export type ResolvedDrop = {
 
 type NormalizedDropEntry = Omit<DropEntry, "chance"> & { chance: number };
 
-const DEFAULT_HARDNESS = 1;
-const BASE_BREAK_SECONDS = 0.75;
-const INEFFECTIVE_MULTIPLIER = 3.5;
-const MIN_BREAK_SECONDS = 0.15;
-
 export function getBlockHardness(blockId: BlockId): number {
   const def = BLOCKS[blockId];
-  if (!def) return DEFAULT_HARDNESS;
+  if (!def) return MINING.defaultHardness;
   if (def.breakable === false) return Number.POSITIVE_INFINITY;
-  const hardness = def.hardness ?? DEFAULT_HARDNESS;
-  if (!Number.isFinite(hardness)) return DEFAULT_HARDNESS;
+  const hardness = def.hardness ?? MINING.defaultHardness;
+  if (!Number.isFinite(hardness)) return MINING.defaultHardness;
   return Math.max(0, hardness);
 }
 
@@ -48,14 +44,14 @@ export function computeBreakTime(blockId: BlockId, toolId?: ToolId): number {
   if (hardness <= 0) return 0;
 
   const tool = getToolDef(toolId);
-  const base = BASE_BREAK_SECONDS * hardness;
+  const base = MINING.baseBreakSeconds * hardness;
   const efficiency = tool?.efficiency ?? 1;
 
   if (isToolEffective(blockId, toolId)) {
-    return Math.max(MIN_BREAK_SECONDS, base / Math.max(0.1, efficiency));
+    return Math.max(MINING.minBreakSeconds, base / Math.max(0.1, efficiency));
   }
 
-  return Math.max(MIN_BREAK_SECONDS, base * INEFFECTIVE_MULTIPLIER);
+  return Math.max(MINING.minBreakSeconds, base * MINING.ineffectiveMultiplier);
 }
 
 export function resolveDrops(

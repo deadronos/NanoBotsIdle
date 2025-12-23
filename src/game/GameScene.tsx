@@ -2,6 +2,7 @@ import { useFrame, useThree } from "@react-three/fiber";
 import { useCallback, useEffect, useMemo, useRef } from "react";
 import * as THREE from "three";
 
+import { ECS_LIGHTING } from "../config/ecs";
 import { GAMEPLAY } from "../config/gameplay";
 import { PERF } from "../config/perf";
 import { DEFAULT_LIGHTS, FOG, HIGHLIGHT } from "../config/rendering";
@@ -375,7 +376,7 @@ export default function GameScene() {
       world.pruneFarChunks(player.position.x, player.position.z);
     }
     const scheduler = schedulerRef.current;
-    scheduler.beginFrame(BACKGROUND_BUDGET_MS);
+    scheduler.beginFrame(PERF.backgroundBudgetMs);
     scheduler.schedule({
       id: "light-queue",
       priority: 1,
@@ -413,7 +414,7 @@ export default function GameScene() {
             miningSession.progress + frameDt / miningSession.breakTime,
           );
           miningSession.fxTimer += frameDt;
-          if (miningSession.fxTimer >= MINING_HIT_INTERVAL) {
+          if (miningSession.fxTimer >= GAMEPLAY.miningHitInterval) {
             miningSession.fxTimer = 0;
             sfxRef.current?.playHit();
             const chipPos = new THREE.Vector3(
@@ -421,7 +422,7 @@ export default function GameScene() {
               hit.block.y + 0.5,
               hit.block.z + 0.5,
             );
-            particlesRef.current?.spawnBurst(chipPos, hit.id, 4);
+            particlesRef.current?.spawnBurst(chipPos, hit.id, GAMEPLAY.miningHitBurstCount);
           }
           setMining({ active: true, progress: miningSession.progress, blockId: hit.id });
           if (miningSession.progress >= 1) {
@@ -458,10 +459,11 @@ export default function GameScene() {
           material.color
             .copy(highlightColorsRef.current.base)
             .lerp(highlightColorsRef.current.mining, activeMining.progress);
-          material.opacity = 0.55 + 0.4 * activeMining.progress;
+          material.opacity =
+            HIGHLIGHT.miningOpacityMin + HIGHLIGHT.miningOpacityScale * activeMining.progress;
         } else {
           material.color.copy(highlightColorsRef.current.base);
-          material.opacity = 0.85;
+          material.opacity = HIGHLIGHT.baseOpacity;
         }
       } else {
         highlight.visible = false;
@@ -475,14 +477,14 @@ export default function GameScene() {
 
     fpsRef.current.acc += delta;
     fpsRef.current.frames += 1;
-    if (fpsRef.current.acc >= 0.5) {
+    if (fpsRef.current.acc >= PERF.fpsSampleSeconds) {
       fpsRef.current.fps = Math.round(fpsRef.current.frames / fpsRef.current.acc);
       fpsRef.current.acc = 0;
       fpsRef.current.frames = 0;
     }
 
     statsTimerRef.current += delta;
-    if (statsTimerRef.current >= 0.2) {
+    if (statsTimerRef.current >= PERF.hudUpdateIntervalSeconds) {
       const pos = ecs.entities.player.position ?? { x: 0, y: 0, z: 0 };
       const timeOfDay = getTimeOfDay(ecs);
       setStats({
@@ -521,14 +523,17 @@ export default function GameScene() {
     } else if (!lightingState) {
       // fallback to legacy values if ECS lighting is unavailable
       if (ambient && sun) {
-        ambient.intensity = 0.2 + sunPhase * 0.5;
-        sun.intensity = 0.15 + sunPhase * 0.9;
+        ambient.intensity = ECS_LIGHTING.ambientBase + sunPhase * ECS_LIGHTING.ambientScale;
+        sun.intensity = ECS_LIGHTING.sunBase + sunPhase * ECS_LIGHTING.sunScale;
         const angle = timeOfDay * Math.PI * 2;
-        sun.position.set(Math.cos(angle) * 120, 30 + sunPhase * 160, Math.sin(angle) * 120);
+        sun.position.set(
+          Math.cos(angle) * ECS_LIGHTING.sunOrbitRadius,
+          ECS_LIGHTING.sunHeightBase + sunPhase * ECS_LIGHTING.sunHeightScale,
+          Math.sin(angle) * ECS_LIGHTING.sunOrbitRadius,
+        );
       }
-      const baseHue = 0.58;
-      const lightness = 0.22 + sunPhase * 0.5;
-      skyColor.current.setHSL(baseHue, 0.52, lightness);
+      const lightness = ECS_LIGHTING.lightnessBase + sunPhase * ECS_LIGHTING.lightnessScale;
+      skyColor.current.setHSL(ECS_LIGHTING.baseHue, ECS_LIGHTING.saturation, lightness);
       scene.background = skyColor.current;
       if (scene.fog) scene.fog.color.copy(skyColor.current);
     }
