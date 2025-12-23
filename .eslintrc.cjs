@@ -58,6 +58,23 @@ module.exports = {
       files: ["**/*.{test,spec}.{ts,tsx}", "src/test/**/*.{ts,tsx}"],
       extends: ["plugin:testing-library/react", "plugin:jest-dom/recommended"],
     },
+    {
+      // Config files often use CommonJS and `require()`
+      files: [
+        "*.config.cjs",
+        "*.config.js",
+        "*.config.mjs",
+        "*.cjs",
+        "vite.config.ts",
+        "tailwind.config.cjs",
+        "eslint.config.cjs",
+        ".eslintrc.cjs",
+      ],
+      rules: {
+        "@typescript-eslint/no-require-imports": "off",
+        "@typescript-eslint/no-var-requires": "off",
+      },
+    },
   ],
   rules: {
     // React Three Fiber/Three.js patterns intentionally mutate scene/refs.

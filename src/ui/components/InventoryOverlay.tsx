@@ -65,8 +65,12 @@ export default function InventoryOverlay({
                         disabled={disabled}
                         onClick={() => onAssignSlot(selectedSlot, id)}
                         title={blockIdToName(id)}
+                        aria-label={`${blockIdToName(id)}, Quantity ${count}`}
                       >
-                        <div className="item-icon" style={iconStyle(tileForBlockIcon(id), atlasUrl)} />
+                        <div
+                          className="item-icon"
+                          style={iconStyle(tileForBlockIcon(id), atlasUrl)}
+                        />
                         <div className="slot-count">{count}</div>
                       </Button>
                     );
@@ -105,20 +109,33 @@ export default function InventoryOverlay({
                             {recipe.name}
                           </div>
                           <div className="flex items-center gap-3">
-                            {recipe.input.map((input) => (
-                              <div
-                                key={`${recipe.id}-${input.id}`}
-                                className="relative grid h-11 w-11 place-items-center rounded-lg border border-white/20 bg-black/60"
-                              >
+                            {recipe.input.map((input) => {
+                              const have = inventory[input.id] ?? 0;
+                              const missing = have < input.count;
+                              return (
                                 <div
-                                  className="item-icon"
-                                  style={iconStyle(tileForBlockIcon(input.id), atlasUrl)}
-                                />
-                                <div className="slot-count">{input.count}</div>
-                              </div>
-                            ))}
+                                  key={`${recipe.id}-${input.id}`}
+                                  className={cn(
+                                    "relative grid h-11 w-11 place-items-center rounded-lg border bg-black/60",
+                                    missing ? "border-red-500/50 bg-red-900/20" : "border-white/20",
+                                  )}
+                                  title={`${blockIdToName(input.id)} (Have: ${have})`}
+                                >
+                                  <div
+                                    className="item-icon"
+                                    style={iconStyle(tileForBlockIcon(input.id), atlasUrl)}
+                                  />
+                                  <div className={cn("slot-count", missing && "text-red-400")}>
+                                    {input.count}
+                                  </div>
+                                </div>
+                              );
+                            })}
                             <div className="text-base text-[var(--accent)]">-&gt;</div>
-                            <div className="relative grid h-11 w-11 place-items-center rounded-lg border border-white/20 bg-black/60">
+                            <div
+                              className="relative grid h-11 w-11 place-items-center rounded-lg border border-white/20 bg-black/60"
+                              title={blockIdToName(recipe.output.id)}
+                            >
                               <div
                                 className="item-icon"
                                 style={iconStyle(tileForBlockIcon(recipe.output.id), atlasUrl)}
@@ -126,7 +143,12 @@ export default function InventoryOverlay({
                               <div className="slot-count">{recipe.output.count}</div>
                             </div>
                           </div>
-                          <Button size="sm" disabled={!canCraft} onClick={() => onCraft(recipe)}>
+                          <Button
+                            size="sm"
+                            disabled={!canCraft}
+                            onClick={() => onCraft(recipe)}
+                            aria-label={`Craft ${recipe.name}`}
+                          >
                             Craft
                           </Button>
                         </div>
