@@ -66,6 +66,10 @@ export function createAtlasTexture(renderer: RendererLike, blocks: readonly Bloc
   paintTile(12, "rgba(160,210,230,0.65)", "rgba(255,255,255,0.22)"); // glass
   paintTile(13, "#f2c86d", "#a36d32"); // torch
   paintTile(14, "#4b4b4f", "#2f2f33"); // bedrock
+  paintTile(15, "#6f6f74", "#2b2b2b"); // coal ore
+  paintTile(16, "#8f8f93", "#b9856c"); // iron ore
+  paintTile(17, "#8f8f93", "#d4ad3e"); // gold ore
+  paintTile(18, "#8f8f93", "#5bd0d0"); // diamond ore
 
   // optional: paint the rest as debug checker.
   for (let t = 10; t < tilesPerRow * tilesPerRow; t++) {
