@@ -1,9 +1,11 @@
 import { INVENTORY_BLOCKS, tileForBlockIcon } from "../../game/items";
 import { type Recipe, RECIPES } from "../../game/recipes";
 import { type BlockId, blockIdToName } from "../../voxel/World";
+import { TOOL_DEFS, type ToolId, type ToolStack } from "../../voxel/tools";
 import { cn } from "../lib/utils";
 import { iconStyle } from "../utils";
 import { Button } from "./ui/button";
+import { Badge } from "./ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "./ui/card";
 import { ScrollArea } from "./ui/scroll-area";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "./ui/tabs";
@@ -11,8 +13,11 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "./ui/tabs";
 type InventoryOverlayProps = {
   atlasUrl?: string;
   inventory: Record<number, number>;
+  tools: Partial<Record<ToolId, ToolStack>>;
+  equippedToolId?: ToolId;
   selectedSlot: number;
   onAssignSlot: (slot: number, id: BlockId) => void;
+  onEquipTool: (id?: ToolId) => void;
   onCraft: (recipe: Recipe) => void;
   onClose: () => void;
 };
@@ -20,8 +25,11 @@ type InventoryOverlayProps = {
 export default function InventoryOverlay({
   atlasUrl,
   inventory,
+  tools,
+  equippedToolId,
   selectedSlot,
   onAssignSlot,
+  onEquipTool,
   onCraft,
   onClose,
 }: InventoryOverlayProps) {
@@ -44,9 +52,10 @@ export default function InventoryOverlay({
 
         <CardContent className="text-xs">
           <Tabs defaultValue="inventory">
-            <TabsList className="grid w-full grid-cols-2">
+            <TabsList className="grid w-full grid-cols-3">
               <TabsTrigger value="inventory">Inventory</TabsTrigger>
               <TabsTrigger value="crafting">Crafting</TabsTrigger>
+              <TabsTrigger value="tools">Tools</TabsTrigger>
             </TabsList>
 
             <TabsContent value="inventory">
@@ -152,6 +161,97 @@ export default function InventoryOverlay({
                             Craft
                           </Button>
                         </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              </ScrollArea>
+            </TabsContent>
+
+            <TabsContent value="tools">
+              <ScrollArea className="h-[min(50vh,420px)] pr-2">
+                <div className="space-y-4">
+                  <div>
+                    <div className="font-display text-sm uppercase tracking-[0.12em]">Tools</div>
+                    <div className="text-xs text-muted-foreground">
+                      Equip a tool to improve mining speed and unlock tougher blocks.
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-[repeat(auto-fit,minmax(220px,1fr))] gap-4">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      className={cn(
+                        "h-auto flex-col items-start gap-2 border-white/15 bg-black/60 px-4 py-3 text-left",
+                        !equippedToolId &&
+                          "border-[rgba(255,200,95,0.6)] shadow-[inset_0_0_0_1px_rgba(255,200,95,0.3)]",
+                      )}
+                      onClick={() => onEquipTool(undefined)}
+                    >
+                      <div className="flex w-full items-center justify-between">
+                        <div className="font-display text-sm uppercase tracking-[0.18em]">
+                          Hands
+                        </div>
+                        {!equippedToolId && <Badge variant="secondary">Equipped</Badge>}
+                      </div>
+                      <div className="text-xs text-muted-foreground">
+                        Basic mining speed, no tool bonuses.
+                      </div>
+                    </Button>
+
+                    {TOOL_DEFS.map((tool) => {
+                      const stack = tools[tool.id];
+                      const count = stack?.count ?? 0;
+                      const disabled = count <= 0;
+                      const equipped = tool.id === equippedToolId;
+                      const durability = stack?.durability ?? tool.durability;
+                      const percent =
+                        tool.durability > 0 ? Math.max(0, durability / tool.durability) : 0;
+
+                      return (
+                        <Button
+                          key={tool.id}
+                          type="button"
+                          variant="outline"
+                          disabled={disabled}
+                          className={cn(
+                            "h-auto flex-col items-start gap-2 border-white/15 bg-black/60 px-4 py-3 text-left",
+                            equipped &&
+                              "border-[rgba(255,200,95,0.6)] shadow-[inset_0_0_0_1px_rgba(255,200,95,0.3)]",
+                          )}
+                          onClick={() => onEquipTool(tool.id)}
+                        >
+                          <div className="flex w-full items-center justify-between">
+                            <div className="font-display text-sm uppercase tracking-[0.16em]">
+                              {tool.name}
+                            </div>
+                            {equipped && <Badge variant="secondary">Equipped</Badge>}
+                          </div>
+                          <div className="text-xs text-muted-foreground">
+                            Tier {tool.tier} • Efficiency {tool.efficiency.toFixed(1)}
+                          </div>
+                          <div className="mt-1 w-full">
+                            <div className="flex items-center justify-between text-[10px] text-muted-foreground">
+                              <span>Durability</span>
+                              <span>
+                                {Math.max(0, Math.floor(durability))}/{tool.durability}
+                              </span>
+                            </div>
+                            <div className="mt-1 h-1.5 overflow-hidden rounded-full bg-white/10">
+                              <div
+                                className={cn(
+                                  "h-full",
+                                  percent > 0.35 ? "bg-[var(--accent)]" : "bg-[var(--danger)]",
+                                )}
+                                style={{ width: `${Math.round(percent * 100)}%` }}
+                              />
+                            </div>
+                          </div>
+                          {!disabled && count > 1 && (
+                            <div className="text-[10px] text-muted-foreground">x{count}</div>
+                          )}
+                        </Button>
                       );
                     })}
                   </div>

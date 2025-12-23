@@ -2,12 +2,20 @@
 import { buildChunkGeometry, type BuiltGeometry } from "./meshing";
 import { SeededRng } from "./generation/rng";
 import { fbm2, fbm3, hash2 } from "./noise";
+import type { ToolType } from "./tools";
 
 type BlockTile = {
   all?: number;
   top?: number;
   side?: number;
   bottom?: number;
+};
+
+export type DropEntry = {
+  itemId: number | string;
+  min: number;
+  max: number;
+  chance?: number;
 };
 
 export type BlockDef = {
@@ -17,28 +25,12 @@ export type BlockDef = {
   transparent?: boolean;
   occludes?: boolean;
   breakable?: boolean;
+  hardness?: number;
+  requiredToolType?: ToolType;
+  requiredTier?: number;
+  dropTable?: DropEntry[];
+  renderFaces?: "all" | "top";
 };
-
-export const BLOCKS: BlockDef[] = [
-  // index matches BlockId enum
-  { name: "Air", solid: false, tile: { all: 0 }, occludes: false, transparent: true },
-  { name: "Grass", solid: true, tile: { top: 1, side: 2, bottom: 3 } },
-  { name: "Dirt", solid: true, tile: { all: 3 } },
-  { name: "Stone", solid: true, tile: { all: 4 } },
-  { name: "Water", solid: false, tile: { all: 5 }, transparent: true, occludes: false },
-  { name: "Sand", solid: true, tile: { all: 6 } },
-  { name: "Wood", solid: true, tile: { side: 7, top: 8, bottom: 8 } },
-  { name: "Leaves", solid: true, tile: { all: 9 }, transparent: true, occludes: false },
-  { name: "Planks", solid: true, tile: { all: 10 } },
-  { name: "Brick", solid: true, tile: { all: 11 } },
-  { name: "Glass", solid: true, tile: { all: 12 }, transparent: true, occludes: false },
-  { name: "Torch", solid: false, tile: { all: 13 }, transparent: true, occludes: false },
-  { name: "Bedrock", solid: true, tile: { all: 14 }, breakable: false },
-  { name: "Coal Ore", solid: true, tile: { all: 15 } },
-  { name: "Iron Ore", solid: true, tile: { all: 16 } },
-  { name: "Gold Ore", solid: true, tile: { all: 17 } },
-  { name: "Diamond Ore", solid: true, tile: { all: 18 } },
-];
 
 export enum BlockId {
   Air = 0,
@@ -59,6 +51,108 @@ export enum BlockId {
   GoldOre = 15,
   DiamondOre = 16,
 }
+
+export const BLOCKS: BlockDef[] = [
+  // index matches BlockId enum
+  {
+    name: "Air",
+    solid: false,
+    tile: { all: 0 },
+    occludes: false,
+    transparent: true,
+    hardness: 0,
+  },
+  { name: "Grass", solid: true, tile: { top: 1, side: 2, bottom: 3 }, hardness: 0.9 },
+  { name: "Dirt", solid: true, tile: { all: 3 }, hardness: 0.8 },
+  {
+    name: "Stone",
+    solid: true,
+    tile: { all: 4 },
+    hardness: 3,
+    requiredToolType: "pickaxe",
+    requiredTier: 1,
+  },
+  {
+    name: "Water",
+    solid: false,
+    tile: { all: 5 },
+    transparent: true,
+    occludes: false,
+    hardness: 0,
+    renderFaces: "top",
+  },
+  { name: "Sand", solid: true, tile: { all: 6 }, hardness: 0.7 },
+  { name: "Wood", solid: true, tile: { side: 7, top: 8, bottom: 8 }, hardness: 1.8 },
+  {
+    name: "Leaves",
+    solid: true,
+    tile: { all: 9 },
+    transparent: true,
+    occludes: false,
+    hardness: 0.4,
+  },
+  { name: "Planks", solid: true, tile: { all: 10 }, hardness: 1.5 },
+  { name: "Brick", solid: true, tile: { all: 11 }, hardness: 3.2 },
+  {
+    name: "Glass",
+    solid: true,
+    tile: { all: 12 },
+    transparent: true,
+    occludes: false,
+    hardness: 0.6,
+  },
+  {
+    name: "Torch",
+    solid: false,
+    tile: { all: 13 },
+    transparent: true,
+    occludes: false,
+    hardness: 0.2,
+  },
+  {
+    name: "Bedrock",
+    solid: true,
+    tile: { all: 14 },
+    breakable: false,
+    hardness: Number.POSITIVE_INFINITY,
+  },
+  {
+    name: "Coal Ore",
+    solid: true,
+    tile: { all: 15 },
+    hardness: 3.2,
+    requiredToolType: "pickaxe",
+    requiredTier: 1,
+    dropTable: [{ itemId: BlockId.CoalOre, min: 1, max: 1 }],
+  },
+  {
+    name: "Iron Ore",
+    solid: true,
+    tile: { all: 16 },
+    hardness: 3.6,
+    requiredToolType: "pickaxe",
+    requiredTier: 2,
+    dropTable: [{ itemId: BlockId.IronOre, min: 1, max: 1 }],
+  },
+  {
+    name: "Gold Ore",
+    solid: true,
+    tile: { all: 17 },
+    hardness: 3.8,
+    requiredToolType: "pickaxe",
+    requiredTier: 2,
+    dropTable: [{ itemId: BlockId.GoldOre, min: 1, max: 1 }],
+  },
+  {
+    name: "Diamond Ore",
+    solid: true,
+    tile: { all: 18 },
+    hardness: 4.2,
+    requiredToolType: "pickaxe",
+    requiredTier: 3,
+    dropTable: [{ itemId: BlockId.DiamondOre, min: 1, max: 1 }],
+  },
+];
 
 export type OreConfig = {
   id: BlockId;

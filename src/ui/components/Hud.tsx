@@ -6,6 +6,7 @@ import Hotbar from "./Hotbar";
 import InventoryOverlay from "./InventoryOverlay";
 import StartOverlay from "./StartOverlay";
 import StatsPanel from "./StatsPanel";
+import Toolbelt from "./Toolbelt";
 
 export default function Hud() {
   const pointerLocked = useGameStore((state) => state.pointerLocked);
@@ -18,9 +19,13 @@ export default function Hud() {
   const setSelectedSlot = useGameStore((state) => state.setSelectedSlot);
   const setHotbarSlot = useGameStore((state) => state.setHotbarSlot);
   const inventory = useGameStore((state) => state.inventory);
+  const tools = useGameStore((state) => state.tools);
+  const equippedToolId = useGameStore((state) => state.equippedToolId);
+  const equipTool = useGameStore((state) => state.equipTool);
   const craft = useGameStore((state) => state.craft);
   const stats = useGameStore((state) => state.stats);
   const targetBlock = useGameStore((state) => state.targetBlock);
+  const mining = useGameStore((state) => state.mining);
 
   useEffect(() => {
     const onKeyDown = (e: KeyboardEvent) => {
@@ -52,7 +57,7 @@ export default function Hud() {
   return (
     <div className="hud">
       <StatsPanel stats={stats} targetBlock={targetBlock} />
-      <Crosshair locked={pointerLocked} />
+      <Crosshair locked={pointerLocked} miningProgress={mining.active ? mining.progress : 0} />
 
       <Hotbar
         hotbar={hotbar}
@@ -61,12 +66,17 @@ export default function Hud() {
         atlasUrl={atlasUrl}
       />
 
+      <Toolbelt tools={tools} equippedToolId={equippedToolId} />
+
       {uiOpen && (
         <InventoryOverlay
           atlasUrl={atlasUrl}
           inventory={inventory}
+          tools={tools}
+          equippedToolId={equippedToolId}
           selectedSlot={selectedSlot}
           onAssignSlot={setHotbarSlot}
+          onEquipTool={equipTool}
           onCraft={craft}
           onClose={handleCloseInventory}
         />
