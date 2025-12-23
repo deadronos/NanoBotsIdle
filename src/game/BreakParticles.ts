@@ -1,6 +1,7 @@
 import * as THREE from "three";
 
 import { BlockId } from "../voxel/World";
+import { BLOCK_COLORS, DEFAULT_BLOCK_COLOR } from "./blockColors";
 
 type Particle = {
   position: THREE.Vector3;
@@ -10,19 +11,6 @@ type Particle = {
   color: THREE.Color;
 };
 
-const DEFAULT_COLOR = new THREE.Color(0xcfc4a9);
-const BLOCK_COLORS: Partial<Record<BlockId, THREE.Color>> = {
-  [BlockId.Grass]: new THREE.Color(0x7fbf6a),
-  [BlockId.Dirt]: new THREE.Color(0x8b6238),
-  [BlockId.Stone]: new THREE.Color(0x9ca1a8),
-  [BlockId.Sand]: new THREE.Color(0xd6c289),
-  [BlockId.Wood]: new THREE.Color(0xb88758),
-  [BlockId.Leaves]: new THREE.Color(0x6bbf73),
-  [BlockId.CoalOre]: new THREE.Color(0x8a8f96),
-  [BlockId.IronOre]: new THREE.Color(0xc49a6c),
-  [BlockId.GoldOre]: new THREE.Color(0xd2b14c),
-  [BlockId.DiamondOre]: new THREE.Color(0x6bd6d1),
-};
 
 export class BreakParticleSystem {
   private particles: Particle[] = [];
@@ -55,7 +43,7 @@ export class BreakParticleSystem {
   }
 
   spawnBurst(position: THREE.Vector3, blockId: BlockId, count = 12): void {
-    const baseColor = BLOCK_COLORS[blockId] ?? DEFAULT_COLOR;
+    const baseColor = BLOCK_COLORS[blockId] ?? DEFAULT_BLOCK_COLOR;
     for (let i = 0; i < count; i++) {
       if (this.particles.length >= this.maxParticles) break;
       const particle = this.particlePool.pop() ?? createParticle();

@@ -13,8 +13,10 @@ import type { ToolId } from "../voxel/tools";
 import { BreakParticleSystem } from "./BreakParticles";
 import { createSfxPlayer } from "./audio";
 import { createGameEcs, getLightingState, getTimeOfDay, stepGameEcs } from "./ecs/gameEcs";
+import { createEcsInstancedRenderers } from "./ecs/instancedRender";
 import { isPlaceableBlock } from "./items";
 import { perfStats } from "./perf";
+import { FrameBudgetScheduler } from "./scheduler";
 import { advanceFixedStep } from "./sim/fixedStep";
 import { useGameStore } from "./store";
 
@@ -24,6 +26,7 @@ const FIXED_STEP_SECONDS = 1 / 60;
 const MAX_SIM_STEPS = 5;
 const MAX_FRAME_DELTA = 0.1;
 const MINING_HIT_INTERVAL = 0.25;
+const BACKGROUND_BUDGET_MS = 6;
 
 type MiningSession = {
   block: { x: number; y: number; z: number };
@@ -72,6 +75,8 @@ export default function GameScene() {
   const miningInputRef = useRef(false);
   const sfxRef = useRef<ReturnType<typeof createSfxPlayer> | null>(null);
   const particlesRef = useRef<BreakParticleSystem | null>(null);
+  const schedulerRef = useRef(new FrameBudgetScheduler());
+  const ecsRenderRef = useRef<ReturnType<typeof createEcsInstancedRenderers> | null>(null);
 
   const setAtlasUrl = useGameStore((state) => state.setAtlasUrl);
   const setPointerLocked = useGameStore((state) => state.setPointerLocked);
@@ -203,6 +208,7 @@ export default function GameScene() {
 
     particlesRef.current = new BreakParticleSystem(scene);
     sfxRef.current = createSfxPlayer();
+    ecsRenderRef.current = createEcsInstancedRenderers(scene);
 
     return () => {
       scene.remove(highlight);
@@ -215,8 +221,10 @@ export default function GameScene() {
       particlesRef.current = null;
       sfxRef.current?.dispose();
       sfxRef.current = null;
+      ecsRenderRef.current?.dispose(scene);
+      ecsRenderRef.current = null;
     };
-  }, [gl, scene, setAtlasUrl, world]);
+  }, [ecs, gl, scene, setAtlasUrl, world]);
 
   useEffect(() => {
     const player = new PlayerController({
@@ -355,29 +363,27 @@ export default function GameScene() {
       world.ensureChunksAround(player.position.x, player.position.z);
       world.pruneFarChunks(player.position.x, player.position.z);
     }
-    if (perfEnabled) {
-      const start = performance.now();
-      world.processLightQueue();
-      perfStats.add("lightMs", performance.now() - start);
-    } else {
-      world.processLightQueue();
-    }
-
-    if (perfEnabled) {
-      const start = performance.now();
-      world.rebuildDirtyChunks();
-      perfStats.add("meshBuildMs", performance.now() - start);
-    } else {
-      world.rebuildDirtyChunks();
-    }
-
-    if (perfEnabled) {
-      const start = performance.now();
-      chunkMeshesRef.current?.sync();
-      perfStats.add("meshSwapMs", performance.now() - start);
-    } else {
-      chunkMeshesRef.current?.sync();
-    }
+    const scheduler = schedulerRef.current;
+    scheduler.beginFrame(BACKGROUND_BUDGET_MS);
+    scheduler.schedule({
+      id: "light-queue",
+      priority: 1,
+      run: () => world.processLightQueue(),
+      onComplete: perfEnabled ? (ms) => perfStats.add("lightMs", ms) : undefined,
+    });
+    scheduler.schedule({
+      id: "mesh-build",
+      priority: 2,
+      run: () => world.rebuildDirtyChunks(),
+      onComplete: perfEnabled ? (ms) => perfStats.add("meshBuildMs", ms) : undefined,
+    });
+    scheduler.schedule({
+      id: "mesh-swap",
+      priority: 3,
+      run: () => chunkMeshesRef.current?.sync(),
+      onComplete: perfEnabled ? (ms) => perfStats.add("meshSwapMs", ms) : undefined,
+    });
+    scheduler.run();
 
     const origin = rayOriginRef.current.copy(camera.position);
     const dir = camera.getWorldDirection(rayDirRef.current);
@@ -478,6 +484,7 @@ export default function GameScene() {
     }
 
     particlesRef.current?.update(frameDt);
+    ecsRenderRef.current?.update(ecs);
 
     const timeOfDay = getTimeOfDay(ecs);
     const sunPhase = Math.sin(timeOfDay * Math.PI * 2) * 0.5 + 0.5;

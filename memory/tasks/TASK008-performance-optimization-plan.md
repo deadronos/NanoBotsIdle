@@ -32,7 +32,7 @@ dont code yet, plan
 
 ## Progress Tracking
 
-**Overall Status:** In Progress - 70%
+**Overall Status:** In Progress - 85%
 
 ### Subtasks
 
@@ -45,8 +45,9 @@ dont code yet, plan
 | 2.2 | Reuse mesh buffers and update renderer swaps | Complete | 2025-12-23 | Mesh buffers reused per chunk |
 | 2.3 | Reduce per-frame allocations (picking, particles, controller) | Complete | 2025-12-23 | Pooling + vector reuse |
 | 2.4 | Perf instrumentation + baseline capture | Complete | 2025-12-23 | Playwright baseline recorded |
-| 2.5 | Frame-budget scheduler | Not Started | 2025-12-23 | Pending design integration |
-| 2.6 | Instanced batching for entities | Not Started | 2025-12-23 | Pending entity renderers |
+| 2.5 | Frame-budget scheduler | Complete | 2025-12-23 | Scheduler integrated in GameScene |
+| 2.6 | Instanced batching for entities | Complete | 2025-12-23 | ECS instanced renderers added |
+| 2.7 | Baseline summary in Memory Bank | Complete | 2025-12-23 | Added memory/perf-baselines.md |
 
 ## Progress Log
 
@@ -60,3 +61,6 @@ dont code yet, plan
 - Reduced allocation churn in picking, break particles, and player movement.
 - Added perf instrumentation + Playwright baseline capture flow (headful required for WebGL here).
 - Baseline snapshot written to `.agent_work/perf-baseline.json` (frameMs avg ~106ms, meshBuild avg ~14.6ms, light avg ~89ms).
+- Added frame-budget scheduler for background tasks (light queue, mesh build, mesh swap).
+- Added instanced rendering batches for ECS mobs/items.
+- Added Memory Bank baseline table in `memory/perf-baselines.md`.
