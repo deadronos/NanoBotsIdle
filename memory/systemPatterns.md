@@ -1,45 +1,19 @@
 # System Patterns
 
-## High-level architecture
+## Architecture overview
 
-The game is structured as a **render loop + voxel engine + UI state**:
+- `src/App.tsx` composes the scene: `Environment`, `World`, `Player`, `Drones`, `UI`.
+- `World` exposes an imperative `WorldApi` via ref to serve targets to drones and apply mining changes.
+- `Drones` runs the agent loop in `useFrame()` and triggers world mutations via `WorldApi`.
+- `src/store.ts` (Zustand) owns economy, upgrades, and prestige.
 
-- React UI mounts the game canvas and HUD (`src/ui/App.tsx`).
-- `GameCanvas` hosts the R3F `<Canvas/>` and sky dome (`src/game/GameCanvas.tsx`).
-- `GameScene` owns the long-lived `World` instance and performs per-frame updates (`src/game/GameScene.tsx`).
-- The voxel engine lives in `src/voxel/*` (world storage, meshing, rendering sync, picking, player controller).
-- Zustand (`src/game/store.ts`) stores UI/light state only (inventory, hotbar, stats, target block, pointer lock).
+## Rendering/perf patterns
 
-## Per-frame data flow
+- Use `InstancedMesh` for large counts (voxels, particle cubes).
+- Initialize instance matrices/colors in `useLayoutEffect`.
+- Minimize work inside `useFrame()`; prefer cached `Vector3`/`Object3D`/`Matrix4` in refs/memos.
 
-`GameScene` runs the loop (via `useFrame`) and does work in this order:
+## Interaction patterns
 
-1. Chunk streaming: `world.ensureChunksAround(...)` + `world.pruneFarChunks(...)`
-2. CPU rebuild: `world.rebuildDirtyChunks()` (bounded)
-3. GPU sync: `createChunkMeshes(...).sync()` (bounded)
-4. Player update: `player.update(dt)`
-5. UI updates: push stats and target block to Zustand
-
-## Separation of concerns
-
-- Heavy objects (`World`, `THREE.Material`, geometries, meshes) stay in `GameScene` refs.
-- Zustand is treated as a bridge to the HUD and overlays.
-
-## World/chunk modeling
-
-- Chunks are keyed by `"cx,cz"` and store blocks in a `Uint8Array`.
-- Storage layout is x-major: `idx = x + sx * (z + sz * y)`.
-- Terrain is generated per chunk on creation; neighbors are marked dirty to hide/show seam faces.
-
-## Rendering model
-
-- Meshing is face-culling only (not greedy): `src/voxel/meshing.ts`.
-- Mesh objects are created per chunk key; geometry is swapped in bounded batches: `src/voxel/rendering.ts`.
-
-## Input / pointer-lock pattern
-
-- `PlayerController` handles keyboard + mouse look and requests pointer lock for `gl.domElement`.
-- `GameScene` publishes `requestPointerLock` into Zustand.
-- `Hud` toggles inventory with `E`:
-  - when UI opens: `document.exitPointerLock()`
-  - when UI closes: `requestPointerLock?.()`
+- Pointer lock is requested on body clicks; UI modals stop propagation so clicks don’t re-lock.
+- UI overlay uses `pointer-events-none` at the container level and enables interaction per panel.

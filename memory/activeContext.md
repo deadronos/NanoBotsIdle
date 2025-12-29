@@ -2,19 +2,17 @@
 
 ## Current focus
 
-Expanded the Miniplex ECS PoC with systems/registry and documented the feature roadmap.
+- Project tooling and repo guidance are now aligned for Vite bundling, Tailwind v4+, and a consistent tests layout.
 
-## Recently added/updated
+## Recent changes
 
-- `memory/designs/DESIGN002-ui-sim-decoupling.md`: design for UI migration + fixed-step loop.
-- `memory/tasks/TASK003-ui-sim-ecs.md`: task tracking for the UI/simulation work.
-- `memory/requirements.md`: added EARS requirements for UI migration + fixed-step loop.
+- Removed legacy `importmap` usage from `index.html`; runtime deps come from `node_modules` via Vite.
+- Installed Tailwind v4+ and configured the official Vite plugin (`@tailwindcss/vite`).
+- Added Tailwind entry file at `src/index.css` and imported it from `src/index.tsx`.
+- Standardized tests to `tests/` and configured Vitest to only include that folder.
+- Added `npm run lint:fix` and added repo agent guidance in root `AGENTS.md`.
 
-## Next steps
+## Next steps (suggested)
 
-- Add Tailwind + shadcn UI primitives and refactor HUD/inventory overlays.
-- Implement fixed-step simulation loop with interpolation.
-- Add unit tests around fixed-step accumulator logic.
-- Add Miniplex ECS PoC and finish hotbar/crosshair UI migration.
-- Document the Minecraft-like feature gap list and decide whether to adopt ECS beyond PoC.
-- Evaluate next ECS targets (mobs/items rendering) and persistence implementation plan.
+- Add real unit tests for `src/store.ts` upgrade costs and prestige multiplier.
+- Consider lightweight code-splitting if bundle size warnings become problematic.

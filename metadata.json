@@ -1,0 +1,5 @@
+{
+  "name": "Voxel Walker",
+  "description": "A beautiful, varied voxel landscape explorer with switchable first and third-person perspectives, animated skies, and dynamic terrain.",
+  "requestFramePermissions": []
+}

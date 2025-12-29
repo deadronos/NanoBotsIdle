@@ -1,29 +1,16 @@
 # Progress
 
-## What works (current)
+## Working
 
-- Vite dev/build/preview pipeline.
-- Chunk streaming and pruning with bounded per-frame rebuild/sync.
-- Procedural terrain generation (grass/dirt/stone, beaches, water, trees, bedrock).
-- Face-culling meshing and incremental mesh syncing.
-- Pointer-lock FPS controller with collision.
-- DDA voxel picking for break/place interactions.
-- Inventory + hotbar + crafting recipes.
-- Runtime-generated atlas used by both voxel rendering and UI icons.
-- HUD/inventory/start overlays migrated to shadcn components with Tailwind.
-- Hotbar/crosshair migrated to Tailwind styling; inventory uses shadcn Tabs + ScrollArea.
-- Fixed-step simulation accumulator with camera interpolation.
-- Miniplex ECS PoC tracks player/time-of-day snapshots.
-- ECS expanded with systems/registry for mobs/items/particles and centralized lighting state.
-- Feature roadmap drafted for Minecraft-like expansion.
-- Vitest tests in place (smoke + fixed-step accumulator).
+- Game loop: drones mine blocks, credits accrue, upgrades/presitge available.
+- Rendering: instanced voxels + basic environment.
+- Tooling: Tailwind v4+ via Vite plugin, ESLint/Prettier, Vitest.
 
-## What’s missing / open areas
+## In progress / next
 
-- Expanded automated tests for world math, chunk indexing, and picking edge cases.
-- Persistence (save/load).
-- Greedy meshing, occlusion optimizations, and more advanced lighting.
+- Expand test coverage (store + utility functions).
+- Tune performance as drone counts increase (avoid allocations in `useFrame()`).
 
-## Known constraints
+## Known notes
 
-- Several invariants are intentionally strict (BlockId alignment, tilesPerRow, per-frame caps). Breaking them can cause subtle rendering bugs or major perf regressions.
+- Vite build warns about large chunks (>500kB) after minification; not currently blocking.
