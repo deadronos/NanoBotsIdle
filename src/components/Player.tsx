@@ -94,11 +94,10 @@ export const Player: React.FC<PlayerProps> = ({ viewMode }) => {
     const WATER_DRAG = cfg.player.waterDrag;
 
     // Movement Physics
-    const speed = isUnderwater
-      ? SWIM_SPEED
-      : keys.current["ShiftLeft"]
-        ? cfg.player.runningSpeed
-        : cfg.player.walkingSpeed;
+    const speed =
+      isUnderwater ? SWIM_SPEED
+      : keys.current["ShiftLeft"] ? cfg.player.runningSpeed
+      : cfg.player.walkingSpeed;
 
     const direction = new Vector3();
     const forward = new Vector3(0, 0, -1).applyAxisAngle(cameraAngle.current.yaw);

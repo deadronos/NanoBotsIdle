@@ -224,9 +224,9 @@ const UpgradeCard: React.FC<{
       onClick={onClick}
       disabled={!canAfford}
       className={`w-full py-2 rounded font-bold text-sm flex justify-center items-center gap-1 ${
-        canAfford
-          ? "bg-green-600 hover:bg-green-500 text-white"
-          : "bg-gray-700 text-gray-400 cursor-not-allowed"
+        canAfford ?
+          "bg-green-600 hover:bg-green-500 text-white"
+        : "bg-gray-700 text-gray-400 cursor-not-allowed"
       }`}
     >
       Buy ${cost.toLocaleString()}
