@@ -1,0 +1,201 @@
+Found 484 possible magic values:
+src\App.tsx:23 -> 60 — <Canvas shadows camera={{ fov: 60 }}>
+src\components\Drones.tsx:27 -> 15 — this.position = new Vector3(0, 15 + Math.random() * 5, 0); // Start high
+src\components\Drones.tsx:27 -> 5 — this.position = new Vector3(0, 15 + Math.random() * 5, 0); // Start high
+src\components\Drones.tsx:44 -> 400 — const MAX_PARTICLES = 400;
+src\components\Drones.tsx:71 -> 0.5 — p.position.x += (Math.random() - 0.5) * 0.8;
+src\components\Drones.tsx:71 -> 0.8 — p.position.x += (Math.random() - 0.5) * 0.8;
+src\components\Drones.tsx:72 -> 0.5 — p.position.y += (Math.random() - 0.5) * 0.8;
+src\components\Drones.tsx:72 -> 0.8 — p.position.y += (Math.random() - 0.5) * 0.8;
+src\components\Drones.tsx:73 -> 0.5 — p.position.z += (Math.random() - 0.5) * 0.8;
+src\components\Drones.tsx:73 -> 0.8 — p.position.z += (Math.random() - 0.5) * 0.8;
+src\components\Drones.tsx:77 -> 0.5 — (Math.random() - 0.5) * 4,
+src\components\Drones.tsx:77 -> 4 — (Math.random() - 0.5) * 4,
+src\components\Drones.tsx:78 -> 4 — Math.random() * 4 + 2, // Upward bias
+src\components\Drones.tsx:78 -> 2 — Math.random() * 4 + 2, // Upward bias
+src\components\Drones.tsx:79 -> 0.5 — (Math.random() - 0.5) * 4,
+src\components\Drones.tsx:79 -> 4 — (Math.random() - 0.5) * 4,
+src\components\Drones.tsx:83 -> 0.5 — p.maxLife = 0.5 + Math.random() * 0.5;
+src\components\Drones.tsx:83 -> 0.5 — p.maxLife = 0.5 + Math.random() * 0.5;
+src\components\Drones.tsx:84 -> 0.2 — p.scale = 0.2 + Math.random() * 0.2;
+src\components\Drones.tsx:84 -> 0.2 — p.scale = 0.2 + Math.random() * 0.2;
+src\components\Drones.tsx:103 -> 15 — p.velocity.y -= 15 * delta; // Gravity
+src\components\Drones.tsx:131 -> 0.3 — <boxGeometry args={[0.3, 0.3, 0.3]} />
+src\components\Drones.tsx:131 -> 0.3 — <boxGeometry args={[0.3, 0.3, 0.3]} />
+src\components\Drones.tsx:131 -> 0.3 — <boxGeometry args={[0.3, 0.3, 0.3]} />
+src\components\Drones.tsx:152 -> 10 — new Array(10).fill(0).map(() => ({ active: false, age: 0 })),
+src\components\Drones.tsx:156 -> 10 — const poolSize = 10;
+src\components\Drones.tsx:167 -> 0.5 — light.position.y += 0.5;
+src\components\Drones.tsx:169 -> 10 — light.intensity = 10;
+src\components\Drones.tsx:179 -> 0.4 — const duration = 0.4;
+src\components\Drones.tsx:188 -> 10 — lightsRef.current[i]!.intensity = 10 * (t * t);
+src\components\Drones.tsx:205 -> 6 — distance={6}
+src\components\Drones.tsx:206 -> 2 — decay={2}
+src\components\Drones.tsx:224 -> 5 — const moveSpeed = 5 + moveSpeedLevel * 2;
+src\components\Drones.tsx:224 -> 2 — const moveSpeed = 5 + moveSpeedLevel * 2;
+src\components\Drones.tsx:225 -> 0.2 — const mineDuration = Math.max(0.2, 2.0 - miningSpeedLevel * 0.2);
+src\components\Drones.tsx:225 -> 2 — const mineDuration = Math.max(0.2, 2.0 - miningSpeedLevel * 0.2);
+src\components\Drones.tsx:225 -> 0.2 — const mineDuration = Math.max(0.2, 2.0 - miningSpeedLevel * 0.2);
+src\components\Drones.tsx:265 -> 2 — const dest = drone.targetPos.clone().add(new Vector3(0, 2, 0));
+src\components\Drones.tsx:269 -> 0.5 — if (dist < 0.5) {
+src\components\Drones.tsx:282 -> 0.2 — if (drone.targetPos && particlesRef.current && Math.random() < 0.2) {
+src\components\Drones.tsx:298 -> 2 — // 2. Particle Burst
+src\components\Drones.tsx:301 -> 8 — for (let i = 0; i < 8; i++) {
+src\components\Drones.tsx:340 -> 0.2 — meshRef.current.position.lerp(drone.position, 0.2);
+src\components\Drones.tsx:342 -> 2 — // 2. Bobbing animation
+src\components\Drones.tsx:343 -> 5 — meshRef.current.position.y += Math.sin(state.clock.elapsedTime * 5 + drone.id) * 0.01;
+src\components\Drones.tsx:343 -> 0.01 — meshRef.current.position.y += Math.sin(state.clock.elapsedTime * 5 + drone.id) * 0.01;
+src\components\Drones.tsx:345 -> 3 — // 3. Rotation
+src\components\Drones.tsx:350 -> 4 — // 4. Visual Effects Update
+src\components\Drones.tsx:364 -> 40 — const jitter = 1 + Math.sin(state.clock.elapsedTime * 40) * 0.3;
+src\components\Drones.tsx:364 -> 0.3 — const jitter = 1 + Math.sin(state.clock.elapsedTime * 40) * 0.3;
+src\components\Drones.tsx:368 -> 0.5 — miningLaserRef.current.position.set(0, 0, 0).lerp(localTarget, 0.5);
+src\components\Drones.tsx:370 -> 2 — miningLaserRef.current.rotation.x += Math.PI / 2;
+src\components\Drones.tsx:374 -> 0.5 — material.opacity = 0.5 + Math.sin(state.clock.elapsedTime * 30) * 0.3;
+src\components\Drones.tsx:374 -> 30 — material.opacity = 0.5 + Math.sin(state.clock.elapsedTime * 30) * 0.3;
+src\components\Drones.tsx:374 -> 0.3 — material.opacity = 0.5 + Math.sin(state.clock.elapsedTime * 30) * 0.3;
+src\components\Drones.tsx:389 -> 0.5 — scanningLaserRef.current.position.set(0, 0, 0).lerp(localTarget, 0.5);
+src\components\Drones.tsx:391 -> 2 — scanningLaserRef.current.rotation.x += Math.PI / 2;
+src\components\Drones.tsx:394 -> 0.2 — material.opacity = 0.2 + Math.sin(state.clock.elapsedTime * 10) * 0.1;
+src\components\Drones.tsx:394 -> 10 — material.opacity = 0.2 + Math.sin(state.clock.elapsedTime * 10) * 0.1;
+src\components\Drones.tsx:394 -> 0.1 — material.opacity = 0.2 + Math.sin(state.clock.elapsedTime * 10) * 0.1;
+src\components\Drones.tsx:407 -> 1.05 — const scale = 1.05 + Math.sin(state.clock.elapsedTime * 8) * 0.05;
+src\components\Drones.tsx:407 -> 8 — const scale = 1.05 + Math.sin(state.clock.elapsedTime * 8) * 0.05;
+src\components\Drones.tsx:407 -> 0.05 — const scale = 1.05 + Math.sin(state.clock.elapsedTime * 8) * 0.05;
+src\components\Drones.tsx:409 -> 0.02 — targetBoxRef.current.rotation.y += 0.02;
+src\components\Drones.tsx:425 -> 0.5 — localTarget.y += 0.5;
+src\components\Drones.tsx:429 -> 2 — impactLightRef.current.intensity = 2 + Math.random() * 3;
+src\components\Drones.tsx:429 -> 3 — impactLightRef.current.intensity = 2 + Math.random() * 3;
+src\components\Drones.tsx:437 -> 2 — <mesh castShadow rotation={[Math.PI / 2, 0, 0]}>
+src\components\Drones.tsx:438 -> 0.3 — <coneGeometry args={[0.3, 0.8, 4]} />
+src\components\Drones.tsx:438 -> 0.8 — <coneGeometry args={[0.3, 0.8, 4]} />
+src\components\Drones.tsx:438 -> 4 — <coneGeometry args={[0.3, 0.8, 4]} />
+src\components\Drones.tsx:439 -> 4444 — <meshStandardMaterial color="#00ffcc" emissive="#004444" roughness={0.2} />
+src\components\Drones.tsx:439 -> 0.2 — <meshStandardMaterial color="#00ffcc" emissive="#004444" roughness={0.2} />
+src\components\Drones.tsx:442 -> 3 — <pointLight distance={3} intensity={0.5} color="cyan" />
+src\components\Drones.tsx:442 -> 0.5 — <pointLight distance={3} intensity={0.5} color="cyan" />
+src\components\Drones.tsx:446 -> 0.05 — <cylinderGeometry args={[0.05, 0.05, 1, 8, 1, true]} />
+src\components\Drones.tsx:446 -> 0.05 — <cylinderGeometry args={[0.05, 0.05, 1, 8, 1, true]} />
+src\components\Drones.tsx:446 -> 8 — <cylinderGeometry args={[0.05, 0.05, 1, 8, 1, true]} />
+src\components\Drones.tsx:450 -> 0.7 — opacity={0.7}
+src\components\Drones.tsx:451 -> 2 — blending={2}
+src\components\Drones.tsx:458 -> 0.015 — <cylinderGeometry args={[0.015, 0.015, 1, 4, 1, true]} />
+src\components\Drones.tsx:458 -> 0.015 — <cylinderGeometry args={[0.015, 0.015, 1, 4, 1, true]} />
+src\components\Drones.tsx:458 -> 4 — <cylinderGeometry args={[0.015, 0.015, 1, 4, 1, true]} />
+src\components\Drones.tsx:462 -> 0.3 — opacity={0.3}
+src\components\Drones.tsx:463 -> 2 — blending={2}
+src\components\Drones.tsx:471 -> 0.5 — <meshBasicMaterial wireframe color="#00ffff" transparent opacity={0.5} depthWrite={false} />
+src\components\Drones.tsx:475 -> 4 — <pointLight ref={impactLightRef} distance={4} decay={2} color="#ffaa00" />
+src\components\Drones.tsx:475 -> 2 — <pointLight ref={impactLightRef} distance={4} decay={2} color="#ffaa00" />
+src\components\Environment.tsx:14 -> 0.01 — cloudsRef.current.rotation.y += delta * 0.01;
+src\components\Environment.tsx:22 -> 450000 — distance={450000}
+src\components\Environment.tsx:23 -> 100 — sunPosition={[100, 20, 100]}
+src\components\Environment.tsx:23 -> 20 — sunPosition={[100, 20, 100]}
+src\components\Environment.tsx:23 -> 100 — sunPosition={[100, 20, 100]}
+src\components\Environment.tsx:25 -> 0.25 — azimuth={0.25}
+src\components\Environment.tsx:26 -> 10 — turbidity={10}
+src\components\Environment.tsx:27 -> 2 — rayleigh={2}
+src\components\Environment.tsx:30 -> 100 — <Stars radius={100} depth={50} count={5000} factor={4} saturation={0} fade speed={1} />
+src\components\Environment.tsx:30 -> 50 — <Stars radius={100} depth={50} count={5000} factor={4} saturation={0} fade speed={1} />
+src\components\Environment.tsx:30 -> 5000 — <Stars radius={100} depth={50} count={5000} factor={4} saturation={0} fade speed={1} />
+src\components\Environment.tsx:30 -> 4 — <Stars radius={100} depth={50} count={5000} factor={4} saturation={0} fade speed={1} />
+src\components\Environment.tsx:33 -> 20 — <group ref={cloudsRef} position={[0, 20, 0]}>
+src\components\Environment.tsx:35 -> 40 — <Cloud segments={40} bounds={[20, 2, 20]} volume={10} color="#ecf0f1" />
+src\components\Environment.tsx:35 -> 20 — <Cloud segments={40} bounds={[20, 2, 20]} volume={10} color="#ecf0f1" />
+src\components\Environment.tsx:35 -> 2 — <Cloud segments={40} bounds={[20, 2, 20]} volume={10} color="#ecf0f1" />
+src\components\Environment.tsx:35 -> 20 — <Cloud segments={40} bounds={[20, 2, 20]} volume={10} color="#ecf0f1" />
+src\components\Environment.tsx:35 -> 10 — <Cloud segments={40} bounds={[20, 2, 20]} volume={10} color="#ecf0f1" />
+src\components\Environment.tsx:36 -> 2 — <Cloud seed={1} scale={2} volume={5} color="#bdc3c7" fade={100} />
+src\components\Environment.tsx:36 -> 5 — <Cloud seed={1} scale={2} volume={5} color="#bdc3c7" fade={100} />
+src\components\Environment.tsx:36 -> 100 — <Cloud seed={1} scale={2} volume={5} color="#bdc3c7" fade={100} />
+src\components\Environment.tsx:41 -> 0.4 — <ambientLight intensity={0.4} />
+src\components\Environment.tsx:46 -> 50 — position={[50, 50, 20]}
+src\components\Environment.tsx:46 -> 50 — position={[50, 50, 20]}
+src\components\Environment.tsx:46 -> 20 — position={[50, 50, 20]}
+src\components\Environment.tsx:47 -> 1.5 — intensity={1.5}
+src\components\Environment.tsx:49 -> 2048 — shadow-mapSize={[2048, 2048]}
+src\components\Environment.tsx:49 -> 2048 — shadow-mapSize={[2048, 2048]}
+src\components\Environment.tsx:50 -> -50 — shadow-camera-left={-50}
+src\components\Environment.tsx:51 -> 50 — shadow-camera-right={50}
+src\components\Environment.tsx:52 -> 50 — shadow-camera-top={50}
+src\components\Environment.tsx:53 -> -50 — shadow-camera-bottom={-50}
+src\components\SettingsModal.tsx:55 -> 80 — className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 pointer-events-auto"
+src\components\SettingsModal.tsx:55 -> 50 — className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 pointer-events-auto"
+src\components\SettingsModal.tsx:57 -> 900 — <div ref={containerRef} className="bg-gray-900 border border-white/10 p-8 rounded-2xl max-w-md w-full shadow-2xl relative">
+src\components\SettingsModal.tsx:57 -> 10 — <div ref={containerRef} className="bg-gray-900 border border-white/10 p-8 rounded-2xl max-w-md w-full shadow-2xl relative">
+src\components\SettingsModal.tsx:57 -> 8 — <div ref={containerRef} className="bg-gray-900 border border-white/10 p-8 rounded-2xl max-w-md w-full shadow-2xl relative">
+src\components\SettingsModal.tsx:57 -> 2 — <div ref={containerRef} className="bg-gray-900 border border-white/10 p-8 rounded-2xl max-w-md w-full shadow-2xl relative">
+src\components\SettingsModal.tsx:57 -> 2 — <div ref={containerRef} className="bg-gray-900 border border-white/10 p-8 rounded-2xl max-w-md w-full shadow-2xl relative">
+src\components\SettingsModal.tsx:58 -> 4 — <button onClick={onClose} className="absolute top-4 right-4 text-white/50 hover:text-white">
+src\components\SettingsModal.tsx:58 -> 4 — <button onClick={onClose} className="absolute top-4 right-4 text-white/50 hover:text-white">
+src\components\SettingsModal.tsx:58 -> 50 — <button onClick={onClose} className="absolute top-4 right-4 text-white/50 hover:text-white">
+src\components\SettingsModal.tsx:62 -> 2 — <h2 className="text-2xl font-bold text-white mb-6 border-b border-white/10 pb-4 flex items-center gap-2">
+src\components\SettingsModal.tsx:62 -> 6 — <h2 className="text-2xl font-bold text-white mb-6 border-b border-white/10 pb-4 flex items-center gap-2">
+src\components\SettingsModal.tsx:62 -> 10 — <h2 className="text-2xl font-bold text-white mb-6 border-b border-white/10 pb-4 flex items-center gap-2">
+src\components\SettingsModal.tsx:62 -> 4 — <h2 className="text-2xl font-bold text-white mb-6 border-b border-white/10 pb-4 flex items-center gap-2">
+src\components\SettingsModal.tsx:62 -> 2 — <h2 className="text-2xl font-bold text-white mb-6 border-b border-white/10 pb-4 flex items-center gap-2">
+src\components\SettingsModal.tsx:66 -> 4 — <div className="space-y-4">
+src\components\SettingsModal.tsx:67 -> 5 — <div className="bg-white/5 p-4 rounded-xl">
+src\components\SettingsModal.tsx:67 -> 4 — <div className="bg-white/5 p-4 rounded-xl">
+src\components\SettingsModal.tsx:68 -> 2 — <h3 className="text-white font-bold mb-2">Save Management</h3>
+src\components\SettingsModal.tsx:69 -> 400 — <p className="text-xs text-gray-400 mb-4">
+src\components\SettingsModal.tsx:69 -> 4 — <p className="text-xs text-gray-400 mb-4">
+src\components\SettingsModal.tsx:72 -> 2 — <div className="flex gap-2">
+src\components\SettingsModal.tsx:75 -> 600 — className="flex-1 bg-blue-600 hover:bg-blue-500 text-white py-2 rounded font-bold text-sm transition-colors"
+src\components\SettingsModal.tsx:75 -> 500 — className="flex-1 bg-blue-600 hover:bg-blue-500 text-white py-2 rounded font-bold text-sm transition-colors"
+src\components\SettingsModal.tsx:75 -> 2 — className="flex-1 bg-blue-600 hover:bg-blue-500 text-white py-2 rounded font-bold text-sm transition-colors"
+src\components\SettingsModal.tsx:81 -> 700 — className="flex-1 bg-gray-700 hover:bg-gray-600 text-white py-2 rounded font-bold text-sm transition-colors"
+src\components\SettingsModal.tsx:81 -> 600 — className="flex-1 bg-gray-700 hover:bg-gray-600 text-white py-2 rounded font-bold text-sm transition-colors"
+src\components\SettingsModal.tsx:81 -> 2 — className="flex-1 bg-gray-700 hover:bg-gray-600 text-white py-2 rounded font-bold text-sm transition-colors"
+src\components\SettingsModal.tsx:96 -> 900 — <div className="bg-red-900/20 border border-red-500/20 p-4 rounded-xl">
+src\components\SettingsModal.tsx:96 -> 20 — <div className="bg-red-900/20 border border-red-500/20 p-4 rounded-xl">
+src\components\SettingsModal.tsx:96 -> 500 — <div className="bg-red-900/20 border border-red-500/20 p-4 rounded-xl">
+src\components\SettingsModal.tsx:96 -> 20 — <div className="bg-red-900/20 border border-red-500/20 p-4 rounded-xl">
+src\components\SettingsModal.tsx:96 -> 4 — <div className="bg-red-900/20 border border-red-500/20 p-4 rounded-xl">
+src\components\SettingsModal.tsx:97 -> 400 — <h3 className="text-red-400 font-bold mb-2">Danger Zone</h3>
+src\components\SettingsModal.tsx:97 -> 2 — <h3 className="text-red-400 font-bold mb-2">Danger Zone</h3>
+src\components\SettingsModal.tsx:104 -> 600 — className="w-full bg-red-600/80 hover:bg-red-500 text-white py-2 rounded font-bold text-sm transition-colors"
+src\components\SettingsModal.tsx:104 -> 80 — className="w-full bg-red-600/80 hover:bg-red-500 text-white py-2 rounded font-bold text-sm transition-colors"
+src\components\SettingsModal.tsx:104 -> 500 — className="w-full bg-red-600/80 hover:bg-red-500 text-white py-2 rounded font-bold text-sm transition-colors"
+src\components\SettingsModal.tsx:104 -> 2 — className="w-full bg-red-600/80 hover:bg-red-500 text-white py-2 rounded font-bold text-sm transition-colors"
+src\components\Player.tsx:15 -> 5 — const WALKING_SPEED = 5.0;
+src\components\Player.tsx:16 -> 8 — const RUNNING_SPEED = 8.0;
+src\components\Player.tsx:17 -> 8 — const JUMP_FORCE = 8.0;
+src\components\Player.tsx:18 -> 20 — const GRAVITY = 20.0;
+src\components\Player.tsx:22 -> 10 — const [position] = useState(() => new Vector3(0, 10, 0));
+src\components\Player.tsx:47 -> 0.002 — cameraAngle.current.yaw -= e.movementX * 0.002;
+src\components\Player.tsx:48 -> 0.002 — cameraAngle.current.pitch -= e.movementY * 0.002;
+src\components\Player.tsx:52 -> 2 — -Math.PI / 2 + 0.1,
+src\components\Player.tsx:52 -> 0.1 — -Math.PI / 2 + 0.1,
+src\components\Player.tsx:53 -> 2 — Math.min(Math.PI / 2 - 0.1, cameraAngle.current.pitch),
+src\components\Player.tsx:53 -> 0.1 — Math.min(Math.PI / 2 - 0.1, cameraAngle.current.pitch),
+src\components\Player.tsx:96 -> 4 — const SWIM_SPEED = 4.0;
+src\components\Player.tsx:97 -> 15 — const BUOYANCY = 15.0;
+src\components\Player.tsx:98 -> 2 — const WATER_DRAG = 2.0;
+src\components\Player.tsx:140 -> 15 — velocity.current.y += swimVertical * 15.0 * delta;
+src\components\Player.tsx:172 -> -20 — if (position.y < -20) {
+src\components\Player.tsx:173 -> 10 — position.set(0, 10, 0);
+src\components\Player.tsx:187 -> 2 — // 2. Update Camera
+src\components\Player.tsx:198 -> 5 — const cameraOffsetDist = 5;
+src\components\Player.tsx:207 -> 0.2 — camera.position.lerp(camPos, 0.2);
+src\components\Player.tsx:214 -> 3 — {/* Player Model (Visible only in 3rd Person) */}
+src\components\Player.tsx:218 -> -0.9 — <mesh position={[0, -0.9, 0]} castShadow>
+src\components\Player.tsx:219 -> 0.6 — <boxGeometry args={[0.6, 1.8, 0.4]} />
+src\components\Player.tsx:219 -> 1.8 — <boxGeometry args={[0.6, 1.8, 0.4]} />
+src\components\Player.tsx:219 -> 0.4 — <boxGeometry args={[0.6, 1.8, 0.4]} />
+src\components\Player.tsx:223 -> 0.4 — <mesh position={[0, 0.4, 0]}>
+src\components\Player.tsx:224 -> 0.4 — <boxGeometry args={[0.4, 0.4, 0.4]} />
+src\components\Player.tsx:224 -> 0.4 — <boxGeometry args={[0.4, 0.4, 0.4]} />
+src\components\Player.tsx:224 -> 0.4 — <boxGeometry args={[0.4, 0.4, 0.4]} />
+src\components\Player.tsx:227 -> 0.1 — <mesh position={[0.1, 0.05, -0.21]}>
+src\components\Player.tsx:227 -> 0.05 — <mesh position={[0.1, 0.05, -0.21]}>
+src\components\Player.tsx:227 -> -0.21 — <mesh position={[0.1, 0.05, -0.21]}>
+src\components\Player.tsx:228 -> 0.05 — <boxGeometry args={[0.05, 0.05, 0.05]} />
+src\components\Player.tsx:228 -> 0.05 — <boxGeometry args={[0.05, 0.05, 0.05]} />
+src\components\Player.tsx:228 -> 0.05 — <boxGeometry args={[0.05, 0.05, 0.05]} />
+src\components\Player.tsx:231 -> -0.1 — <mesh position={[-0.1, 0.05, -0.21]}>
+src\components\Player.tsx:231 -> 0.05 — <mesh position={[-0.1, 0.05, -0.21]}>
+src\components\Player.tsx:231 -> -0.21 — <mesh position={[-0.1, 0.05, -0.21]}>
+src\components\Player.tsx:232 -> 0.05 — <boxGeometry args={[0.05, 0.05, 0.05]} />
+src\components\Player.tsx:232 -> 0.05 — <boxGeometry args={[0.05, 0.05, 0.05]} />
+src\components\Player.tsx:232 -> 0.05 — <boxGeometry args={[0.05, 0.05, 0.05]} />

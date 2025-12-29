@@ -1,43 +1,65 @@
-# NanoBots Idle - Voxel Frontier
+# NanoBotsIdle (Voxel Walker)
 
-A React 19 + React Three Fiber sandbox that grows a Minecraft-style voxel world in the browser.
+A 3D Voxel Incremental/Idle game built with React Three Fiber. Command a fleet of autonomous mining drones to strip-mine procedurally generated planets, research upgrades, and warp to new worlds.
 
-Features included:
+## 🎮 Controls
 
-- Infinite chunk streaming with pruning (16x72x16 chunks)
-- Procedural terrain with beaches, water, trees, and bedrock
-- Chunk meshing with face culling
-- Pointer-lock first-person controller (walk, sprint, jump)
-- DDA voxel picking with break/place
-- Inventory, hotbar, and batch crafting recipes
-- Day/night light cycle and fog atmosphere
-- In-code pixel atlas (no external art required)
+| Key            | Action                                   |
+| -------------- | ---------------------------------------- |
+| **W A S D**    | Move Player                              |
+| **Space**      | Jump                                     |
+| **Shift**      | Sprint                                   |
+| **Click**      | Lock Mouse (Camera Control)              |
+| **UI Buttons** | Toggle View (1st/3rd), Open Research Lab |
 
-## Controls
+## 🌟 Features
 
-- WASD move
-- Space jump
-- Shift sprint
-- 1-9 hotbar
-- E inventory
-- Left click break
-- Right click place
-- Esc unlock pointer
+### 🤖 Autonomous Drone Fleet
 
-## Run
+- Drones automatically seek valuable voxel blocks.
+- Visual mining lasers and particle effects.
+- **Upgradable AI:** Increase fleet size, mining speed, and thruster velocity.
 
-```bash
-npm install
-npm run dev
-```
+### 🪐 Procedural Voxel Worlds
 
-Then open the local URL printed by Vite.
+- Infinite (pseudo-infinite via prestige) procedural terrain generation.
+- Destructible environment: Drones physically remove blocks from the world.
+- Different biomes/height maps based on prestige seed.
 
-## Next upgrades
+### 🔬 Research & Progression
 
-- Greedy meshing and occlusion optimization
-- Lighting propagation and torch glow
-- Item drops, durability, and tools
-- Save/load (IndexedDB)
-- Mobs, biomes, and structures
-- Multiplayer (authoritative server)
+- **Credits:** Earned by mining blocks.
+- **Upgrades:**
+  - **Drone Count:** Expand your swarm.
+  - **Drill Speed:** Mine blocks faster.
+  - **Thrusters:** Reduce travel time between blocks.
+  - **Laser Power:** Visual intensity upgrades.
+- **Prestige (Planetary Jump):** Warp to a new, fresh planet when resources run low. Increases global resource multipliers.
+
+### 🎥 Dual Camera Modes
+
+- **First Person:** Immersive view for exploring the mines.
+- **Third Person:** Tactical view of your character and the drone swarm.
+
+## 🛠️ Tech Stack
+
+- **Core:** React, TypeScript, Vite
+- **3D Engine:** Three.js, @react-three/fiber, @react-three/drei
+- **State Management:** Zustand
+- **Styling:** TailwindCSS
+- **Physics/Math:** Custom voxel collision & Simplex noise
+
+## 🚀 Getting Started
+
+1. **Install dependencies:**
+   ```bash
+   npm install
+   ```
+2. **Start development server:**
+   ```bash
+   npm run dev
+   ```
+3. **Build for production:**
+   ```bash
+   npm run build
+   ```

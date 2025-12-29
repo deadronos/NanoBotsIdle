@@ -2,18 +2,15 @@
 
 ## In Progress
 
-- (none)
+- [TASK003] Config-driven constants extraction — Scan and extract magic values into `/src/config` (In Progress)
 
 ## Pending
 
-- [TASK002] Add a test runner (Vitest) for logic tests
-  - Goal: make the repo’s default “TDD when in doubt” workflow frictionless.
-  - Notes: keep tests focused on pure logic (`World` math/indexing, DDA picking, crafting rules).
+- (none)
 
 ## Completed
 
-- [TASK001] Backfill Memory Bank documentation
-- [TASK003] UI refresh + fixed-step simulation + ECS evaluation
+- [TASK001] Repo tooling and agent guidance — Tailwind v4 setup, tests moved to `tests/`, lint autofix script, importmap removal.
 
 ## Abandoned
 
