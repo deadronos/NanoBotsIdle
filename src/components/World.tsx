@@ -22,7 +22,7 @@ export const World: React.FC = () => {
   const spawnZ = cfg.player.spawnZ ?? 0;
 
   const { addVoxel, capacity, clear, ensureCapacity, flushRebuild, meshRef, removeVoxel, solidCountRef } =
-    useInstancedVoxels(chunkSize);
+    useInstancedVoxels(chunkSize, cfg.terrain.waterLevel);
 
   const addChunk = useCallback(
     (cx: number, cy: number, cz: number) => {

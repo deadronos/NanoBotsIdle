@@ -10,14 +10,14 @@ export const random = (seed: number) => {
   return x - Math.floor(x);
 };
 
-export const getVoxelColor = (y: number): Color => {
-  // Height-based coloring
-  if (y < -1) return new Color("#1a4d8c"); // Deep Water
-  if (y < 0.5) return new Color("#2d73bf"); // Water
-  if (y < 1.5) return new Color("#e3dba3"); // Sand
-  if (y < 4) return new Color("#59a848"); // Grass
-  if (y < 7) return new Color("#3b7032"); // Dark Grass/Forest
-  if (y < 10) return new Color("#6e6e6e"); // Rock
+export const getVoxelColor = (y: number, waterLevel = -20): Color => {
+  // Height-based coloring relative to water level
+  if (y < waterLevel - 2) return new Color("#1a4d8c"); // Deep Water
+  if (y < waterLevel + 0.5) return new Color("#2d73bf"); // Water
+  if (y < waterLevel + 2.5) return new Color("#e3dba3"); // Sand
+  if (y < waterLevel + 6) return new Color("#59a848"); // Grass
+  if (y < waterLevel + 12) return new Color("#3b7032"); // Dark Grass/Forest
+  if (y < waterLevel + 20) return new Color("#6e6e6e"); // Rock
   return new Color("#ffffff"); // Snow
 };
 
