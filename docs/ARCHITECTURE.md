@@ -16,14 +16,15 @@
 ---
 
 ## 2. Technology Stack
--   **Runtime**: Browser (Single Page Application)
--   **Framework**: React 18
--   **Build Tool**: Vite
--   **Language**: TypeScript
--   **3D Engine**: Three.js (via `@react-three/fiber`)
--   **Abstractions**: `@react-three/drei` (Sky, Clouds, Text helpers)
--   **State Management**: Zustand (with Persist middleware)
--   **Styling**: TailwindCSS
+-   **Runtime**: Browser (Single Page Application)  
+-   **Framework**: React 18  
+-   **Build Tool**: Vite  
+-   **Language**: TypeScript  
+-   **3D Engine**: Three.js (via `@react-three/fiber`)  
+-   **Abstractions**: `@react-three/drei` (Sky, Clouds, Text helpers)  
+-   **State Management**: Zustand (with Persist middleware)  
+-   **Styling**: TailwindCSS  
+- **Configuration**: Centralized config system (`/src/config`) with typed domain-specific configs (terrain, player, render, economy, drones) and runtime overrides via env variables.
 
 ---
 

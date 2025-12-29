@@ -3,18 +3,14 @@ import React, { useEffect, useRef, useState } from "react";
 import type { Group } from "three";
 import { Euler, Vector3 } from "three";
 
+import { getPlayerGroundHeight } from "../sim/player";
+import { useGameStore } from "../store";
+import { getConfig } from "../config/index";
 import type { ViewMode } from "../types";
-import { noise2D } from "../utils";
 
 interface PlayerProps {
   viewMode: ViewMode;
 }
-
-const WALKING_SPEED = 5.0;
-const RUNNING_SPEED = 8.0;
-const JUMP_FORCE = 8.0;
-const GRAVITY = 20.0;
-const PLAYER_HEIGHT = 1.8;
 
 export const Player: React.FC<PlayerProps> = ({ viewMode }) => {
   const { camera } = useThree();
@@ -23,6 +19,8 @@ export const Player: React.FC<PlayerProps> = ({ viewMode }) => {
   const isJumping = useRef(false);
   const groupRef = useRef<Group>(null);
   const playerVisualsRef = useRef<Group>(null);
+
+  const prestigeLevel = useGameStore((s) => s.prestigeLevel);
 
   // Input State
   const keys = useRef<Record<string, boolean>>({});
@@ -88,25 +86,21 @@ export const Player: React.FC<PlayerProps> = ({ viewMode }) => {
   }, []);
 
   useFrame((state, delta) => {
-
-    // Water Physics Constants
-    const WATER_LEVEL = 0.1; // Matched to visual water plane height
-    const SWIM_SPEED = 4.0;
-    const BUOYANCY = 15.0;
-    const WATER_DRAG = 2.0;
-
-    const isUnderwater = position.y < WATER_LEVEL;
+    // Water & Player Physics (config-driven)
+    const cfg = getConfig();
+    const isUnderwater = position.y < cfg.terrain.waterLevel;
+    const SWIM_SPEED = cfg.player.swimSpeed;
+    const BUOYANCY = cfg.player.buoyancy;
+    const WATER_DRAG = cfg.player.waterDrag;
 
     // Movement Physics
-    const speed = isUnderwater 
-      ? SWIM_SPEED 
-      : (keys.current["ShiftLeft"] ? RUNNING_SPEED : WALKING_SPEED);
-      
+    const speed =
+      isUnderwater ? SWIM_SPEED
+      : keys.current["ShiftLeft"] ? cfg.player.runningSpeed
+      : cfg.player.walkingSpeed;
+
     const direction = new Vector3();
-    const forward = new Vector3(0, 0, -1).applyAxisAngle(
-      new Vector3(0, 1, 0),
-      cameraAngle.current.yaw,
-    );
+    const forward = new Vector3(0, 0, -1).applyAxisAngle(cameraAngle.current.yaw);
     const right = new Vector3(1, 0, 0).applyAxisAngle(
       new Vector3(0, 1, 0),
       cameraAngle.current.yaw,
@@ -127,45 +121,35 @@ export const Player: React.FC<PlayerProps> = ({ viewMode }) => {
     if (isUnderwater) {
       // Swimming Logic
       isJumping.current = false;
-      
+
       // Vertical Input
       let swimVertical = 0;
       if (keys.current["Space"]) swimVertical += 1; // Swim Up
-      if (keys.current["KeyC"]) swimVertical -= 1;  // Dive Down
-      
+      if (keys.current["KeyC"]) swimVertical -= 1; // Dive Down
+
       // Apply swim force
-      velocity.current.y += swimVertical * 15.0 * delta;
+      velocity.current.y += swimVertical * cfg.player.swimForce * delta;
 
       // Apply Buoyancy (pushes up towards surface)
       // Stronger if deeper
-      const depth = WATER_LEVEL - position.y;
-      velocity.current.y += depth * BUOYANCY * delta; 
-      
+      const depth = cfg.terrain.waterLevel - position.y;
+
       // Apply Drag
       velocity.current.y -= velocity.current.y * WATER_DRAG * delta;
-      
     } else {
       // Standard Gravity & Jump
       if (keys.current["Space"] && !isJumping.current) {
-        velocity.current.y = JUMP_FORCE;
+        velocity.current.y = cfg.player.jumpForce;
         isJumping.current = true;
       }
 
-      velocity.current.y -= GRAVITY * delta;
+      velocity.current.y -= cfg.player.gravity * delta;
     }
 
     position.y += velocity.current.y * delta;
 
-    // Ground Collision
-    const rawNoise = noise2D(Math.round(position.x), Math.round(position.z), 123);
-    // Corresponding matched world generation logic (simplified approximation here or shared ref needed)
-    // Note: If World generation changes logic, this collision logic needs to match exactly 
-    // or we risk sinking into ground. 
-    // Ideally we should export the terrain function. 
-    // user previously edited World.tsx with: Math.floor((rawNoise + 0.1) * 4)
-    // We must mirror that here for accurate collision.
-    const voxelHeight = Math.floor((rawNoise + 0.1) * 4);
-    const groundHeight = voxelHeight + 0.5 + PLAYER_HEIGHT;
+    // Ground Collision — use centralized helper to keep collision consistent with world generation
+    const groundHeight = getPlayerGroundHeight(position.x, position.z, prestigeLevel);
 
     if (position.y < groundHeight) {
       position.y = groundHeight;
@@ -173,9 +157,9 @@ export const Player: React.FC<PlayerProps> = ({ viewMode }) => {
       isJumping.current = false;
     }
 
-    // Kill plane
-    if (position.y < -20) {
-      position.set(0, 10, 0);
+    // Kill plane / respawn
+    if (position.y < cfg.player.killPlaneY!) {
+      position.set(0, cfg.player.respawnY!, 0);
       velocity.current.set(0, 0, 0);
     }
 

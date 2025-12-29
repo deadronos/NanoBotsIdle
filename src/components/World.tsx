@@ -6,11 +6,13 @@ import React, {
   useMemo,
   useRef,
 } from "react";
-import type { Color, InstancedMesh } from "three";
-import { Matrix4, Object3D, Vector3 } from "three";
+import type { InstancedMesh } from "three";
+import { Vector3 } from "three";
 
+import { getConfig } from "../config/index";
+import { populateInstancedMesh, setInstanceTransform } from "../render/instanced";
+import { generateInstances, getSeed } from "../sim/terrain";
 import { useGameStore } from "../store";
-import { getVoxelColor, getVoxelValue, noise2D } from "../utils";
 
 export interface WorldApi {
   getRandomTarget: () => { index: number; position: Vector3; value: number } | null;
@@ -20,7 +22,7 @@ export interface WorldApi {
 // eslint-disable-next-line @typescript-eslint/no-empty-object-type
 interface WorldProps {}
 
-const WORLD_RADIUS = 30; // Slightly reduced for performance with many drones
+// WORLD_RADIUS moved to `src/constants.ts`
 
 export const World = forwardRef<WorldApi, WorldProps>((props, ref) => {
   const meshRef = useRef<InstancedMesh>(null);
@@ -28,41 +30,13 @@ export const World = forwardRef<WorldApi, WorldProps>((props, ref) => {
   const setTotalBlocks = useGameStore((state) => state.setTotalBlocks);
   const incrementMinedBlocks = useGameStore((state) => state.incrementMinedBlocks);
   const prestigeLevel = useGameStore((state) => state.prestigeLevel);
-  const seed = 123 + prestigeLevel * 99; // Change seed on prestige
+  const seed = getSeed(prestigeLevel); // Change seed on prestige
+  const cfg = getConfig();
 
-  // Generate the terrain data
+  // Generate the terrain data (centralized in sim/terrain)
   const instances = useMemo(() => {
-    const tempInstances: {
-      x: number;
-      y: number;
-      z: number;
-      color: Color;
-      value: number;
-      id: number;
-    }[] = [];
-    let idCounter = 0;
-
-    for (let x = -WORLD_RADIUS; x <= WORLD_RADIUS; x++) {
-      for (let z = -WORLD_RADIUS; z <= WORLD_RADIUS; z++) {
-        const rawNoise = noise2D(x, z, seed);
-        // Reduce water by adding a positive bias (+0.6)
-        const h = Math.floor((rawNoise + 0.6) * 4);
-
-        // Surface Block (Mineable)
-        // Only generate blocks if they are above water-ish level or we want a visible floor
-        // But for optimization, let's keep generating all 'terrain' that is solid
-        tempInstances.push({
-          x,
-          y: h,
-          z,
-          color: getVoxelColor(h),
-          value: getVoxelValue(h),
-          id: idCounter++,
-        });
-      }
-    }
-    return tempInstances;
-  }, [seed]);
+    return generateInstances(seed);
+  }, [seed, cfg.terrain.worldRadius]);
 
   // Track mined blocks via a Ref to avoid re-renders
   const minedIndices = useRef<Set<number>>(new Set());
@@ -98,14 +72,10 @@ export const World = forwardRef<WorldApi, WorldProps>((props, ref) => {
       minedIndices.current.add(index);
       incrementMinedBlocks();
 
-      // Update visual: Scale to 0
+      // Update visual: Scale to 0 using shared helper
       const mesh = meshRef.current;
       if (mesh) {
-        const matrix = new Matrix4();
-        mesh.getMatrixAt(index, matrix);
-        matrix.scale(new Vector3(0, 0, 0)); // Hide it
-        mesh.setMatrixAt(index, matrix);
-        mesh.instanceMatrix.needsUpdate = true;
+        setInstanceTransform(mesh, index, { scale: { x: 0, y: 0, z: 0 } });
       }
 
       return instances[index].value;
@@ -114,19 +84,9 @@ export const World = forwardRef<WorldApi, WorldProps>((props, ref) => {
 
   useLayoutEffect(() => {
     if (!meshRef.current) return;
-    const dummy = new Object3D();
 
-    // Reset all matrices
-    instances.forEach((data, i) => {
-      dummy.position.set(data.x, data.y, data.z);
-      dummy.scale.set(1, 1, 1);
-      dummy.updateMatrix();
-      meshRef.current!.setMatrixAt(i, dummy.matrix);
-      meshRef.current!.setColorAt(i, data.color);
-    });
-
-    meshRef.current.instanceMatrix.needsUpdate = true;
-    if (meshRef.current.instanceColor) meshRef.current.instanceColor.needsUpdate = true;
+    // Use centralized helper to populate the instanced mesh
+    populateInstancedMesh(meshRef.current, instances);
   }, [instances]);
 
   return (
@@ -142,8 +102,10 @@ export const World = forwardRef<WorldApi, WorldProps>((props, ref) => {
       </instancedMesh>
 
       {/* Water Plane */}
-      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.2, 0]} receiveShadow>
-        <planeGeometry args={[WORLD_RADIUS * 2 + 20, WORLD_RADIUS * 2 + 20]} />
+      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, cfg.terrain.waterLevel, 0]} receiveShadow>
+        <planeGeometry
+          args={[cfg.terrain.worldRadius * 2 + 20, cfg.terrain.worldRadius * 2 + 20]}
+        />
         <meshStandardMaterial
           color="#42a7ff"
           transparent

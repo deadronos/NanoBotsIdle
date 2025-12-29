@@ -24,12 +24,9 @@ export interface GameState {
   getUpgradeCost: (type: "drone" | "speed" | "move" | "laser") => number;
 }
 
-const BASE_COSTS = {
-  drone: 100,
-  speed: 50,
-  move: 50,
-  laser: 200,
-};
+import { getConfig } from "./config/index";
+
+// Legacy defaults remain in config (see src/config/economy.ts)
 
 export const useGameStore = create<GameState>()(
   persist(
@@ -62,15 +59,17 @@ export const useGameStore = create<GameState>()(
 
       getUpgradeCost: (type) => {
         const state = get();
+        const cfg = getConfig();
+        const baseCosts = cfg.economy?.baseCosts ?? { drone: 100, speed: 50, move: 50, laser: 200 };
         switch (type) {
           case "drone":
-            return Math.floor(BASE_COSTS.drone * Math.pow(1.5, state.droneCount - 3));
+            return Math.floor(baseCosts.drone * Math.pow(1.5, state.droneCount - 3));
           case "speed":
-            return Math.floor(BASE_COSTS.speed * Math.pow(1.3, state.miningSpeedLevel - 1));
+            return Math.floor(baseCosts.speed * Math.pow(1.3, state.miningSpeedLevel - 1));
           case "move":
-            return Math.floor(BASE_COSTS.move * Math.pow(1.3, state.moveSpeedLevel - 1));
+            return Math.floor(baseCosts.move * Math.pow(1.3, state.moveSpeedLevel - 1));
           case "laser":
-            return Math.floor(BASE_COSTS.laser * Math.pow(1.4, state.laserPowerLevel - 1));
+            return Math.floor(baseCosts.laser * Math.pow(1.4, state.laserPowerLevel - 1));
         }
         return 999999;
       },

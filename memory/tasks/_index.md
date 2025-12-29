@@ -2,7 +2,7 @@
 
 ## In Progress
 
-- (none)
+- [TASK003] Config-driven constants extraction — Scan and extract magic values into `/src/config` (In Progress)
 
 ## Pending
 
