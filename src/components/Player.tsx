@@ -3,9 +3,9 @@ import React, { useEffect, useRef, useState } from "react";
 import type { Group } from "three";
 import { Euler, Vector3 } from "three";
 
-import { WATER_LEVEL } from "../constants";
 import { getPlayerGroundHeight } from "../sim/player";
 import { useGameStore } from "../store";
+import { getConfig } from "../config/index";
 import type { ViewMode } from "../types";
 
 interface PlayerProps {
@@ -92,12 +92,13 @@ export const Player: React.FC<PlayerProps> = ({ viewMode }) => {
 
   useFrame((state, delta) => {
 
-    // Water Physics Constants (WATER_LEVEL imported)
+    // Water Physics Constants (WATER_LEVEL read from config)
     const SWIM_SPEED = 4.0;
     const BUOYANCY = 15.0;
     const WATER_DRAG = 2.0;
+    const cfg = getConfig();
 
-    const isUnderwater = position.y < WATER_LEVEL;
+    const isUnderwater = position.y < cfg.terrain.waterLevel;
 
     // Movement Physics
     const speed = isUnderwater

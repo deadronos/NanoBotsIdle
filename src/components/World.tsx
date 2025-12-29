@@ -9,7 +9,7 @@ import React, {
 import type { InstancedMesh } from "three";
 import { Vector3 } from "three";
 
-import { WATER_LEVEL,WORLD_RADIUS } from "../constants";
+import { getConfig } from "../config/index";
 import { populateInstancedMesh, setInstanceTransform } from "../render/instanced";
 import { generateInstances, getSeed } from "../sim/terrain";
 import { useGameStore } from "../store";
@@ -31,11 +31,12 @@ export const World = forwardRef<WorldApi, WorldProps>((props, ref) => {
   const incrementMinedBlocks = useGameStore((state) => state.incrementMinedBlocks);
   const prestigeLevel = useGameStore((state) => state.prestigeLevel);
   const seed = getSeed(prestigeLevel); // Change seed on prestige
+  const cfg = getConfig();
 
   // Generate the terrain data (centralized in sim/terrain)
   const instances = useMemo(() => {
-    return generateInstances(seed, WORLD_RADIUS);
-  }, [seed]);
+    return generateInstances(seed);
+  }, [seed, cfg.terrain.worldRadius]);
 
   // Track mined blocks via a Ref to avoid re-renders
   const minedIndices = useRef<Set<number>>(new Set());
@@ -101,8 +102,8 @@ export const World = forwardRef<WorldApi, WorldProps>((props, ref) => {
       </instancedMesh>
 
       {/* Water Plane */}
-      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, WATER_LEVEL, 0]} receiveShadow>
-        <planeGeometry args={[WORLD_RADIUS * 2 + 20, WORLD_RADIUS * 2 + 20]} />
+      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, cfg.terrain.waterLevel, 0]} receiveShadow>
+        <planeGeometry args={[cfg.terrain.worldRadius * 2 + 20, cfg.terrain.worldRadius * 2 + 20]} />
         <meshStandardMaterial
           color="#42a7ff"
           transparent

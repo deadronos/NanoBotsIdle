@@ -2,7 +2,7 @@
 
 ## In Progress
 
-- [TASK002] Centralize terrain & constants — Centralize terrain generation and shared constants to ensure deterministic physics and visuals (In Progress)
+- [TASK003] Config-driven constants extraction — Scan and extract magic values into `/src/config` (In Progress)
 
 ## Pending
 
