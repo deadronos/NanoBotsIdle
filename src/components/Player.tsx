@@ -7,6 +7,7 @@ import { getConfig } from "../config/index";
 import { getPlayerGroundHeight } from "../sim/player";
 import type { ViewMode } from "../types";
 import { useUiStore } from "../ui/store";
+import { PlayerVisuals } from "./player/PlayerVisuals";
 
 interface PlayerProps {
   viewMode: ViewMode;
@@ -196,25 +197,7 @@ export const Player: React.FC<PlayerProps> = ({ viewMode }) => {
       {/* Player Model (Visible only in 3rd Person) */}
       {viewMode === "THIRD_PERSON" && (
         <group ref={playerVisualsRef}>
-          {/* Body */}
-          <mesh position={[0, -0.9, 0]} castShadow>
-            <boxGeometry args={[0.6, 1.8, 0.4]} />
-            <meshStandardMaterial color="orange" />
-          </mesh>
-          {/* Head */}
-          <mesh position={[0, 0.4, 0]}>
-            <boxGeometry args={[0.4, 0.4, 0.4]} />
-            <meshStandardMaterial color="#ffccaa" />
-            {/* Face Details */}
-            <mesh position={[0.1, 0.05, -0.21]}>
-              <boxGeometry args={[0.05, 0.05, 0.05]} />
-              <meshStandardMaterial color="black" />
-            </mesh>
-            <mesh position={[-0.1, 0.05, -0.21]}>
-              <boxGeometry args={[0.05, 0.05, 0.05]} />
-              <meshStandardMaterial color="black" />
-            </mesh>
-          </mesh>
+          <PlayerVisuals />
         </group>
       )}
 
