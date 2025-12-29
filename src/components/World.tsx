@@ -2,7 +2,8 @@ import React, { useCallback, useEffect, useRef } from "react";
 
 import { getConfig } from "../config/index";
 import { applyVoxelEdits, getVoxelMaterialAt, MATERIAL_SOLID, resetVoxelEdits } from "../sim/collision";
-import { getSeed, getSurfaceHeight } from "../sim/terrain";
+import { getSeed } from "../sim/seed";
+import { getSurfaceHeightCore } from "../sim/terrain-core";
 import { getSimBridge } from "../simBridge/simBridge";
 import { useUiStore } from "../ui/store";
 import { useInstancedVoxels } from "./world/useInstancedVoxels";
@@ -55,7 +56,13 @@ export const World: React.FC = () => {
 
   const ensureInitialChunk = useCallback(() => {
     if (activeChunks.current.size > 0) return;
-    const surfaceY = getSurfaceHeight(spawnX, spawnZ, seed);
+    const surfaceY = getSurfaceHeightCore(
+      spawnX,
+      spawnZ,
+      seed,
+      cfg.terrain.surfaceBias,
+      cfg.terrain.quantizeScale,
+    );
     const cy = Math.floor(surfaceY / chunkSize);
     const baseCx = Math.floor(spawnX / chunkSize);
     const baseCz = Math.floor(spawnZ / chunkSize);
@@ -64,7 +71,7 @@ export const World: React.FC = () => {
         addChunk(baseCx + cx, cy, baseCz + cz);
       }
     }
-  }, [addChunk, chunkSize, seed, spawnX, spawnZ]);
+  }, [addChunk, chunkSize, cfg.terrain.quantizeScale, cfg.terrain.surfaceBias, seed, spawnX, spawnZ]);
 
   useEffect(() => {
     return bridge.onFrame((frame) => {

@@ -5,6 +5,17 @@ import { getSurfaceHeightCore } from "../../sim/terrain-core";
 
 export { MATERIAL_AIR, MATERIAL_BEDROCK, MATERIAL_SOLID };
 
+const NEIGHBOR_OFFSETS = [
+  [1, 0, 0],
+  [-1, 0, 0],
+  [0, 1, 0],
+  [0, -1, 0],
+  [0, 0, 1],
+  [0, 0, -1],
+] as const;
+
+const FRONTIER_UPDATE_OFFSETS = [[0, 0, 0], ...NEIGHBOR_OFFSETS] as const;
+
 type WorldOptions = {
   seed: number;
 };
@@ -54,14 +65,10 @@ export class WorldModel {
 
   private isFrontier(x: number, y: number, z: number) {
     if (this.materialAt(x, y, z) !== MATERIAL_SOLID) return false;
-    return (
-      this.materialAt(x + 1, y, z) === MATERIAL_AIR ||
-      this.materialAt(x - 1, y, z) === MATERIAL_AIR ||
-      this.materialAt(x, y + 1, z) === MATERIAL_AIR ||
-      this.materialAt(x, y - 1, z) === MATERIAL_AIR ||
-      this.materialAt(x, y, z + 1) === MATERIAL_AIR ||
-      this.materialAt(x, y, z - 1) === MATERIAL_AIR
-    );
+    for (const [dx, dy, dz] of NEIGHBOR_OFFSETS) {
+      if (this.materialAt(x + dx, y + dy, z + dz) === MATERIAL_AIR) return true;
+    }
+    return false;
   }
 
   private updateFrontierAt(x: number, y: number, z: number) {
@@ -150,13 +157,9 @@ export class WorldModel {
       if (!was && now) frontierAdded.push({ x: cx, y: cy, z: cz });
     };
 
-    update(x, y, z);
-    update(x + 1, y, z);
-    update(x - 1, y, z);
-    update(x, y + 1, z);
-    update(x, y - 1, z);
-    update(x, y, z + 1);
-    update(x, y, z - 1);
+    for (const [dx, dy, dz] of FRONTIER_UPDATE_OFFSETS) {
+      update(x + dx, y + dy, z + dz);
+    }
 
     return { edit, frontierAdded, frontierRemoved };
   }

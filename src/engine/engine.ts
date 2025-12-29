@@ -1,16 +1,17 @@
 import { getDroneMoveSpeed, getMineDuration } from "../config/drones";
 import { getConfig } from "../config/index";
 import { computeNextUpgradeCosts, tryBuyUpgrade, type UpgradeType } from "../economy/upgrades";
-import { DRONE_STATE_ID, type DroneStateId } from "../shared/droneState";
 import type { Cmd, RenderDelta, UiSnapshot } from "../shared/protocol";
 import { getVoxelValueFromHeight } from "../sim/terrain-core";
 import { type Drone, syncDroneCount } from "./drones";
+import { encodeDrones, toFloat32ArrayOrUndefined } from "./encode";
 import {
   addKey as addKeyToIndex,
   createKeyIndex,
   removeKey as removeKeyFromIndex,
   resetKeyIndex,
 } from "./keyIndex";
+import { pickTargetKey } from "./targeting";
 import { initWorldForPrestige } from "./world/initWorld";
 import type { WorldModel } from "./world/world";
 
@@ -74,28 +75,6 @@ export const createEngine = (_seed?: number): Engine => {
   const isUpgradeType = (id: string): id is UpgradeType =>
     id === "drone" || id === "speed" || id === "move" || id === "laser";
 
-  const pickTargetKey = () => {
-    if (!world) return null;
-    if (frontier.keys.length === 0) return null;
-    const waterline = Math.floor(cfg.terrain.waterLevel);
-    let attempts = 0;
-    while (attempts < maxTargetAttempts) {
-      const idx = Math.floor(Math.random() * frontier.keys.length);
-      const key = frontier.keys[idx];
-      const { y } = world.coordsFromKey(key);
-      if (y < waterline) {
-        attempts += 1;
-        continue;
-      }
-      if (!minedKeys.has(key) && !reservedKeys.has(key)) {
-        reservedKeys.add(key);
-        return key;
-      }
-      attempts += 1;
-    }
-    return null;
-  };
-
   const dispatch = (cmd: Cmd) => {
     switch (cmd.t) {
       case "BUY_UPGRADE": {
@@ -140,7 +119,14 @@ export const createEngine = (_seed?: number): Engine => {
       for (const drone of drones) {
         switch (drone.state) {
           case "SEEKING": {
-            const targetKey = pickTargetKey();
+            const targetKey = pickTargetKey({
+              world,
+              frontierKeys: frontier.keys,
+              minedKeys,
+              reservedKeys,
+              waterLevel: cfg.terrain.waterLevel,
+              maxAttempts: maxTargetAttempts,
+            });
             if (targetKey) {
               const coords = world.coordsFromKey(targetKey);
               drone.targetKey = targetKey;
@@ -212,37 +198,7 @@ export const createEngine = (_seed?: number): Engine => {
       uiSnapshot.totalBlocks = world.countFrontierAboveWater();
     }
 
-    let entities: Float32Array | undefined;
-    let entityTargets: Float32Array | undefined;
-    let entityStates: Uint8Array | undefined;
-    if (drones.length > 0) {
-      entities = new Float32Array(drones.length * 3);
-      entityTargets = new Float32Array(drones.length * 3);
-      entityStates = new Uint8Array(drones.length);
-      for (let i = 0; i < drones.length; i += 1) {
-        const base = i * 3;
-        const drone = drones[i];
-        entities[base] = drone.x;
-        entities[base + 1] = drone.y;
-        entities[base + 2] = drone.z;
-
-        let stateValue: DroneStateId = DRONE_STATE_ID.SEEKING;
-        if (drone.state === "MOVING") stateValue = DRONE_STATE_ID.MOVING;
-        if (drone.state === "MINING") stateValue = DRONE_STATE_ID.MINING;
-        entityStates[i] = stateValue;
-
-        entityTargets[base] = drone.targetX;
-        entityTargets[base + 1] = drone.targetY;
-        entityTargets[base + 2] = drone.targetZ;
-      }
-    }
-
-    const minedPositionsArray =
-      minedPositions.length > 0 ? new Float32Array(minedPositions) : undefined;
-    const frontierAddArray =
-      frontierAdded.length > 0 ? new Float32Array(frontierAdded) : undefined;
-    const frontierRemoveArray =
-      frontierRemoved.length > 0 ? new Float32Array(frontierRemoved) : undefined;
+    const { entities, entityTargets, entityStates } = encodeDrones(drones);
 
     const delta: RenderDelta = {
       tick,
@@ -250,9 +206,9 @@ export const createEngine = (_seed?: number): Engine => {
       entityTargets,
       entityStates,
       edits: editsThisTick.length > 0 ? editsThisTick : undefined,
-      minedPositions: minedPositionsArray,
-      frontierAdd: frontierAddArray,
-      frontierRemove: frontierRemoveArray,
+      minedPositions: toFloat32ArrayOrUndefined(minedPositions),
+      frontierAdd: toFloat32ArrayOrUndefined(frontierAdded),
+      frontierRemove: toFloat32ArrayOrUndefined(frontierRemoved),
     };
 
     if (pendingFrontierSnapshot) {
