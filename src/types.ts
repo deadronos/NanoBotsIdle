@@ -1,4 +1,4 @@
-export type ViewMode = 'FIRST_PERSON' | 'THIRD_PERSON';
+export type ViewMode = "FIRST_PERSON" | "THIRD_PERSON";
 
 export interface PlayerState {
   position: [number, number, number];

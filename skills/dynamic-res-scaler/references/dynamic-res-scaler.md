@@ -5,14 +5,14 @@ Use this reference when you need a drop-in dynamic DPR scaler similar to `src/co
 ## Drop-in Implementation
 
 ```tsx
-import { useFrame, useThree } from '@react-three/fiber';
-import { useEffect, useRef } from 'react';
+import { useFrame, useThree } from "@react-three/fiber";
+import { useEffect, useRef } from "react";
 
 const TARGET_FPS = 60;
 const CHECK_INTERVAL = 500; // ms
 const FPS_TOLERANCE = 5;
 const MIN_DPR = 0.5;
-const MAX_DPR = typeof window !== 'undefined' ? Math.min(window.devicePixelRatio, 2) : 1;
+const MAX_DPR = typeof window !== "undefined" ? Math.min(window.devicePixelRatio, 2) : 1;
 const STEP = 0.1;
 
 export function DynamicResScaler() {
@@ -45,7 +45,7 @@ export function DynamicResScaler() {
       if (nextDpr !== dprRef.current) {
         dprRef.current = nextDpr;
         setDpr(nextDpr);
-        if (process.env.NODE_ENV === 'development') {
+        if (process.env.NODE_ENV === "development") {
           console.log(`[DynamicResScaler] FPS: ${fps}, DPR: ${nextDpr.toFixed(2)}`);
         }
       }

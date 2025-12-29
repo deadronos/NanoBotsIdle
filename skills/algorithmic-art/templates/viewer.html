@@ -46,7 +46,7 @@
       }
 
       body {
-        font-family: 'Poppins', sans-serif;
+        font-family: "Poppins", sans-serif;
         background: linear-gradient(135deg, var(--anthropic-light) 0%, #f5f3ee 100%);
         min-height: 100vh;
         color: var(--anthropic-dark);
@@ -73,7 +73,7 @@
       }
 
       .sidebar h1 {
-        font-family: 'Lora', serif;
+        font-family: "Lora", serif;
         font-size: 24px;
         font-weight: 500;
         color: var(--anthropic-dark);
@@ -103,7 +103,7 @@
       }
 
       .control-section h3::before {
-        content: '•';
+        content: "•";
         color: var(--anthropic-orange);
         font-weight: bold;
       }
@@ -114,7 +114,7 @@
         background: var(--anthropic-light);
         padding: 12px;
         border-radius: 8px;
-        font-family: 'Courier New', monospace;
+        font-family: "Courier New", monospace;
         font-size: 14px;
         margin-bottom: 12px;
         border: 1px solid var(--anthropic-light-gray);
@@ -158,7 +158,7 @@
         gap: 12px;
       }
 
-      .slider-container input[type='range'] {
+      .slider-container input[type="range"] {
         flex: 1;
         height: 4px;
         background: var(--anthropic-light-gray);
@@ -167,7 +167,7 @@
         -webkit-appearance: none;
       }
 
-      .slider-container input[type='range']::-webkit-slider-thumb {
+      .slider-container input[type="range"]::-webkit-slider-thumb {
         -webkit-appearance: none;
         width: 16px;
         height: 16px;
@@ -177,12 +177,12 @@
         transition: all 0.2s ease;
       }
 
-      .slider-container input[type='range']::-webkit-slider-thumb:hover {
+      .slider-container input[type="range"]::-webkit-slider-thumb:hover {
         transform: scale(1.1);
         background: #c86641;
       }
 
-      .slider-container input[type='range']::-moz-range-thumb {
+      .slider-container input[type="range"]::-moz-range-thumb {
         width: 16px;
         height: 16px;
         background: var(--anthropic-orange);
@@ -193,7 +193,7 @@
       }
 
       .value-display {
-        font-family: 'Courier New', monospace;
+        font-family: "Courier New", monospace;
         font-size: 12px;
         color: var(--anthropic-mid-gray);
         min-width: 60px;
@@ -218,7 +218,7 @@
         gap: 8px;
       }
 
-      .color-picker-container input[type='color'] {
+      .color-picker-container input[type="color"] {
         width: 32px;
         height: 32px;
         border: none;
@@ -229,7 +229,7 @@
       }
 
       .color-value {
-        font-family: 'Courier New', monospace;
+        font-family: "Courier New", monospace;
         font-size: 12px;
         color: var(--anthropic-mid-gray);
       }
@@ -506,7 +506,7 @@
         flowSpeed: 0.5,
         noiseScale: 0.005,
         trailLength: 8,
-        colorPalette: ['#d97757', '#6a9bcc', '#788c5d'],
+        colorPalette: ["#d97757", "#6a9bcc", "#788c5d"],
       };
 
       let defaultParams = { ...params }; // Store defaults for reset
@@ -522,12 +522,12 @@
 
       function setup() {
         let canvas = createCanvas(1200, 1200);
-        canvas.parent('canvas-container');
+        canvas.parent("canvas-container");
 
         initializeSystem();
 
         // Remove loading message
-        document.querySelector('.loading').style.display = 'none';
+        document.querySelector(".loading").style.display = "none";
       }
 
       function initializeSystem() {
@@ -590,11 +590,11 @@
       // ═══════════════════════════════════════════════════════════════════════
 
       function updateSeedDisplay() {
-        document.getElementById('seed-input').value = params.seed;
+        document.getElementById("seed-input").value = params.seed;
       }
 
       function updateSeed() {
-        let input = document.getElementById('seed-input');
+        let input = document.getElementById("seed-input");
         let newSeed = parseInt(input.value);
         if (newSeed && newSeed > 0) {
           params.seed = newSeed;
@@ -627,29 +627,29 @@
         params = { ...defaultParams };
 
         // Update UI elements
-        document.getElementById('particleCount').value = params.particleCount;
-        document.getElementById('particleCount-value').textContent = params.particleCount;
-        document.getElementById('flowSpeed').value = params.flowSpeed;
-        document.getElementById('flowSpeed-value').textContent = params.flowSpeed;
-        document.getElementById('noiseScale').value = params.noiseScale;
-        document.getElementById('noiseScale-value').textContent = params.noiseScale;
-        document.getElementById('trailLength').value = params.trailLength;
-        document.getElementById('trailLength-value').textContent = params.trailLength;
+        document.getElementById("particleCount").value = params.particleCount;
+        document.getElementById("particleCount-value").textContent = params.particleCount;
+        document.getElementById("flowSpeed").value = params.flowSpeed;
+        document.getElementById("flowSpeed-value").textContent = params.flowSpeed;
+        document.getElementById("noiseScale").value = params.noiseScale;
+        document.getElementById("noiseScale-value").textContent = params.noiseScale;
+        document.getElementById("trailLength").value = params.trailLength;
+        document.getElementById("trailLength-value").textContent = params.trailLength;
 
         // Reset colors
-        document.getElementById('color1').value = params.colorPalette[0];
-        document.getElementById('color1-value').textContent = params.colorPalette[0];
-        document.getElementById('color2').value = params.colorPalette[1];
-        document.getElementById('color2-value').textContent = params.colorPalette[1];
-        document.getElementById('color3').value = params.colorPalette[2];
-        document.getElementById('color3-value').textContent = params.colorPalette[2];
+        document.getElementById("color1").value = params.colorPalette[0];
+        document.getElementById("color1-value").textContent = params.colorPalette[0];
+        document.getElementById("color2").value = params.colorPalette[1];
+        document.getElementById("color2-value").textContent = params.colorPalette[1];
+        document.getElementById("color3").value = params.colorPalette[2];
+        document.getElementById("color3-value").textContent = params.colorPalette[2];
 
         updateSeedDisplay();
         initializeSystem();
       }
 
       // Initialize UI on load
-      window.addEventListener('load', function () {
+      window.addEventListener("load", function () {
         updateSeedDisplay();
       });
     </script>

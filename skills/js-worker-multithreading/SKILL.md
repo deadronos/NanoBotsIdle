@@ -42,7 +42,7 @@ Use this skill to move CPU-heavy work off the main thread with worker pools whil
 ## Minimal Template (multithreading package)
 
 ```ts
-import { initRuntime, move, spawn } from 'multithreading';
+import { initRuntime, move, spawn } from "multithreading";
 
 type Input = { count: number; positions: Float32Array };
 type Output = { forces: Float32Array };

@@ -1,4 +1,4 @@
-import { Color } from 'three';
+import { Color } from "three";
 
 // Pseudo-random number generator
 export const random = (seed: number) => {
@@ -17,27 +17,27 @@ export const noise2D = (x: number, z: number, seed = 0): number => {
 
 export const getVoxelColor = (y: number): Color => {
   // Height-based coloring
-  if (y < -1) return new Color('#1a4d8c'); // Deep Water
-  if (y < 0.5) return new Color('#2d73bf'); // Water
-  if (y < 1.5) return new Color('#e3dba3'); // Sand
-  if (y < 4) return new Color('#59a848'); // Grass
-  if (y < 7) return new Color('#3b7032'); // Dark Grass/Forest
-  if (y < 10) return new Color('#6e6e6e'); // Rock
-  return new Color('#ffffff'); // Snow
+  if (y < -1) return new Color("#1a4d8c"); // Deep Water
+  if (y < 0.5) return new Color("#2d73bf"); // Water
+  if (y < 1.5) return new Color("#e3dba3"); // Sand
+  if (y < 4) return new Color("#59a848"); // Grass
+  if (y < 7) return new Color("#3b7032"); // Dark Grass/Forest
+  if (y < 10) return new Color("#6e6e6e"); // Rock
+  return new Color("#ffffff"); // Snow
 };
 
 export const getVoxelValue = (y: number): number => {
-    // Returns credit value based on scarcity/height
-    if (y < 0.5) return 1; // Water/Sand (Common)
-    if (y < 4) return 2;   // Grass
-    if (y < 7) return 5;   // Forest
-    if (y < 10) return 15; // Rock/Ore
-    return 50;             // Rare Snow peaks
-}
+  // Returns credit value based on scarcity/height
+  if (y < 0.5) return 1; // Water/Sand (Common)
+  if (y < 4) return 2; // Grass
+  if (y < 7) return 5; // Forest
+  if (y < 10) return 15; // Rock/Ore
+  return 50; // Rare Snow peaks
+};
 
-export const getVoxelType = (y: number): 'water' | 'solid' => {
-  if (y < 0.5) return 'water';
-  return 'solid';
+export const getVoxelType = (y: number): "water" | "solid" => {
+  if (y < 0.5) return "water";
+  return "solid";
 };
 
 // Helper to get terrain height at a specific x, z coordinate
@@ -45,7 +45,7 @@ export const getTerrainHeight = (x: number, z: number): number => {
   // Quantize coordinates to grid
   const h = Math.floor(noise2D(x, z) * 2);
   // Flatten water level
-  if (h < 0) return 0; 
+  if (h < 0) return 0;
   return h;
 };
 
