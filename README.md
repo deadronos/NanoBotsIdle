@@ -2,6 +2,8 @@
 
 A 3D Voxel Incremental/Idle game built with React Three Fiber. Command a fleet of autonomous mining drones to strip-mine procedurally generated planets, research upgrades, and warp to new worlds.
 
+![Game Screenshot](./image.png)
+
 ## 🎮 Controls
 
 | Key            | Action                                   |

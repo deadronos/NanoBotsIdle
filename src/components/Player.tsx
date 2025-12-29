@@ -9,6 +9,7 @@ import { useUiStore } from "../ui/store";
 import { PlayerVisuals } from "./player/PlayerVisuals";
 import { updatePlayerFrame } from "./player/updatePlayerFrame";
 import { usePointerLockInput } from "./player/usePointerLockInput";
+import { playerPosition } from "../engine/playerState";
 
 interface PlayerProps {
   viewMode: ViewMode;
@@ -54,6 +55,7 @@ export const Player: React.FC<PlayerProps> = ({ viewMode }) => {
       camera,
       temps: frameTemps.current,
     });
+    playerPosition.copy(position);
   });
 
   return (
