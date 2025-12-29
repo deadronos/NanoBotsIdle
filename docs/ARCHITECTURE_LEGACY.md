@@ -3,6 +3,9 @@
 **Version:** 0.2.0 (Alpha)
 **Last Updated:** 2025-12-29
 
+This file is preserved for historical context. The current architecture source
+of truth is `docs/ARCHITECTURE.md`.
+
 ## 1. Overview
 **Voxel Walker** is a browser-based, 3D Voxel Idle/Clicker game. It combines first-person exploration mechanics (similar to Minecraft) with incremental game loops (auto-mining drones, upgrades, prestige).
 
