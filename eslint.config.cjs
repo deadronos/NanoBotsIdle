@@ -8,6 +8,6 @@ const compat = new FlatCompat({ baseDirectory: __dirname, recommendedConfig: con
 
 // Convert legacy config to flat config and also add ignores that were previously in .eslintignore
 module.exports = [
-  { ignores: ["dist", "coverage", "node_modules"] },
+  { ignores: ["dist", "coverage", "node_modules", "skills"] },
   ...compat.config(legacy),
 ];
