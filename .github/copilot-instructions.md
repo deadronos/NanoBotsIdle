@@ -2,6 +2,9 @@
 
 This repository is a small React + React Three Fiber game prototype: a voxel-ish world with an autonomous mining-drone loop and an overlay UI. These instructions tell Copilot how to make changes that match the existing architecture, tooling, and performance constraints.
 
+## Agent guidance
+also cross-reference root folder `AGENTS.md`
+
 ## Project summary
 
 - Runtime: Vite + React (currently React 19 in `package.json`)
@@ -16,6 +19,10 @@ Key gameplay loop:
 - The world (`src/components/World.tsx`) generates a grid of mineable “surface blocks” using `noise2D()`.
 - Drones (`src/components/Drones.tsx`) request targets from the `World` imperative API and mine blocks; mining adds credits (scaled by prestige level) into the Zustand store.
 - UI (`src/components/UI.tsx`) reads store state and provides upgrades + prestige.
+
+## Memory bank:
+Also look at `memory/` folder and `memory/designs` for spec/design docs and `memory/tasks` for past or current tasks and implementation plans. Useful instructions in `.github/instructions/memory-bank.instructions.md`.
+
 
 ## Commands (use these)
 
@@ -94,12 +101,12 @@ Key gameplay loop:
 ## Security & secrets
 
 - Do not hardcode API keys.
-- `vite.config.ts` currently injects `process.env.GEMINI_API_KEY` into the build; keep secrets in `.env` files and reference them via Vite’s `loadEnv` only.
+- `vite.config.ts` can injects sensible environment variables into the build; keep secrets in `.env` files and reference them via Vite’s `loadEnv` only.
 - Avoid logging sensitive values.
 
 ## Testing guidance (Vitest)
 
-- Tests live in `src/*.test.ts(x)` and use Vitest.
+- Tests live in `tests/` and use Vitest.
 - Prefer small, deterministic unit tests for store logic and utility functions.
 - For 3D rendering logic, prefer testing pure helpers (e.g., cost functions, noise/value mapping) and keep `useFrame` logic testable by extracting pure functions when feasible.
 
