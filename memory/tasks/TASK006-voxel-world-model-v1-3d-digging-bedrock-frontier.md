@@ -1,6 +1,6 @@
 # [TASK006] - Voxel World Model v1 (3D Digging + Bedrock + Frontier + Prestige Safety)
 
-**Status:** Pending  
+**Status:** In Progress  
 **Added:** 2025-12-29  
 **Updated:** 2025-12-29
 
@@ -52,13 +52,13 @@ Player collision remains main-thread for responsiveness, but must mirror Worker 
   - Soft-lock prevention seed retry behavior.
 
 ## Progress Tracking
-**Overall Status:** Not Started - 0%
+**Overall Status:** In Progress - 20%
 
 ### Subtasks
 
 | ID | Description | Status | Updated | Notes |
 | --- | --- | --- | --- | --- |
-| 6.1 | Implement base+edits world query in engine | Not Started | - | `materialAt()` + config-driven bedrock. |
+| 6.1 | Implement base+edits world query in engine | In Progress | 2025-12-29 | Added `WorldModel` with base + edits and bedrock; mining supports frontier check. |
 | 6.2 | Implement frontier tracking + above-water subset | Not Started | - | Incremental neighbor updates. |
 | 6.3 | Implement mining command validation + edits output | Not Started | - | Reject non-frontier and bedrock. |
 | 6.4 | Implement soft-lock prevention (seed retry) | Not Started | - | Guarantee `minAboveWaterBlocks`. |
@@ -70,7 +70,7 @@ Player collision remains main-thread for responsiveness, but must mirror Worker 
 
 ### 2025-12-29
 - Created TASK006 with an implementation plan.
+- Added initial `WorldModel` (base + edits, bedrock) and unit tests; added terrain config knobs.
 
 ## Design Link
 - `memory/designs/DESIGN005-voxel-world-model-v1.md`
-

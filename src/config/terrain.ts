@@ -5,6 +5,8 @@ export type TerrainConfig = {
   surfaceBias: number;
   quantizeScale: number;
   waterLevel: number;
+  bedrockY?: number;
+  genRetries?: number;
 };
 
 export const defaultTerrainConfig: TerrainConfig = {
@@ -14,4 +16,6 @@ export const defaultTerrainConfig: TerrainConfig = {
   surfaceBias: 0.6,
   quantizeScale: 4,
   waterLevel: 0.2,
+  bedrockY: -50,
+  genRetries: 5,
 };

@@ -1,14 +1,5 @@
-import React, {
-  forwardRef,
-  useCallback,
-  useEffect,
-  useImperativeHandle,
-  useLayoutEffect,
-  useMemo,
-  useRef,
-} from "react";
+import React, { useCallback, useEffect, useLayoutEffect, useMemo, useRef } from "react";
 import type { InstancedMesh } from "three";
-import { Vector3 } from "three";
 
 import { getConfig } from "../config/index";
 import { populateInstancedMesh, setInstanceTransform } from "../render/instanced";
@@ -16,15 +7,7 @@ import { getSimBridge } from "../simBridge/simBridge";
 import { generateInstances, getSeed } from "../sim/terrain";
 import { useUiStore } from "../ui/store";
 
-export interface WorldApi {
-  getRandomTarget: () => { index: number; position: Vector3; value: number } | null;
-  mineBlock: (index: number) => number; // Returns value mined
-}
-
-// eslint-disable-next-line @typescript-eslint/no-empty-object-type
-interface WorldProps {}
-
-export const World = forwardRef<WorldApi, WorldProps>((props, ref) => {
+export const World: React.FC = () => {
   const meshRef = useRef<InstancedMesh>(null);
 
   const snapshot = useUiStore((state) => state.snapshot);
@@ -82,26 +65,6 @@ export const World = forwardRef<WorldApi, WorldProps>((props, ref) => {
     });
   }, [bridge, mineBlockInternal]);
 
-  useImperativeHandle(ref, () => ({
-    getRandomTarget: () => {
-      let attempts = 0;
-      while (attempts < 20) {
-        const idx = Math.floor(Math.random() * instanceCount);
-        if (!minedIndices.current.has(idx)) {
-          const data = instances[idx];
-          return {
-            index: idx,
-            position: new Vector3(data.x, data.y, data.z),
-            value: data.value,
-          };
-        }
-        attempts++;
-      }
-      return null;
-    },
-    mineBlock: (index: number) => mineBlockInternal(index),
-  }));
-
   useLayoutEffect(() => {
     if (!meshRef.current) return;
     populateInstancedMesh(meshRef.current, instances);
@@ -127,5 +90,4 @@ export const World = forwardRef<WorldApi, WorldProps>((props, ref) => {
       </mesh>
     </group>
   );
-});
-World.displayName = "World";
+};
