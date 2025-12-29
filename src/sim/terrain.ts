@@ -1,7 +1,7 @@
 import type { Color } from "three";
 
-import { getVoxelColor, getVoxelValue, noise2D } from "../utils";
 import { getConfig } from "../config/index";
+import { getVoxelColor, getVoxelValue, noise2D } from "../utils";
 
 export type Voxel = {
   id?: number;

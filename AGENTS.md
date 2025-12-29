@@ -6,6 +6,7 @@ Use this file as the starting point for any agentic work (Copilot, automation, o
 ## Start here
 
 - Read `.github/copilot-instructions.md` first. It is the repo-specific source of truth for architecture, performance constraints, and conventions.
+- Then read `docs/ARCHITECTURE.md` (and `docs/ARCHITECTURE/README.md`) for the high-level architecture spec and numbered TECH/GAME/DEC docs.
 - Look for additional repo guidance in `.github/`:
   - `.github/instructions/` (coding standards, testing, React, TypeScript, performance, etc.)
   - `.github/prompts/` (prompt templates)
@@ -41,6 +42,16 @@ Persistent project context and planning artifacts live in `memory/`:
 - Tasks/implementation plans: `memory/tasks/` (archive to `memory/tasks/COMPLETED/` when done)
 
 Use the Memory Bank instructions at `.github/instructions/memory-bank.instructions.md`.
+
+## Architecture docs (resumable work)
+
+- Treat `docs/ARCHITECTURE.md` as the high-level source of truth for intended architecture and system boundaries.
+- Keep deeper specs and decisions split into `docs/ARCHITECTURE/` as numbered documents:
+  - `TECH###-*` (technical specs)
+  - `GAME###-*` (gameplay specs)
+  - `DEC###-*` (decisions / ADRs)
+- If work is interrupted, resume by re-reading and updating `docs/ARCHITECTURE.md` + the relevant `TECH/GAME/DEC` docs before continuing implementation.
+- New designs and implementation plans in `memory/designs/` and `memory/tasks/` should reference the relevant `TECH/GAME/DEC` IDs.
 
 ## Workflow expectations
 
