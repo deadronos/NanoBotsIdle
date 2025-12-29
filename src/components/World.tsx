@@ -1,16 +1,21 @@
-import React, { useLayoutEffect, useRef, useMemo, useEffect, forwardRef, useImperativeHandle } from 'react';
-import { InstancedMesh, Object3D, Color, Matrix4, Vector3 } from 'three';
-import { getVoxelColor, noise2D, getVoxelValue } from '../utils';
+import React, { forwardRef, useEffect, useImperativeHandle, useLayoutEffect, useMemo, useRef } from 'react';
+import type { Color, InstancedMesh } from 'three';
+import { Matrix4, Object3D, Vector3 } from 'three';
+
 import { useGameStore } from '../store';
+import { getVoxelColor, getVoxelValue, noise2D } from '../utils';
 
 export interface WorldApi {
   getRandomTarget: () => { index: number; position: Vector3; value: number } | null;
   mineBlock: (index: number) => number; // Returns value mined
 }
 
+// eslint-disable-next-line @typescript-eslint/no-empty-object-type
+interface WorldProps {}
+
 const WORLD_RADIUS = 30; // Slightly reduced for performance with many drones
 
-export const World = forwardRef<WorldApi, {}>((props, ref) => {
+export const World = forwardRef<WorldApi, WorldProps>((props, ref) => {
   const meshRef = useRef<InstancedMesh>(null);
   const waterMeshRef = useRef<InstancedMesh>(null);
   
@@ -28,7 +33,7 @@ export const World = forwardRef<WorldApi, {}>((props, ref) => {
     for (let x = -WORLD_RADIUS; x <= WORLD_RADIUS; x++) {
       for (let z = -WORLD_RADIUS; z <= WORLD_RADIUS; z++) {
         const rawNoise = noise2D(x, z, seed);
-        let h = Math.floor(rawNoise * 3);
+        const h = Math.floor(rawNoise * 3);
         
         // Surface Block (Mineable)
         tempInstances.push({
@@ -168,3 +173,4 @@ export const World = forwardRef<WorldApi, {}>((props, ref) => {
     </group>
   );
 });
+World.displayName = 'World';

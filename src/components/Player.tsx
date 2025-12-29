@@ -1,8 +1,10 @@
-import React, { useRef, useState, useEffect } from 'react';
 import { useFrame, useThree } from '@react-three/fiber';
-import { Vector3, Euler, Group } from 'three';
+import React, { useEffect, useRef, useState } from 'react';
+import type { Group } from 'three';
+import { Euler, Vector3 } from 'three';
+
+import type { ViewMode } from '../types';
 import { noise2D } from '../utils';
-import { ViewMode } from '../types';
 
 interface PlayerProps {
   viewMode: ViewMode;
@@ -23,7 +25,7 @@ export const Player: React.FC<PlayerProps> = ({ viewMode }) => {
   const playerVisualsRef = useRef<Group>(null);
   
   // Input State
-  const keys = useRef<{ [key: string]: boolean }>({});
+  const keys = useRef<Record<string, boolean>>({});
   
   // Camera State
   const cameraAngle = useRef({ yaw: 0, pitch: 0 });
@@ -51,10 +53,12 @@ export const Player: React.FC<PlayerProps> = ({ viewMode }) => {
         // Handle Promise-based requestPointerLock safely
         const result = document.body.requestPointerLock() as unknown as Promise<void> | undefined;
         if (result && typeof result.catch === 'function') {
-          result.catch((err: any) => {
+          result.catch((err: unknown) => {
              // Ignore "The user has exited the lock..." error
-             if (err?.name === 'NotSupportedError' || err?.message?.includes('exited the lock')) return;
-             console.debug('Pointer lock interrupted:', err);
+             if (err instanceof Error) {
+                if (err.name === 'NotSupportedError' || err.message?.includes('exited the lock')) return;
+                console.debug('Pointer lock interrupted:', err);
+             }
           });
         }
       } catch (e) {

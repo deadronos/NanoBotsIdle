@@ -1,9 +1,11 @@
-import React, { useRef, useMemo, useImperativeHandle, forwardRef } from 'react';
 import { useFrame } from '@react-three/fiber';
-import { Vector3, Group, Mesh, Object3D, Color, MathUtils, Matrix4, InstancedMesh, MeshBasicMaterial, PointLight } from 'three';
+import React, { forwardRef, useImperativeHandle, useLayoutEffect, useMemo, useRef } from 'react';
+import type { Group, InstancedMesh, Mesh, MeshBasicMaterial, PointLight } from 'three';
+import { Color, Object3D, Vector3 } from 'three';
+
 import { useGameStore } from '../store';
-import { WorldApi } from './World';
 import { getVoxelColor } from '../utils';
+import type { WorldApi } from './World';
 
 interface DronesProps {
   worldRef: React.RefObject<WorldApi>;
@@ -35,9 +37,12 @@ interface ParticleHandle {
     spawn: (pos: Vector3, color: Color) => void;
 }
 
+// eslint-disable-next-line @typescript-eslint/no-empty-object-type
+interface ParticlesProps {}
+
 const MAX_PARTICLES = 400;
 
-const Particles = forwardRef<ParticleHandle, {}>((props, ref) => {
+const Particles = forwardRef<ParticleHandle, ParticlesProps>((props, ref) => {
     const meshRef = useRef<InstancedMesh>(null);
     
     // Particle State
@@ -81,7 +86,7 @@ const Particles = forwardRef<ParticleHandle, {}>((props, ref) => {
             // Initial update to mesh to prevent flicker
             if (meshRef.current) {
                 meshRef.current.setColorAt(idx, p.color);
-                meshRef.current.instanceColor!.needsUpdate = true;
+                if (meshRef.current.instanceColor) meshRef.current.instanceColor.needsUpdate = true;
             }
         }
     }));
@@ -133,6 +138,7 @@ const Particles = forwardRef<ParticleHandle, {}>((props, ref) => {
         </instancedMesh>
     );
 });
+Particles.displayName = 'Particles';
 
 // --- Flash Effect System ---
 
@@ -140,16 +146,19 @@ interface FlashHandle {
     trigger: (pos: Vector3) => void;
 }
 
-const FlashEffect = forwardRef<FlashHandle, {}>((props, ref) => {
-    const lightsRef = useRef<(PointLight | null)[]>([]);
-    // Track state in a separate ref to avoid re-renders
-    const statesRef = useRef<{ active: boolean; age: number }[]>([]);
-    const poolSize = 10;
-    const cursor = useRef(0);
+// eslint-disable-next-line @typescript-eslint/no-empty-object-type
+interface FlashEffectProps {}
 
-    useMemo(() => {
-        statesRef.current = new Array(poolSize).fill(0).map(() => ({ active: false, age: 0 }));
-    }, []);
+const FlashEffect = forwardRef<FlashHandle, FlashEffectProps>((props, ref) => {
+    const lightsRef = useRef<(PointLight | null)[]>([]);
+    
+    // Initialize state ref with initial value to avoid useMemo side-effect warning
+    const statesRef = useRef<{ active: boolean; age: number }[]>(
+        new Array(10).fill(0).map(() => ({ active: false, age: 0 }))
+    );
+
+    const cursor = useRef(0);
+    const poolSize = 10;
 
     useImperativeHandle(ref, () => ({
         trigger: (pos: Vector3) => {
@@ -193,7 +202,7 @@ const FlashEffect = forwardRef<FlashHandle, {}>((props, ref) => {
             {Array.from({ length: poolSize }).map((_, i) => (
                 <pointLight
                     key={i}
-                    ref={(el) => (lightsRef.current[i] = el)}
+                    ref={(el) => { lightsRef.current[i] = el; }}
                     visible={false}
                     color="#ffffaa" // Bright warm white
                     distance={6}
@@ -203,6 +212,7 @@ const FlashEffect = forwardRef<FlashHandle, {}>((props, ref) => {
         </group>
     );
 });
+FlashEffect.displayName = 'FlashEffect';
 
 
 // --- Main Drone Logic ---
@@ -223,7 +233,9 @@ export const Drones: React.FC<DronesProps> = ({ worldRef }) => {
   const flashRef = useRef<FlashHandle>(null);
 
   // Sync drone count
-  useMemo(() => {
+  // Using useLayoutEffect to ensure refs are updated before painting
+  // We use a state to force re-render if we really needed to, but droneCount change already triggered this.
+  useLayoutEffect(() => {
     const current = dronesRef.current;
     if (current.length < droneCount) {
         for (let i = current.length; i < droneCount; i++) {
@@ -310,7 +322,8 @@ export const Drones: React.FC<DronesProps> = ({ worldRef }) => {
     <group>
       <Particles ref={particlesRef} />
       <FlashEffect ref={flashRef} />
-      {dronesRef.current.map((drone) => (
+      {/* eslint-disable-next-line react-hooks/refs */}
+      {dronesRef.current.slice(0, droneCount).map((drone) => (
         <DroneVisual 
             key={drone.id} 
             drone={drone} 
@@ -325,6 +338,7 @@ const DroneVisual: React.FC<{ drone: DroneAgent }> = ({ drone }) => {
     const miningLaserRef = useRef<Mesh>(null);
     const scanningLaserRef = useRef<Mesh>(null);
     const targetBoxRef = useRef<Mesh>(null);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const impactLightRef = useRef<any>(null);
 
     useFrame((state) => {
@@ -351,8 +365,8 @@ const DroneVisual: React.FC<{ drone: DroneAgent }> = ({ drone }) => {
             miningLaserRef.current.visible = isMining;
             if (isMining && drone.targetPos) {
                 const localTarget = meshRef.current.worldToLocal(drone.targetPos.clone());
-                const start = new Vector3(0, 0, 0); 
-                const dist = start.distanceTo(localTarget);
+                // const start = new Vector3(0, 0, 0); 
+                const dist = localTarget.length(); // local origin to local target
                 
                 // Jitter width
                 const jitter = 1 + Math.sin(state.clock.elapsedTime * 40) * 0.3;
@@ -374,8 +388,8 @@ const DroneVisual: React.FC<{ drone: DroneAgent }> = ({ drone }) => {
             scanningLaserRef.current.visible = isMoving;
             if (isMoving && drone.targetPos) {
                 const localTarget = meshRef.current.worldToLocal(drone.targetPos.clone());
-                const start = new Vector3(0, 0, 0); 
-                const dist = start.distanceTo(localTarget);
+                // const start = new Vector3(0, 0, 0); 
+                const dist = localTarget.length();
                 
                 // Thin steady beam
                 scanningLaserRef.current.scale.set(1, dist, 1);

@@ -124,5 +124,8 @@ module.exports = {
 
     // Avoid Node-only builtins in browser code (still allow in config/scripts)
     "import/no-nodejs-modules": "off",
+
+    // R3F
+    "react/no-unknown-property": "off",
   },
 };

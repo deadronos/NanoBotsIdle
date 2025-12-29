@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
-import { ViewMode } from '../types';
+
 import { useGameStore } from '../store';
+import type { ViewMode } from '../types';
 
 interface UIProps {
   viewMode: ViewMode;
@@ -85,8 +86,18 @@ const ShopModal: React.FC<{ onClose: () => void }> = ({ onClose }) => {
     };
 
     return (
-        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 pointer-events-auto" onClick={onClose}>
-            <div className="bg-gray-900 border border-white/10 p-8 rounded-2xl max-w-2xl w-full shadow-2xl relative" onClick={handleContainerClick}>
+        <div 
+            className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 pointer-events-auto" 
+            onClick={onClose}
+            role="button"
+            tabIndex={0}
+            onKeyDown={(e) => { if (e.key === 'Escape') onClose(); }}
+        >
+            <div 
+                className="bg-gray-900 border border-white/10 p-8 rounded-2xl max-w-2xl w-full shadow-2xl relative cursor-default" 
+                onClick={handleContainerClick}
+                role="presentation"
+            >
                 <button onClick={onClose} className="absolute top-4 right-4 text-white/50 hover:text-white">✕</button>
                 
                 <h2 className="text-3xl font-bold text-white mb-6 border-b border-white/10 pb-4">Research & Development</h2>

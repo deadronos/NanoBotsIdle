@@ -7,7 +7,7 @@ export const random = (seed: number) => {
 };
 
 // Simple 2D noise function (a mix of sines) to avoid heavy dependencies
-export const noise2D = (x: number, z: number, seed: number = 0): number => {
+export const noise2D = (x: number, z: number, seed = 0): number => {
   const n =
     Math.sin(x * 0.1 + seed) * Math.cos(z * 0.1 + seed) * 2 +
     Math.sin(x * 0.3 + seed * 2) * Math.cos(z * 0.3 - seed) * 1 +
