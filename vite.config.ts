@@ -1,25 +1,23 @@
-/// <reference types="vitest" />
+import path from 'path';
+import { defineConfig, loadEnv } from 'vite';
+import react from '@vitejs/plugin-react';
 
-import react from "@vitejs/plugin-react-swc";
-import { defineConfig } from "vite";
-
-export default defineConfig({
-  plugins: [react()],
-  server: {
-    port: 5173,
-    strictPort: true,
-  },
-  test: {
-    environment: "jsdom",
-    setupFiles: ["./src/test/setup.ts"],
-    include: ["src/**/*.{test,spec}.{ts,tsx}"],
-    clearMocks: true,
-    restoreMocks: true,
-    mockReset: true,
-    coverage: {
-      provider: "v8",
-      reporter: ["text", "html", "lcov"],
-      exclude: ["**/*.d.ts", "src/test/**", "dist/**", "coverage/**", "node_modules/**"],
-    },
-  },
+export default defineConfig(({ mode }) => {
+    const env = loadEnv(mode, '.', '');
+    return {
+      server: {
+        port: 3000,
+        host: '0.0.0.0',
+      },
+      plugins: [react()],
+      define: {
+        'process.env.API_KEY': JSON.stringify(env.GEMINI_API_KEY),
+        'process.env.GEMINI_API_KEY': JSON.stringify(env.GEMINI_API_KEY)
+      },
+      resolve: {
+        alias: {
+          '@': path.resolve(__dirname, '.'),
+        }
+      }
+    };
 });
