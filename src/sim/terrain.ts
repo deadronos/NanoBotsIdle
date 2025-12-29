@@ -1,7 +1,11 @@
 import type { Color } from "three";
 
 import { getConfig } from "../config/index";
-import { getVoxelColor, getVoxelValue, noise2D } from "../utils";
+import { getVoxelColor } from "../utils";
+import { getSeed } from "./seed";
+import { getSurfaceHeightCore, getVoxelValueFromHeight, noise2D } from "./terrain-core";
+
+export { getSeed } from "./seed";
 
 export type Voxel = {
   id?: number;
@@ -13,18 +17,11 @@ export type Voxel = {
   type: "water" | "solid";
 };
 
-export const getSeed = (prestigeLevel = 1): number => {
-  const cfg = getConfig();
-  return cfg.terrain.baseSeed + cfg.terrain.prestigeSeedDelta * prestigeLevel;
-};
-
 export const computeVoxel = (x: number, z: number, seed?: number): Voxel => {
   const s = seed ?? getSeed(1);
-  const raw = noise2D(x, z, s);
   const cfg = getConfig();
-  // Use configured bias and quantization scale
-  const y = Math.floor((raw + cfg.terrain.surfaceBias) * cfg.terrain.quantizeScale);
-  const value = getVoxelValue(y);
+  const y = getSurfaceHeightCore(x, z, s, cfg.terrain.surfaceBias, cfg.terrain.quantizeScale);
+  const value = getVoxelValueFromHeight(y);
   const color = getVoxelColor(y);
   const type = y < 0.5 ? "water" : "solid";
 

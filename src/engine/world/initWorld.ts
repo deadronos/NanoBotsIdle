@@ -1,5 +1,5 @@
 import type { Config } from "../../config/index";
-import { getSeed } from "../../sim/terrain";
+import { getSeed } from "../../sim/seed";
 import { WorldModel } from "./world";
 
 export type WorldInitResult = {

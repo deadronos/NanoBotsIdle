@@ -1,6 +1,7 @@
-import React, { useEffect, useRef } from "react";
+import React, { useRef } from "react";
 
 import { exportSave, importSave, resetGame } from "../utils/saveUtils";
+import { ModalShell } from "./ui/ModalShell";
 
 interface SettingsModalProps {
   onClose: () => void;
@@ -8,26 +9,6 @@ interface SettingsModalProps {
 
 export const SettingsModal: React.FC<SettingsModalProps> = ({ onClose }) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const containerRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") onClose();
-    };
-    document.addEventListener("keydown", onKey);
-    return () => document.removeEventListener("keydown", onKey);
-  }, [onClose]);
-
-  // Click outside to close
-  useEffect(() => {
-    const onDocClick = (e: MouseEvent) => {
-      if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
-        onClose();
-      }
-    };
-    document.addEventListener("mousedown", onDocClick);
-    return () => document.removeEventListener("mousedown", onDocClick);
-  }, [onClose]);
 
   const handleImportClick = () => {
     fileInputRef.current?.click();
@@ -47,16 +28,10 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ onClose }) => {
   };
 
   return (
-    <div
-      role="dialog"
-      aria-modal="true"
-      tabIndex={-1}
-      className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 pointer-events-auto"
+    <ModalShell
+      onClose={onClose}
+      contentClassName="bg-gray-900 border border-white/10 p-8 rounded-2xl max-w-md w-full shadow-2xl relative"
     >
-      <div
-        ref={containerRef}
-        className="bg-gray-900 border border-white/10 p-8 rounded-2xl max-w-md w-full shadow-2xl relative"
-      >
         <button onClick={onClose} className="absolute top-4 right-4 text-white/50 hover:text-white">
           ✕
         </button>
@@ -107,7 +82,6 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ onClose }) => {
             </button>
           </div>
         </div>
-      </div>
-    </div>
+    </ModalShell>
   );
 };
