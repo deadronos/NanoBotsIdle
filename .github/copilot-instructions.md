@@ -5,6 +5,11 @@ This repository is a small React + React Three Fiber game prototype: a voxel-ish
 ## Agent guidance
 also cross-reference root folder `AGENTS.md`
 
+Architecture docs:
+
+- High-level architecture spec: `docs/ARCHITECTURE.md`
+- Numbered specs/decisions: `docs/ARCHITECTURE/` (`TECH###-*`, `GAME###-*`, `DEC###-*`)
+
 ## Project summary
 
 - Runtime: Vite + React (currently React 19 in `package.json`)

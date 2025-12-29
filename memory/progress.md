@@ -10,6 +10,7 @@
 
 - Expand test coverage (store + utility functions).
 - Tune performance as drone counts increase (avoid allocations in `useFrame()`).
+- Plan/execute worker-authoritative engine refactor (protocol + engine + deltas), per `docs/ARCHITECTURE.md`.
 
 ## Known notes
 

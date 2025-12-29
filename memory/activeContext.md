@@ -2,7 +2,8 @@
 
 ## Current focus
 
-- Project tooling and repo guidance are now aligned for Vite bundling, Tailwind v4+, and a consistent tests layout.
+- Project tooling and repo guidance are aligned for Vite bundling, Tailwind v4+, and a consistent tests layout.
+- Refactor toward a Worker-authoritative engine with clean sim/render separation (`docs/ARCHITECTURE.md`).
 
 ## Recent changes
 
@@ -14,5 +15,6 @@
 
 ## Next steps (suggested)
 
-- Add real unit tests for `src/store.ts` upgrade costs and prestige multiplier.
-- Consider lightweight code-splitting if bundle size warnings become problematic.
+- Execute the sim/render separation refactor in phases (see `memory/tasks/_index.md`): `TASK004` → `TASK005` → `TASK006`.
+- Continue config extraction work (`TASK003`) so balance knobs live in `src/config/*`.
+- Keep an eye on bundle size warnings; revisit code-splitting later if it becomes annoying.

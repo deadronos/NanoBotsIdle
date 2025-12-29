@@ -1,10 +1,9 @@
-import { getSeed, getSurfaceHeight } from "./terrain";
 import { getConfig } from "../config/index";
+import { getGroundHeightWithEdits } from "./collision";
 
 export const getPlayerGroundHeight = (x: number, z: number, prestigeLevel = 1): number => {
   // Player logic historically quantized positions to the nearest voxel grid
-  const seed = getSeed(prestigeLevel);
-  const surface = getSurfaceHeight(Math.round(x), Math.round(z), seed);
+  const surface = getGroundHeightWithEdits(x, z, prestigeLevel);
   const cfg = getConfig();
   return surface + 0.5 + cfg.player.playerHeight;
 };
