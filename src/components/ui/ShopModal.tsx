@@ -3,6 +3,8 @@ import React from "react";
 import { getConfig } from "../../config/index";
 import { getSimBridge } from "../../simBridge/simBridge";
 import { useUiStore } from "../../ui/store";
+import { ModalShell } from "./ModalShell";
+import { UpgradeCard } from "./UpgradeCard";
 
 interface ShopModalProps {
   onClose: () => void;
@@ -15,26 +17,8 @@ export const ShopModal: React.FC<ShopModalProps> = ({ onClose }) => {
   const minPrestigeBlocks = cfg.economy.prestigeMinMinedBlocks;
   const bridge = getSimBridge();
 
-  // Stop click propagation to prevent pointer lock when clicking shop
-  const handleContainerClick = (e: React.MouseEvent) => {
-    e.stopPropagation();
-  };
-
   return (
-    <div
-      className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 pointer-events-auto"
-      onClick={onClose}
-      role="button"
-      tabIndex={0}
-      onKeyDown={(e) => {
-        if (e.key === "Escape") onClose();
-      }}
-    >
-      <div
-        className="bg-gray-900 border border-white/10 p-8 rounded-2xl max-w-2xl w-full shadow-2xl relative cursor-default"
-        onClick={handleContainerClick}
-        role="presentation"
-      >
+    <ModalShell onClose={onClose}>
         <button onClick={onClose} className="absolute top-4 right-4 text-white/50 hover:text-white">
           ✕
         </button>
@@ -97,33 +81,6 @@ export const ShopModal: React.FC<ShopModalProps> = ({ onClose }) => {
             {snapshot.minedBlocks < minPrestigeBlocks ? `Mine ${minPrestigeBlocks} Blocks first` : "WARP JUMP"}
           </button>
         </div>
-      </div>
-    </div>
+    </ModalShell>
   );
 };
-
-const UpgradeCard: React.FC<{
-  title: string;
-  level: number;
-  cost: number;
-  onClick: () => void;
-  canAfford: boolean;
-  desc: string;
-}> = ({ title, level, cost, onClick, canAfford, desc }) => (
-  <div className="bg-white/5 p-4 rounded-xl border border-white/5 hover:border-white/20 transition-colors">
-    <div className="flex justify-between items-start mb-2">
-      <h3 className="font-bold text-white text-lg">{title}</h3>
-      <span className="text-xs bg-blue-500/20 text-blue-300 px-2 py-1 rounded">Lv. {level}</span>
-    </div>
-    <p className="text-xs text-gray-400 mb-4 h-8">{desc}</p>
-    <button
-      onClick={onClick}
-      disabled={!canAfford}
-      className={`w-full py-2 rounded font-bold text-sm flex justify-center items-center gap-1 ${
-        canAfford ? "bg-green-600 hover:bg-green-500 text-white" : "bg-gray-700 text-gray-400 cursor-not-allowed"
-      }`}
-    >
-      Buy ${cost.toLocaleString()}
-    </button>
-  </div>
-);
