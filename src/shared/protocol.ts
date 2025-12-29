@@ -21,14 +21,14 @@ export type RenderDelta = {
   frontierAdd?: Float32Array;
   frontierRemove?: Float32Array;
   frontierReset?: boolean;
-  effects?: Array<{
+  effects?: {
     kind: "beam";
     fromId: number;
     toX: number;
     toY: number;
     toZ: number;
     ttl: number;
-  }>;
+  }[];
 };
 
 export type UiSnapshot = {

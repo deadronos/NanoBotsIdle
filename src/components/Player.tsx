@@ -98,7 +98,10 @@ export const Player: React.FC<PlayerProps> = ({ viewMode }) => {
       : cfg.player.walkingSpeed;
 
     const direction = new Vector3();
-    const forward = new Vector3(0, 0, -1).applyAxisAngle(cameraAngle.current.yaw);
+    const forward = new Vector3(0, 0, -1).applyAxisAngle(
+      new Vector3(0, 1, 0),
+      cameraAngle.current.yaw,
+    );
     const right = new Vector3(1, 0, 0).applyAxisAngle(new Vector3(0, 1, 0), cameraAngle.current.yaw);
 
     if (keys.current["KeyW"]) direction.add(forward);

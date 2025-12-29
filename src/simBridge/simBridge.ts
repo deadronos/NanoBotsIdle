@@ -4,7 +4,7 @@ type FrameMessage = Extract<FromWorker, { t: "FRAME" }>;
 type FrameHandler = (frame: FrameMessage) => void;
 
 type WorkerLike = {
-  postMessage: (message: ToWorker, transfer?: Transferable[]) => void;
+  postMessage: Worker["postMessage"];
   addEventListener: (type: "message", listener: (event: MessageEvent<FromWorker>) => void) => void;
   removeEventListener: (type: "message", listener: (event: MessageEvent<FromWorker>) => void) => void;
   terminate?: () => void;

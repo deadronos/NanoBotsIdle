@@ -33,7 +33,7 @@ class FakeWorker {
 describe("sim bridge gating", () => {
   it("allows only one STEP in flight", () => {
     const worker = new FakeWorker();
-    const bridge = createSimBridge({ workerFactory: () => worker, onError: () => {} });
+    const bridge = createSimBridge({ workerFactory: () => worker, onError: () => undefined });
 
     bridge.step(1000);
 
@@ -69,7 +69,7 @@ describe("sim bridge gating", () => {
 
   it("stops stepping after worker error", () => {
     const worker = new FakeWorker();
-    const bridge = createSimBridge({ workerFactory: () => worker, onError: () => {} });
+    const bridge = createSimBridge({ workerFactory: () => worker, onError: () => undefined });
 
     bridge.step(1000);
     worker.emit({ t: "ERROR", message: "boom" });

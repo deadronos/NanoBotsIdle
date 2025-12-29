@@ -21,7 +21,7 @@ export const createEngine = (seed?: number): Engine => {
   const minedKeys = new Set<string>();
   const reservedKeys = new Set<string>();
   let world: WorldModel | null = null;
-  let worldSeed = seed ?? getSeed(1);
+  void seed;
   let frontierKeys: string[] = [];
   const frontierIndex = new Map<string, number>();
   let pendingFrontierSnapshot: Float32Array | null = null;
@@ -115,7 +115,6 @@ export const createEngine = (seed?: number): Engine => {
       const candidateWorld = new WorldModel({ seed: candidateSeed });
       const aboveWater = candidateWorld.initializeFrontierFromSurface(cfg.terrain.worldRadius);
       if (aboveWater >= minBlocks) {
-        worldSeed = candidateSeed;
         world = candidateWorld;
         frontierKeys = candidateWorld.getFrontierKeys();
         frontierIndex.clear();
@@ -126,7 +125,6 @@ export const createEngine = (seed?: number): Engine => {
         return;
       }
     }
-    worldSeed = baseSeed;
     world = new WorldModel({ seed: baseSeed });
     world.initializeFrontierFromSurface(cfg.terrain.worldRadius);
     frontierKeys = world.getFrontierKeys();
@@ -212,7 +210,6 @@ export const createEngine = (seed?: number): Engine => {
   };
 
   const dispatch = (cmd: Cmd) => {
-    void seed;
     switch (cmd.t) {
       case "BUY_UPGRADE": {
         const count = Math.max(1, cmd.n);

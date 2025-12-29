@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
-import { Object3D } from "three";
 import type { InstancedMesh } from "three";
+import { Object3D } from "three";
+
 import { getConfig } from "../config/index";
 import { applyVoxelEdits, resetVoxelEdits } from "../sim/collision";
 import { getSimBridge } from "../simBridge/simBridge";

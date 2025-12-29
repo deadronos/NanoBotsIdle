@@ -1,8 +1,8 @@
 import { describe, expect, it } from "vitest";
 
 import { getConfig, resetConfig, updateConfig } from "../src/config/index";
-import { getSeed, getSurfaceHeight } from "../src/sim/terrain";
 import { MATERIAL_AIR, MATERIAL_BEDROCK, MATERIAL_SOLID, WorldModel } from "../src/engine/world/world";
+import { getSeed, getSurfaceHeight } from "../src/sim/terrain";
 
 describe("world model (v1)", () => {
   it("returns bedrock below the configured bedrockY", () => {
