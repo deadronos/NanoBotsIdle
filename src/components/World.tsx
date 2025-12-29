@@ -6,6 +6,7 @@ import { getSeed } from "../sim/seed";
 import { getSurfaceHeightCore } from "../sim/terrain-core";
 import { getSimBridge } from "../simBridge/simBridge";
 import { useUiStore } from "../ui/store";
+import { playerChunk, playerPosition } from "../engine/playerState";
 import { chunkKey, ensureNeighborChunksForMinedVoxel, populateChunkVoxels } from "./world/chunkHelpers";
 import { useInstancedVoxels } from "./world/useInstancedVoxels";
 
@@ -54,6 +55,19 @@ export const World: React.FC = () => {
     }
   }, [addChunk, chunkSize, cfg.terrain.quantizeScale, cfg.terrain.surfaceBias, seed, spawnX, spawnZ]);
 
+  const ensureChunksRadius = useCallback(
+    (cx: number, cy: number, cz: number, radius: number) => {
+      for (let x = -radius; x <= radius; x++) {
+        for (let y = -radius; y <= radius; y++) {
+          for (let z = -radius; z <= radius; z++) {
+            addChunk(cx + x, cy + y, cz + z);
+          }
+        }
+      }
+    },
+    [addChunk],
+  );
+
   useEffect(() => {
     return bridge.onFrame((frame) => {
       if (frame.delta.edits && frame.delta.edits.length > 0) {
@@ -74,6 +88,21 @@ export const World: React.FC = () => {
       }
 
       ensureInitialChunk();
+
+      // Poll player chunk
+      const px = playerPosition.x;
+      const py = playerPosition.y;
+      const pz = playerPosition.z;
+      const pcx = Math.floor(px / chunkSize);
+      const pcy = Math.floor(py / chunkSize);
+      const pcz = Math.floor(pz / chunkSize);
+
+      if (pcx !== playerChunk.cx || pcy !== playerChunk.cy || pcz !== playerChunk.cz) {
+        playerChunk.cx = pcx;
+        playerChunk.cy = pcy;
+        playerChunk.cz = pcz;
+        ensureChunksRadius(pcx, pcy, pcz, 1);
+      }
 
       const mined = frame.delta.minedPositions;
       if (mined && mined.length > 0) {
@@ -97,6 +126,7 @@ export const World: React.FC = () => {
     capacity,
     chunkSize,
     clear,
+    ensureChunksRadius,
     ensureInitialChunk,
     flushRebuild,
     removeVoxel,

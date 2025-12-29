@@ -111,7 +111,7 @@ export const tickDrones = (options: {
               frontierRemoved.push(pos.x, pos.y, pos.z);
             });
 
-            const value = getVoxelValueFromHeight(drone.targetY);
+            const value = getVoxelValueFromHeight(drone.targetY, cfg.terrain.waterLevel);
             uiSnapshot.credits += value * uiSnapshot.prestigeLevel;
             uiSnapshot.minedBlocks += 1;
           }

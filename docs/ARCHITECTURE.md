@@ -93,6 +93,17 @@ Protocol details are specified in `docs/ARCHITECTURE/TECH001-sim-render-separati
 
 Implementation details and constraints are specified in `docs/ARCHITECTURE/TECH002-voxel-world-model.md`.
 
+## Terrain & Water Generation
+
+- **Coordinate System**: Pure Y-up.
+- **Water Level**: Defined in `src/config/terrain.ts` (e.g., `-20`).
+  - Voxels at `y <= waterLevel` are logically "water".
+  - This threshold is authoritative across simulation, rendering, and AI.
+- **Generation Strategy**:
+  - Uses 2D Perlin noise to determine surface height $y$ at $(x, z)$.
+  - `surfaceBias` shifts the entire terrain up/down to ensure sufficient landmass above water.
+  - Mining logic respects `waterLevel` to distinguish "underwater" vs "surface" operations.
+
 ## Player collision (main thread)
 
 Player collision stays on the main thread for responsiveness. To keep collision

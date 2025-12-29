@@ -21,9 +21,9 @@ export const computeVoxel = (x: number, z: number, seed?: number): Voxel => {
   const s = seed ?? getSeed(1);
   const cfg = getConfig();
   const y = getSurfaceHeightCore(x, z, s, cfg.terrain.surfaceBias, cfg.terrain.quantizeScale);
-  const value = getVoxelValueFromHeight(y);
+  const value = getVoxelValueFromHeight(y, cfg.terrain.waterLevel);
   const color = getVoxelColor(y);
-  const type = y < 0.5 ? "water" : "solid";
+  const type = y <= cfg.terrain.waterLevel ? "water" : "solid";
 
   return { x, y, z, color, value, type };
 };

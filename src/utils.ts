@@ -21,8 +21,8 @@ export const getVoxelColor = (y: number): Color => {
   return new Color("#ffffff"); // Snow
 };
 
-export const getVoxelType = (y: number): "water" | "solid" => {
-  if (y < 0.5) return "water";
+export const getVoxelType = (y: number, waterLevel = -20): "water" | "solid" => {
+  if (y <= waterLevel) return "water";
   return "solid";
 };
 

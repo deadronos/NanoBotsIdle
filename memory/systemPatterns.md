@@ -7,6 +7,11 @@
 - `Drones` renders purely from Worker pose/target/state deltas (no sim logic in `useFrame()`).
 - Zustand (`src/ui/store.ts`) is a read-only UI snapshot + panel state.
 
+## Terrain & Water Strategy
+- **Configuration-Driven**: Water level, surface bias, and scale are handled via `src/config/terrain.ts`, not hardcoded constants.
+- **Unified Water Logic**: All systems (render, physics, AI) share the same `waterLevel` configuration to prevent visual/logical mismatches.
+- **Generation**: Terrain value functions return heights relative to the water level to simplify logic (e.g. `y - waterLevel`).
+
 ## Rendering/perf patterns
 - Use `InstancedMesh` for large counts (voxels, particle cubes).
 - Initialize instance matrices/colors in `useLayoutEffect`.
