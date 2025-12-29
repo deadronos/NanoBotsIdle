@@ -1,15 +1,11 @@
 import { getConfig } from "../config/index";
+import type { VoxelEdit } from "../shared/protocol";
+import { MATERIAL_AIR, MATERIAL_BEDROCK, MATERIAL_SOLID, voxelKey } from "../shared/voxel";
 import { getSeed, getSurfaceHeight } from "./terrain";
 
-type VoxelEdit = { x: number; y: number; z: number; mat: number };
-
-export const MATERIAL_AIR = 0;
-export const MATERIAL_SOLID = 1;
-export const MATERIAL_BEDROCK = 2;
+export { MATERIAL_AIR, MATERIAL_BEDROCK, MATERIAL_SOLID };
 
 const edits = new Map<string, number>();
-
-const key = (x: number, y: number, z: number) => `${x},${y},${z}`;
 
 const baseMaterialAt = (x: number, y: number, z: number, seed: number) => {
   const cfg = getConfig();
@@ -21,14 +17,14 @@ const baseMaterialAt = (x: number, y: number, z: number, seed: number) => {
 };
 
 const materialAt = (x: number, y: number, z: number, seed: number) => {
-  const override = edits.get(key(x, y, z));
+  const override = edits.get(voxelKey(x, y, z));
   if (override !== undefined) return override;
   return baseMaterialAt(x, y, z, seed);
 };
 
 export const applyVoxelEdits = (incoming: VoxelEdit[]) => {
   for (const edit of incoming) {
-    edits.set(key(edit.x, edit.y, edit.z), edit.mat);
+    edits.set(voxelKey(edit.x, edit.y, edit.z), edit.mat);
   }
 };
 

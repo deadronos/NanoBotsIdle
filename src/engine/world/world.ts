@@ -1,16 +1,9 @@
 import { getConfig } from "../../config/index";
+import type { VoxelEdit } from "../../shared/protocol";
+import { coordsFromVoxelKey, MATERIAL_AIR, MATERIAL_BEDROCK, MATERIAL_SOLID, voxelKey } from "../../shared/voxel";
 import { getSurfaceHeightCore } from "../../sim/terrain-core";
 
-export const MATERIAL_AIR = 0;
-export const MATERIAL_SOLID = 1;
-export const MATERIAL_BEDROCK = 2;
-
-export type VoxelEdit = {
-  x: number;
-  y: number;
-  z: number;
-  mat: number;
-};
+export { MATERIAL_AIR, MATERIAL_BEDROCK, MATERIAL_SOLID };
 
 type WorldOptions = {
   seed: number;
@@ -32,12 +25,11 @@ export class WorldModel {
   }
 
   key(x: number, y: number, z: number) {
-    return `${x},${y},${z}`;
+    return voxelKey(x, y, z);
   }
 
   coordsFromKey(key: string) {
-    const [x, y, z] = key.split(",").map((value) => Number(value));
-    return { x, y, z };
+    return coordsFromVoxelKey(key);
   }
 
   baseMaterialAt(x: number, y: number, z: number) {
