@@ -1,10 +1,10 @@
 import { useFrame } from "@react-three/fiber";
 import React, { forwardRef, useEffect, useMemo, useRef } from "react";
 import type { InstancedMesh } from "three";
-import { Color, Vector3 } from "three";
+import { Color, Object3D, Vector3 } from "three";
 
 import { getConfig } from "../../config/index";
-import { setInstanceColor, setInstanceTransform } from "../../render/instanced";
+import { setInstanceColor } from "../../render/instanced";
 
 export interface ParticleHandle {
   spawn: (pos: Vector3, color: Color) => void;
@@ -29,6 +29,8 @@ export const Particles = forwardRef<ParticleHandle, ParticlesProps>((props, ref)
       color: new Color(),
     }));
   }, [MAX_PARTICLES]);
+
+  const tmp = useMemo(() => new Object3D(), []);
 
   useEffect(() => {
     const handle = ref as React.MutableRefObject<ParticleHandle | null>;
@@ -80,29 +82,35 @@ export const Particles = forwardRef<ParticleHandle, ParticlesProps>((props, ref)
 
     let needsUpdate = false;
 
-    particles.forEach((p, i) => {
+    const mesh = meshRef.current;
+
+    for (let i = 0; i < particles.length; i += 1) {
+      const p = particles[i];
       if (p.life > 0) {
         p.velocity.y -= cfg.drones.particle.gravity * delta;
         p.position.addScaledVector(p.velocity, delta);
         p.life -= delta;
 
         const currentScale = p.scale * (p.life / p.maxLife);
+        const scale = Math.max(0, currentScale);
 
-        setInstanceTransform(meshRef.current!, i, {
-          position: { x: p.position.x, y: p.position.y, z: p.position.z },
-          scale: {
-            x: Math.max(0, currentScale),
-            y: Math.max(0, currentScale),
-            z: Math.max(0, currentScale),
-          },
-        });
+        tmp.position.copy(p.position);
+        tmp.scale.set(scale, scale, scale);
+        tmp.updateMatrix();
+        mesh.setMatrixAt(i, tmp.matrix);
         needsUpdate = true;
-      } else if (p.scale !== 0) {
+        continue;
+      }
+
+      if (p.scale !== 0) {
         p.scale = 0;
-        setInstanceTransform(meshRef.current!, i, { scale: { x: 0, y: 0, z: 0 } });
+        tmp.position.copy(p.position);
+        tmp.scale.set(0, 0, 0);
+        tmp.updateMatrix();
+        mesh.setMatrixAt(i, tmp.matrix);
         needsUpdate = true;
       }
-    });
+    }
 
     if (needsUpdate) {
       meshRef.current.instanceMatrix.needsUpdate = true;

@@ -2,6 +2,7 @@ import { useCallback, useLayoutEffect, useMemo, useRef, useState } from "react";
 import type { InstancedMesh } from "three";
 import { Object3D } from "three";
 
+import { applyInstanceUpdates } from "../../render/instanced";
 import {
   ensureInstanceColors,
   getInitialCapacity,
@@ -21,6 +22,8 @@ export const useInstancedVoxels = (chunkSize: number) => {
   const solidCountRef = useRef(0);
   const needsRebuild = useRef(false);
   const tmp = useMemo(() => new Object3D(), []);
+
+  const UPDATE_BOTH = useMemo(() => ({ matrix: true, color: true }) as const, []);
 
   const [capacity, setCapacity] = useState(() => getInitialCapacity(chunkSize));
 
@@ -45,11 +48,10 @@ export const useInstancedVoxels = (chunkSize: number) => {
       if (mesh && !needsRebuild.current) {
         setVoxelInstance(mesh, tmp, result.index, x, y, z);
         mesh.count = result.count;
-        if (mesh.instanceMatrix) mesh.instanceMatrix.needsUpdate = true;
-        if (mesh.instanceColor) mesh.instanceColor.needsUpdate = true;
+        applyInstanceUpdates(mesh, UPDATE_BOTH);
       }
     },
-    [ensureCapacity, tmp],
+    [UPDATE_BOTH, ensureCapacity, tmp],
   );
 
   const removeVoxel = useCallback(
@@ -64,11 +66,10 @@ export const useInstancedVoxels = (chunkSize: number) => {
           setVoxelInstance(mesh, tmp, result.index, result.moved.x, result.moved.y, result.moved.z);
         }
         mesh.count = result.count;
-        if (mesh.instanceMatrix) mesh.instanceMatrix.needsUpdate = true;
-        if (mesh.instanceColor) mesh.instanceColor.needsUpdate = true;
+        applyInstanceUpdates(mesh, UPDATE_BOTH);
       }
     },
-    [tmp],
+    [UPDATE_BOTH, tmp],
   );
 
   const clear = useCallback(() => {
@@ -78,10 +79,9 @@ export const useInstancedVoxels = (chunkSize: number) => {
     const mesh = meshRef.current;
     if (mesh) {
       mesh.count = 0;
-      if (mesh.instanceMatrix) mesh.instanceMatrix.needsUpdate = true;
-      if (mesh.instanceColor) mesh.instanceColor.needsUpdate = true;
+      applyInstanceUpdates(mesh, UPDATE_BOTH);
     }
-  }, []);
+  }, [UPDATE_BOTH]);
 
   const flushRebuild = useCallback(() => {
     if (!needsRebuild.current) return;
