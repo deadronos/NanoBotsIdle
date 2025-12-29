@@ -25,8 +25,14 @@ render state (Three objects) and player input/collision state.
 - Do not import Zustand in engine/worker/protocol or renderer code.
 - The main thread must not mutate sim state directly.
 - The Worker must not touch DOM/WebGL/Three APIs.
-- The main thread must not post `STEP` messages faster than the Worker can
+- The main thread must not post `STEP` messages faster than the Worker can      
   respond (tick gating; prevents message backlog).
+
+## Rendering adapter notes
+
+- When using `InstancedMesh` with `vertexColors`, ensure the base geometry has a
+  `color` attribute. Use `ensureGeometryHasVertexColors()` in
+  `src/render/instanced.ts` to avoid black/uninitialized instance colors.
 
 ## Data flow
 

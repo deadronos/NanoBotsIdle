@@ -8,6 +8,8 @@ export type PlayerConfig = {
   swimForce: number;
   buoyancy: number;
   waterDrag: number;
+  spawnX?: number;
+  spawnZ?: number;
   respawnY?: number;
   killPlaneY?: number;
 };
@@ -22,6 +24,8 @@ export const defaultPlayerConfig: PlayerConfig = {
   swimForce: 15.0,
   buoyancy: 15.0,
   waterDrag: 2.0,
+  spawnX: 0,
+  spawnZ: 0,
   respawnY: 10,
   killPlaneY: -20,
 };

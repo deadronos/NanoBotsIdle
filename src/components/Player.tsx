@@ -14,7 +14,10 @@ interface PlayerProps {
 
 export const Player: React.FC<PlayerProps> = ({ viewMode }) => {
   const { camera } = useThree();
-  const [position] = useState(() => new Vector3(0, 10, 0));
+  const cfg = getConfig();
+  const [position] = useState(
+    () => new Vector3(cfg.player.spawnX ?? 0, cfg.player.respawnY ?? 10, cfg.player.spawnZ ?? 0),
+  );
   const velocity = useRef(new Vector3(0, 0, 0));
   const isJumping = useRef(false);
   const groupRef = useRef<Group>(null);
@@ -153,7 +156,7 @@ export const Player: React.FC<PlayerProps> = ({ viewMode }) => {
 
     // Kill plane / respawn
     if (position.y < cfg.player.killPlaneY!) {
-      position.set(0, cfg.player.respawnY!, 0);
+      position.set(cfg.player.spawnX ?? 0, cfg.player.respawnY ?? 10, cfg.player.spawnZ ?? 0);
       velocity.current.set(0, 0, 0);
     }
 

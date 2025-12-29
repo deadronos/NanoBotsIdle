@@ -109,6 +109,9 @@ Decision record: `docs/ARCHITECTURE/DEC001-main-thread-player-collision.md`.
 - Voxels:
   - Rendered via chunk mesh caches (instancing/meshing strategy can evolve).
   - Voxel edits mark affected chunks dirty and schedule rebuilds.
+  - If using `vertexColors` with `InstancedMesh`, ensure the base geometry has a
+    `color` attribute (see `ensureGeometryHasVertexColors()` in
+    `src/render/instanced.ts`) or colors can appear black.
 - Drones:
   - Rendered with instancing; transforms applied imperatively.
   - Per-frame positions must not be stored in Zustand.

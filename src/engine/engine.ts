@@ -119,18 +119,18 @@ export const createEngine = (seed?: number): Engine => {
         frontierKeys = candidateWorld.getFrontierKeys();
         frontierIndex.clear();
         frontierKeys.forEach((key, index) => frontierIndex.set(key, index));
-        uiSnapshot.totalBlocks = frontierKeys.length;
+        uiSnapshot.totalBlocks = aboveWater;
         pendingFrontierSnapshot = candidateWorld.getFrontierPositionsArray();
         pendingFrontierReset = true;
         return;
       }
     }
     world = new WorldModel({ seed: baseSeed });
-    world.initializeFrontierFromSurface(cfg.terrain.worldRadius);
+    const aboveWater = world.initializeFrontierFromSurface(cfg.terrain.worldRadius);
     frontierKeys = world.getFrontierKeys();
     frontierIndex.clear();
     frontierKeys.forEach((key, index) => frontierIndex.set(key, index));
-    uiSnapshot.totalBlocks = frontierKeys.length;
+    uiSnapshot.totalBlocks = aboveWater;
     pendingFrontierSnapshot = world.getFrontierPositionsArray();
     pendingFrontierReset = true;
   };
@@ -196,10 +196,16 @@ export const createEngine = (seed?: number): Engine => {
   const pickTargetKey = () => {
     if (!world) return null;
     if (frontierKeys.length === 0) return null;
+    const waterline = Math.floor(cfg.terrain.waterLevel);
     let attempts = 0;
     while (attempts < maxTargetAttempts) {
       const idx = Math.floor(Math.random() * frontierKeys.length);
       const key = frontierKeys[idx];
+      const { y } = world.coordsFromKey(key);
+      if (y < waterline) {
+        attempts += 1;
+        continue;
+      }
       if (!minedKeys.has(key) && !reservedKeys.has(key)) {
         reservedKeys.add(key);
         return key;
@@ -321,6 +327,7 @@ export const createEngine = (seed?: number): Engine => {
           }
         }
       }
+      uiSnapshot.totalBlocks = world.countFrontierAboveWater();
     }
 
     let entities: Float32Array | undefined;

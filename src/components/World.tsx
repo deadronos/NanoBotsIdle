@@ -1,30 +1,41 @@
 import React, { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import type { InstancedMesh } from "three";
-import { Object3D } from "three";
+import { InstancedBufferAttribute, Object3D } from "three";
 
 import { getConfig } from "../config/index";
-import { applyVoxelEdits, resetVoxelEdits } from "../sim/collision";
+import { ensureGeometryHasVertexColors } from "../render/instanced";
+import { applyVoxelEdits, getVoxelMaterialAt, MATERIAL_SOLID, resetVoxelEdits } from "../sim/collision";
+import { getSeed, getSurfaceHeight } from "../sim/terrain";
 import { getSimBridge } from "../simBridge/simBridge";
+import { useUiStore } from "../ui/store";
 import { getVoxelColor } from "../utils";
 
 const keyFromCoords = (x: number, y: number, z: number) => `${x},${y},${z}`;
+const chunkKey = (cx: number, cy: number, cz: number) => `${cx},${cy},${cz}`;
+const mod = (value: number, size: number) => ((value % size) + size) % size;
 
-const getInitialCapacity = (radius: number) => {
-  const surface = (radius * 2 + 1) ** 2;
-  return Math.max(512, surface);
+const getInitialCapacity = (chunkSize: number) => {
+  return Math.max(512, chunkSize * chunkSize * chunkSize);
 };
 
 export const World: React.FC = () => {
   const meshRef = useRef<InstancedMesh>(null);
-  const frontierPositions = useRef<number[]>([]);
-  const frontierIndex = useRef<Map<string, number>>(new Map());
-  const frontierCount = useRef(0);
+  const solidPositions = useRef<number[]>([]);
+  const solidIndex = useRef<Map<string, number>>(new Map());
+  const solidCount = useRef(0);
+  const activeChunks = useRef<Set<string>>(new Set());
   const needsRebuild = useRef(false);
   const tmp = useMemo(() => new Object3D(), []);
 
   const cfg = getConfig();
   const bridge = getSimBridge();
-  const [capacity, setCapacity] = useState(() => getInitialCapacity(cfg.terrain.worldRadius));
+  const prestigeLevel = useUiStore((state) => state.snapshot.prestigeLevel);
+  const seed = getSeed(prestigeLevel);
+  const chunkSize = cfg.terrain.chunkSize ?? 16;
+  const spawnX = cfg.player.spawnX ?? 0;
+  const spawnZ = cfg.player.spawnZ ?? 0;
+
+  const [capacity, setCapacity] = useState(() => getInitialCapacity(chunkSize));
 
   const ensureCapacity = useCallback(
     (count: number) => {
@@ -51,7 +62,7 @@ export const World: React.FC = () => {
   const rebuildMesh = useCallback(() => {
     const mesh = meshRef.current;
     if (!mesh) return;
-    const positions = frontierPositions.current;
+    const positions = solidPositions.current;
     const count = positions.length / 3;
     for (let i = 0; i < count; i += 1) {
       const base = i * 3;
@@ -62,109 +73,123 @@ export const World: React.FC = () => {
     if (mesh.instanceColor) mesh.instanceColor.needsUpdate = true;
   }, [setVoxelInstance]);
 
-  const loadFrontierSnapshot = useCallback(
-    (positionsArray: Float32Array) => {
-      const positions = Array.from(positionsArray);
-      const map = new Map<string, number>();
-      for (let i = 0; i < positions.length; i += 3) {
-        map.set(keyFromCoords(positions[i], positions[i + 1], positions[i + 2]), i / 3);
-      }
-      frontierPositions.current = positions;
-      frontierIndex.current = map;
-      frontierCount.current = positions.length / 3;
-      ensureCapacity(frontierCount.current);
-      if (!needsRebuild.current) rebuildMesh();
-    },
-    [ensureCapacity, rebuildMesh],
-  );
+  const addVoxel = useCallback(
+    (x: number, y: number, z: number) => {
+      const key = keyFromCoords(x, y, z);
+      if (solidIndex.current.has(key)) return;
+      const index = solidCount.current;
+      solidIndex.current.set(key, index);
+      solidPositions.current.push(x, y, z);
+      solidCount.current += 1;
+      ensureCapacity(solidCount.current);
 
-  const applyFrontierAdds = useCallback(
-    (positionsArray: Float32Array) => {
       const mesh = meshRef.current;
-      const positions = frontierPositions.current;
-      const indexMap = frontierIndex.current;
-      let updated = false;
-      for (let i = 0; i < positionsArray.length; i += 3) {
-        const x = positionsArray[i];
-        const y = positionsArray[i + 1];
-        const z = positionsArray[i + 2];
-        const key = keyFromCoords(x, y, z);
-        if (indexMap.has(key)) continue;
-        const index = frontierCount.current;
-        indexMap.set(key, index);
-        positions.push(x, y, z);
-        frontierCount.current += 1;
-        if (mesh && !needsRebuild.current) {
-          setVoxelInstance(mesh, index, x, y, z);
-          updated = true;
-        }
-      }
-      if (frontierCount.current > capacity) {
-        ensureCapacity(frontierCount.current);
-        return;
-      }
-      if (mesh && !needsRebuild.current && updated) {
-        mesh.count = frontierCount.current;
+      if (mesh && !needsRebuild.current) {
+        setVoxelInstance(mesh, index, x, y, z);
+        mesh.count = solidCount.current;
         if (mesh.instanceMatrix) mesh.instanceMatrix.needsUpdate = true;
         if (mesh.instanceColor) mesh.instanceColor.needsUpdate = true;
       }
     },
-    [capacity, ensureCapacity, setVoxelInstance],
+    [ensureCapacity, setVoxelInstance],
   );
 
-  const applyFrontierRemoves = useCallback(
-    (positionsArray: Float32Array) => {
-      const mesh = meshRef.current;
-      const positions = frontierPositions.current;
-      const indexMap = frontierIndex.current;
-      let updated = false;
-      for (let i = 0; i < positionsArray.length; i += 3) {
-        const x = positionsArray[i];
-        const y = positionsArray[i + 1];
-        const z = positionsArray[i + 2];
-        const key = keyFromCoords(x, y, z);
-        const index = indexMap.get(key);
-        if (index === undefined) continue;
-        const lastIndex = frontierCount.current - 1;
+  const removeVoxel = useCallback(
+    (x: number, y: number, z: number) => {
+      const key = keyFromCoords(x, y, z);
+      const index = solidIndex.current.get(key);
+      if (index === undefined) return;
+      const lastIndex = solidCount.current - 1;
+      const positions = solidPositions.current;
+      if (index !== lastIndex) {
         const lastBase = lastIndex * 3;
-        if (index !== lastIndex) {
-          const lastX = positions[lastBase];
-          const lastY = positions[lastBase + 1];
-          const lastZ = positions[lastBase + 2];
-          positions[index * 3] = lastX;
-          positions[index * 3 + 1] = lastY;
-          positions[index * 3 + 2] = lastZ;
-          const lastKey = keyFromCoords(lastX, lastY, lastZ);
-          indexMap.set(lastKey, index);
-          if (mesh && !needsRebuild.current) {
-            setVoxelInstance(mesh, index, lastX, lastY, lastZ);
-            updated = true;
-          }
+        const lastX = positions[lastBase];
+        const lastY = positions[lastBase + 1];
+        const lastZ = positions[lastBase + 2];
+        positions[index * 3] = lastX;
+        positions[index * 3 + 1] = lastY;
+        positions[index * 3 + 2] = lastZ;
+        const lastKey = keyFromCoords(lastX, lastY, lastZ);
+        solidIndex.current.set(lastKey, index);
+        if (meshRef.current && !needsRebuild.current) {
+          setVoxelInstance(meshRef.current, index, lastX, lastY, lastZ);
         }
-        positions.length -= 3;
-        frontierCount.current -= 1;
-        indexMap.delete(key);
       }
-      if (mesh && !needsRebuild.current && updated) {
-        mesh.count = frontierCount.current;
-        if (mesh.instanceMatrix) mesh.instanceMatrix.needsUpdate = true;
-        if (mesh.instanceColor) mesh.instanceColor.needsUpdate = true;
+      positions.length -= 3;
+      solidCount.current -= 1;
+      solidIndex.current.delete(key);
+      if (meshRef.current && !needsRebuild.current) {
+        meshRef.current.count = solidCount.current;
+        if (meshRef.current.instanceMatrix) meshRef.current.instanceMatrix.needsUpdate = true;
+        if (meshRef.current.instanceColor) meshRef.current.instanceColor.needsUpdate = true;
       }
     },
     [setVoxelInstance],
   );
 
+  const addChunk = useCallback(
+    (cx: number, cy: number, cz: number) => {
+      const key = chunkKey(cx, cy, cz);
+      if (activeChunks.current.has(key)) return;
+      activeChunks.current.add(key);
+
+      const size = chunkSize;
+      const baseX = cx * size;
+      const baseY = cy * size;
+      const baseZ = cz * size;
+
+      ensureCapacity(solidCount.current + size * size * size);
+
+      for (let x = 0; x < size; x += 1) {
+        for (let y = 0; y < size; y += 1) {
+          for (let z = 0; z < size; z += 1) {
+            const wx = baseX + x;
+            const wy = baseY + y;
+            const wz = baseZ + z;
+            if (getVoxelMaterialAt(wx, wy, wz, prestigeLevel) === MATERIAL_SOLID) {
+              addVoxel(wx, wy, wz);
+            }
+          }
+        }
+      }
+      needsRebuild.current = true;
+    },
+    [addVoxel, chunkSize, ensureCapacity, prestigeLevel],
+  );
+
+  const ensureInitialChunk = useCallback(() => {
+    if (activeChunks.current.size > 0) return;
+    const surfaceY = getSurfaceHeight(spawnX, spawnZ, seed);
+    const cy = Math.floor(surfaceY / chunkSize);
+    const baseCx = Math.floor(spawnX / chunkSize);
+    const baseCz = Math.floor(spawnZ / chunkSize);
+    for (let cx = -1; cx <= 1; cx += 1) {
+      for (let cz = -1; cz <= 1; cz += 1) {
+        addChunk(baseCx + cx, cy, baseCz + cz);
+      }
+    }
+  }, [addChunk, chunkSize, seed, spawnX, spawnZ]);
+
   useEffect(() => {
     return bridge.onFrame((frame) => {
       if (frame.delta.edits && frame.delta.edits.length > 0) {
         applyVoxelEdits(frame.delta.edits);
+        frame.delta.edits.forEach((edit) => {
+          if (edit.mat === MATERIAL_SOLID) {
+            addVoxel(edit.x, edit.y, edit.z);
+          } else {
+            removeVoxel(edit.x, edit.y, edit.z);
+          }
+        });
       }
 
       if (frame.delta.frontierReset) {
-        frontierPositions.current = [];
-        frontierIndex.current.clear();
-        frontierCount.current = 0;
+        solidPositions.current = [];
+        solidIndex.current.clear();
+        solidCount.current = 0;
+        activeChunks.current.clear();
         resetVoxelEdits();
+        needsRebuild.current = false;
         if (meshRef.current) {
           meshRef.current.count = 0;
           if (meshRef.current.instanceMatrix) meshRef.current.instanceMatrix.needsUpdate = true;
@@ -172,26 +197,56 @@ export const World: React.FC = () => {
         }
       }
 
-      if (frame.delta.frontierAdd && frame.delta.frontierAdd.length > 0) {
-        if (frame.delta.frontierReset) {
-          loadFrontierSnapshot(frame.delta.frontierAdd);
-        } else {
-          applyFrontierAdds(frame.delta.frontierAdd);
+      ensureInitialChunk();
+
+      const mined = frame.delta.minedPositions;
+      if (mined && mined.length > 0) {
+        for (let i = 0; i < mined.length; i += 3) {
+          const x = mined[i];
+          const y = mined[i + 1];
+          const z = mined[i + 2];
+          const cx = Math.floor(x / chunkSize);
+          const cy = Math.floor(y / chunkSize);
+          const cz = Math.floor(z / chunkSize);
+          const lx = mod(x, chunkSize);
+          const ly = mod(y, chunkSize);
+          const lz = mod(z, chunkSize);
+          if (lx === 0) addChunk(cx - 1, cy, cz);
+          if (lx === chunkSize - 1) addChunk(cx + 1, cy, cz);
+          if (ly === 0) addChunk(cx, cy - 1, cz);
+          if (ly === chunkSize - 1) addChunk(cx, cy + 1, cz);
+          if (lz === 0) addChunk(cx, cy, cz - 1);
+          if (lz === chunkSize - 1) addChunk(cx, cy, cz + 1);
         }
       }
 
-      if (
-        !frame.delta.frontierReset &&
-        frame.delta.frontierRemove &&
-        frame.delta.frontierRemove.length > 0
-      ) {
-        applyFrontierRemoves(frame.delta.frontierRemove);
+      if (needsRebuild.current && meshRef.current && solidCount.current <= capacity) {
+        rebuildMesh();
+        needsRebuild.current = false;
       }
     });
-  }, [applyFrontierAdds, applyFrontierRemoves, bridge, loadFrontierSnapshot]);
+  }, [
+    addChunk,
+    addVoxel,
+    bridge,
+    capacity,
+    chunkSize,
+    ensureInitialChunk,
+    rebuildMesh,
+    removeVoxel,
+  ]);
 
   useLayoutEffect(() => {
     if (!meshRef.current) return;
+    ensureGeometryHasVertexColors(meshRef.current.geometry);
+    if (!meshRef.current.instanceColor || meshRef.current.instanceColor.count !== capacity) {
+      const colors = new Float32Array(capacity * 3);
+      colors.fill(1);
+      meshRef.current.instanceColor = new InstancedBufferAttribute(colors, 3);
+      meshRef.current.geometry.setAttribute("instanceColor", meshRef.current.instanceColor);
+      meshRef.current.instanceColor.needsUpdate = true;
+      needsRebuild.current = true;
+    }
     if (needsRebuild.current) {
       rebuildMesh();
       needsRebuild.current = false;
@@ -202,7 +257,7 @@ export const World: React.FC = () => {
     <group>
       <instancedMesh ref={meshRef} args={[undefined, undefined, capacity]} castShadow receiveShadow>
         <boxGeometry args={[1, 1, 1]} />
-        <meshStandardMaterial roughness={0.8} metalness={0.1} vertexColors />
+        <meshStandardMaterial roughness={0.8} metalness={0.1} vertexColors={true} />
       </instancedMesh>
 
       {/* Water Plane */}

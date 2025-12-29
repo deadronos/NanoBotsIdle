@@ -45,11 +45,13 @@ export const createSimBridge = (options: SimBridgeOptions = {}): SimBridge => {
   let frameId = 0;
   let cmdQueue: Cmd[] = [];
   const frameHandlers = new Set<FrameHandler>();
+  let lastFrame: FrameMessage | null = null;
 
   const handleMessage = (event: MessageEvent<FromWorker>) => {
     const msg = event.data;
     if (msg.t === "FRAME") {
       stepInFlight = false;
+      lastFrame = msg;
       frameHandlers.forEach((handler) => handler(msg));
       return;
     }
@@ -121,6 +123,7 @@ export const createSimBridge = (options: SimBridgeOptions = {}): SimBridge => {
     stepInFlight = false;
     disabled = false;
     initSent = false;
+    lastFrame = null;
   };
 
   const enqueue = (cmd: Cmd) => {
@@ -129,6 +132,9 @@ export const createSimBridge = (options: SimBridgeOptions = {}): SimBridge => {
 
   const onFrame = (handler: FrameHandler) => {
     frameHandlers.add(handler);
+    if (lastFrame) {
+      handler(lastFrame);
+    }
     return () => {
       frameHandlers.delete(handler);
     };

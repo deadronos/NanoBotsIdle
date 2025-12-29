@@ -1,5 +1,5 @@
-import type { Color, InstancedMesh } from "three";
-import { Object3D } from "three";
+import type { BufferGeometry, Color, InstancedMesh } from "three";
+import { BufferAttribute, Color as ThreeColor, Object3D } from "three";
 
 // Reuse a single Object3D to avoid allocations in hot paths
 const _tmp = new Object3D();
@@ -54,4 +54,28 @@ export const populateInstancedMesh = (
 
   if (mesh.instanceMatrix) mesh.instanceMatrix.needsUpdate = true;
   if (mesh.instanceColor) mesh.instanceColor.needsUpdate = true;
+};
+
+export const ensureGeometryHasVertexColors = (
+  geometry: BufferGeometry,
+  color: string | number | Color = 0xffffff,
+) => {
+  const position = geometry.getAttribute("position");
+  if (!position) return;
+
+  const existing = geometry.getAttribute("color");
+  if (existing && existing.count === position.count) return;
+
+  const tmp = new ThreeColor();
+  tmp.set(color as string | number | Color);
+
+  const colors = new Float32Array(position.count * 3);
+  for (let i = 0; i < position.count; i += 1) {
+    const base = i * 3;
+    colors[base] = tmp.r;
+    colors[base + 1] = tmp.g;
+    colors[base + 2] = tmp.b;
+  }
+
+  geometry.setAttribute("color", new BufferAttribute(colors, 3));
 };
