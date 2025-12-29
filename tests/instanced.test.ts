@@ -1,4 +1,4 @@
-import type { Color,InstancedMesh } from "three";
+import type { Color, InstancedMesh } from "three";
 import { describe, expect, it, vi } from "vitest";
 
 import * as I from "../src/render/instanced";
@@ -16,7 +16,10 @@ describe("instanced helpers API (TDD)", () => {
       instanceMatrix: { needsUpdate: false },
     } as unknown as InstancedMesh;
 
-    I.setInstanceTransform(mesh, 2, { position: { x: 1, y: 2, z: 3 }, scale: { x: 1, y: 1, z: 1 } });
+    I.setInstanceTransform(mesh, 2, {
+      position: { x: 1, y: 2, z: 3 },
+      scale: { x: 1, y: 1, z: 1 },
+    });
 
     expect(mesh.setMatrixAt).toHaveBeenCalled();
     expect(mesh.instanceMatrix.needsUpdate).toBe(true);

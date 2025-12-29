@@ -1,4 +1,4 @@
-import { getSeed,getSurfaceHeight } from "./terrain";
+import { getSeed, getSurfaceHeight } from "./terrain";
 import { getConfig } from "../config/index";
 
 export const getPlayerGroundHeight = (x: number, z: number, prestigeLevel = 1): number => {

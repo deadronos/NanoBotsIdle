@@ -1,4 +1,4 @@
-import type { Color,InstancedMesh } from "three";
+import type { Color, InstancedMesh } from "three";
 import { Object3D } from "three";
 
 // Reuse a single Object3D to avoid allocations in hot paths
@@ -7,7 +7,11 @@ const _tmp = new Object3D();
 export const setInstanceTransform = (
   mesh: InstancedMesh,
   index: number,
-  opts: { position?: { x: number; y: number; z: number }; scale?: { x: number; y: number; z: number }; rotation?: { x: number; y: number; z: number } },
+  opts: {
+    position?: { x: number; y: number; z: number };
+    scale?: { x: number; y: number; z: number };
+    rotation?: { x: number; y: number; z: number };
+  },
 ) => {
   const { position, scale, rotation } = opts;
 
@@ -26,13 +30,19 @@ export const setInstanceColor = (mesh: InstancedMesh, index: number, color: Colo
   if (mesh.instanceColor) mesh.instanceColor.needsUpdate = true;
 };
 
-export const applyInstanceUpdates = (mesh: InstancedMesh, opts?: { matrix?: boolean; color?: boolean }) => {
+export const applyInstanceUpdates = (
+  mesh: InstancedMesh,
+  opts?: { matrix?: boolean; color?: boolean },
+) => {
   if (!opts) return;
   if (opts.matrix && mesh.instanceMatrix) mesh.instanceMatrix.needsUpdate = true;
   if (opts.color && mesh.instanceColor) mesh.instanceColor.needsUpdate = true;
 };
 
-export const populateInstancedMesh = (mesh: InstancedMesh, instances: { x: number; y: number; z: number; color?: Color }[]) => {
+export const populateInstancedMesh = (
+  mesh: InstancedMesh,
+  instances: { x: number; y: number; z: number; color?: Color }[],
+) => {
   instances.forEach((inst, i) => {
     setInstanceTransform(mesh, i, {
       position: { x: inst.x, y: inst.y, z: inst.z },

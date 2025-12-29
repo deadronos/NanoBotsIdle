@@ -109,7 +109,7 @@ export const UI: React.FC<UIProps> = ({ viewMode, onToggleView }) => {
 
       {/* Shop Modal */}
       {isShopOpen && <ShopModal onClose={() => setShopOpen(false)} />}
-      
+
       {/* Settings Modal */}
       {isSettingsOpen && <SettingsModal onClose={() => setSettingsOpen(false)} />}
     </div>

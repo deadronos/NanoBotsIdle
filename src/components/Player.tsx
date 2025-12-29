@@ -12,8 +12,6 @@ interface PlayerProps {
   viewMode: ViewMode;
 }
 
-
-
 export const Player: React.FC<PlayerProps> = ({ viewMode }) => {
   const { camera } = useThree();
   const [position] = useState(() => new Vector3(0, 10, 0));
@@ -88,7 +86,6 @@ export const Player: React.FC<PlayerProps> = ({ viewMode }) => {
   }, []);
 
   useFrame((state, delta) => {
-
     // Water & Player Physics (config-driven)
     const cfg = getConfig();
     const isUnderwater = position.y < cfg.terrain.waterLevel;
@@ -97,12 +94,14 @@ export const Player: React.FC<PlayerProps> = ({ viewMode }) => {
     const WATER_DRAG = cfg.player.waterDrag;
 
     // Movement Physics
-    const speed = isUnderwater ? SWIM_SPEED : (keys.current["ShiftLeft"] ? cfg.player.runningSpeed : cfg.player.walkingSpeed);
+    const speed = isUnderwater
+      ? SWIM_SPEED
+      : keys.current["ShiftLeft"]
+        ? cfg.player.runningSpeed
+        : cfg.player.walkingSpeed;
 
     const direction = new Vector3();
-    const forward = new Vector3(0, 0, -1).applyAxisAngle(
-      cameraAngle.current.yaw,
-    );
+    const forward = new Vector3(0, 0, -1).applyAxisAngle(cameraAngle.current.yaw);
     const right = new Vector3(1, 0, 0).applyAxisAngle(
       new Vector3(0, 1, 0),
       cameraAngle.current.yaw,
@@ -127,7 +126,7 @@ export const Player: React.FC<PlayerProps> = ({ viewMode }) => {
       // Vertical Input
       let swimVertical = 0;
       if (keys.current["Space"]) swimVertical += 1; // Swim Up
-      if (keys.current["KeyC"]) swimVertical -= 1;  // Dive Down
+      if (keys.current["KeyC"]) swimVertical -= 1; // Dive Down
 
       // Apply swim force
       velocity.current.y += swimVertical * cfg.player.swimForce * delta;
@@ -138,7 +137,6 @@ export const Player: React.FC<PlayerProps> = ({ viewMode }) => {
 
       // Apply Drag
       velocity.current.y -= velocity.current.y * WATER_DRAG * delta;
-
     } else {
       // Standard Gravity & Jump
       if (keys.current["Space"] && !isJumping.current) {

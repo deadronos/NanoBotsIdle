@@ -1,8 +1,8 @@
-import { describe, expect,it } from "vitest";
+import { describe, expect, it } from "vitest";
 
 import { PLAYER_HEIGHT } from "../src/constants";
 import { getPlayerGroundHeight } from "../src/sim/player";
-import { getSeed,getSurfaceHeight } from "../src/sim/terrain";
+import { getSeed, getSurfaceHeight } from "../src/sim/terrain";
 
 describe("player physics helper (TDD)", () => {
   it("getPlayerGroundHeight should equal surfaceHeight + player offsets", () => {

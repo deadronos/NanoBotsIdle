@@ -3,7 +3,7 @@ import React, { forwardRef, useImperativeHandle, useLayoutEffect, useMemo, useRe
 import type { Group, InstancedMesh, Mesh, MeshBasicMaterial, PointLight } from "three";
 import { Color, Vector3 } from "three";
 
-import { setInstanceColor,setInstanceTransform } from "../render/instanced";
+import { setInstanceColor, setInstanceTransform } from "../render/instanced";
 import { useGameStore } from "../store";
 import { getVoxelColor } from "../utils";
 import { getDroneMoveSpeed, getMineDuration } from "../config/drones";
@@ -94,7 +94,6 @@ const Particles = forwardRef<ParticleHandle, ParticlesProps>((props, ref) => {
     },
   }));
 
-
   useFrame((state, delta) => {
     if (!meshRef.current) return;
 
@@ -113,7 +112,11 @@ const Particles = forwardRef<ParticleHandle, ParticlesProps>((props, ref) => {
         // Update instance matrix using shared helper to avoid allocations in hot paths
         setInstanceTransform(meshRef.current!, i, {
           position: { x: p.position.x, y: p.position.y, z: p.position.z },
-          scale: { x: Math.max(0, currentScale), y: Math.max(0, currentScale), z: Math.max(0, currentScale) },
+          scale: {
+            x: Math.max(0, currentScale),
+            y: Math.max(0, currentScale),
+            z: Math.max(0, currentScale),
+          },
         });
         needsUpdate = true;
       } else if (p.scale !== 0) {

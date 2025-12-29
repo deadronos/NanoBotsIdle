@@ -30,14 +30,15 @@ export const computeVoxel = (x: number, z: number, seed?: number): Voxel => {
 
   return { x, y, z, color, value, type };
 };
-export const getSurfaceHeight = (x: number, z: number, seed?: number): number => computeVoxel(x, z, seed).y;
+export const getSurfaceHeight = (x: number, z: number, seed?: number): number =>
+  computeVoxel(x, z, seed).y;
 
-export const getSmoothHeight = (x: number, z: number, seed?: number): number => noise2D(x, z, seed) * 2;
-
+export const getSmoothHeight = (x: number, z: number, seed?: number): number =>
+  noise2D(x, z, seed) * 2;
 
 export const generateInstances = (seed: number, radius?: number) => {
   const cfg = getConfig();
-  const r = typeof radius === 'number' ? radius : cfg.terrain.worldRadius;
+  const r = typeof radius === "number" ? radius : cfg.terrain.worldRadius;
   const out: Voxel[] = [];
   let idCounter = 0;
   for (let x = -r; x <= r; x++) {

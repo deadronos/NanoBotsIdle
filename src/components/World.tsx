@@ -103,7 +103,9 @@ export const World = forwardRef<WorldApi, WorldProps>((props, ref) => {
 
       {/* Water Plane */}
       <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, cfg.terrain.waterLevel, 0]} receiveShadow>
-        <planeGeometry args={[cfg.terrain.worldRadius * 2 + 20, cfg.terrain.worldRadius * 2 + 20]} />
+        <planeGeometry
+          args={[cfg.terrain.worldRadius * 2 + 20, cfg.terrain.worldRadius * 2 + 20]}
+        />
         <meshStandardMaterial
           color="#42a7ff"
           transparent

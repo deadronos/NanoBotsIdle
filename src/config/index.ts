@@ -33,7 +33,6 @@ let _config: Config = {
   render: _defaultRender,
 };
 
-
 export const getConfig = (): Config => _config;
 
 export const updateConfig = (partial: Partial<Config>) => {
@@ -42,7 +41,12 @@ export const updateConfig = (partial: Partial<Config>) => {
 };
 
 export const resetConfig = () => {
-  _config = { terrain: _defaultTerrain, player: _defaultPlayer, drones: _defaultDrones, render: _defaultRender };
+  _config = {
+    terrain: _defaultTerrain,
+    player: _defaultPlayer,
+    drones: _defaultDrones,
+    render: _defaultRender,
+  };
   return _config;
 };
 

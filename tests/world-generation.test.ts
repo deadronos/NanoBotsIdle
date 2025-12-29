@@ -1,7 +1,7 @@
-import { describe, expect,it } from "vitest";
+import { describe, expect, it } from "vitest";
 
 import { WORLD_RADIUS } from "../src/constants";
-import { computeVoxel,generateInstances } from "../src/sim/terrain";
+import { computeVoxel, generateInstances } from "../src/sim/terrain";
 
 describe("world generation (TDD)", () => {
   it("generateInstances should produce expected number of instances and match computeVoxel for samples", () => {

@@ -1,4 +1,4 @@
-import { describe, expect,it } from "vitest";
+import { describe, expect, it } from "vitest";
 
 // This test models the expected constants API before implementation (TDD failing test)
 import * as C from "../src/constants";

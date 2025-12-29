@@ -1,13 +1,13 @@
-import fs from 'fs/promises';
-import path from 'path';
+import fs from "fs/promises";
+import path from "path";
 
 const NUMBER_REGEX = /(^|[^A-Za-z0-9_\.])(-?\d+(?:\.\d+)?)/g;
 
-async function collectFiles(dir, exts = ['.ts', '.tsx']) {
+async function collectFiles(dir, exts = [".ts", ".tsx"]) {
   const entries = await fs.readdir(dir, { withFileTypes: true });
   const files = [];
   for (const e of entries) {
-    if (e.name === 'node_modules' || e.name === 'dist' || e.name === '.git') continue;
+    if (e.name === "node_modules" || e.name === "dist" || e.name === ".git") continue;
     const res = path.join(dir, e.name);
     if (e.isDirectory()) {
       const nested = await collectFiles(res, exts);
@@ -19,12 +19,12 @@ async function collectFiles(dir, exts = ['.ts', '.tsx']) {
   return files;
 }
 
-export async function findMagicValues({ root = 'src' } = {}) {
+export async function findMagicValues({ root = "src" } = {}) {
   const files = await collectFiles(root);
   const results = [];
   await Promise.all(
     files.map(async (file) => {
-      const txt = await fs.readFile(file, 'utf8');
+      const txt = await fs.readFile(file, "utf8");
       const lines = txt.split(/\r?\n/);
       lines.forEach((line, idx) => {
         let m;
@@ -42,9 +42,9 @@ export async function findMagicValues({ root = 'src' } = {}) {
 }
 
 export async function runCli() {
-  const results = await findMagicValues({ root: 'src' });
+  const results = await findMagicValues({ root: "src" });
   if (results.length === 0) {
-    console.log('No magic values found');
+    console.log("No magic values found");
     return 0;
   }
   console.log(`Found ${results.length} possible magic values:`);
@@ -54,7 +54,7 @@ export async function runCli() {
   return results.length;
 }
 
-if (process.argv[1] && process.argv[1].endsWith('find-magic-values.js')) {
+if (process.argv[1] && process.argv[1].endsWith("find-magic-values.js")) {
   runCli()
     .then((count) => process.exit(count > 0 ? 1 : 0))
     .catch((err) => {

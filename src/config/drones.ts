@@ -97,13 +97,16 @@ export const defaultDronesConfig: DronesConfig = {
 import type { Config } from "./index";
 
 export const getDroneMoveSpeed = (level: number, cfg?: Config) => {
-  if (!cfg) throw new Error('getDroneMoveSpeed: cfg is required (pass getConfig())');
+  if (!cfg) throw new Error("getDroneMoveSpeed: cfg is required (pass getConfig())");
   return cfg.drones.baseMoveSpeed + level * cfg.drones.moveSpeedPerLevel;
 };
 
 export const getMineDuration = (level: number, cfg?: Config) => {
-  if (!cfg) throw new Error('getMineDuration: cfg is required (pass getConfig())');
-  return Math.max(cfg.drones.minMineDuration, cfg.drones.baseMineDuration - level * cfg.drones.mineDurationReductionPerLevel);
+  if (!cfg) throw new Error("getMineDuration: cfg is required (pass getConfig())");
+  return Math.max(
+    cfg.drones.minMineDuration,
+    cfg.drones.baseMineDuration - level * cfg.drones.mineDurationReductionPerLevel,
+  );
 };
 
 export default defaultDronesConfig;
