@@ -88,8 +88,20 @@ export const Player: React.FC<PlayerProps> = ({ viewMode }) => {
   }, []);
 
   useFrame((state, delta) => {
-    // 1. Handle Physics
-    const speed = keys.current["ShiftLeft"] ? RUNNING_SPEED : WALKING_SPEED;
+
+    // Water Physics Constants
+    const WATER_LEVEL = 0.1; // Matched to visual water plane height
+    const SWIM_SPEED = 4.0;
+    const BUOYANCY = 15.0;
+    const WATER_DRAG = 2.0;
+
+    const isUnderwater = position.y < WATER_LEVEL;
+
+    // Movement Physics
+    const speed = isUnderwater 
+      ? SWIM_SPEED 
+      : (keys.current["ShiftLeft"] ? RUNNING_SPEED : WALKING_SPEED);
+      
     const direction = new Vector3();
     const forward = new Vector3(0, 0, -1).applyAxisAngle(
       new Vector3(0, 1, 0),
@@ -107,27 +119,57 @@ export const Player: React.FC<PlayerProps> = ({ viewMode }) => {
 
     if (direction.lengthSq() > 0) direction.normalize().multiplyScalar(speed * delta);
 
-    // Apply movement
+    // Apply horizontal movement
     position.x += direction.x;
     position.z += direction.z;
 
-    // Gravity & Jump
-    if (keys.current["Space"] && !isJumping.current) {
-      velocity.current.y = JUMP_FORCE;
-      isJumping.current = true;
+    // Vertical Physics
+    if (isUnderwater) {
+      // Swimming Logic
+      isJumping.current = false;
+      
+      // Vertical Input
+      let swimVertical = 0;
+      if (keys.current["Space"]) swimVertical += 1; // Swim Up
+      if (keys.current["KeyC"]) swimVertical -= 1;  // Dive Down
+      
+      // Apply swim force
+      velocity.current.y += swimVertical * 15.0 * delta;
+
+      // Apply Buoyancy (pushes up towards surface)
+      // Stronger if deeper
+      const depth = WATER_LEVEL - position.y;
+      velocity.current.y += depth * BUOYANCY * delta; 
+      
+      // Apply Drag
+      velocity.current.y -= velocity.current.y * WATER_DRAG * delta;
+      
+    } else {
+      // Standard Gravity & Jump
+      if (keys.current["Space"] && !isJumping.current) {
+        velocity.current.y = JUMP_FORCE;
+        isJumping.current = true;
+      }
+
+      velocity.current.y -= GRAVITY * delta;
     }
 
-    velocity.current.y -= GRAVITY * delta;
     position.y += velocity.current.y * delta;
 
     // Ground Collision
     const rawNoise = noise2D(Math.round(position.x), Math.round(position.z), 123);
-    const voxelHeight = Math.floor(rawNoise * 3);
-    const groundHeight = voxelHeight + 0.5;
+    // Corresponding matched world generation logic (simplified approximation here or shared ref needed)
+    // Note: If World generation changes logic, this collision logic needs to match exactly 
+    // or we risk sinking into ground. 
+    // Ideally we should export the terrain function. 
+    // user previously edited World.tsx with: Math.floor((rawNoise + 0.1) * 4)
+    // We must mirror that here for accurate collision.
+    const voxelHeight = Math.floor((rawNoise + 0.1) * 4);
+    const groundHeight = voxelHeight + 0.5 + PLAYER_HEIGHT;
 
-    if (position.y < groundHeight + PLAYER_HEIGHT) {
-      position.y = groundHeight + PLAYER_HEIGHT;
-      velocity.current.y = 0;
+    if (position.y < groundHeight) {
+      position.y = groundHeight;
+      velocity.current.y = Math.max(0, velocity.current.y);
       isJumping.current = false;
     }
 

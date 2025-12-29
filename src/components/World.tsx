@@ -24,7 +24,6 @@ const WORLD_RADIUS = 30; // Slightly reduced for performance with many drones
 
 export const World = forwardRef<WorldApi, WorldProps>((props, ref) => {
   const meshRef = useRef<InstancedMesh>(null);
-  const waterMeshRef = useRef<InstancedMesh>(null);
 
   const setTotalBlocks = useGameStore((state) => state.setTotalBlocks);
   const incrementMinedBlocks = useGameStore((state) => state.incrementMinedBlocks);
@@ -32,7 +31,7 @@ export const World = forwardRef<WorldApi, WorldProps>((props, ref) => {
   const seed = 123 + prestigeLevel * 99; // Change seed on prestige
 
   // Generate the terrain data
-  const { instances, waterInstances } = useMemo(() => {
+  const instances = useMemo(() => {
     const tempInstances: {
       x: number;
       y: number;
@@ -41,15 +40,17 @@ export const World = forwardRef<WorldApi, WorldProps>((props, ref) => {
       value: number;
       id: number;
     }[] = [];
-    const tempWater: { x: number; y: number; z: number }[] = [];
     let idCounter = 0;
 
     for (let x = -WORLD_RADIUS; x <= WORLD_RADIUS; x++) {
       for (let z = -WORLD_RADIUS; z <= WORLD_RADIUS; z++) {
         const rawNoise = noise2D(x, z, seed);
-        const h = Math.floor(rawNoise * 3);
+        // Reduce water by adding a positive bias (+0.6)
+        const h = Math.floor((rawNoise + 0.6) * 4);
 
         // Surface Block (Mineable)
+        // Only generate blocks if they are above water-ish level or we want a visible floor
+        // But for optimization, let's keep generating all 'terrain' that is solid
         tempInstances.push({
           x,
           y: h,
@@ -58,22 +59,9 @@ export const World = forwardRef<WorldApi, WorldProps>((props, ref) => {
           value: getVoxelValue(h),
           id: idCounter++,
         });
-
-        // Fill gaps below (Not mineable for simplicity in this version, or we assume infinite depth)
-        // For visual sake, we only mine the top crust in this game loop
-        if (h > -2) {
-          // We add 'bedrock' visual but don't add it to the mineable instances array to keep logic simple
-        }
-
-        const waterLevel = -1;
-        if (h <= waterLevel) {
-          for (let wh = h + 1; wh <= 0; wh++) {
-            tempWater.push({ x, y: wh, z });
-          }
-        }
       }
     }
-    return { instances: tempInstances, waterInstances: tempWater };
+    return tempInstances;
   }, [seed]);
 
   // Track mined blocks via a Ref to avoid re-renders
@@ -141,17 +129,6 @@ export const World = forwardRef<WorldApi, WorldProps>((props, ref) => {
     if (meshRef.current.instanceColor) meshRef.current.instanceColor.needsUpdate = true;
   }, [instances]);
 
-  useLayoutEffect(() => {
-    if (!waterMeshRef.current) return;
-    const dummy = new Object3D();
-    waterInstances.forEach((data, i) => {
-      dummy.position.set(data.x, data.y, data.z);
-      dummy.updateMatrix();
-      waterMeshRef.current!.setMatrixAt(i, dummy.matrix);
-    });
-    waterMeshRef.current.instanceMatrix.needsUpdate = true;
-  }, [waterInstances]);
-
   return (
     <group>
       <instancedMesh
@@ -164,20 +141,17 @@ export const World = forwardRef<WorldApi, WorldProps>((props, ref) => {
         <meshStandardMaterial roughness={0.8} metalness={0.1} />
       </instancedMesh>
 
-      <instancedMesh
-        ref={waterMeshRef}
-        args={[undefined, undefined, waterInstances.length]}
-        receiveShadow
-      >
-        <boxGeometry args={[1, 1, 1]} />
+      {/* Water Plane */}
+      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.2, 0]} receiveShadow>
+        <planeGeometry args={[WORLD_RADIUS * 2 + 20, WORLD_RADIUS * 2 + 20]} />
         <meshStandardMaterial
           color="#42a7ff"
           transparent
-          opacity={0.6}
-          roughness={0.1}
-          metalness={0.1}
+          opacity={0.7}
+          roughness={0.0}
+          metalness={0.3}
         />
-      </instancedMesh>
+      </mesh>
 
       {/* Bedrock layer to prevent holes when surface is mined (visual only) */}
       <mesh position={[0, -5, 0]} receiveShadow rotation={[-Math.PI / 2, 0, 0]}>
