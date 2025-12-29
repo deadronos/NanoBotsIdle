@@ -37,7 +37,7 @@ References:
   - Replace `src/components/World.tsx` imperative API with `applyDelta()` updates (temporary render strategy).
 
 ## Progress Tracking
-**Overall Status:** In Progress - 75%
+**Overall Status:** In Progress - 85%
 
 ### Subtasks
 
@@ -60,6 +60,7 @@ References:
 - Bridged mining rewards/total blocks to the engine via commands.
 - Moved drone simulation into the engine and switched drone rendering to use worker deltas.
 - World now streams a target pool to the worker and applies mined indices from sim deltas.
+- Restored per-drone visuals (lasers/target highlight) using worker-sent target/state arrays.
 
 ## Design Link
 - `memory/designs/DESIGN004-worker-authoritative-sim-engine-refactor.md`

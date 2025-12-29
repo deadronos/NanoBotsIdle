@@ -21,6 +21,10 @@ export const createEngine = (seed?: number): Engine => {
   const reservedIndices = new Set<number>();
 
   type DroneState = "SEEKING" | "MOVING" | "MINING";
+  const DRONE_SEEKING = 0;
+  const DRONE_MOVING = 1;
+  const DRONE_MINING = 2;
+
   type Drone = {
     id: number;
     x: number;
@@ -270,14 +274,34 @@ export const createEngine = (seed?: number): Engine => {
     }
 
     let entities: Float32Array | undefined;
+    let entityTargets: Float32Array | undefined;
+    let entityStates: Uint8Array | undefined;
     if (drones.length > 0) {
       entities = new Float32Array(drones.length * 3);
+      entityTargets = new Float32Array(drones.length * 3);
+      entityStates = new Uint8Array(drones.length);
       for (let i = 0; i < drones.length; i += 1) {
         const base = i * 3;
         const drone = drones[i];
         entities[base] = drone.x;
         entities[base + 1] = drone.y;
         entities[base + 2] = drone.z;
+
+        let stateValue = DRONE_SEEKING;
+        if (drone.state === "MOVING") stateValue = DRONE_MOVING;
+        if (drone.state === "MINING") stateValue = DRONE_MINING;
+        entityStates[i] = stateValue;
+
+        if (targetPositions && drone.targetIndex >= 0) {
+          const targetBase = drone.targetIndex * 3;
+          entityTargets[base] = targetPositions[targetBase];
+          entityTargets[base + 1] = targetPositions[targetBase + 1];
+          entityTargets[base + 2] = targetPositions[targetBase + 2];
+        } else {
+          entityTargets[base] = Number.NaN;
+          entityTargets[base + 1] = Number.NaN;
+          entityTargets[base + 2] = Number.NaN;
+        }
       }
     }
 
@@ -289,6 +313,8 @@ export const createEngine = (seed?: number): Engine => {
       delta: {
         tick,
         entities,
+        entityTargets,
+        entityStates,
         minedIndices: minedIndicesArray,
         minedPositions: minedPositionsArray,
       },
