@@ -1,20 +1,16 @@
 import { useFrame } from "@react-three/fiber";
 import React, { useEffect, useRef } from "react";
-import type { Group, Mesh, MeshBasicMaterial, PointLight } from "three";
+import type { Group, Mesh, PointLight } from "three";
 import { Vector3 } from "three";
 
 import { getConfig } from "../config/index";
 import { getSimBridge } from "../simBridge/simBridge";
 import { useUiStore } from "../ui/store";
-import { getVoxelColor } from "../utils";
 import type { FlashHandle } from "./drones/FlashEffect";
 import { FlashEffect } from "./drones/FlashEffect";
 import type { ParticleHandle } from "./drones/Particles";
 import { Particles } from "./drones/Particles";
-
-const DRONE_SEEKING = 0;
-const DRONE_MOVING = 1;
-const DRONE_MINING = 2;
+import { updateDronesFrame } from "./drones/updateDronesFrame";
 
 export const Drones: React.FC = () => {
   const cfg = getConfig();
@@ -53,127 +49,30 @@ export const Drones: React.FC = () => {
     const states = statesRef.current;
     if (!positions || !targets || !states) return;
 
-    const count = Math.min(snapshot.droneCount, Math.floor(positions.length / 3));
+    const didConsumeMined = updateDronesFrame({
+      cfg,
+      droneCount: snapshot.droneCount,
+      positions,
+      targets,
+      states,
+      refs: {
+        groupRefs: groupRefs.current,
+        miningLaserRefs: miningLaserRefs.current,
+        scanningLaserRefs: scanningLaserRefs.current,
+        targetBoxRefs: targetBoxRefs.current,
+        impactLightRefs: impactLightRefs.current,
+      },
+      effects: {
+        particles: particlesRef.current,
+        flash: flashRef.current,
+      },
+      tempWorldTarget: tempTarget.current,
+      tempLocalTarget: tempLocal.current,
+      frameState: state,
+      minedPositions: minedPositionsRef.current,
+    });
 
-    for (let i = 0; i < count; i += 1) {
-      const group = groupRefs.current[i];
-      if (!group) continue;
-
-      const base = i * 3;
-      const x = positions[base];
-      const y = positions[base + 1];
-      const z = positions[base + 2];
-
-      const bob = Math.sin(state.clock.elapsedTime * cfg.drones.visual.bobbing.speed + i) *
-        cfg.drones.visual.bobbing.amplitude;
-      group.position.set(x, y + bob, z);
-
-      const targetX = targets[base];
-      const targetY = targets[base + 1];
-      const targetZ = targets[base + 2];
-      const hasTarget = Number.isFinite(targetX) && Number.isFinite(targetY) && Number.isFinite(targetZ);
-      const droneState = states[i] ?? DRONE_SEEKING;
-
-      const isMining = droneState === DRONE_MINING && hasTarget;
-      const isMoving = droneState === DRONE_MOVING && hasTarget;
-
-      if (hasTarget) {
-        tempTarget.current.set(targetX, targetY, targetZ);
-        group.lookAt(tempTarget.current);
-      }
-
-      const miningLaser = miningLaserRefs.current[i];
-      if (miningLaser) {
-        miningLaser.visible = isMining;
-        if (isMining && hasTarget) {
-          tempLocal.current.set(targetX, targetY, targetZ);
-          const localTarget = group.worldToLocal(tempLocal.current);
-          const dist = localTarget.length();
-          const jitter =
-            cfg.drones.visual.miningLaser.baseWidth +
-            Math.sin(state.clock.elapsedTime * 40) * cfg.drones.visual.miningLaser.jitterAmplitude;
-
-          miningLaser.scale.set(jitter, dist, jitter);
-          miningLaser.position.set(0, 0, 0).lerp(localTarget, 0.5);
-          miningLaser.lookAt(localTarget);
-          miningLaser.rotation.x += Math.PI / 2;
-
-          const material = miningLaser.material as MeshBasicMaterial;
-          material.opacity =
-            cfg.drones.visual.miningLaser.opacityBase +
-            Math.sin(state.clock.elapsedTime * cfg.drones.visual.miningLaser.opacityFreq) * 0.3;
-        }
-      }
-
-      const scanningLaser = scanningLaserRefs.current[i];
-      if (scanningLaser) {
-        scanningLaser.visible = isMoving;
-        if (isMoving && hasTarget) {
-          tempLocal.current.set(targetX, targetY, targetZ);
-          const localTarget = group.worldToLocal(tempLocal.current);
-          const dist = localTarget.length();
-
-          scanningLaser.scale.set(1, dist, 1);
-          scanningLaser.position.set(0, 0, 0).lerp(localTarget, 0.5);
-          scanningLaser.lookAt(localTarget);
-          scanningLaser.rotation.x += Math.PI / 2;
-
-          const material = scanningLaser.material as MeshBasicMaterial;
-          material.opacity =
-            cfg.drones.visual.scanningLaser.opacityBase +
-            Math.sin(state.clock.elapsedTime * cfg.drones.visual.scanningLaser.opacityFreq) *
-              cfg.drones.visual.scanningLaser.opacityAmplitude;
-        }
-      }
-
-      const targetBox = targetBoxRefs.current[i];
-      if (targetBox) {
-        targetBox.visible = hasTarget;
-        if (hasTarget) {
-          tempLocal.current.set(targetX, targetY, targetZ);
-          const localTarget = group.worldToLocal(tempLocal.current);
-          targetBox.position.copy(localTarget);
-
-          const scale =
-            cfg.drones.visual.targetBox.baseScale +
-            Math.sin(state.clock.elapsedTime * cfg.drones.visual.targetBox.pulseFreq) *
-              cfg.drones.visual.targetBox.pulseAmplitude;
-          targetBox.scale.setScalar(scale);
-          targetBox.rotation.y += 0.02;
-
-          const material = targetBox.material as MeshBasicMaterial;
-          material.color.setHex(isMining ? 0xff3333 : 0x00ffff);
-        }
-      }
-
-      const impactLight = impactLightRefs.current[i];
-      if (impactLight) {
-        impactLight.visible = isMining;
-        if (isMining && hasTarget) {
-          tempLocal.current.set(targetX, targetY + 0.5, targetZ);
-          const localTarget = group.worldToLocal(tempLocal.current);
-          impactLight.position.copy(localTarget);
-          impactLight.intensity =
-            cfg.drones.visual.impactLight.baseIntensity +
-            Math.random() * cfg.drones.visual.impactLight.randomIntensity;
-        }
-      }
-    }
-
-    const minedPositions = minedPositionsRef.current;
-    if (minedPositions && minedPositions.length > 0) {
-      for (let i = 0; i < minedPositions.length; i += 3) {
-        tempTarget.current.set(minedPositions[i], minedPositions[i + 1], minedPositions[i + 2]);
-        const blockColor = getVoxelColor(tempTarget.current.y);
-        if (flashRef.current) {
-          flashRef.current.trigger(tempTarget.current);
-        }
-        if (particlesRef.current) {
-          for (let j = 0; j < cfg.drones.particle.burstCount; j += 1) {
-            particlesRef.current.spawn(tempTarget.current, blockColor);
-          }
-        }
-      }
+    if (didConsumeMined) {
       minedPositionsRef.current = null;
     }
   });

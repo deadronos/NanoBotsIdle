@@ -1,9 +1,18 @@
 import { getDroneMoveSpeed, getMineDuration } from "../config/drones";
 import { getConfig } from "../config/index";
+import { computeNextUpgradeCosts, tryBuyUpgrade, type UpgradeType } from "../economy/upgrades";
+import { DRONE_STATE_ID, type DroneStateId } from "../shared/droneState";
 import type { Cmd, RenderDelta, UiSnapshot } from "../shared/protocol";
-import { getSeed } from "../sim/terrain";
 import { getVoxelValueFromHeight } from "../sim/terrain-core";
-import { WorldModel } from "./world/world";
+import { type Drone, syncDroneCount } from "./drones";
+import {
+  addKey as addKeyToIndex,
+  createKeyIndex,
+  removeKey as removeKeyFromIndex,
+  resetKeyIndex,
+} from "./keyIndex";
+import { initWorldForPrestige } from "./world/initWorld";
+import type { WorldModel } from "./world/world";
 
 export type Engine = {
   dispatch: (cmd: Cmd) => void;
@@ -14,36 +23,17 @@ export type Engine = {
   ) => { delta: RenderDelta; ui: UiSnapshot; backlog: number };
 };
 
-export const createEngine = (seed?: number): Engine => {
+export const createEngine = (_seed?: number): Engine => {
   let tick = 0;
   const cfg = getConfig();
   const maxTargetAttempts = 20;
   const minedKeys = new Set<string>();
   const reservedKeys = new Set<string>();
   let world: WorldModel | null = null;
-  void seed;
-  let frontierKeys: string[] = [];
-  const frontierIndex = new Map<string, number>();
+  void _seed;
+  const frontier = createKeyIndex();
   let pendingFrontierSnapshot: Float32Array | null = null;
   let pendingFrontierReset = false;
-
-  type DroneState = "SEEKING" | "MOVING" | "MINING";
-  const DRONE_SEEKING = 0;
-  const DRONE_MOVING = 1;
-  const DRONE_MINING = 2;
-
-  type Drone = {
-    id: number;
-    x: number;
-    y: number;
-    z: number;
-    targetKey: string | null;
-    targetX: number;
-    targetY: number;
-    targetZ: number;
-    state: DroneState;
-    miningTimer: number;
-  };
 
   let drones: Drone[] = [];
 
@@ -59,47 +49,11 @@ export const createEngine = (seed?: number): Engine => {
     upgrades: {},
   };
 
-  const getUpgradeCost = (type: "drone" | "speed" | "move" | "laser") => {
-    const baseCosts = cfg.economy.baseCosts;
-    switch (type) {
-      case "drone":
-        return Math.floor(baseCosts.drone * Math.pow(1.5, uiSnapshot.droneCount - 3));
-      case "speed":
-        return Math.floor(baseCosts.speed * Math.pow(1.3, uiSnapshot.miningSpeedLevel - 1));
-      case "move":
-        return Math.floor(baseCosts.move * Math.pow(1.3, uiSnapshot.moveSpeedLevel - 1));
-      case "laser":
-        return Math.floor(baseCosts.laser * Math.pow(1.4, uiSnapshot.laserPowerLevel - 1));
-    }
-  };
-
   const updateNextCosts = () => {
-    uiSnapshot.nextCosts = {
-      drone: getUpgradeCost("drone"),
-      speed: getUpgradeCost("speed"),
-      move: getUpgradeCost("move"),
-      laser: getUpgradeCost("laser"),
-    };
+    uiSnapshot.nextCosts = computeNextUpgradeCosts(uiSnapshot, cfg);
   };
 
   updateNextCosts();
-
-  const addFrontierKey = (key: string) => {
-    if (frontierIndex.has(key)) return;
-    frontierIndex.set(key, frontierKeys.length);
-    frontierKeys.push(key);
-  };
-
-  const removeFrontierKey = (key: string) => {
-    const idx = frontierIndex.get(key);
-    if (idx === undefined) return;
-    const lastIdx = frontierKeys.length - 1;
-    const lastKey = frontierKeys[lastIdx];
-    frontierKeys[idx] = lastKey;
-    frontierIndex.set(lastKey, idx);
-    frontierKeys.pop();
-    frontierIndex.delete(key);
-  };
 
   const resetTargets = () => {
     minedKeys.clear();
@@ -107,100 +61,27 @@ export const createEngine = (seed?: number): Engine => {
   };
 
   const ensureSeedWithMinAboveWater = (prestigeLevel: number) => {
-    const baseSeed = getSeed(prestigeLevel);
-    const retryLimit = cfg.terrain.genRetries ?? 5;
-    const minBlocks = cfg.economy.prestigeMinMinedBlocks;
-    for (let attempt = 0; attempt <= retryLimit; attempt += 1) {
-      const candidateSeed = baseSeed + attempt * 101;
-      const candidateWorld = new WorldModel({ seed: candidateSeed });
-      const aboveWater = candidateWorld.initializeFrontierFromSurface(cfg.terrain.worldRadius);
-      if (aboveWater >= minBlocks) {
-        world = candidateWorld;
-        frontierKeys = candidateWorld.getFrontierKeys();
-        frontierIndex.clear();
-        frontierKeys.forEach((key, index) => frontierIndex.set(key, index));
-        uiSnapshot.totalBlocks = aboveWater;
-        pendingFrontierSnapshot = candidateWorld.getFrontierPositionsArray();
-        pendingFrontierReset = true;
-        return;
-      }
-    }
-    world = new WorldModel({ seed: baseSeed });
-    const aboveWater = world.initializeFrontierFromSurface(cfg.terrain.worldRadius);
-    frontierKeys = world.getFrontierKeys();
-    frontierIndex.clear();
-    frontierKeys.forEach((key, index) => frontierIndex.set(key, index));
-    uiSnapshot.totalBlocks = aboveWater;
-    pendingFrontierSnapshot = world.getFrontierPositionsArray();
+    const result = initWorldForPrestige(prestigeLevel, cfg);
+    world = result.world;
+    resetKeyIndex(frontier, result.frontierKeys);
+    uiSnapshot.totalBlocks = result.aboveWaterCount;
+    pendingFrontierSnapshot = result.frontierPositions;
     pendingFrontierReset = true;
   };
 
   ensureSeedWithMinAboveWater(uiSnapshot.prestigeLevel);
 
-  const buyUpgrade = (id: string) => {
-    if (id === "drone") {
-      const cost = getUpgradeCost("drone");
-      if (uiSnapshot.credits >= cost) {
-        uiSnapshot.credits -= cost;
-        uiSnapshot.droneCount += 1;
-      }
-      return;
-    }
-    if (id === "speed") {
-      const cost = getUpgradeCost("speed");
-      if (uiSnapshot.credits >= cost) {
-        uiSnapshot.credits -= cost;
-        uiSnapshot.miningSpeedLevel += 1;
-      }
-      return;
-    }
-    if (id === "move") {
-      const cost = getUpgradeCost("move");
-      if (uiSnapshot.credits >= cost) {
-        uiSnapshot.credits -= cost;
-        uiSnapshot.moveSpeedLevel += 1;
-      }
-      return;
-    }
-    if (id === "laser") {
-      const cost = getUpgradeCost("laser");
-      if (uiSnapshot.credits >= cost) {
-        uiSnapshot.credits -= cost;
-        uiSnapshot.laserPowerLevel += 1;
-      }
-    }
-  };
-
-  const syncDroneCount = () => {
-    if (drones.length === uiSnapshot.droneCount) return;
-    if (drones.length < uiSnapshot.droneCount) {
-      for (let i = drones.length; i < uiSnapshot.droneCount; i += 1) {
-        drones.push({
-          id: i,
-          x: 0,
-          y: cfg.drones.startHeightBase + Math.random() * cfg.drones.startHeightRandom,
-          z: 0,
-          targetKey: null,
-          targetX: Number.NaN,
-          targetY: Number.NaN,
-          targetZ: Number.NaN,
-          state: "SEEKING",
-          miningTimer: 0,
-        });
-      }
-      return;
-    }
-    drones = drones.slice(0, uiSnapshot.droneCount);
-  };
+  const isUpgradeType = (id: string): id is UpgradeType =>
+    id === "drone" || id === "speed" || id === "move" || id === "laser";
 
   const pickTargetKey = () => {
     if (!world) return null;
-    if (frontierKeys.length === 0) return null;
+    if (frontier.keys.length === 0) return null;
     const waterline = Math.floor(cfg.terrain.waterLevel);
     let attempts = 0;
     while (attempts < maxTargetAttempts) {
-      const idx = Math.floor(Math.random() * frontierKeys.length);
-      const key = frontierKeys[idx];
+      const idx = Math.floor(Math.random() * frontier.keys.length);
+      const key = frontier.keys[idx];
       const { y } = world.coordsFromKey(key);
       if (y < waterline) {
         attempts += 1;
@@ -218,9 +99,10 @@ export const createEngine = (seed?: number): Engine => {
   const dispatch = (cmd: Cmd) => {
     switch (cmd.t) {
       case "BUY_UPGRADE": {
+        if (!isUpgradeType(cmd.id)) return;
         const count = Math.max(1, cmd.n);
         for (let i = 0; i < count; i += 1) {
-          buyUpgrade(cmd.id);
+          tryBuyUpgrade(cmd.id, uiSnapshot, cfg);
         }
         updateNextCosts();
         return;
@@ -244,7 +126,7 @@ export const createEngine = (seed?: number): Engine => {
     _maxSubsteps: number,
   ) => {
     tick += 1;
-    syncDroneCount();
+    drones = syncDroneCount(drones, uiSnapshot.droneCount, cfg);
 
     const dtSeconds = _dtSeconds;
     const moveSpeed = getDroneMoveSpeed(uiSnapshot.moveSpeedLevel, cfg);
@@ -304,13 +186,13 @@ export const createEngine = (seed?: number): Engine => {
                   minedPositions.push(drone.targetX, drone.targetY, drone.targetZ);
                   editsThisTick.push(editResult.edit);
                   editResult.frontierAdded.forEach((pos) => {
-                    const addKey = world!.key(pos.x, pos.y, pos.z);
-                    addFrontierKey(addKey);
+                    const key = world!.key(pos.x, pos.y, pos.z);
+                    addKeyToIndex(frontier, key);
                     frontierAdded.push(pos.x, pos.y, pos.z);
                   });
                   editResult.frontierRemoved.forEach((pos) => {
-                    const removeKey = world!.key(pos.x, pos.y, pos.z);
-                    removeFrontierKey(removeKey);
+                    const key = world!.key(pos.x, pos.y, pos.z);
+                    removeKeyFromIndex(frontier, key);
                     frontierRemoved.push(pos.x, pos.y, pos.z);
                   });
 
@@ -344,9 +226,9 @@ export const createEngine = (seed?: number): Engine => {
         entities[base + 1] = drone.y;
         entities[base + 2] = drone.z;
 
-        let stateValue = DRONE_SEEKING;
-        if (drone.state === "MOVING") stateValue = DRONE_MOVING;
-        if (drone.state === "MINING") stateValue = DRONE_MINING;
+        let stateValue: DroneStateId = DRONE_STATE_ID.SEEKING;
+        if (drone.state === "MOVING") stateValue = DRONE_STATE_ID.MOVING;
+        if (drone.state === "MINING") stateValue = DRONE_STATE_ID.MINING;
         entityStates[i] = stateValue;
 
         entityTargets[base] = drone.targetX;
