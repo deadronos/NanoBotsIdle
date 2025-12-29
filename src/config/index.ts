@@ -1,10 +1,12 @@
-import type {DronesConfig } from "./drones";
+import type { DronesConfig } from "./drones";
 import { defaultDronesConfig as _defaultDrones } from "./drones";
-import type {PlayerConfig } from "./player";
+import type { EconomyConfig } from "./economy";
+import { defaultEconomyConfig as _defaultEconomy } from "./economy";
+import type { PlayerConfig } from "./player";
 import { defaultPlayerConfig as _defaultPlayer } from "./player";
-import type {RenderConfig } from "./render";
+import type { RenderConfig } from "./render";
 import { defaultRenderConfig as _defaultRender } from "./render";
-import type {TerrainConfig } from "./terrain";
+import type { TerrainConfig } from "./terrain";
 import { defaultTerrainConfig as _defaultTerrain } from "./terrain";
 
 export type Config = {
@@ -12,15 +14,28 @@ export type Config = {
   player: PlayerConfig;
   drones: DronesConfig;
   render: RenderConfig;
+  economy: EconomyConfig;
 };
 
-const deepMerge = (a: any, b: any) => {
-  const out = { ...a };
-  Object.keys(b || {}).forEach((k) => {
-    if (b[k] && typeof b[k] === "object" && !Array.isArray(b[k]) && a[k]) {
-      out[k] = deepMerge(a[k], b[k]);
+type PlainObject = Record<string, unknown>;
+type DeepPartial<T> = {
+  [K in keyof T]?: T[K] extends PlainObject ? DeepPartial<T[K]> : T[K];
+};
+
+const isPlainObject = (value: unknown): value is PlainObject => {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
+};
+
+const deepMerge = (a: PlainObject, b: PlainObject): PlainObject => {
+  const out = { ...a } as PlainObject;
+  (Object.keys(b || {}) as (keyof PlainObject)[]).forEach((key) => {
+    const next = b[key];
+    if (next === undefined) return;
+    const current = a[key];
+    if (isPlainObject(current) && isPlainObject(next)) {
+      out[key] = deepMerge(current, next);
     } else {
-      out[k] = b[k];
+      out[key] = next;
     }
   });
   return out;
@@ -31,12 +46,13 @@ let _config: Config = {
   player: _defaultPlayer,
   drones: _defaultDrones,
   render: _defaultRender,
+  economy: _defaultEconomy,
 };
 
 export const getConfig = (): Config => _config;
 
-export const updateConfig = (partial: Partial<Config>) => {
-  _config = deepMerge(_config, partial);
+export const updateConfig = (partial: DeepPartial<Config>) => {
+  _config = deepMerge(_config as PlainObject, partial as PlainObject) as Config;
   return _config;
 };
 
@@ -46,6 +62,7 @@ export const resetConfig = () => {
     player: _defaultPlayer,
     drones: _defaultDrones,
     render: _defaultRender,
+    economy: _defaultEconomy,
   };
   return _config;
 };

@@ -1,7 +1,7 @@
 import fs from "fs/promises";
 import path from "path";
 
-const NUMBER_REGEX = /(^|[^A-Za-z0-9_\.])(-?\d+(?:\.\d+)?)/g;
+const NUMBER_REGEX = /(^|[^A-Za-z0-9_.])(-?\d+(?:\.\d+)?)/g;
 
 async function collectFiles(dir, exts = [".ts", ".tsx"]) {
   const entries = await fs.readdir(dir, { withFileTypes: true });

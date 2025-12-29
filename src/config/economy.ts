@@ -5,6 +5,7 @@ export type EconomyConfig = {
     move: number;
     laser: number;
   };
+  prestigeMinMinedBlocks: number;
 };
 
 export const defaultEconomyConfig: EconomyConfig = {
@@ -14,4 +15,5 @@ export const defaultEconomyConfig: EconomyConfig = {
     move: 50,
     laser: 200,
   },
+  prestigeMinMinedBlocks: 50,
 };
