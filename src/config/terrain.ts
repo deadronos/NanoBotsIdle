@@ -17,7 +17,7 @@ export const defaultTerrainConfig: TerrainConfig = {
   chunkSize: 16,
   surfaceBias: 0.6,
   quantizeScale: 4,
-  waterLevel: -10,
+  waterLevel:-20,
   bedrockY: -50,
   genRetries: 5,
 };
