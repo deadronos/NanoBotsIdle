@@ -2,7 +2,7 @@
 
 ## In Progress
 
-- (none)
+- [TASK002] Centralize terrain & constants — Centralize terrain generation and shared constants to ensure deterministic physics and visuals (In Progress)
 
 ## Pending
 
