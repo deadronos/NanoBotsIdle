@@ -4,13 +4,17 @@ export const INVENTORY_BLOCKS: BlockId[] = [
   BlockId.Grass,
   BlockId.Dirt,
   BlockId.Stone,
+  BlockId.CoalOre,
+  BlockId.IronOre,
+  BlockId.GoldOre,
+  BlockId.DiamondOre,
   BlockId.Sand,
   BlockId.Wood,
   BlockId.Leaves,
   BlockId.Planks,
   BlockId.Brick,
   BlockId.Glass,
-  BlockId.Torch
+  BlockId.Torch,
 ];
 
 export function isPlaceableBlock(id: BlockId): boolean {

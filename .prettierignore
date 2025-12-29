@@ -1,0 +1,10 @@
+dist
+coverage
+node_modules
+.vite
+.github
+memory
+docs
+plans
+specs
+*.min.*

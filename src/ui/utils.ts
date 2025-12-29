@@ -1,15 +1,13 @@
-const tilesPerRow = 16;
-const tilePx = 16;
-const atlasPx = tilesPerRow * tilePx;
+import { ATLAS_PX, TILE_PX, TILES_PER_ROW } from "../config/atlas";
 
 export function iconStyle(tile: number, atlasUrl?: string) {
   if (!atlasUrl) return undefined;
-  const x = (tile % tilesPerRow) * tilePx;
-  const y = Math.floor(tile / tilesPerRow) * tilePx;
+  const x = (tile % TILES_PER_ROW) * TILE_PX;
+  const y = Math.floor(tile / TILES_PER_ROW) * TILE_PX;
   return {
     backgroundImage: `url(${atlasUrl})`,
     backgroundPosition: `-${x}px -${y}px`,
-    backgroundSize: `${atlasPx}px ${atlasPx}px`
+    backgroundSize: `${ATLAS_PX}px ${ATLAS_PX}px`,
   } as const;
 }
 

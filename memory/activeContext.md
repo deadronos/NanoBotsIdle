@@ -2,15 +2,19 @@
 
 ## Current focus
 
-Backfilling project documentation so AI agents and maintainers can quickly understand the architecture, invariants, and workflows.
+Implemented DESIGN006 lighting propagation, torch emission, and mob spawning with tests.
 
 ## Recently added/updated
 
-- `.github/copilot-instructions.md`: concise, repo-specific Copilot guidance.
-- `AGENTS.md`: extended agent guide referencing Copilot instructions and the Memory Bank.
-- `/memory/*`: core Memory Bank files for project brief, patterns, and requirements.
+- `src/voxel/lighting.ts`: bounded light queue + propagation helpers.
+- `src/voxel/World.ts`: light arrays, sunlight updates, torch emission hooks.
+- `src/voxel/meshing.ts`: vertex colors from per-block lighting.
+- `src/game/GameScene.tsx`: lighting updates per frame, vertex color material.
+- `src/game/ecs/gameEcs.ts`: mob spawning system + configs.
+- Added lighting + mob spawn tests under `src/voxel` and `src/game/ecs`.
 
 ## Next steps
 
-- Decide whether to add a test runner (e.g., Vitest) to make the default TDD workflow easy to apply.
-- If/when tests exist, document the command(s) and where to place them.
+- Tune light propagation limits/thresholds and spawn parameters for gameplay feel.
+- Add mob rendering/AI behaviors to visualize spawns.
+- Consider optimizing lighting rebuilds (partial vertex color updates).

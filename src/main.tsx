@@ -1,7 +1,9 @@
+import "./ui/style.css";
+
 import React from "react";
 import { createRoot } from "react-dom/client";
+
 import App from "./ui/App";
-import "./ui/style.css";
 
 const root = document.getElementById("root");
 if (!root) throw new Error("Missing #root element");
@@ -9,5 +11,5 @@ if (!root) throw new Error("Missing #root element");
 createRoot(root).render(
   <React.StrictMode>
     <App />
-  </React.StrictMode>
+  </React.StrictMode>,
 );

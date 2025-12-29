@@ -1,5 +1,14 @@
 import { create } from "zustand";
-import { BlockId, BLOCK_ID_LIST } from "../voxel/World";
+
+import { BLOCK_ID_LIST, BlockId } from "../voxel/World";
+import {
+  DEFAULT_TOOL_ID,
+  ToolId,
+  type ToolStack,
+  applyToolDamage,
+  createToolStack,
+  getToolDef,
+} from "../voxel/tools";
 import type { Recipe } from "./recipes";
 
 export type Vec3 = { x: number; y: number; z: number };
@@ -11,6 +20,12 @@ export type GameStats = {
   timeOfDay: number;
 };
 
+export type MiningState = {
+  active: boolean;
+  progress: number;
+  blockId: BlockId | null;
+};
+
 export type GameStore = {
   pointerLocked: boolean;
   requestPointerLock?: () => void;
@@ -19,6 +34,9 @@ export type GameStore = {
   hotbar: BlockId[];
   selectedSlot: number;
   inventory: Record<number, number>;
+  tools: Partial<Record<ToolId, ToolStack>>;
+  equippedToolId?: ToolId;
+  mining: MiningState;
   stats: GameStats;
   targetBlock: BlockId | null;
   setPointerLocked: (locked: boolean) => void;
@@ -29,6 +47,10 @@ export type GameStore = {
   setHotbarSlot: (slot: number, id: BlockId) => void;
   addItem: (id: BlockId, count?: number) => void;
   consumeItem: (id: BlockId, count?: number) => boolean;
+  addTool: (id: ToolId, count?: number) => void;
+  equipTool: (id?: ToolId) => void;
+  applyToolDurability: (id: ToolId, amount?: number) => void;
+  setMining: (partial: Partial<MiningState>) => void;
   craft: (recipe: Recipe) => boolean;
   setStats: (partial: Partial<GameStats>) => void;
   setTargetBlock: (id: BlockId | null) => void;
@@ -50,8 +72,15 @@ const seededInventory: Record<number, number> = {
   [BlockId.Planks]: 0,
   [BlockId.Brick]: 0,
   [BlockId.Glass]: 0,
-  [BlockId.Torch]: 0
+  [BlockId.Torch]: 0,
 };
+
+const seededTools: Partial<Record<ToolId, ToolStack>> = {};
+const defaultToolDef = getToolDef(DEFAULT_TOOL_ID);
+if (defaultToolDef) {
+  seededTools[defaultToolDef.id] = createToolStack(defaultToolDef, 1);
+}
+const defaultEquippedToolId = defaultToolDef?.id;
 
 const defaultHotbar: BlockId[] = [
   BlockId.Grass,
@@ -62,7 +91,7 @@ const defaultHotbar: BlockId[] = [
   BlockId.Planks,
   BlockId.Glass,
   BlockId.Brick,
-  BlockId.Leaves
+  BlockId.Leaves,
 ];
 
 export const useGameStore = create<GameStore>((set, get) => ({
@@ -73,11 +102,14 @@ export const useGameStore = create<GameStore>((set, get) => ({
   hotbar: defaultHotbar,
   selectedSlot: 0,
   inventory: seededInventory,
+  tools: seededTools,
+  equippedToolId: defaultEquippedToolId,
+  mining: { active: false, progress: 0, blockId: null },
   stats: {
     fps: 0,
     position: { x: 0, y: 0, z: 0 },
     chunkCount: 0,
-    timeOfDay: 0
+    timeOfDay: 0,
   },
   targetBlock: null,
   setPointerLocked: (locked) => set({ pointerLocked: locked }),
@@ -107,6 +139,47 @@ export const useGameStore = create<GameStore>((set, get) => ({
     set({ inventory });
     return true;
   },
+  addTool: (id, count = 1) => {
+    const def = getToolDef(id);
+    if (!def) return;
+    const tools = { ...get().tools };
+    const existing = tools[id];
+    if (existing) {
+      tools[id] = {
+        count: existing.count + Math.max(0, Math.floor(count)),
+        durability: existing.durability,
+      };
+    } else {
+      tools[id] = createToolStack(def, count);
+    }
+    set({ tools });
+  },
+  equipTool: (id) => {
+    if (!id) {
+      set({ equippedToolId: undefined });
+      return;
+    }
+    const tools = get().tools;
+    if (!tools[id]) return;
+    set({ equippedToolId: id });
+  },
+  applyToolDurability: (id, amount = 1) => {
+    const def = getToolDef(id);
+    if (!def) return;
+    const tools = { ...get().tools };
+    const existing = tools[id];
+    if (!existing) return;
+    const next = applyToolDamage(existing, def, amount);
+    if (!next) {
+      delete tools[id];
+      const equipped = get().equippedToolId === id ? undefined : get().equippedToolId;
+      set({ tools, equippedToolId: equipped });
+      return;
+    }
+    tools[id] = next;
+    set({ tools });
+  },
+  setMining: (partial) => set({ mining: { ...get().mining, ...partial } }),
   craft: (recipe) => {
     const inventory = { ...get().inventory };
     for (const input of recipe.input) {
@@ -120,5 +193,5 @@ export const useGameStore = create<GameStore>((set, get) => ({
     return true;
   },
   setStats: (partial) => set({ stats: { ...get().stats, ...partial } }),
-  setTargetBlock: (id) => set({ targetBlock: id })
+  setTargetBlock: (id) => set({ targetBlock: id }),
 }));

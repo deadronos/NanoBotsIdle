@@ -1,5 +1,8 @@
 import * as THREE from "three";
-import { World, BlockId, BLOCKS } from "./World";
+
+import { PLAYER_CAMERA, PLAYER_INPUT, PLAYER_PHYSICS, PLAYER_SPAWN } from "../config/player";
+import type { World } from "./World";
+import { BlockId, BLOCKS } from "./World";
 
 type PlayerControllerOpts = {
   camera: THREE.PerspectiveCamera;
@@ -28,29 +31,42 @@ export class PlayerController {
   // Camera angles
   private yaw = 0;
   private pitch = 0;
+  private prevPosition = new THREE.Vector3(0, 30, 0);
 
   private handleKeyDown?: (e: KeyboardEvent) => void;
   private handleKeyUp?: (e: KeyboardEvent) => void;
   private handleMouseMove?: (e: MouseEvent) => void;
 
   private input: InputState = {
-    forward: false, back: false, left: false, right: false, jump: false, sprint: false,
+    forward: false,
+    back: false,
+    left: false,
+    right: false,
+    jump: false,
+    sprint: false,
   };
 
   // Physics params
-  private gravity = -24;
-  private walkSpeed = 6.0;
-  private sprintMult = 1.6;
-  private jumpSpeed = 8.2;
-  private friction = 10.0;
-  private airControl = 0.15;
+  private gravity = PLAYER_PHYSICS.gravity;
+  private walkSpeed = PLAYER_PHYSICS.walkSpeed;
+  private sprintMult = PLAYER_PHYSICS.sprintMultiplier;
+  private jumpSpeed = PLAYER_PHYSICS.jumpSpeed;
+  private friction = PLAYER_PHYSICS.friction;
+  private airControl = PLAYER_PHYSICS.airControl;
 
   // Collider (AABB)
   // Like Minecraft: width ~0.6, height ~1.8
-  private halfW = 0.3;
-  private height = 1.78;
+  private halfW = PLAYER_PHYSICS.halfWidth;
+  private height = PLAYER_PHYSICS.height;
 
   private onGround = false;
+
+  private tmpMoveDir = new THREE.Vector3();
+  private tmpForward = new THREE.Vector3();
+  private tmpRight = new THREE.Vector3();
+  private tmpDesiredVel = new THREE.Vector3();
+  private tmpHorizVel = new THREE.Vector3();
+  private tmpNext = new THREE.Vector3();
 
   constructor(opts: PlayerControllerOpts) {
     this.camera = opts.camera;
@@ -73,7 +89,7 @@ export class PlayerController {
       left: false,
       right: false,
       jump: false,
-      sprint: false
+      sprint: false,
     };
   }
 
@@ -85,21 +101,24 @@ export class PlayerController {
 
   teleportToSafeSpawn(): void {
     // find a solid block in center chunk and spawn above it.
-    const spawnX = 8;
-    const spawnZ = 8;
-    let y = 50;
-    for (; y > 2; y--) {
+    const spawnX = PLAYER_SPAWN.x;
+    const spawnZ = PLAYER_SPAWN.z;
+    let y = PLAYER_SPAWN.scanStartY;
+    for (; y > PLAYER_SPAWN.minY; y--) {
       const below = this.world.getBlock(spawnX, y - 1, spawnZ);
       if (below !== BlockId.Air && BLOCKS[below].solid) break;
     }
-    this.position.set(spawnX + 0.5, y + 2.2, spawnZ + 0.5);
+    this.position.set(spawnX + 0.5, y + PLAYER_SPAWN.offsetY, spawnZ + 0.5);
     this.velocity.set(0, 0, 0);
-    this.syncCamera();
+    this.capturePreviousState();
+    this.syncCamera(1);
   }
 
   cameraWorldPosition(): THREE.Vector3 {
     // Camera at eye height
-    return this.position.clone().add(new THREE.Vector3(0, this.height * 0.92, 0));
+    return this.position
+      .clone()
+      .add(new THREE.Vector3(0, this.height * PLAYER_CAMERA.eyeHeightFactor, 0));
   }
 
   cameraWorldDirection(): THREE.Vector3 {
@@ -116,16 +135,22 @@ export class PlayerController {
     const bMin = new THREE.Vector3(bx, by, bz);
     const bMax = new THREE.Vector3(bx + 1, by + 1, bz + 1);
 
-    return (min.x < bMax.x && max.x > bMin.x)
-      && (min.y < bMax.y && max.y > bMin.y)
-      && (min.z < bMax.z && max.z > bMin.z);
+    return (
+      min.x < bMax.x &&
+      max.x > bMin.x &&
+      min.y < bMax.y &&
+      max.y > bMin.y &&
+      min.z < bMax.z &&
+      max.z > bMin.z
+    );
   }
 
   update(dt: number): void {
+    this.capturePreviousState();
     // Movement input in world space (XZ plane)
-    const moveDir = new THREE.Vector3();
-    const forward = new THREE.Vector3(Math.sin(this.yaw), 0, Math.cos(this.yaw) * -1); // camera forward projected
-    const right = new THREE.Vector3(forward.z, 0, -forward.x);
+    const moveDir = this.tmpMoveDir.set(0, 0, 0);
+    const forward = this.tmpForward.set(-Math.sin(this.yaw), 0, Math.cos(this.yaw) * -1); // camera forward projected
+    const right = this.tmpRight.set(-forward.z, 0, forward.x);
 
     if (this.input.forward) moveDir.add(forward);
     if (this.input.back) moveDir.sub(forward);
@@ -138,8 +163,8 @@ export class PlayerController {
     const speed = this.walkSpeed * (this.input.sprint ? this.sprintMult : 1);
 
     // Horizontal velocity change.
-    const desiredVel = moveDir.multiplyScalar(speed);
-    const horizVel = new THREE.Vector3(this.velocity.x, 0, this.velocity.z);
+    const desiredVel = this.tmpDesiredVel.copy(moveDir).multiplyScalar(speed);
+    const horizVel = this.tmpHorizVel.set(this.velocity.x, 0, this.velocity.z);
 
     if (this.onGround) {
       // Friction towards desired velocity.
@@ -164,7 +189,7 @@ export class PlayerController {
     this.velocity.y += this.gravity * dt;
 
     // Integrate with axis-separated collision resolution.
-    const next = this.position.clone().add(this.velocity.clone().multiplyScalar(dt));
+    const next = this.tmpNext.copy(this.velocity).multiplyScalar(dt).add(this.position);
     this.onGround = false;
 
     // X
@@ -180,15 +205,25 @@ export class PlayerController {
     this.resolveCollisionsAxis("y");
 
     // Safety clamp
-    if (this.position.y < -10) this.teleportToSafeSpawn();
-
-    this.syncCamera();
+    if (this.position.y < PLAYER_SPAWN.fallResetY) this.teleportToSafeSpawn();
   }
 
-  private syncCamera(): void {
-    const eye = this.cameraWorldPosition();
-    this.camera.position.copy(eye);
+  syncCamera(alpha: number): void {
+    const t = Math.min(Math.max(alpha, 0), 1);
+    const interpX = lerp(this.prevPosition.x, this.position.x, t);
+    const interpY = lerp(this.prevPosition.y, this.position.y, t);
+    const interpZ = lerp(this.prevPosition.z, this.position.z, t);
+
+    this.camera.position.set(
+      interpX,
+      interpY + this.height * PLAYER_CAMERA.eyeHeightFactor,
+      interpZ,
+    );
     this.camera.rotation.set(this.pitch, this.yaw, 0, "YXZ");
+  }
+
+  private capturePreviousState(): void {
+    this.prevPosition.copy(this.position);
   }
 
   private resolveCollisionsAxis(axis: "x" | "y" | "z"): void {
@@ -215,7 +250,7 @@ export class PlayerController {
           if (!aabbIntersects(min, max, bMin, bMax)) continue;
 
           if (axis === "x") {
-            const leftPen = bMax.x - min.x;  // push +x
+            const leftPen = bMax.x - min.x; // push +x
             const rightPen = max.x - bMin.x; // push -x
             if (leftPen < rightPen) {
               this.position.x += leftPen + 1e-4;
@@ -237,18 +272,19 @@ export class PlayerController {
             this.velocity.z = 0;
             min.z = this.position.z - this.halfW;
             max.z = this.position.z + this.halfW;
-          } else { // y
+          } else {
+            // y
             const downPen = bMax.y - min.y; // push +y
-            const upPen = max.y - bMin.y;   // push -y
+            const upPen = max.y - bMin.y; // push -y
             if (downPen < upPen) {
-              // we're below the block (rare)
+              // landed on block
               this.position.y += downPen + 1e-4;
+              if (this.velocity.y < 0) this.onGround = true;
               this.velocity.y = Math.max(0, this.velocity.y);
             } else {
-              // landed on block
+              // hit head on block
               this.position.y -= upPen + 1e-4;
-              if (this.velocity.y < 0) this.onGround = true;
-              this.velocity.y = 0;
+              if (this.velocity.y > 0) this.velocity.y = 0;
             }
             min.y = this.position.y;
             max.y = this.position.y + this.height;
@@ -282,11 +318,12 @@ export class PlayerController {
   }
 
   private bindMouseLook(): void {
-    const clampPitch = (p: number) => Math.max(-Math.PI / 2 + 0.01, Math.min(Math.PI / 2 - 0.01, p));
+    const clampPitch = (p: number) =>
+      Math.max(-Math.PI / 2 + 0.01, Math.min(Math.PI / 2 - 0.01, p));
 
     this.handleMouseMove = (e) => {
       if (document.pointerLockElement !== this.domElement) return;
-      const sens = 0.0022;
+      const sens = PLAYER_INPUT.mouseSensitivity;
       this.yaw -= e.movementX * sens;
       this.pitch -= e.movementY * sens;
       this.pitch = clampPitch(this.pitch);
@@ -296,8 +333,22 @@ export class PlayerController {
   }
 }
 
-function aabbIntersects(aMin: THREE.Vector3, aMax: THREE.Vector3, bMin: THREE.Vector3, bMax: THREE.Vector3): boolean {
-  return (aMin.x < bMax.x && aMax.x > bMin.x)
-    && (aMin.y < bMax.y && aMax.y > bMin.y)
-    && (aMin.z < bMax.z && aMax.z > bMin.z);
+function aabbIntersects(
+  aMin: THREE.Vector3,
+  aMax: THREE.Vector3,
+  bMin: THREE.Vector3,
+  bMax: THREE.Vector3,
+): boolean {
+  return (
+    aMin.x < bMax.x &&
+    aMax.x > bMin.x &&
+    aMin.y < bMax.y &&
+    aMax.y > bMin.y &&
+    aMin.z < bMax.z &&
+    aMax.z > bMin.z
+  );
+}
+
+function lerp(a: number, b: number, t: number): number {
+  return a + (b - a) * t;
 }

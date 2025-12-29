@@ -1,5 +1,7 @@
-import * as THREE from "three";
-import { World, BlockId, BLOCKS } from "./World";
+import type * as THREE from "three";
+
+import type { World } from "./World";
+import { BlockId } from "./World";
 
 export type BlockHit = {
   block: { x: number; y: number; z: number };
@@ -11,27 +13,42 @@ export type BlockHit = {
 /**
  * Fast voxel raycast via 3D DDA (Amanatides & Woo).
  */
-export function pickBlockDDA(world: World, origin: THREE.Vector3, direction: THREE.Vector3, maxDist: number): BlockHit | null {
-  const dir = direction.clone().normalize();
+export function pickBlockDDA(
+  world: World,
+  origin: THREE.Vector3,
+  direction: THREE.Vector3,
+  maxDist: number,
+): BlockHit | null {
+  const dirX = direction.x;
+  const dirY = direction.y;
+  const dirZ = direction.z;
+  const len = Math.hypot(dirX, dirY, dirZ);
+  if (len === 0) return null;
+  const dx = dirX / len;
+  const dy = dirY / len;
+  const dz = dirZ / len;
   const o = origin;
 
   let x = Math.floor(o.x);
   let y = Math.floor(o.y);
   let z = Math.floor(o.z);
 
-  const stepX = dir.x > 0 ? 1 : -1;
-  const stepY = dir.y > 0 ? 1 : -1;
-  const stepZ = dir.z > 0 ? 1 : -1;
+  const stepX = dx > 0 ? 1 : -1;
+  const stepY = dy > 0 ? 1 : -1;
+  const stepZ = dz > 0 ? 1 : -1;
 
-  const tDeltaX = dir.x === 0 ? Number.POSITIVE_INFINITY : Math.abs(1 / dir.x);
-  const tDeltaY = dir.y === 0 ? Number.POSITIVE_INFINITY : Math.abs(1 / dir.y);
-  const tDeltaZ = dir.z === 0 ? Number.POSITIVE_INFINITY : Math.abs(1 / dir.z);
+  const tDeltaX = dx === 0 ? Number.POSITIVE_INFINITY : Math.abs(1 / dx);
+  const tDeltaY = dy === 0 ? Number.POSITIVE_INFINITY : Math.abs(1 / dy);
+  const tDeltaZ = dz === 0 ? Number.POSITIVE_INFINITY : Math.abs(1 / dz);
 
   const frac = (v: number) => v - Math.floor(v);
 
-  let tMaxX = dir.x === 0 ? Number.POSITIVE_INFINITY : (dir.x > 0 ? (1 - frac(o.x)) : frac(o.x)) * tDeltaX;
-  let tMaxY = dir.y === 0 ? Number.POSITIVE_INFINITY : (dir.y > 0 ? (1 - frac(o.y)) : frac(o.y)) * tDeltaY;
-  let tMaxZ = dir.z === 0 ? Number.POSITIVE_INFINITY : (dir.z > 0 ? (1 - frac(o.z)) : frac(o.z)) * tDeltaZ;
+  let tMaxX =
+    dx === 0 ? Number.POSITIVE_INFINITY : (dx > 0 ? 1 - frac(o.x) : frac(o.x)) * tDeltaX;
+  let tMaxY =
+    dy === 0 ? Number.POSITIVE_INFINITY : (dy > 0 ? 1 - frac(o.y) : frac(o.y)) * tDeltaY;
+  let tMaxZ =
+    dz === 0 ? Number.POSITIVE_INFINITY : (dz > 0 ? 1 - frac(o.z) : frac(o.z)) * tDeltaZ;
 
   // Track which face we crossed last to get hit normal.
   let lastStep: { x: number; y: number; z: number } = { x: 0, y: 0, z: 0 };
@@ -39,7 +56,6 @@ export function pickBlockDDA(world: World, origin: THREE.Vector3, direction: THR
 
   const isHitBlock = (id: BlockId): boolean => {
     if (id === BlockId.Air) return false;
-    const def = BLOCKS[id];
     // Treat water as "not hittable" by default; you can change this.
     if (id === BlockId.Water) return false;
     return true;
@@ -52,7 +68,7 @@ export function pickBlockDDA(world: World, origin: THREE.Vector3, direction: THR
       block: { x, y, z },
       normal: { x: 0, y: 1, z: 0 },
       t: 0,
-      id: startId
+      id: startId,
     };
   }
 
@@ -89,7 +105,7 @@ export function pickBlockDDA(world: World, origin: THREE.Vector3, direction: THR
         block: { x, y, z },
         normal: { x: lastStep.x, y: lastStep.y, z: lastStep.z },
         t,
-        id
+        id,
       };
     }
   }

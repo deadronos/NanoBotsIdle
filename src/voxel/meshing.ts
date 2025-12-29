@@ -1,9 +1,21 @@
 import * as THREE from "three";
-import { World, Chunk, BlockId, BLOCKS } from "./World";
+
+import { TILE_SIZE, TILES_PER_ROW } from "../config/atlas";
+import type { Chunk, World } from "./World";
+import { BlockId, BLOCKS } from "./World";
+
+export type MeshBuffers = {
+  positions: Float32Array;
+  normals: Float32Array;
+  uvs: Float32Array;
+  colors: Float32Array;
+  indices: Uint32Array;
+};
 
 export type BuiltGeometry = {
-  geometry: THREE.BufferGeometry;
+  buffers: MeshBuffers;
   vertexCount: number;
+  indexCount: number;
 };
 
 type Face = {
@@ -20,59 +32,117 @@ type Face = {
 const FACES: Face[] = [
   {
     name: "px",
-    v: [[1,0,0],[1,1,0],[1,1,1],[1,0,1]],
-    n: [1,0,0],
-    o: [1,0,0],
-    uv: [[0,0],[0,1],[1,1],[1,0]],
+    v: [
+      [1, 0, 0],
+      [1, 1, 0],
+      [1, 1, 1],
+      [1, 0, 1],
+    ],
+    n: [1, 0, 0],
+    o: [1, 0, 0],
+    uv: [
+      [0, 0],
+      [0, 1],
+      [1, 1],
+      [1, 0],
+    ],
   },
   {
     name: "nx",
-    v: [[0,0,1],[0,1,1],[0,1,0],[0,0,0]],
-    n: [-1,0,0],
-    o: [-1,0,0],
-    uv: [[0,0],[0,1],[1,1],[1,0]],
+    v: [
+      [0, 0, 1],
+      [0, 1, 1],
+      [0, 1, 0],
+      [0, 0, 0],
+    ],
+    n: [-1, 0, 0],
+    o: [-1, 0, 0],
+    uv: [
+      [0, 0],
+      [0, 1],
+      [1, 1],
+      [1, 0],
+    ],
   },
   {
     name: "py",
-    v: [[0,1,1],[1,1,1],[1,1,0],[0,1,0]],
-    n: [0,1,0],
-    o: [0,1,0],
-    uv: [[0,0],[1,0],[1,1],[0,1]],
+    v: [
+      [0, 1, 1],
+      [1, 1, 1],
+      [1, 1, 0],
+      [0, 1, 0],
+    ],
+    n: [0, 1, 0],
+    o: [0, 1, 0],
+    uv: [
+      [0, 0],
+      [1, 0],
+      [1, 1],
+      [0, 1],
+    ],
   },
   {
     name: "ny",
-    v: [[0,0,0],[1,0,0],[1,0,1],[0,0,1]],
-    n: [0,-1,0],
-    o: [0,-1,0],
-    uv: [[0,0],[1,0],[1,1],[0,1]],
+    v: [
+      [0, 0, 0],
+      [1, 0, 0],
+      [1, 0, 1],
+      [0, 0, 1],
+    ],
+    n: [0, -1, 0],
+    o: [0, -1, 0],
+    uv: [
+      [0, 0],
+      [1, 0],
+      [1, 1],
+      [0, 1],
+    ],
   },
   {
     name: "pz",
-    v: [[1,0,1],[1,1,1],[0,1,1],[0,0,1]],
-    n: [0,0,1],
-    o: [0,0,1],
-    uv: [[0,0],[0,1],[1,1],[1,0]],
+    v: [
+      [1, 0, 1],
+      [1, 1, 1],
+      [0, 1, 1],
+      [0, 0, 1],
+    ],
+    n: [0, 0, 1],
+    o: [0, 0, 1],
+    uv: [
+      [0, 0],
+      [0, 1],
+      [1, 1],
+      [1, 0],
+    ],
   },
   {
     name: "nz",
-    v: [[0,0,0],[0,1,0],[1,1,0],[1,0,0]],
-    n: [0,0,-1],
-    o: [0,0,-1],
-    uv: [[0,0],[0,1],[1,1],[1,0]],
+    v: [
+      [0, 0, 0],
+      [0, 1, 0],
+      [1, 1, 0],
+      [1, 0, 0],
+    ],
+    n: [0, 0, -1],
+    o: [0, 0, -1],
+    uv: [
+      [0, 0],
+      [0, 1],
+      [1, 1],
+      [1, 0],
+    ],
   },
 ];
 
 function isFaceVisible(
-  world: World,
-  wx: number,
-  wy: number,
-  wz: number,
-  nx: number,
-  ny: number,
-  nz: number,
-  selfId: BlockId
+  getBlock: (x: number, y: number, z: number) => BlockId,
+  x: number,
+  y: number,
+  z: number,
+  face: Face,
+  selfId: BlockId,
 ): boolean {
-  const b = world.getBlock(wx + nx, wy + ny, wz + nz);
+  const b = getBlock(x + face.o[0], y + face.o[1], z + face.o[2]);
   if (b === BlockId.Air) return true;
   const neighbor = BLOCKS[b];
   if (b === selfId && neighbor.transparent) return false;
@@ -86,60 +156,198 @@ function tileForFace(id: BlockId, face: Face): number {
   const t = def.tile;
   if (face.name === "py" && t.top != null) return t.top;
   if (face.name === "ny" && t.bottom != null) return t.bottom;
-  if (t.side != null && (face.name === "px" || face.name === "nx" || face.name === "pz" || face.name === "nz")) return t.side;
+  if (
+    t.side != null &&
+    (face.name === "px" || face.name === "nx" || face.name === "pz" || face.name === "nz")
+  )
+    return t.side;
   return t.all ?? 0;
 }
 
-export function buildChunkGeometry(world: World, chunk: Chunk): BuiltGeometry {
+function sampleVertexLight(
+  getLight: (x: number, y: number, z: number) => number,
+  x: number,
+  y: number,
+  z: number,
+  face: Face,
+  v: [number, number, number],
+): number {
+  switch (face.name) {
+    case "px":
+      return getLight(x + 1, y + v[1], z + v[2]);
+    case "nx":
+      return getLight(x - 1, y + v[1], z + v[2]);
+    case "py":
+      return getLight(x + v[0], y + 1, z + v[2]);
+    case "ny":
+      return getLight(x + v[0], y - 1, z + v[2]);
+    case "pz":
+      return getLight(x + v[0], y + v[1], z + 1);
+    case "nz":
+      return getLight(x + v[0], y + v[1], z - 1);
+    default:
+      return getLight(x, y, z);
+  }
+}
+
+export function buildChunkGeometry(
+  world: World,
+  chunk: Chunk,
+  buffers?: MeshBuffers,
+): BuiltGeometry {
   const { x: sx, y: sy, z: sz } = chunk.size;
   const baseX = chunk.cx * sx;
   const baseZ = chunk.cz * sz;
 
-  const positions: number[] = [];
-  const normals: number[] = [];
-  const uvs: number[] = [];
-  const indices: number[] = [];
+  const meshBuffers = buffers ?? createMeshBuffers();
+  let positions = meshBuffers.positions;
+  let normals = meshBuffers.normals;
+  let uvs = meshBuffers.uvs;
+  let colors = meshBuffers.colors;
+  let indices = meshBuffers.indices;
 
-  const tilesPerRow = 16; // must match atlas.ts
-  const tileSize = 1 / tilesPerRow;
+  const neighbors = {
+    nx: world.getChunk(chunk.cx - 1, chunk.cz),
+    px: world.getChunk(chunk.cx + 1, chunk.cz),
+    nz: world.getChunk(chunk.cx, chunk.cz - 1),
+    pz: world.getChunk(chunk.cx, chunk.cz + 1),
+  };
+
+  const getBlockLocal = (lx: number, ly: number, lz: number): BlockId => {
+    if (ly < 0 || ly >= sy) return BlockId.Air;
+    if (lx >= 0 && lx < sx && lz >= 0 && lz < sz) {
+      return chunk.getLocal(lx, ly, lz);
+    }
+
+    let neighbor: Chunk | undefined;
+    let nx = lx;
+    let nz = lz;
+
+    if (lx < 0) {
+      neighbor = neighbors.nx;
+      nx = lx + sx;
+    } else if (lx >= sx) {
+      neighbor = neighbors.px;
+      nx = lx - sx;
+    }
+
+    if (lz < 0) {
+      if (neighbor) {
+        return world.getBlock(baseX + lx, ly, baseZ + lz);
+      }
+      neighbor = neighbors.nz;
+      nz = lz + sz;
+    } else if (lz >= sz) {
+      if (neighbor) {
+        return world.getBlock(baseX + lx, ly, baseZ + lz);
+      }
+      neighbor = neighbors.pz;
+      nz = lz - sz;
+    }
+
+    if (!neighbor) return BlockId.Air;
+    return neighbor.getLocal(nx, ly, nz);
+  };
+
+  const getLightLocal = (lx: number, ly: number, lz: number): number => {
+    if (ly < 0 || ly >= sy) return 0;
+    if (lx >= 0 && lx < sx && lz >= 0 && lz < sz) {
+      const idx = chunk.idx(lx, ly, lz);
+      return Math.max(chunk.sunLight[idx], chunk.blockLight[idx]);
+    }
+
+    let neighbor: Chunk | undefined;
+    let nx = lx;
+    let nz = lz;
+
+    if (lx < 0) {
+      neighbor = neighbors.nx;
+      nx = lx + sx;
+    } else if (lx >= sx) {
+      neighbor = neighbors.px;
+      nx = lx - sx;
+    }
+
+    if (lz < 0) {
+      if (neighbor) {
+        return world.getLightAt(baseX + lx, ly, baseZ + lz);
+      }
+      neighbor = neighbors.nz;
+      nz = lz + sz;
+    } else if (lz >= sz) {
+      if (neighbor) {
+        return world.getLightAt(baseX + lx, ly, baseZ + lz);
+      }
+      neighbor = neighbors.pz;
+      nz = lz - sz;
+    }
+
+    if (!neighbor) return 0;
+    const idx = neighbor.idx(nx, ly, nz);
+    return Math.max(neighbor.sunLight[idx], neighbor.blockLight[idx]);
+  };
 
   let vertCount = 0;
+  let posIndex = 0;
+  let normIndex = 0;
+  let uvIndex = 0;
+  let colorIndex = 0;
+  let indexIndex = 0;
 
   for (let y = 0; y < sy; y++) {
     for (let z = 0; z < sz; z++) {
       for (let x = 0; x < sx; x++) {
         const id = chunk.getLocal(x, y, z);
         if (id === BlockId.Air) continue;
-
         const def = BLOCKS[id];
         const wx = baseX + x;
         const wz = baseZ + z;
 
         for (const face of FACES) {
-          if (!isFaceVisible(world, wx, y, wz, face.o[0], face.o[1], face.o[2], id)) continue;
+          if (def.renderFaces === "top" && face.name !== "py") continue;
+          if (!isFaceVisible(getBlockLocal, x, y, z, face, id)) continue;
 
           const tile = tileForFace(id, face);
-          const tx = tile % tilesPerRow;
-          const ty = Math.floor(tile / tilesPerRow);
+          const tx = tile % TILES_PER_ROW;
+          const ty = Math.floor(tile / TILES_PER_ROW);
+
+          positions = ensureFloatCapacity(positions, posIndex + 12);
+          normals = ensureFloatCapacity(normals, normIndex + 12);
+          uvs = ensureFloatCapacity(uvs, uvIndex + 8);
+          colors = ensureFloatCapacity(colors, colorIndex + 12);
+          indices = ensureIndexCapacity(indices, indexIndex + 6);
 
           for (let i = 0; i < 4; i++) {
             const v = face.v[i]!;
-            positions.push(wx + v[0], y + v[1], wz + v[2]);
-            normals.push(face.n[0], face.n[1], face.n[2]);
+            positions[posIndex++] = wx + v[0];
+            positions[posIndex++] = y + v[1];
+            positions[posIndex++] = wz + v[2];
+            normals[normIndex++] = face.n[0];
+            normals[normIndex++] = face.n[1];
+            normals[normIndex++] = face.n[2];
 
             const uv = face.uv[i]!;
             // Atlas UV: add tiny inset to reduce bleeding.
             const inset = 0.001;
-            const u = (tx + THREE.MathUtils.lerp(inset, 1 - inset, uv[0])) * tileSize;
-            const vv = (ty + THREE.MathUtils.lerp(inset, 1 - inset, uv[1])) * tileSize;
-            uvs.push(u, 1 - vv);
+            const u = (tx + THREE.MathUtils.lerp(inset, 1 - inset, uv[0])) * TILE_SIZE;
+            const vv = (ty + THREE.MathUtils.lerp(inset, 1 - inset, uv[1])) * TILE_SIZE;
+            uvs[uvIndex++] = u;
+            uvs[uvIndex++] = 1 - vv;
+
+            const light = sampleVertexLight(getLightLocal, x, y, z, face, v);
+            const brightness = light / 15;
+            colors[colorIndex++] = brightness;
+            colors[colorIndex++] = brightness;
+            colors[colorIndex++] = brightness;
           }
 
           // Two triangles: 0-1-2, 0-2-3
-          indices.push(
-            vertCount + 0, vertCount + 1, vertCount + 2,
-            vertCount + 0, vertCount + 2, vertCount + 3,
-          );
+          indices[indexIndex++] = vertCount + 0;
+          indices[indexIndex++] = vertCount + 1;
+          indices[indexIndex++] = vertCount + 2;
+          indices[indexIndex++] = vertCount + 0;
+          indices[indexIndex++] = vertCount + 2;
+          indices[indexIndex++] = vertCount + 3;
 
           vertCount += 4;
         }
@@ -147,12 +355,41 @@ export function buildChunkGeometry(world: World, chunk: Chunk): BuiltGeometry {
     }
   }
 
-  const geometry = new THREE.BufferGeometry();
-  geometry.setAttribute("position", new THREE.Float32BufferAttribute(positions, 3));
-  geometry.setAttribute("normal", new THREE.Float32BufferAttribute(normals, 3));
-  geometry.setAttribute("uv", new THREE.Float32BufferAttribute(uvs, 2));
-  geometry.setIndex(indices);
-  geometry.computeBoundingSphere();
+  meshBuffers.positions = positions;
+  meshBuffers.normals = normals;
+  meshBuffers.uvs = uvs;
+  meshBuffers.colors = colors;
+  meshBuffers.indices = indices;
 
-  return { geometry, vertexCount: vertCount };
+  return { buffers: meshBuffers, vertexCount: vertCount, indexCount: indexIndex };
+}
+
+function createMeshBuffers(): MeshBuffers {
+  const initialFaces = 1024;
+  const initialVertices = initialFaces * 4;
+  return {
+    positions: new Float32Array(initialVertices * 3),
+    normals: new Float32Array(initialVertices * 3),
+    uvs: new Float32Array(initialVertices * 2),
+    colors: new Float32Array(initialVertices * 3),
+    indices: new Uint32Array(initialFaces * 6),
+  };
+}
+
+function ensureFloatCapacity(buffer: Float32Array, required: number): Float32Array {
+  if (buffer.length >= required) return buffer;
+  let size = buffer.length > 0 ? buffer.length : 1;
+  while (size < required) size *= 2;
+  const next = new Float32Array(size);
+  next.set(buffer);
+  return next;
+}
+
+function ensureIndexCapacity(buffer: Uint32Array, required: number): Uint32Array {
+  if (buffer.length >= required) return buffer;
+  let size = buffer.length > 0 ? buffer.length : 1;
+  while (size < required) size *= 2;
+  const next = new Uint32Array(size);
+  next.set(buffer);
+  return next;
 }

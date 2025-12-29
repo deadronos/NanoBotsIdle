@@ -39,11 +39,13 @@ build
 .vite
 .parcel-cache
 node_modules/.vite
+.agent_work/
 
 # Test & coverage
 coverage/
 .nyc_output/
 playwright-report/
+test-results/
 cypress/videos/
 cypress/screenshots/
 
