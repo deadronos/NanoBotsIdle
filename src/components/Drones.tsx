@@ -6,6 +6,8 @@ import { Color, Vector3 } from "three";
 import { setInstanceColor,setInstanceTransform } from "../render/instanced";
 import { useGameStore } from "../store";
 import { getVoxelColor } from "../utils";
+import { getDroneMoveSpeed, getMineDuration } from "../config/drones";
+import { getConfig } from "../config/index";
 import type { WorldApi } from "./World";
 
 interface DronesProps {
@@ -22,9 +24,9 @@ class DroneAgent {
   state: DroneState;
   miningTimer: number;
 
-  constructor(id: number) {
+  constructor(id: number, startBase = 15, startRandom = 5) {
     this.id = id;
-    this.position = new Vector3(0, 15 + Math.random() * 5, 0); // Start high
+    this.position = new Vector3(0, startBase + Math.random() * startRandom, 0); // Start high
     this.targetPos = null;
     this.targetIndex = -1;
     this.state = "SEEKING";
@@ -41,10 +43,11 @@ interface ParticleHandle {
 // eslint-disable-next-line @typescript-eslint/no-empty-object-type
 interface ParticlesProps {}
 
-const MAX_PARTICLES = 400;
-
 const Particles = forwardRef<ParticleHandle, ParticlesProps>((props, ref) => {
   const meshRef = useRef<InstancedMesh>(null);
+
+  const cfg = getConfig();
+  const MAX_PARTICLES = cfg.drones.particle.maxParticles;
 
   // Particle State
   const particles = useMemo(() => {
@@ -56,7 +59,7 @@ const Particles = forwardRef<ParticleHandle, ParticlesProps>((props, ref) => {
       scale: 0,
       color: new Color(),
     }));
-  }, []);
+  }, [MAX_PARTICLES]);
 
   useImperativeHandle(ref, () => ({
     spawn: (pos: Vector3, color: Color) => {
@@ -72,16 +75,16 @@ const Particles = forwardRef<ParticleHandle, ParticlesProps>((props, ref) => {
       p.position.y += (Math.random() - 0.5) * 0.8;
       p.position.z += (Math.random() - 0.5) * 0.8;
 
-      // Explosion velocity
+      // Explosion velocity (config driven)
       p.velocity.set(
-        (Math.random() - 0.5) * 4,
-        Math.random() * 4 + 2, // Upward bias
-        (Math.random() - 0.5) * 4,
+        (Math.random() - 0.5) * cfg.drones.particle.maxVelocity,
+        Math.random() * cfg.drones.particle.maxVelocity + cfg.drones.particle.upBiasBase, // Upward bias
+        (Math.random() - 0.5) * cfg.drones.particle.maxVelocity,
       );
 
-      p.life = 1.0;
-      p.maxLife = 0.5 + Math.random() * 0.5;
-      p.scale = 0.2 + Math.random() * 0.2;
+      p.life = cfg.drones.particle.lifeBase + Math.random() * cfg.drones.particle.lifeRandom;
+      p.maxLife = p.life;
+      p.scale = cfg.drones.particle.scaleBase + Math.random() * cfg.drones.particle.scaleRandom;
       p.color.copy(color);
 
       // Initial update to mesh to prevent flicker
@@ -220,9 +223,10 @@ export const Drones: React.FC<DronesProps> = ({ worldRef }) => {
   const prestigeLevel = useGameStore((state) => state.prestigeLevel);
   const addCredits = useGameStore((state) => state.addCredits);
 
-  // Derived stats
-  const moveSpeed = 5 + moveSpeedLevel * 2;
-  const mineDuration = Math.max(0.2, 2.0 - miningSpeedLevel * 0.2);
+  // Derived stats (config-driven)
+  const cfg = getConfig();
+  const moveSpeed = getDroneMoveSpeed(moveSpeedLevel, cfg);
+  const mineDuration = getMineDuration(miningSpeedLevel, cfg);
 
   const dronesRef = useRef<DroneAgent[]>([]);
   const particlesRef = useRef<ParticleHandle>(null);
@@ -233,9 +237,10 @@ export const Drones: React.FC<DronesProps> = ({ worldRef }) => {
   // We use a state to force re-render if we really needed to, but droneCount change already triggered this.
   useLayoutEffect(() => {
     const current = dronesRef.current;
+    const cfg = getConfig();
     if (current.length < droneCount) {
       for (let i = current.length; i < droneCount; i++) {
-        current.push(new DroneAgent(i));
+        current.push(new DroneAgent(i, cfg.drones.startHeightBase, cfg.drones.startHeightRandom));
       }
     } else if (current.length > droneCount) {
       dronesRef.current = current.slice(0, droneCount);
