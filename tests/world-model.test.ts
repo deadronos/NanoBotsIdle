@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { resetConfig, updateConfig } from "../src/config/index";
+import { getConfig, resetConfig, updateConfig } from "../src/config/index";
 import { getSeed, getSurfaceHeight } from "../src/sim/terrain";
 import { MATERIAL_AIR, MATERIAL_BEDROCK, MATERIAL_SOLID, WorldModel } from "../src/engine/world/world";
 
@@ -28,10 +28,23 @@ describe("world model (v1)", () => {
     updateConfig({ terrain: { bedrockY: -50 } });
     const seed = getSeed(1);
     const world = new WorldModel({ seed });
+    const cfg = getConfig();
+    world.initializeFrontierFromSurface(cfg.terrain.worldRadius);
     const surfaceY = getSurfaceHeight(2, 2, seed);
     const edit = world.mineVoxel(2, surfaceY, 2);
     expect(edit).not.toBeNull();
-    expect(edit?.mat).toBe(MATERIAL_AIR);
+    expect(edit?.edit.mat).toBe(MATERIAL_AIR);
     expect(world.materialAt(2, surfaceY, 2)).toBe(MATERIAL_AIR);
+  });
+
+  it("rejects mining a non-frontier interior voxel", () => {
+    resetConfig();
+    updateConfig({ terrain: { bedrockY: -50 } });
+    const seed = getSeed(1);
+    const world = new WorldModel({ seed });
+    const surfaceY = getSurfaceHeight(3, 3, seed);
+    const interiorY = surfaceY - 2;
+    const edit = world.mineVoxel(3, interiorY, 3);
+    expect(edit).toBeNull();
   });
 });

@@ -2,10 +2,7 @@ export type Cmd =
   | { t: "BUY_UPGRADE"; id: string; n: number }
   | { t: "PRESTIGE" }
   | { t: "CLICK_VOXEL"; x: number; y: number; z: number }
-  | { t: "SET_TOOL"; tool: "mine" | "build" }
-  | { t: "MINE_BLOCK"; value: number }
-  | { t: "SET_TOTAL_BLOCKS"; total: number }
-  | { t: "SET_TARGET_POOL"; positions: Float32Array; values: Float32Array };
+  | { t: "SET_TOOL"; tool: "mine" | "build" };
 
 export type VoxelEdit = {
   x: number;
@@ -20,9 +17,10 @@ export type RenderDelta = {
   entityTargets?: Float32Array;
   entityStates?: Uint8Array;
   edits?: VoxelEdit[];
-  dirtyChunks?: Int32Array;
-  minedIndices?: Int32Array;
   minedPositions?: Float32Array;
+  frontierAdd?: Float32Array;
+  frontierRemove?: Float32Array;
+  frontierReset?: boolean;
   effects?: Array<{
     kind: "beam";
     fromId: number;

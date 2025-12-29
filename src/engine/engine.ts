@@ -1,6 +1,9 @@
 import { getDroneMoveSpeed, getMineDuration } from "../config/drones";
 import { getConfig } from "../config/index";
 import type { Cmd, RenderDelta, UiSnapshot } from "../shared/protocol";
+import { getSeed } from "../sim/terrain";
+import { getVoxelValueFromHeight } from "../sim/terrain-core";
+import { WorldModel } from "./world/world";
 
 export type Engine = {
   dispatch: (cmd: Cmd) => void;
@@ -15,10 +18,14 @@ export const createEngine = (seed?: number): Engine => {
   let tick = 0;
   const cfg = getConfig();
   const maxTargetAttempts = 20;
-  let targetPositions: Float32Array | null = null;
-  let targetValues: Float32Array | null = null;
-  const minedIndices = new Set<number>();
-  const reservedIndices = new Set<number>();
+  const minedKeys = new Set<string>();
+  const reservedKeys = new Set<string>();
+  let world: WorldModel | null = null;
+  let worldSeed = seed ?? getSeed(1);
+  let frontierKeys: string[] = [];
+  const frontierIndex = new Map<string, number>();
+  let pendingFrontierSnapshot: Float32Array | null = null;
+  let pendingFrontierReset = false;
 
   type DroneState = "SEEKING" | "MOVING" | "MINING";
   const DRONE_SEEKING = 0;
@@ -30,7 +37,10 @@ export const createEngine = (seed?: number): Engine => {
     x: number;
     y: number;
     z: number;
-    targetIndex: number;
+    targetKey: string | null;
+    targetX: number;
+    targetY: number;
+    targetZ: number;
     state: DroneState;
     miningTimer: number;
   };
@@ -73,6 +83,61 @@ export const createEngine = (seed?: number): Engine => {
   };
 
   updateNextCosts();
+
+  const addFrontierKey = (key: string) => {
+    if (frontierIndex.has(key)) return;
+    frontierIndex.set(key, frontierKeys.length);
+    frontierKeys.push(key);
+  };
+
+  const removeFrontierKey = (key: string) => {
+    const idx = frontierIndex.get(key);
+    if (idx === undefined) return;
+    const lastIdx = frontierKeys.length - 1;
+    const lastKey = frontierKeys[lastIdx];
+    frontierKeys[idx] = lastKey;
+    frontierIndex.set(lastKey, idx);
+    frontierKeys.pop();
+    frontierIndex.delete(key);
+  };
+
+  const resetTargets = () => {
+    minedKeys.clear();
+    reservedKeys.clear();
+  };
+
+  const ensureSeedWithMinAboveWater = (prestigeLevel: number) => {
+    const baseSeed = getSeed(prestigeLevel);
+    const retryLimit = cfg.terrain.genRetries ?? 5;
+    const minBlocks = cfg.economy.prestigeMinMinedBlocks;
+    for (let attempt = 0; attempt <= retryLimit; attempt += 1) {
+      const candidateSeed = baseSeed + attempt * 101;
+      const candidateWorld = new WorldModel({ seed: candidateSeed });
+      const aboveWater = candidateWorld.initializeFrontierFromSurface(cfg.terrain.worldRadius);
+      if (aboveWater >= minBlocks) {
+        worldSeed = candidateSeed;
+        world = candidateWorld;
+        frontierKeys = candidateWorld.getFrontierKeys();
+        frontierIndex.clear();
+        frontierKeys.forEach((key, index) => frontierIndex.set(key, index));
+        uiSnapshot.totalBlocks = frontierKeys.length;
+        pendingFrontierSnapshot = candidateWorld.getFrontierPositionsArray();
+        pendingFrontierReset = true;
+        return;
+      }
+    }
+    worldSeed = baseSeed;
+    world = new WorldModel({ seed: baseSeed });
+    world.initializeFrontierFromSurface(cfg.terrain.worldRadius);
+    frontierKeys = world.getFrontierKeys();
+    frontierIndex.clear();
+    frontierKeys.forEach((key, index) => frontierIndex.set(key, index));
+    uiSnapshot.totalBlocks = frontierKeys.length;
+    pendingFrontierSnapshot = world.getFrontierPositionsArray();
+    pendingFrontierReset = true;
+  };
+
+  ensureSeedWithMinAboveWater(uiSnapshot.prestigeLevel);
 
   const buyUpgrade = (id: string) => {
     if (id === "drone") {
@@ -117,7 +182,10 @@ export const createEngine = (seed?: number): Engine => {
           x: 0,
           y: cfg.drones.startHeightBase + Math.random() * cfg.drones.startHeightRandom,
           z: 0,
-          targetIndex: -1,
+          targetKey: null,
+          targetX: Number.NaN,
+          targetY: Number.NaN,
+          targetZ: Number.NaN,
           state: "SEEKING",
           miningTimer: 0,
         });
@@ -127,25 +195,20 @@ export const createEngine = (seed?: number): Engine => {
     drones = drones.slice(0, uiSnapshot.droneCount);
   };
 
-  const resetTargets = () => {
-    minedIndices.clear();
-    reservedIndices.clear();
-  };
-
-  const pickTargetIndex = () => {
-    if (!targetValues) return -1;
-    const total = targetValues.length;
-    if (total === 0) return -1;
+  const pickTargetKey = () => {
+    if (!world) return null;
+    if (frontierKeys.length === 0) return null;
     let attempts = 0;
     while (attempts < maxTargetAttempts) {
-      const idx = Math.floor(Math.random() * total);
-      if (!minedIndices.has(idx) && !reservedIndices.has(idx)) {
-        reservedIndices.add(idx);
-        return idx;
+      const idx = Math.floor(Math.random() * frontierKeys.length);
+      const key = frontierKeys[idx];
+      if (!minedKeys.has(key) && !reservedKeys.has(key)) {
+        reservedKeys.add(key);
+        return key;
       }
       attempts += 1;
     }
-    return -1;
+    return null;
   };
 
   const dispatch = (cmd: Cmd) => {
@@ -159,26 +222,6 @@ export const createEngine = (seed?: number): Engine => {
         updateNextCosts();
         return;
       }
-      case "MINE_BLOCK": {
-        if (cmd.value > 0) {
-          uiSnapshot.credits += cmd.value * uiSnapshot.prestigeLevel;
-          uiSnapshot.minedBlocks += 1;
-        }
-        return;
-      }
-      case "SET_TOTAL_BLOCKS": {
-        uiSnapshot.totalBlocks = cmd.total;
-        uiSnapshot.minedBlocks = 0;
-        return;
-      }
-      case "SET_TARGET_POOL": {
-        targetPositions = cmd.positions;
-        targetValues = cmd.values;
-        uiSnapshot.totalBlocks = targetValues.length;
-        uiSnapshot.minedBlocks = 0;
-        resetTargets();
-        return;
-      }
       case "PRESTIGE": {
         if (uiSnapshot.minedBlocks < cfg.economy.prestigeMinMinedBlocks) return;
         uiSnapshot.credits = 0;
@@ -186,6 +229,7 @@ export const createEngine = (seed?: number): Engine => {
         uiSnapshot.totalBlocks = 0;
         uiSnapshot.prestigeLevel += 1;
         resetTargets();
+        ensureSeedWithMinAboveWater(uiSnapshot.prestigeLevel);
         return;
       }
     }
@@ -202,34 +246,35 @@ export const createEngine = (seed?: number): Engine => {
     const dtSeconds = _dtSeconds;
     const moveSpeed = getDroneMoveSpeed(uiSnapshot.moveSpeedLevel, cfg);
     const mineDuration = getMineDuration(uiSnapshot.miningSpeedLevel, cfg);
-    const minedThisTick: number[] = [];
     const minedPositions: number[] = [];
+    const editsThisTick: { x: number; y: number; z: number; mat: number }[] = [];
+    const frontierAdded: number[] = [];
+    const frontierRemoved: number[] = [];
 
-    if (targetPositions && targetValues) {
+    if (world) {
       for (const drone of drones) {
         switch (drone.state) {
           case "SEEKING": {
-            const targetIndex = pickTargetIndex();
-            if (targetIndex >= 0) {
-              drone.targetIndex = targetIndex;
+            const targetKey = pickTargetKey();
+            if (targetKey) {
+              const coords = world.coordsFromKey(targetKey);
+              drone.targetKey = targetKey;
+              drone.targetX = coords.x;
+              drone.targetY = coords.y;
+              drone.targetZ = coords.z;
               drone.state = "MOVING";
             }
             break;
           }
           case "MOVING": {
-            if (drone.targetIndex < 0) {
+            if (!drone.targetKey) {
               drone.state = "SEEKING";
               break;
             }
-            const baseIndex = drone.targetIndex * 3;
-            const targetX = targetPositions[baseIndex];
-            const targetY = targetPositions[baseIndex + 1];
-            const targetZ = targetPositions[baseIndex + 2];
-            const destY = targetY + 2;
-
-            const dx = targetX - drone.x;
+            const destY = drone.targetY + 2;
+            const dx = drone.targetX - drone.x;
             const dy = destY - drone.y;
-            const dz = targetZ - drone.z;
+            const dz = drone.targetZ - drone.z;
             const dist = Math.hypot(dx, dy, dz);
 
             if (dist < 0.5) {
@@ -247,24 +292,32 @@ export const createEngine = (seed?: number): Engine => {
           case "MINING": {
             drone.miningTimer += dtSeconds;
             if (drone.miningTimer >= mineDuration) {
-              const index = drone.targetIndex;
-              if (index >= 0 && !minedIndices.has(index)) {
-                minedIndices.add(index);
-                reservedIndices.delete(index);
-                minedThisTick.push(index);
-                const baseIndex = index * 3;
-                const minedX = targetPositions[baseIndex];
-                const minedY = targetPositions[baseIndex + 1];
-                const minedZ = targetPositions[baseIndex + 2];
-                minedPositions.push(minedX, minedY, minedZ);
-                const value = targetValues[index];
-                if (value > 0) {
+              const key = drone.targetKey;
+              if (key && !minedKeys.has(key)) {
+                const editResult = world.mineVoxel(drone.targetX, drone.targetY, drone.targetZ);
+                if (editResult) {
+                  minedKeys.add(key);
+                  reservedKeys.delete(key);
+                  minedPositions.push(drone.targetX, drone.targetY, drone.targetZ);
+                  editsThisTick.push(editResult.edit);
+                  editResult.frontierAdded.forEach((pos) => {
+                    const addKey = world!.key(pos.x, pos.y, pos.z);
+                    addFrontierKey(addKey);
+                    frontierAdded.push(pos.x, pos.y, pos.z);
+                  });
+                  editResult.frontierRemoved.forEach((pos) => {
+                    const removeKey = world!.key(pos.x, pos.y, pos.z);
+                    removeFrontierKey(removeKey);
+                    frontierRemoved.push(pos.x, pos.y, pos.z);
+                  });
+
+                  const value = getVoxelValueFromHeight(drone.targetY);
                   uiSnapshot.credits += value * uiSnapshot.prestigeLevel;
                   uiSnapshot.minedBlocks += 1;
                 }
               }
               drone.state = "SEEKING";
-              drone.targetIndex = -1;
+              drone.targetKey = null;
               drone.miningTimer = 0;
             }
             break;
@@ -292,32 +345,39 @@ export const createEngine = (seed?: number): Engine => {
         if (drone.state === "MINING") stateValue = DRONE_MINING;
         entityStates[i] = stateValue;
 
-        if (targetPositions && drone.targetIndex >= 0) {
-          const targetBase = drone.targetIndex * 3;
-          entityTargets[base] = targetPositions[targetBase];
-          entityTargets[base + 1] = targetPositions[targetBase + 1];
-          entityTargets[base + 2] = targetPositions[targetBase + 2];
-        } else {
-          entityTargets[base] = Number.NaN;
-          entityTargets[base + 1] = Number.NaN;
-          entityTargets[base + 2] = Number.NaN;
-        }
+        entityTargets[base] = drone.targetX;
+        entityTargets[base + 1] = drone.targetY;
+        entityTargets[base + 2] = drone.targetZ;
       }
     }
 
-    const minedIndicesArray = minedThisTick.length > 0 ? new Int32Array(minedThisTick) : undefined;
     const minedPositionsArray =
       minedPositions.length > 0 ? new Float32Array(minedPositions) : undefined;
+    const frontierAddArray =
+      frontierAdded.length > 0 ? new Float32Array(frontierAdded) : undefined;
+    const frontierRemoveArray =
+      frontierRemoved.length > 0 ? new Float32Array(frontierRemoved) : undefined;
+
+    const delta: RenderDelta = {
+      tick,
+      entities,
+      entityTargets,
+      entityStates,
+      edits: editsThisTick.length > 0 ? editsThisTick : undefined,
+      minedPositions: minedPositionsArray,
+      frontierAdd: frontierAddArray,
+      frontierRemove: frontierRemoveArray,
+    };
+
+    if (pendingFrontierSnapshot) {
+      delta.frontierAdd = pendingFrontierSnapshot;
+      delta.frontierReset = pendingFrontierReset;
+      pendingFrontierSnapshot = null;
+      pendingFrontierReset = false;
+    }
 
     return {
-      delta: {
-        tick,
-        entities,
-        entityTargets,
-        entityStates,
-        minedIndices: minedIndicesArray,
-        minedPositions: minedPositionsArray,
-      },
+      delta,
       ui: uiSnapshot,
       backlog: 0,
     };

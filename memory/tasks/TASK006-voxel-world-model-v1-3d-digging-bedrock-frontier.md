@@ -1,6 +1,6 @@
 # [TASK006] - Voxel World Model v1 (3D Digging + Bedrock + Frontier + Prestige Safety)
 
-**Status:** In Progress  
+**Status:** Completed  
 **Added:** 2025-12-29  
 **Updated:** 2025-12-29
 
@@ -52,25 +52,27 @@ Player collision remains main-thread for responsiveness, but must mirror Worker 
   - Soft-lock prevention seed retry behavior.
 
 ## Progress Tracking
-**Overall Status:** In Progress - 20%
+**Overall Status:** Completed - 100%
 
 ### Subtasks
 
 | ID | Description | Status | Updated | Notes |
 | --- | --- | --- | --- | --- |
-| 6.1 | Implement base+edits world query in engine | In Progress | 2025-12-29 | Added `WorldModel` with base + edits and bedrock; mining supports frontier check. |
-| 6.2 | Implement frontier tracking + above-water subset | Not Started | - | Incremental neighbor updates. |
-| 6.3 | Implement mining command validation + edits output | Not Started | - | Reject non-frontier and bedrock. |
-| 6.4 | Implement soft-lock prevention (seed retry) | Not Started | - | Guarantee `minAboveWaterBlocks`. |
-| 6.5 | Implement frontier voxel instanced renderer (main thread) | Not Started | - | Dynamic add/remove mapping. |
-| 6.6 | Implement collision proxy edits + ground query | Not Started | - | Remove “invisible ground” after mining. |
-| 6.7 | Add config + tests for world rules | Not Started | - | Keep tuning in `src/config`. |
+| 6.1 | Implement base+edits world query in engine | Complete | 2025-12-29 | WorldModel uses base + edits with bedrock and frontier logic. |
+| 6.2 | Implement frontier tracking + above-water subset | Complete | 2025-12-29 | Incremental frontier add/remove updates. |
+| 6.3 | Implement mining command validation + edits output | Complete | 2025-12-29 | Rejects non-frontier and bedrock; emits edits. |
+| 6.4 | Implement soft-lock prevention (seed retry) | Complete | 2025-12-29 | Seed retry ensures min above-water frontier. |
+| 6.5 | Implement frontier voxel instanced renderer (main thread) | Complete | 2025-12-29 | Dynamic add/remove and snapshot rebuild. |
+| 6.6 | Implement collision proxy edits + ground query | Complete | 2025-12-29 | Collision now honors voxel edits. |
+| 6.7 | Add config + tests for world rules | Complete | 2025-12-29 | Added tests for frontier mining + bedrock. |
 
 ## Progress Log
 
 ### 2025-12-29
 - Created TASK006 with an implementation plan.
 - Added initial `WorldModel` (base + edits, bedrock) and unit tests; added terrain config knobs.
+- Completed frontier tracking, mining edits, seed retries, and main-thread frontier instancing.
+- Collision proxy now mirrors voxel edits; tests updated for frontier mining behavior.
 
 ## Design Link
 - `memory/designs/DESIGN005-voxel-world-model-v1.md`

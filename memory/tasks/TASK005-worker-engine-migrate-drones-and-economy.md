@@ -37,7 +37,7 @@ References:
   - Replace `src/components/World.tsx` imperative API with `applyDelta()` updates (temporary render strategy).
 
 ## Progress Tracking
-**Overall Status:** In Progress - 85%
+**Overall Status:** Completed - 100%
 
 ### Subtasks
 
@@ -49,7 +49,7 @@ References:
 | 5.4 | Add `src/ui/store.ts` as UI read model | Complete | 2025-12-29 | UI snapshot stored via `useUiStore`. |
 | 5.5 | Refactor `UI.tsx` to dispatch commands | Complete | 2025-12-29 | UI uses `UiSnapshot` + `nextCosts`; sends commands via sim bridge. |
 | 5.6 | Refactor `Drones.tsx` to render-only | Complete | 2025-12-29 | Drones now render from worker delta positions; mining effects driven by mined events. |
-| 5.7 | Refactor `World.tsx` to consume voxel edit deltas | Not Started | - | Remove `WorldApi` usage. |
+| 5.7 | Refactor `World.tsx` to consume voxel edit deltas | Complete | 2025-12-29 | World now consumes worker edits/mined indices; removed `WorldApi`. |
 
 ## Progress Log
 

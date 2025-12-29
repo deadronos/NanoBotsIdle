@@ -41,7 +41,9 @@ describe("protocol payloads", () => {
         entityTargets: new Float32Array([1, 2, 3]),
         entityStates: new Uint8Array([1]),
         edits: [{ x: 0, y: 1, z: 2, mat: 1 }],
-        dirtyChunks: new Int32Array([0, 1]),
+        frontierAdd: new Float32Array([0, 0, 0]),
+        frontierRemove: new Float32Array([1, 1, 1]),
+        frontierReset: true,
         effects: [{ kind: "beam", fromId: 1, toX: 0, toY: 1, toZ: 2, ttl: 0.5 }],
       },
       ui: {
