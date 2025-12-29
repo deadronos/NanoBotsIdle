@@ -1,4 +1,5 @@
-import { describe, it, expect } from "vitest";
+import { describe, expect,it } from "vitest";
+
 import defaultDronesConfig, { getDroneMoveSpeed, getMineDuration } from "../src/config/drones";
 import { getConfig } from "../src/config/index";
 

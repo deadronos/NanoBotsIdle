@@ -1,5 +1,5 @@
-import { getSeed, getSurfaceHeight } from "./terrain";
 import { getConfig } from "../config/index";
+import { getSeed, getSurfaceHeight } from "./terrain";
 
 export const getPlayerGroundHeight = (x: number, z: number, prestigeLevel = 1): number => {
   // Player logic historically quantized positions to the nearest voxel grid

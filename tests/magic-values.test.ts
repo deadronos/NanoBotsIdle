@@ -1,4 +1,4 @@
-import { describe, it, expect } from "vitest";
+import { describe, expect,it } from "vitest";
 
 // TDD: failing test first — expect the scanner to find at least one magic value in `src/`
 import { findMagicValues } from "../scripts/find-magic-values.js";

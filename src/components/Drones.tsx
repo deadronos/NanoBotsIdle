@@ -3,11 +3,11 @@ import React, { forwardRef, useImperativeHandle, useLayoutEffect, useMemo, useRe
 import type { Group, InstancedMesh, Mesh, MeshBasicMaterial, PointLight } from "three";
 import { Color, Vector3 } from "three";
 
+import { getDroneMoveSpeed, getMineDuration } from "../config/drones";
+import { getConfig } from "../config/index";
 import { setInstanceColor, setInstanceTransform } from "../render/instanced";
 import { useGameStore } from "../store";
 import { getVoxelColor } from "../utils";
-import { getDroneMoveSpeed, getMineDuration } from "../config/drones";
-import { getConfig } from "../config/index";
 import type { WorldApi } from "./World";
 
 interface DronesProps {

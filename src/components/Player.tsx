@@ -3,9 +3,9 @@ import React, { useEffect, useRef, useState } from "react";
 import type { Group } from "three";
 import { Euler, Vector3 } from "three";
 
+import { getConfig } from "../config/index";
 import { getPlayerGroundHeight } from "../sim/player";
 import { useGameStore } from "../store";
-import { getConfig } from "../config/index";
 import type { ViewMode } from "../types";
 
 interface PlayerProps {

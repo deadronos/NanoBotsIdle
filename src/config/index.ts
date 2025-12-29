@@ -1,11 +1,11 @@
-import type { PlayerConfig, defaultPlayerConfig } from "./player";
-import type { TerrainConfig, defaultTerrainConfig } from "./terrain";
-import type { DronesConfig, defaultDronesConfig } from "./drones";
-import type { RenderConfig, defaultRenderConfig } from "./render";
-import { defaultTerrainConfig as _defaultTerrain } from "./terrain";
-import { defaultPlayerConfig as _defaultPlayer } from "./player";
+import type {DronesConfig } from "./drones";
 import { defaultDronesConfig as _defaultDrones } from "./drones";
+import type {PlayerConfig } from "./player";
+import { defaultPlayerConfig as _defaultPlayer } from "./player";
+import type {RenderConfig } from "./render";
 import { defaultRenderConfig as _defaultRender } from "./render";
+import type {TerrainConfig } from "./terrain";
+import { defaultTerrainConfig as _defaultTerrain } from "./terrain";
 
 export type Config = {
   terrain: TerrainConfig;
