@@ -1,8 +1,9 @@
 import { useFrame } from "@react-three/fiber";
 import React, { forwardRef, useImperativeHandle, useLayoutEffect, useMemo, useRef } from "react";
 import type { Group, InstancedMesh, Mesh, MeshBasicMaterial, PointLight } from "three";
-import { Color, Object3D, Vector3 } from "three";
+import { Color, Vector3 } from "three";
 
+import { setInstanceColor,setInstanceTransform } from "../render/instanced";
 import { useGameStore } from "../store";
 import { getVoxelColor } from "../utils";
 import type { WorldApi } from "./World";
@@ -85,13 +86,11 @@ const Particles = forwardRef<ParticleHandle, ParticlesProps>((props, ref) => {
 
       // Initial update to mesh to prevent flicker
       if (meshRef.current) {
-        meshRef.current.setColorAt(idx, p.color);
-        if (meshRef.current.instanceColor) meshRef.current.instanceColor.needsUpdate = true;
+        setInstanceColor(meshRef.current, idx, p.color);
       }
     },
   }));
 
-  const dummy = useMemo(() => new Object3D(), []);
 
   useFrame((state, delta) => {
     if (!meshRef.current) return;
@@ -108,20 +107,16 @@ const Particles = forwardRef<ParticleHandle, ParticlesProps>((props, ref) => {
         // Scale down as it dies
         const currentScale = p.scale * (p.life / p.maxLife);
 
-        dummy.position.copy(p.position);
-        dummy.scale.setScalar(Math.max(0, currentScale));
-        dummy.rotation.x += delta * 5;
-        dummy.rotation.z += delta * 5;
-        dummy.updateMatrix();
-
-        meshRef.current!.setMatrixAt(i, dummy.matrix);
+        // Update instance matrix using shared helper to avoid allocations in hot paths
+        setInstanceTransform(meshRef.current!, i, {
+          position: { x: p.position.x, y: p.position.y, z: p.position.z },
+          scale: { x: Math.max(0, currentScale), y: Math.max(0, currentScale), z: Math.max(0, currentScale) },
+        });
         needsUpdate = true;
       } else if (p.scale !== 0) {
         // Hide dead particles
         p.scale = 0;
-        dummy.scale.set(0, 0, 0);
-        dummy.updateMatrix();
-        meshRef.current!.setMatrixAt(i, dummy.matrix);
+        setInstanceTransform(meshRef.current!, i, { scale: { x: 0, y: 0, z: 0 } });
         needsUpdate = true;
       }
     });

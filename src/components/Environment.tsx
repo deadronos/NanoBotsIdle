@@ -1,4 +1,4 @@
-import { Sky, Stars, Cloud, Clouds } from "@react-three/drei";
+import { Cloud, Clouds,Sky, Stars } from "@react-three/drei";
 import { useFrame } from "@react-three/fiber";
 import React, { useRef } from "react";
 import type { DirectionalLight, Group } from "three";

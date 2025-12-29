@@ -132,3 +132,16 @@ Manual verification:
 ---
 
 **Next steps:** Implement `src/constants.ts` and `src/sim/terrain.ts`, add unit tests for terrain determinism, then update `World.tsx` and `Player.tsx` to use the new APIs.
+
+## Implementation Status
+
+- Implemented: `src/constants.ts`, `src/sim/terrain.ts` (with `computeVoxel`, `getSurfaceHeight`, `getSmoothHeight`, `getSeed`, `generateInstances`), `src/sim/player.ts`, and `src/render/instanced.ts` helpers.
+- Migrated: `src/components/World.tsx` to use `generateInstances` and `populateInstancedMesh`, `src/components/Player.tsx` to use `getPlayerGroundHeight` and shared constants, and particle updates to use instanced helpers.
+- Tests: Added/updated tests under `tests/` covering constants, terrain, voxels, instanced helpers, world generation, and player physics.
+- Validation: Ran lint/typecheck/tests and built a production bundle (no build errors; bundle size warning noted).
+
+## Follow-up
+
+- Prepare a focused PR that includes the design doc, all tests, and a concise migration summary (files changed, tests added, and acceptance checklist).  
+- Create a follow-up design (`memory/designs/DESIGN003`) and tasks for splitting drone simulation out of `Drones.tsx` into a `DroneManager`/`src/sim/drones.ts` so rendering and simulation are fully separated and the sim can be run in a worker if needed.
+

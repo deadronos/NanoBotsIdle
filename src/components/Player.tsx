@@ -3,8 +3,10 @@ import React, { useEffect, useRef, useState } from "react";
 import type { Group } from "three";
 import { Euler, Vector3 } from "three";
 
+import { WATER_LEVEL } from "../constants";
+import { getPlayerGroundHeight } from "../sim/player";
+import { useGameStore } from "../store";
 import type { ViewMode } from "../types";
-import { noise2D } from "../utils";
 
 interface PlayerProps {
   viewMode: ViewMode;
@@ -14,7 +16,6 @@ const WALKING_SPEED = 5.0;
 const RUNNING_SPEED = 8.0;
 const JUMP_FORCE = 8.0;
 const GRAVITY = 20.0;
-const PLAYER_HEIGHT = 1.8;
 
 export const Player: React.FC<PlayerProps> = ({ viewMode }) => {
   const { camera } = useThree();
@@ -23,6 +24,8 @@ export const Player: React.FC<PlayerProps> = ({ viewMode }) => {
   const isJumping = useRef(false);
   const groupRef = useRef<Group>(null);
   const playerVisualsRef = useRef<Group>(null);
+
+  const prestigeLevel = useGameStore((s) => s.prestigeLevel);
 
   // Input State
   const keys = useRef<Record<string, boolean>>({});
@@ -89,8 +92,7 @@ export const Player: React.FC<PlayerProps> = ({ viewMode }) => {
 
   useFrame((state, delta) => {
 
-    // Water Physics Constants
-    const WATER_LEVEL = 0.1; // Matched to visual water plane height
+    // Water Physics Constants (WATER_LEVEL imported)
     const SWIM_SPEED = 4.0;
     const BUOYANCY = 15.0;
     const WATER_DRAG = 2.0;
@@ -98,10 +100,10 @@ export const Player: React.FC<PlayerProps> = ({ viewMode }) => {
     const isUnderwater = position.y < WATER_LEVEL;
 
     // Movement Physics
-    const speed = isUnderwater 
-      ? SWIM_SPEED 
+    const speed = isUnderwater
+      ? SWIM_SPEED
       : (keys.current["ShiftLeft"] ? RUNNING_SPEED : WALKING_SPEED);
-      
+
     const direction = new Vector3();
     const forward = new Vector3(0, 0, -1).applyAxisAngle(
       new Vector3(0, 1, 0),
@@ -127,23 +129,23 @@ export const Player: React.FC<PlayerProps> = ({ viewMode }) => {
     if (isUnderwater) {
       // Swimming Logic
       isJumping.current = false;
-      
+
       // Vertical Input
       let swimVertical = 0;
       if (keys.current["Space"]) swimVertical += 1; // Swim Up
       if (keys.current["KeyC"]) swimVertical -= 1;  // Dive Down
-      
+
       // Apply swim force
       velocity.current.y += swimVertical * 15.0 * delta;
 
       // Apply Buoyancy (pushes up towards surface)
       // Stronger if deeper
       const depth = WATER_LEVEL - position.y;
-      velocity.current.y += depth * BUOYANCY * delta; 
-      
+      velocity.current.y += depth * BUOYANCY * delta;
+
       // Apply Drag
       velocity.current.y -= velocity.current.y * WATER_DRAG * delta;
-      
+
     } else {
       // Standard Gravity & Jump
       if (keys.current["Space"] && !isJumping.current) {
@@ -156,16 +158,8 @@ export const Player: React.FC<PlayerProps> = ({ viewMode }) => {
 
     position.y += velocity.current.y * delta;
 
-    // Ground Collision
-    const rawNoise = noise2D(Math.round(position.x), Math.round(position.z), 123);
-    // Corresponding matched world generation logic (simplified approximation here or shared ref needed)
-    // Note: If World generation changes logic, this collision logic needs to match exactly 
-    // or we risk sinking into ground. 
-    // Ideally we should export the terrain function. 
-    // user previously edited World.tsx with: Math.floor((rawNoise + 0.1) * 4)
-    // We must mirror that here for accurate collision.
-    const voxelHeight = Math.floor((rawNoise + 0.1) * 4);
-    const groundHeight = voxelHeight + 0.5 + PLAYER_HEIGHT;
+    // Ground Collision — use centralized helper to keep collision consistent with world generation
+    const groundHeight = getPlayerGroundHeight(position.x, position.z, prestigeLevel);
 
     if (position.y < groundHeight) {
       position.y = groundHeight;
