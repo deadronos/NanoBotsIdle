@@ -3,6 +3,7 @@ import type { VoxelEdit } from "../shared/protocol";
 import { MATERIAL_AIR, MATERIAL_BEDROCK, MATERIAL_SOLID, voxelKey } from "../shared/voxel";
 import { getSeed } from "./seed";
 import { getSurfaceHeightCore } from "./terrain-core";
+import { getBaseMaterialAt } from "./voxelBaseMaterial";
 
 export { MATERIAL_AIR, MATERIAL_BEDROCK, MATERIAL_SOLID };
 
@@ -11,16 +12,7 @@ const edits = new Map<string, number>();
 const baseMaterialAt = (x: number, y: number, z: number, seed: number) => {
   const cfg = getConfig();
   const bedrockY = cfg.terrain.bedrockY ?? -50;
-  if (y <= bedrockY) return MATERIAL_BEDROCK;
-  const surfaceY = getSurfaceHeightCore(
-    x,
-    z,
-    seed,
-    cfg.terrain.surfaceBias,
-    cfg.terrain.quantizeScale,
-  );
-  if (y <= surfaceY) return MATERIAL_SOLID;
-  return MATERIAL_AIR;
+  return getBaseMaterialAt(x, y, z, seed, bedrockY, cfg);
 };
 
 const materialAt = (x: number, y: number, z: number, seed: number) => {

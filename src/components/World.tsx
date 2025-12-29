@@ -1,15 +1,13 @@
 import React, { useCallback, useEffect, useRef } from "react";
 
 import { getConfig } from "../config/index";
-import { applyVoxelEdits, getVoxelMaterialAt, MATERIAL_SOLID, resetVoxelEdits } from "../sim/collision";
+import { applyVoxelEdits, MATERIAL_SOLID, resetVoxelEdits } from "../sim/collision";
 import { getSeed } from "../sim/seed";
 import { getSurfaceHeightCore } from "../sim/terrain-core";
 import { getSimBridge } from "../simBridge/simBridge";
 import { useUiStore } from "../ui/store";
+import { chunkKey, ensureNeighborChunksForMinedVoxel, populateChunkVoxels } from "./world/chunkHelpers";
 import { useInstancedVoxels } from "./world/useInstancedVoxels";
-
-const chunkKey = (cx: number, cy: number, cz: number) => `${cx},${cy},${cz}`;
-const mod = (value: number, size: number) => ((value % size) + size) % size;
 
 export const World: React.FC = () => {
   const activeChunks = useRef<Set<string>>(new Set());
@@ -31,25 +29,8 @@ export const World: React.FC = () => {
       if (activeChunks.current.has(key)) return;
       activeChunks.current.add(key);
 
-      const size = chunkSize;
-      const baseX = cx * size;
-      const baseY = cy * size;
-      const baseZ = cz * size;
-
-      ensureCapacity(solidCountRef.current + size * size * size);
-
-      for (let x = 0; x < size; x += 1) {
-        for (let y = 0; y < size; y += 1) {
-          for (let z = 0; z < size; z += 1) {
-            const wx = baseX + x;
-            const wy = baseY + y;
-            const wz = baseZ + z;
-            if (getVoxelMaterialAt(wx, wy, wz, prestigeLevel) === MATERIAL_SOLID) {
-              addVoxel(wx, wy, wz);
-            }
-          }
-        }
-      }
+      ensureCapacity(solidCountRef.current + chunkSize * chunkSize * chunkSize);
+      populateChunkVoxels({ cx, cy, cz, chunkSize, prestigeLevel, addVoxel });
     },
     [addVoxel, chunkSize, ensureCapacity, prestigeLevel, solidCountRef],
   );
@@ -97,21 +78,13 @@ export const World: React.FC = () => {
       const mined = frame.delta.minedPositions;
       if (mined && mined.length > 0) {
         for (let i = 0; i < mined.length; i += 3) {
-          const x = mined[i];
-          const y = mined[i + 1];
-          const z = mined[i + 2];
-          const cx = Math.floor(x / chunkSize);
-          const cy = Math.floor(y / chunkSize);
-          const cz = Math.floor(z / chunkSize);
-          const lx = mod(x, chunkSize);
-          const ly = mod(y, chunkSize);
-          const lz = mod(z, chunkSize);
-          if (lx === 0) addChunk(cx - 1, cy, cz);
-          if (lx === chunkSize - 1) addChunk(cx + 1, cy, cz);
-          if (ly === 0) addChunk(cx, cy - 1, cz);
-          if (ly === chunkSize - 1) addChunk(cx, cy + 1, cz);
-          if (lz === 0) addChunk(cx, cy, cz - 1);
-          if (lz === chunkSize - 1) addChunk(cx, cy, cz + 1);
+          ensureNeighborChunksForMinedVoxel({
+            x: mined[i],
+            y: mined[i + 1],
+            z: mined[i + 2],
+            chunkSize,
+            addChunk,
+          });
         }
       }
 

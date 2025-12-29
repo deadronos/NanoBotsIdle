@@ -1,17 +1,11 @@
 import { getDroneMoveSpeed, getMineDuration } from "../config/drones";
 import { getConfig } from "../config/index";
 import { computeNextUpgradeCosts, tryBuyUpgrade, type UpgradeType } from "../economy/upgrades";
-import type { Cmd, RenderDelta, UiSnapshot } from "../shared/protocol";
-import { getVoxelValueFromHeight } from "../sim/terrain-core";
+import type { Cmd, RenderDelta, UiSnapshot, VoxelEdit } from "../shared/protocol";
 import { type Drone, syncDroneCount } from "./drones";
 import { encodeDrones, toFloat32ArrayOrUndefined } from "./encode";
-import {
-  addKey as addKeyToIndex,
-  createKeyIndex,
-  removeKey as removeKeyFromIndex,
-  resetKeyIndex,
-} from "./keyIndex";
-import { pickTargetKey } from "./targeting";
+import { createKeyIndex, resetKeyIndex } from "./keyIndex";
+import { tickDrones } from "./tickDrones";
 import { initWorldForPrestige } from "./world/initWorld";
 import type { WorldModel } from "./world/world";
 
@@ -111,91 +105,28 @@ export const createEngine = (_seed?: number): Engine => {
     const moveSpeed = getDroneMoveSpeed(uiSnapshot.moveSpeedLevel, cfg);
     const mineDuration = getMineDuration(uiSnapshot.miningSpeedLevel, cfg);
     const minedPositions: number[] = [];
-    const editsThisTick: { x: number; y: number; z: number; mat: number }[] = [];
+    const editsThisTick: VoxelEdit[] = [];
     const frontierAdded: number[] = [];
     const frontierRemoved: number[] = [];
 
     if (world) {
-      for (const drone of drones) {
-        switch (drone.state) {
-          case "SEEKING": {
-            const targetKey = pickTargetKey({
-              world,
-              frontierKeys: frontier.keys,
-              minedKeys,
-              reservedKeys,
-              waterLevel: cfg.terrain.waterLevel,
-              maxAttempts: maxTargetAttempts,
-            });
-            if (targetKey) {
-              const coords = world.coordsFromKey(targetKey);
-              drone.targetKey = targetKey;
-              drone.targetX = coords.x;
-              drone.targetY = coords.y;
-              drone.targetZ = coords.z;
-              drone.state = "MOVING";
-            }
-            break;
-          }
-          case "MOVING": {
-            if (!drone.targetKey) {
-              drone.state = "SEEKING";
-              break;
-            }
-            const destY = drone.targetY + 2;
-            const dx = drone.targetX - drone.x;
-            const dy = destY - drone.y;
-            const dz = drone.targetZ - drone.z;
-            const dist = Math.hypot(dx, dy, dz);
-
-            if (dist < 0.5) {
-              drone.state = "MINING";
-              drone.miningTimer = 0;
-            } else if (dist > 0) {
-              const step = moveSpeed * dtSeconds;
-              const inv = step / dist;
-              drone.x += dx * inv;
-              drone.y += dy * inv;
-              drone.z += dz * inv;
-            }
-            break;
-          }
-          case "MINING": {
-            drone.miningTimer += dtSeconds;
-            if (drone.miningTimer >= mineDuration) {
-              const key = drone.targetKey;
-              if (key && !minedKeys.has(key)) {
-                const editResult = world.mineVoxel(drone.targetX, drone.targetY, drone.targetZ);
-                if (editResult) {
-                  minedKeys.add(key);
-                  reservedKeys.delete(key);
-                  minedPositions.push(drone.targetX, drone.targetY, drone.targetZ);
-                  editsThisTick.push(editResult.edit);
-                  editResult.frontierAdded.forEach((pos) => {
-                    const key = world!.key(pos.x, pos.y, pos.z);
-                    addKeyToIndex(frontier, key);
-                    frontierAdded.push(pos.x, pos.y, pos.z);
-                  });
-                  editResult.frontierRemoved.forEach((pos) => {
-                    const key = world!.key(pos.x, pos.y, pos.z);
-                    removeKeyFromIndex(frontier, key);
-                    frontierRemoved.push(pos.x, pos.y, pos.z);
-                  });
-
-                  const value = getVoxelValueFromHeight(drone.targetY);
-                  uiSnapshot.credits += value * uiSnapshot.prestigeLevel;
-                  uiSnapshot.minedBlocks += 1;
-                }
-              }
-              drone.state = "SEEKING";
-              drone.targetKey = null;
-              drone.miningTimer = 0;
-            }
-            break;
-          }
-        }
-      }
-      uiSnapshot.totalBlocks = world.countFrontierAboveWater();
+      tickDrones({
+        world,
+        drones,
+        dtSeconds,
+        cfg,
+        frontier,
+        minedKeys,
+        reservedKeys,
+        moveSpeed,
+        mineDuration,
+        maxTargetAttempts,
+        uiSnapshot,
+        minedPositions,
+        editsThisTick,
+        frontierAdded,
+        frontierRemoved,
+      });
     }
 
     const { entities, entityTargets, entityStates } = encodeDrones(drones);

@@ -2,6 +2,7 @@ import { getConfig } from "../../config/index";
 import type { VoxelEdit } from "../../shared/protocol";
 import { coordsFromVoxelKey, MATERIAL_AIR, MATERIAL_BEDROCK, MATERIAL_SOLID, voxelKey } from "../../shared/voxel";
 import { getSurfaceHeightCore } from "../../sim/terrain-core";
+import { getBaseMaterialAt } from "../../sim/voxelBaseMaterial";
 
 export { MATERIAL_AIR, MATERIAL_BEDROCK, MATERIAL_SOLID };
 
@@ -44,17 +45,8 @@ export class WorldModel {
   }
 
   baseMaterialAt(x: number, y: number, z: number) {
-    if (y <= this.bedrockY) return MATERIAL_BEDROCK;
     const cfg = getConfig();
-    const surfaceY = getSurfaceHeightCore(
-      x,
-      z,
-      this.seed,
-      cfg.terrain.surfaceBias,
-      cfg.terrain.quantizeScale,
-    );
-    if (y <= surfaceY) return MATERIAL_SOLID;
-    return MATERIAL_AIR;
+    return getBaseMaterialAt(x, y, z, this.seed, this.bedrockY, cfg);
   }
 
   materialAt(x: number, y: number, z: number) {
