@@ -1,110 +1,145 @@
-# Voxel Walker Architecture
+# NanoBotsIdle Architecture (Source of Truth)
 
-**Version:** 0.2.0 (Alpha)
-**Last Updated:** 2025-12-29
+**Status:** Alpha (prototype; evolves quickly)  
+**Last updated:** 2025-12-29
 
-## 1. Overview
-**Voxel Walker** is a browser-based, 3D Voxel Idle/Clicker game. It combines first-person exploration mechanics (similar to Minecraft) with incremental game loops (auto-mining drones, upgrades, prestige).
+This document is the source of truth for NanoBotsIdle's high-level architecture
+and design intent. If the code and this doc diverge, either:
 
-### Core Loop
-1.  **Explore**: Move around a procedurally generated voxel island.
-2.  **Mine**: Click blocks to gain Credits.
-3.  **Upgrade**: Spend Credits to buy Drones or improve mining stats.
-4.  **Expand**: Drones automate resource collection.
-5.  **Prestige**: Reset progress for permanent multipliers (feature stubs in place).
+- Update this doc and the relevant specs under `docs/ARCHITECTURE/`, or
+- Change the code to match the intended architecture described here.
 
----
+The previous architecture notes are preserved in `docs/ARCHITECTURE_LEGACY.md`.
 
-## 2. Technology Stack
--   **Runtime**: Browser (Single Page Application)  
--   **Framework**: React 18  
--   **Build Tool**: Vite  
--   **Language**: TypeScript  
--   **3D Engine**: Three.js (via `@react-three/fiber`)  
--   **Abstractions**: `@react-three/drei` (Sky, Clouds, Text helpers)  
--   **State Management**: Zustand (with Persist middleware)  
--   **Styling**: TailwindCSS  
-- **Configuration**: Centralized config system (`/src/config`) with typed domain-specific configs (terrain, player, render, economy, drones) and runtime overrides via env variables.
+## Read next
 
----
+- Detailed spec index: `docs/ARCHITECTURE/README.md`
+- Sim/render split + Worker protocol: `docs/ARCHITECTURE/TECH001-sim-render-separation.md`
+- True 3D voxel model: `docs/ARCHITECTURE/TECH002-voxel-world-model.md`
+- Progression loop + soft-lock rules: `docs/ARCHITECTURE/GAME001-progression-loop.md`
 
-## 3. Core Systems
+## Product summary
 
-### 3.1 Voxel World Engine (`World.tsx`)
-The world is a fixed-radius island generated via 2D Simplex Noise.
--   **Rendering Strategy**: Uses `InstancedMesh` for high performance.
-    -   *Optimization*: Only ~4000-5000 instances are rendered.
-    -   *Logic*: A single `boxGeometry` is instanced at (x, y, z) coordinates determined by the noise map.
--   **Chunking**: Currently monolithic (single chunk). Future scaling would require chunking logic.
--   **Water**: Originally voxel-based, now replaced by a **Single Plane Mesh** at `y=0.2` for performance and visual clarity.
--   **Bedrock**: A safety plane rendered below the world to prevent looking into the void if the surface is mined away.
+NanoBotsIdle is a 3D voxel incremental/idle game:
 
-### 3.2 Physics & Player Controller (`Player.tsx`)
-A custom kinematic physics implementation (no heavy physics engine like Cannon or Rapier).
--   **Collision**: Implicit AABB collision against the Voxel Grid.
-    -   Logic: `Math.round(playerPos)` maps directly to array indices. If a block exists at target `(x, y, z)`, movement is blocked.
--   **Gravity**: Constant downward acceleration applied every frame.
--   **Swimming**:
-    -   Activated when `y < WATER_LEVEL` (0.1).
-    -   Applies `BUOYANCY` (upward force) and `WATER_DRAG` (dampening).
-    -   Controls switch to allow vertical movement (`Space` to ascend, `C` to dive).
--   **Mining Interaction**: Uses `Raycaster` from the camera center to detect clicked instances.
+1. Mine blocks (player + drones).
+2. Spend credits on upgrades (more drones, faster mining).
+3. Prestige regenerates the world for a permanent multiplier.
 
-### 3.3 Economy & State (`store.ts`)
-Managed via **Zustand**.
--   **Persistence**: Automatically saves to `localStorage` key `voxel-walker-storage`.
--   **Versioning**: Save state includes a `version` number to handle future migrations.
--   **Resources**:
-    -   `credits`: Main currency.
-    -   `minedBlocks`: Counter for achievements/progress.
-    -   `totalBlocks`: Used to calculate "mmined percentage".
--   **Upgrades**:
-    -   `clickDamage`: Mining speed/power per click.
-    -   `clickRange`: Max distance to mine.
-    -   `moveSpeed`: Player walk speed.
-    -   `droneCount`: Number of active drones.
-    -   `droneSpeed`: Speed of drone mining cycles.
+The architecture must keep the main thread responsive while simulation grows
+more complex (voxels, drones, and future systems).
 
-### 3.4 Autonomous Drones (`Drones.tsx`)
-Visual representations of idle income.
--   **Logic**:
-    -   Drones "orbit" or patrol near the player/center.
-    -   Every `X` seconds (based on `droneSpeed`), they pick a random valid block from the `World` API.
-    -   Visual laser beam effect draws from Drone -> Target Block.
-    -   Block is "mined" (scale set to 0), and credits are awarded.
+## Architecture goals
 
----
+- Clean separation of simulation and rendering/UI.
+- Main thread stays responsive for player input and R3F rendering.
+- Simulation is pure TypeScript and can run in a Worker.
+- World supports true 3D digging (not just a surface heightmap).
+- Gameplay/balance is configurable via `src/config/*`.
+- Systems are modular/extendable (future drones/buildings can be added without
+  entangling Three/React into core logic).
 
-## 4. Visuals & Environment
--   **Sky System**: Dynamic sun/moon cycle elements (currently static noon lighting).
--   **Clouds**: Volumetric clouds via Drei `<Clouds>` and `<Cloud>` components.
--   **Material Design**:
-    -   Voxels use `MeshStandardMaterial` with `roughness: 0.8` for a matte look.
-    -   Water uses `transparent: true`, `opacity: 0.7`, `color: #42a7ff`.
+## System boundaries (authoritative ownership)
 
----
+### Main thread (React + R3F)
 
-## 5. Gameplay specifications
+- Owns:
+  - Input + camera/player movement.
+  - Collision resolution.
+  - Three.js scene objects (meshes, materials, effects).
+  - UI rendering and interaction.
+- Sends:
+  - Commands (player actions + UI actions) to simulation.
+- Applies:
+  - Voxel edit deltas to render caches and the collision proxy.
+  - Entity pose deltas to instanced meshes.
 
-### Terrain Generation Specs
--   **Noise Function**: Simple 2D noise (no heavy libraries).
--   **Bias**: Positive bias `+0.6` creates significant land mass (Island preset).
--   **Voxel Coloring**:
-    -   `y < 0.5`: Sand/Water edge
-    -   `y < 4`: Grass
-    -   `y < 7`: Forest (Dark Green)
-    -   `y < 10`: Rock/Stone
-    -   `y >= 10`: Snow
+### Simulation (Engine, hosted in a Worker)
 
-### Save System Specs
--   **Auto-Save**: Changes persist immediately (State -> LocalStorage).
--   **Export**: JSON dump of the state tree.
--   **Import**: JSON parsing with schema validation (basic).
--   **Reset**: Hard wipe of localStorage.
+- Owns canonical state:
+  - Voxel world (procedural base + sparse edits overlay).
+  - Drones/entities (target: ~50 drones; soft-capped by costs).
+  - Economy/upgrades/prestige.
+- Enforces rules:
+  - "Mine only if voxel has an air neighbor" (frontier-only mining).
+  - Bedrock is indestructible (prevents infinite falling).
+  - Starter drones mine above-water only (for now).
+  - World generation must avoid prestige soft locks.
+- Emits:
+  - Voxel edits (authoritative deltas).
+  - Render deltas (poses, dirty chunks, short-lived effects).
+  - UI snapshot (cheap derived numbers for Zustand/UI).
 
----
+## Data flow (commands + deltas)
 
-## 6. Future Considerations / Technical Debt
--   **Mobility**: Jumping physics are currently basic impulses.
--   **Rendering**: `InstancedMesh` re-calculation of matrices on every mine event is okay for single clicks, but creating massive explosions might require a cleaner "dirty flag" approach.
--   **Scalability**: `WORLD_RADIUS > 50` will likely cause framerate drops without chunking and frustum culling.
+- Main thread collects commands and sends them to the simulation.
+- Simulation processes commands during budgeted ticks and returns deltas.
+- The main thread drives tick scheduling and gates steps so there is at most one
+  step in flight (prevents message backlog and input lag).
+
+Protocol details are specified in `docs/ARCHITECTURE/TECH001-sim-render-separation.md`.
+
+## World model (true 3D digging)
+
+- The world is a 3D voxel field queried as `materialAt(x, y, z)`.
+- The base terrain is deterministic from `(x, z, seed)` surface height.
+- Edits are stored sparsely as overrides:
+  - Mined voxel -> `AIR`
+  - Placed voxel -> `SOLID`/material id (future)
+- Bedrock is definitive and indestructible:
+  - For `y <= bedrockY`, material is always `BEDROCK`
+- Mining is frontier-only:
+  - A voxel is mineable only if it is solid and has an air neighbor.
+
+Implementation details and constraints are specified in `docs/ARCHITECTURE/TECH002-voxel-world-model.md`.
+
+## Player collision (main thread)
+
+Player collision stays on the main thread for responsiveness. To keep collision
+consistent with the authoritative world, the main thread maintains a read-only
+collision proxy:
+
+- Procedural base material query (same seed/config rules).
+- Mirrored voxel edits applied from Worker deltas.
+
+Decision record: `docs/ARCHITECTURE/DEC001-main-thread-player-collision.md`.
+
+## Rendering (R3F)
+
+- Voxels:
+  - Rendered via chunk mesh caches (instancing/meshing strategy can evolve).
+  - Voxel edits mark affected chunks dirty and schedule rebuilds.
+- Drones:
+  - Rendered with instancing; transforms applied imperatively.
+  - Per-frame positions must not be stored in Zustand.
+- Effects (beams, particles, flashes):
+  - Driven by simulation deltas, but implemented as renderer-only systems.
+
+## UI state (Zustand)
+
+Zustand is a read model for UI, not the simulation:
+
+- Stores UI toggles/panels/selection and the latest `UiSnapshot`.
+- Must not store world voxel arrays or per-frame render data.
+
+## Config and balancing
+
+- Tuning lives in `src/config/*` and is intended to be tweakable without code
+  rewrites.
+- Drone count is soft-capped by upgrade cost curves (piecewise knee after a
+  threshold; configurable).
+- World generation must guarantee a minimum number of above-water mineable
+  blocks to avoid prestige soft locks (starter drones are above-water only).
+
+See `docs/ARCHITECTURE/GAME001-progression-loop.md`.
+
+## Updating this architecture (workflow)
+
+- If a change affects architecture, update:
+  - `docs/ARCHITECTURE.md`, and
+  - the relevant `TECH/GAME/DEC` documents in `docs/ARCHITECTURE/`
+  in the same PR.
+- Designs and implementation plans live in:
+  - `memory/designs/`
+  - `memory/tasks/`
+  and should reference the relevant `TECH/GAME/DEC` IDs.
