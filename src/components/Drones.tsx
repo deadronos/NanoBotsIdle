@@ -6,6 +6,7 @@ import { Vector3 } from "three";
 import { getConfig } from "../config/index";
 import { getSimBridge } from "../simBridge/simBridge";
 import { useUiStore } from "../ui/store";
+import { DroneInstance } from "./drones/DroneInstance";
 import type { FlashHandle } from "./drones/FlashEffect";
 import { FlashEffect } from "./drones/FlashEffect";
 import type { ParticleHandle } from "./drones/Particles";
@@ -82,58 +83,15 @@ export const Drones: React.FC = () => {
       <Particles ref={particlesRef} />
       <FlashEffect ref={flashRef} />
       {Array.from({ length: snapshot.droneCount }).map((_, i) => (
-        <group
+        <DroneInstance
           key={i}
-          ref={(el) => {
-            groupRefs.current[i] = el;
-          }}
-        >
-          <mesh castShadow rotation={[Math.PI / 2, 0, 0]}>
-            <coneGeometry args={[0.3, 0.8, 4]} />
-            <meshStandardMaterial color="#00ffcc" emissive="#004444" roughness={0.2} />
-          </mesh>
-          <pointLight distance={3} intensity={0.5} color="cyan" />
-
-          <mesh
-            ref={(el) => {
-              miningLaserRefs.current[i] = el;
-            }}
-            visible={false}
-          >
-            <cylinderGeometry args={[0.05, 0.05, 1, 8, 1, true]} />
-            <meshBasicMaterial color="#ff3333" transparent opacity={0.7} blending={2} depthWrite={false} />
-          </mesh>
-
-          <mesh
-            ref={(el) => {
-              scanningLaserRefs.current[i] = el;
-            }}
-            visible={false}
-          >
-            <cylinderGeometry args={[0.015, 0.015, 1, 4, 1, true]} />
-            <meshBasicMaterial color="#00ffff" transparent opacity={0.3} blending={2} depthWrite={false} />
-          </mesh>
-
-          <mesh
-            ref={(el) => {
-              targetBoxRefs.current[i] = el;
-            }}
-            visible={false}
-          >
-            <boxGeometry args={[1, 1, 1]} />
-            <meshBasicMaterial wireframe color="#00ffff" transparent opacity={0.5} depthWrite={false} />
-          </mesh>
-
-          <pointLight
-            ref={(el) => {
-              impactLightRefs.current[i] = el;
-            }}
-            distance={4}
-            decay={2}
-            color="#ffaa00"
-            visible={false}
-          />
-        </group>
+          index={i}
+          groupRefs={groupRefs}
+          miningLaserRefs={miningLaserRefs}
+          scanningLaserRefs={scanningLaserRefs}
+          targetBoxRefs={targetBoxRefs}
+          impactLightRefs={impactLightRefs}
+        />
       ))}
     </group>
   );

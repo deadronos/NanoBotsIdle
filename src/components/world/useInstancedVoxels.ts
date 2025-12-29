@@ -1,22 +1,29 @@
 import { useCallback, useLayoutEffect, useMemo, useRef, useState } from "react";
 import type { InstancedMesh } from "three";
-import { InstancedBufferAttribute, Object3D } from "three";
+import { Object3D } from "three";
 
-import { ensureGeometryHasVertexColors } from "../../render/instanced";
-import { voxelKey } from "../../shared/voxel";
-import { getVoxelColor } from "../../utils";
-
-const getInitialCapacity = (chunkSize: number) => {
-  return Math.max(512, chunkSize * chunkSize * chunkSize);
-};
+import { applyInstanceUpdates } from "../../render/instanced";
+import {
+  ensureInstanceColors,
+  getInitialCapacity,
+  rebuildVoxelInstances,
+  setVoxelInstance,
+} from "./instancedVoxels/voxelInstanceMesh";
+import {
+  addVoxelToStore,
+  clearVoxelStore,
+  createVoxelInstanceStore,
+  removeVoxelFromStore,
+} from "./instancedVoxels/voxelInstanceStore";
 
 export const useInstancedVoxels = (chunkSize: number) => {
   const meshRef = useRef<InstancedMesh>(null);
-  const solidPositions = useRef<number[]>([]);
-  const solidIndex = useRef<Map<string, number>>(new Map());
-  const solidCount = useRef(0);
+  const storeRef = useRef(createVoxelInstanceStore());
+  const solidCountRef = useRef(0);
   const needsRebuild = useRef(false);
   const tmp = useMemo(() => new Object3D(), []);
+
+  const UPDATE_BOTH = useMemo(() => ({ matrix: true, color: true }) as const, []);
 
   const [capacity, setCapacity] = useState(() => getInitialCapacity(chunkSize));
 
@@ -30,123 +37,65 @@ export const useInstancedVoxels = (chunkSize: number) => {
     [capacity],
   );
 
-  const setVoxelInstance = useCallback(
-    (mesh: InstancedMesh, index: number, x: number, y: number, z: number) => {
-      tmp.position.set(x, y, z);
-      tmp.rotation.set(0, 0, 0);
-      tmp.scale.set(1, 1, 1);
-      tmp.updateMatrix();
-      mesh.setMatrixAt(index, tmp.matrix);
-      mesh.setColorAt(index, getVoxelColor(y));
-    },
-    [tmp],
-  );
-
-  const rebuildMesh = useCallback(() => {
-    const mesh = meshRef.current;
-    if (!mesh) return;
-    const positions = solidPositions.current;
-    const count = positions.length / 3;
-    for (let i = 0; i < count; i += 1) {
-      const base = i * 3;
-      setVoxelInstance(mesh, i, positions[base], positions[base + 1], positions[base + 2]);
-    }
-    mesh.count = count;
-    if (mesh.instanceMatrix) mesh.instanceMatrix.needsUpdate = true;
-    if (mesh.instanceColor) mesh.instanceColor.needsUpdate = true;
-  }, [setVoxelInstance]);
-
   const addVoxel = useCallback(
     (x: number, y: number, z: number) => {
-      const key = voxelKey(x, y, z);
-      if (solidIndex.current.has(key)) return;
-      const index = solidCount.current;
-      solidIndex.current.set(key, index);
-      solidPositions.current.push(x, y, z);
-      solidCount.current += 1;
-      ensureCapacity(solidCount.current);
+      const result = addVoxelToStore(storeRef.current, x, y, z);
+      if (!result) return;
+      solidCountRef.current = result.count;
+      ensureCapacity(result.count);
 
       const mesh = meshRef.current;
       if (mesh && !needsRebuild.current) {
-        setVoxelInstance(mesh, index, x, y, z);
-        mesh.count = solidCount.current;
-        if (mesh.instanceMatrix) mesh.instanceMatrix.needsUpdate = true;
-        if (mesh.instanceColor) mesh.instanceColor.needsUpdate = true;
+        setVoxelInstance(mesh, tmp, result.index, x, y, z);
+        mesh.count = result.count;
+        applyInstanceUpdates(mesh, UPDATE_BOTH);
       }
     },
-    [ensureCapacity, setVoxelInstance],
+    [UPDATE_BOTH, ensureCapacity, tmp],
   );
 
   const removeVoxel = useCallback(
     (x: number, y: number, z: number) => {
-      const key = voxelKey(x, y, z);
-      const index = solidIndex.current.get(key);
-      if (index === undefined) return;
-
-      const lastIndex = solidCount.current - 1;
-      const positions = solidPositions.current;
-      if (index !== lastIndex) {
-        const lastBase = lastIndex * 3;
-        const lastX = positions[lastBase];
-        const lastY = positions[lastBase + 1];
-        const lastZ = positions[lastBase + 2];
-        positions[index * 3] = lastX;
-        positions[index * 3 + 1] = lastY;
-        positions[index * 3 + 2] = lastZ;
-        const lastKey = voxelKey(lastX, lastY, lastZ);
-        solidIndex.current.set(lastKey, index);
-        const mesh = meshRef.current;
-        if (mesh && !needsRebuild.current) {
-          setVoxelInstance(mesh, index, lastX, lastY, lastZ);
-        }
-      }
-
-      positions.length -= 3;
-      solidCount.current -= 1;
-      solidIndex.current.delete(key);
+      const result = removeVoxelFromStore(storeRef.current, x, y, z);
+      if (!result) return;
+      solidCountRef.current = result.count;
 
       const mesh = meshRef.current;
       if (mesh && !needsRebuild.current) {
-        mesh.count = solidCount.current;
-        if (mesh.instanceMatrix) mesh.instanceMatrix.needsUpdate = true;
-        if (mesh.instanceColor) mesh.instanceColor.needsUpdate = true;
+        if (result.moved) {
+          setVoxelInstance(mesh, tmp, result.index, result.moved.x, result.moved.y, result.moved.z);
+        }
+        mesh.count = result.count;
+        applyInstanceUpdates(mesh, UPDATE_BOTH);
       }
     },
-    [setVoxelInstance],
+    [UPDATE_BOTH, tmp],
   );
 
   const clear = useCallback(() => {
-    solidPositions.current = [];
-    solidIndex.current.clear();
-    solidCount.current = 0;
+    clearVoxelStore(storeRef.current);
+    solidCountRef.current = 0;
     needsRebuild.current = false;
     const mesh = meshRef.current;
     if (mesh) {
       mesh.count = 0;
-      if (mesh.instanceMatrix) mesh.instanceMatrix.needsUpdate = true;
-      if (mesh.instanceColor) mesh.instanceColor.needsUpdate = true;
+      applyInstanceUpdates(mesh, UPDATE_BOTH);
     }
-  }, []);
+  }, [UPDATE_BOTH]);
 
   const flushRebuild = useCallback(() => {
     if (!needsRebuild.current) return;
     if (!meshRef.current) return;
-    if (solidCount.current > capacity) return;
-    rebuildMesh();
+    if (storeRef.current.count > capacity) return;
+    rebuildVoxelInstances(meshRef.current, tmp, storeRef.current.positions);
     needsRebuild.current = false;
-  }, [capacity, rebuildMesh]);
+  }, [capacity, tmp]);
 
   useLayoutEffect(() => {
     const mesh = meshRef.current;
     if (!mesh) return;
 
-    ensureGeometryHasVertexColors(mesh.geometry);
-    if (!mesh.instanceColor || mesh.instanceColor.count !== capacity) {
-      const colors = new Float32Array(capacity * 3);
-      colors.fill(1);
-      mesh.instanceColor = new InstancedBufferAttribute(colors, 3);
-      mesh.geometry.setAttribute("instanceColor", mesh.instanceColor);
-      mesh.instanceColor.needsUpdate = true;
+    if (ensureInstanceColors(mesh, capacity)) {
       needsRebuild.current = true;
     }
 
@@ -161,6 +110,6 @@ export const useInstancedVoxels = (chunkSize: number) => {
     removeVoxel,
     clear,
     flushRebuild,
-    solidCountRef: solidCount,
+    solidCountRef,
   };
 };
