@@ -1,6 +1,6 @@
 # [TASK005] - Worker Engine Migration (Drones + Economy + UI Snapshot)
 
-**Status:** Pending  
+**Status:** In Progress  
 **Added:** 2025-12-29  
 **Updated:** 2025-12-29
 
@@ -37,25 +37,29 @@ References:
   - Replace `src/components/World.tsx` imperative API with `applyDelta()` updates (temporary render strategy).
 
 ## Progress Tracking
-**Overall Status:** Not Started - 0%
+**Overall Status:** In Progress - 75%
 
 ### Subtasks
 
 | ID | Description | Status | Updated | Notes |
 | --- | --- | --- | --- | --- |
-| 5.1 | Implement engine economy + upgrades + `UiSnapshot` | Not Started | - | UI must not compute costs. |
-| 5.2 | Implement engine drone sim + pose delta output | Not Started | - | Target ~50 drones; avoid allocations. |
-| 5.3 | Add `Cmd` handling for shop + prestige | Not Started | - | Replace direct Zustand mutations. |
-| 5.4 | Add `src/ui/store.ts` as UI read model | Not Started | - | Store latest snapshot + toggles only. |
-| 5.5 | Refactor `UI.tsx` to dispatch commands | Not Started | - | No direct `buyUpgrade()` in store. |
-| 5.6 | Refactor `Drones.tsx` to render-only | Not Started | - | No sim in `useFrame()` beyond interpolation/effects. |
+| 5.1 | Implement engine economy + upgrades + `UiSnapshot` | Complete | 2025-12-29 | Engine now owns credits, upgrades, prestige, mined/total counts, and nextCosts. |
+| 5.2 | Implement engine drone sim + pose delta output | Complete | 2025-12-29 | Worker now simulates drones and emits positions + mined events. |
+| 5.3 | Add `Cmd` handling for shop + prestige | Complete | 2025-12-29 | Added `BUY_UPGRADE`, `PRESTIGE`, `MINE_BLOCK`, `SET_TOTAL_BLOCKS`. |
+| 5.4 | Add `src/ui/store.ts` as UI read model | Complete | 2025-12-29 | UI snapshot stored via `useUiStore`. |
+| 5.5 | Refactor `UI.tsx` to dispatch commands | Complete | 2025-12-29 | UI uses `UiSnapshot` + `nextCosts`; sends commands via sim bridge. |
+| 5.6 | Refactor `Drones.tsx` to render-only | Complete | 2025-12-29 | Drones now render from worker delta positions; mining effects driven by mined events. |
 | 5.7 | Refactor `World.tsx` to consume voxel edit deltas | Not Started | - | Remove `WorldApi` usage. |
 
 ## Progress Log
 
 ### 2025-12-29
 - Created TASK005 with an implementation plan.
+- Moved economy/upgrade logic into the engine and extended `UiSnapshot`.
+- Added UI read model store and updated UI, World, Drones, and Player to consume it.
+- Bridged mining rewards/total blocks to the engine via commands.
+- Moved drone simulation into the engine and switched drone rendering to use worker deltas.
+- World now streams a target pool to the worker and applies mined indices from sim deltas.
 
 ## Design Link
 - `memory/designs/DESIGN004-worker-authoritative-sim-engine-refactor.md`
-

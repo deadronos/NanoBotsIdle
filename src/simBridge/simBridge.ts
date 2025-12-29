@@ -1,0 +1,154 @@
+import type { Cmd, FromWorker, ToWorker } from "../shared/protocol";
+
+type FrameMessage = Extract<FromWorker, { t: "FRAME" }>;
+type FrameHandler = (frame: FrameMessage) => void;
+
+type WorkerLike = {
+  postMessage: (message: ToWorker, transfer?: Transferable[]) => void;
+  addEventListener: (type: "message", listener: (event: MessageEvent<FromWorker>) => void) => void;
+  removeEventListener: (type: "message", listener: (event: MessageEvent<FromWorker>) => void) => void;
+  terminate?: () => void;
+};
+
+type SimBridgeOptions = {
+  workerFactory?: () => WorkerLike;
+  budgetMs?: number;
+  maxSubsteps?: number;
+  onError?: (message: string) => void;
+};
+
+export type SimBridge = {
+  start: () => void;
+  stop: () => void;
+  step: (nowMs: number) => void;
+  enqueue: (cmd: Cmd) => void;
+  onFrame: (handler: FrameHandler) => () => void;
+  isRunning: () => boolean;
+};
+
+const defaultWorkerFactory = (): WorkerLike => {
+  return new Worker(new URL("../worker/sim.worker.ts", import.meta.url), { type: "module" });
+};
+
+export const createSimBridge = (options: SimBridgeOptions = {}): SimBridge => {
+  const workerFactory = options.workerFactory ?? defaultWorkerFactory;
+  const budgetMs = options.budgetMs ?? 8;
+  const maxSubsteps = options.maxSubsteps ?? 4;
+  const onError = options.onError ?? ((message) => console.error(message));
+
+  let worker: WorkerLike | null = null;
+  let running = false;
+  let rafId: number | null = null;
+  let initSent = false;
+  let stepInFlight = false;
+  let disabled = false;
+  let frameId = 0;
+  let cmdQueue: Cmd[] = [];
+  const frameHandlers = new Set<FrameHandler>();
+
+  const handleMessage = (event: MessageEvent<FromWorker>) => {
+    const msg = event.data;
+    if (msg.t === "FRAME") {
+      stepInFlight = false;
+      frameHandlers.forEach((handler) => handler(msg));
+      return;
+    }
+
+    if (msg.t === "ERROR") {
+      stepInFlight = false;
+      disabled = true;
+      onError(`Sim worker error: ${msg.message}`);
+      return;
+    }
+  };
+
+  const ensureWorker = () => {
+    if (worker) return;
+    worker = workerFactory();
+    worker.addEventListener("message", handleMessage);
+    if (!initSent) {
+      worker.postMessage({ t: "INIT" });
+      initSent = true;
+    }
+  };
+
+  const step = (nowMs: number) => {
+    if (disabled) return;
+    ensureWorker();
+    if (!worker || stepInFlight) return;
+
+    const cmds = cmdQueue;
+    cmdQueue = [];
+    const message: ToWorker = {
+      t: "STEP",
+      frameId,
+      nowMs,
+      budgetMs,
+      maxSubsteps,
+      cmds,
+    };
+    frameId += 1;
+    stepInFlight = true;
+    worker.postMessage(message);
+  };
+
+  const loop = (nowMs: number) => {
+    if (!running) return;
+    step(nowMs);
+    rafId = requestAnimationFrame(loop);
+  };
+
+  const start = () => {
+    if (running) return;
+    running = true;
+    ensureWorker();
+    rafId = requestAnimationFrame(loop);
+  };
+
+  const stop = () => {
+    running = false;
+    if (rafId !== null) {
+      cancelAnimationFrame(rafId);
+      rafId = null;
+    }
+    if (worker) {
+      worker.removeEventListener("message", handleMessage);
+      if (worker.terminate) {
+        worker.terminate();
+      }
+      worker = null;
+    }
+    stepInFlight = false;
+    disabled = false;
+    initSent = false;
+  };
+
+  const enqueue = (cmd: Cmd) => {
+    cmdQueue.push(cmd);
+  };
+
+  const onFrame = (handler: FrameHandler) => {
+    frameHandlers.add(handler);
+    return () => {
+      frameHandlers.delete(handler);
+    };
+  };
+
+  return {
+    start,
+    stop,
+    step,
+    enqueue,
+    onFrame,
+    isRunning: () => running,
+  };
+};
+
+let singleton: SimBridge | null = null;
+
+export const getSimBridge = (): SimBridge => {
+  if (!singleton) {
+    singleton = createSimBridge();
+  }
+  return singleton;
+};

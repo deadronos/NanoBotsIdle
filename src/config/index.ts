@@ -12,6 +12,7 @@ export type Config = {
   player: PlayerConfig;
   drones: DronesConfig;
   render: RenderConfig;
+  economy: EconomyConfig;
 };
 
 const deepMerge = (a: any, b: any) => {
@@ -31,6 +32,7 @@ let _config: Config = {
   player: _defaultPlayer,
   drones: _defaultDrones,
   render: _defaultRender,
+  economy: _defaultEconomy,
 };
 
 export const getConfig = (): Config => _config;
@@ -46,8 +48,11 @@ export const resetConfig = () => {
     player: _defaultPlayer,
     drones: _defaultDrones,
     render: _defaultRender,
+    economy: _defaultEconomy,
   };
   return _config;
 };
 
 export default getConfig;
+import type { EconomyConfig } from "./economy";
+import { defaultEconomyConfig as _defaultEconomy } from "./economy";

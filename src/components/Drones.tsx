@@ -1,38 +1,12 @@
 import { useFrame } from "@react-three/fiber";
-import React, { forwardRef, useImperativeHandle, useLayoutEffect, useMemo, useRef } from "react";
-import type { Group, InstancedMesh, Mesh, MeshBasicMaterial, PointLight } from "three";
+import React, { forwardRef, useEffect, useLayoutEffect, useMemo, useRef } from "react";
+import type { InstancedMesh, PointLight } from "three";
 import { Color, Vector3 } from "three";
 
-import { getDroneMoveSpeed, getMineDuration } from "../config/drones";
 import { getConfig } from "../config/index";
 import { setInstanceColor, setInstanceTransform } from "../render/instanced";
-import { useGameStore } from "../store";
+import { getSimBridge } from "../simBridge/simBridge";
 import { getVoxelColor } from "../utils";
-import type { WorldApi } from "./World";
-
-interface DronesProps {
-  worldRef: React.RefObject<WorldApi | null>;
-}
-
-type DroneState = "SEEKING" | "MOVING" | "MINING";
-
-class DroneAgent {
-  id: number;
-  position: Vector3;
-  targetPos: Vector3 | null;
-  targetIndex: number;
-  state: DroneState;
-  miningTimer: number;
-
-  constructor(id: number, startBase = 15, startRandom = 5) {
-    this.id = id;
-    this.position = new Vector3(0, startBase + Math.random() * startRandom, 0); // Start high
-    this.targetPos = null;
-    this.targetIndex = -1;
-    this.state = "SEEKING";
-    this.miningTimer = 0;
-  }
-}
 
 // --- Particle System ---
 
@@ -49,7 +23,6 @@ const Particles = forwardRef<ParticleHandle, ParticlesProps>((props, ref) => {
   const cfg = getConfig();
   const MAX_PARTICLES = cfg.drones.particle.maxParticles;
 
-  // Particle State
   const particles = useMemo(() => {
     return new Array(MAX_PARTICLES).fill(0).map(() => ({
       position: new Vector3(),
@@ -61,38 +34,40 @@ const Particles = forwardRef<ParticleHandle, ParticlesProps>((props, ref) => {
     }));
   }, [MAX_PARTICLES]);
 
-  useImperativeHandle(ref, () => ({
-    spawn: (pos: Vector3, color: Color) => {
-      // Find a dead particle or overwrite the oldest (simple circular buffer or random search)
-      // For simplicity, we just search for first available or random if full
-      let idx = particles.findIndex((p) => p.life <= 0);
-      if (idx === -1) idx = Math.floor(Math.random() * MAX_PARTICLES);
+  useEffect(() => {
+    const handle = ref as React.MutableRefObject<ParticleHandle | null>;
+    handle.current = {
+      spawn: (pos: Vector3, color: Color) => {
+        let idx = particles.findIndex((p) => p.life <= 0);
+        if (idx === -1) idx = Math.floor(Math.random() * MAX_PARTICLES);
 
-      const p = particles[idx];
-      p.position.copy(pos);
-      // Randomize position slightly around the center of the block
-      p.position.x += (Math.random() - 0.5) * 0.8;
-      p.position.y += (Math.random() - 0.5) * 0.8;
-      p.position.z += (Math.random() - 0.5) * 0.8;
+        const p = particles[idx];
+        p.position.copy(pos);
+        p.position.x += (Math.random() - 0.5) * 0.8;
+        p.position.y += (Math.random() - 0.5) * 0.8;
+        p.position.z += (Math.random() - 0.5) * 0.8;
 
-      // Explosion velocity (config driven)
-      p.velocity.set(
-        (Math.random() - 0.5) * cfg.drones.particle.maxVelocity,
-        Math.random() * cfg.drones.particle.maxVelocity + cfg.drones.particle.upBiasBase, // Upward bias
-        (Math.random() - 0.5) * cfg.drones.particle.maxVelocity,
-      );
+        p.velocity.set(
+          (Math.random() - 0.5) * cfg.drones.particle.maxVelocity,
+          Math.random() * cfg.drones.particle.maxVelocity + cfg.drones.particle.upBiasBase,
+          (Math.random() - 0.5) * cfg.drones.particle.maxVelocity,
+        );
 
-      p.life = cfg.drones.particle.lifeBase + Math.random() * cfg.drones.particle.lifeRandom;
-      p.maxLife = p.life;
-      p.scale = cfg.drones.particle.scaleBase + Math.random() * cfg.drones.particle.scaleRandom;
-      p.color.copy(color);
+        p.life = cfg.drones.particle.lifeBase + Math.random() * cfg.drones.particle.lifeRandom;
+        p.maxLife = p.life;
+        p.scale = cfg.drones.particle.scaleBase + Math.random() * cfg.drones.particle.scaleRandom;
+        p.color.copy(color);
 
-      // Initial update to mesh to prevent flicker
-      if (meshRef.current) {
-        setInstanceColor(meshRef.current, idx, p.color);
-      }
-    },
-  }));
+        if (meshRef.current) {
+          setInstanceColor(meshRef.current, idx, p.color);
+        }
+      },
+    };
+
+    return () => {
+      handle.current = null;
+    };
+  }, [cfg.drones.particle.lifeBase, cfg.drones.particle.lifeRandom, cfg.drones.particle.maxVelocity, cfg.drones.particle.scaleBase, cfg.drones.particle.scaleRandom, cfg.drones.particle.upBiasBase, MAX_PARTICLES, particles, ref]);
 
   useFrame((state, delta) => {
     if (!meshRef.current) return;
@@ -101,15 +76,12 @@ const Particles = forwardRef<ParticleHandle, ParticlesProps>((props, ref) => {
 
     particles.forEach((p, i) => {
       if (p.life > 0) {
-        // Physics
-        p.velocity.y -= 15 * delta; // Gravity
+        p.velocity.y -= 15 * delta;
         p.position.addScaledVector(p.velocity, delta);
         p.life -= delta;
 
-        // Scale down as it dies
         const currentScale = p.scale * (p.life / p.maxLife);
 
-        // Update instance matrix using shared helper to avoid allocations in hot paths
         setInstanceTransform(meshRef.current!, i, {
           position: { x: p.position.x, y: p.position.y, z: p.position.z },
           scale: {
@@ -120,7 +92,6 @@ const Particles = forwardRef<ParticleHandle, ParticlesProps>((props, ref) => {
         });
         needsUpdate = true;
       } else if (p.scale !== 0) {
-        // Hide dead particles
         p.scale = 0;
         setInstanceTransform(meshRef.current!, i, { scale: { x: 0, y: 0, z: 0 } });
         needsUpdate = true;
@@ -153,7 +124,6 @@ interface FlashEffectProps {}
 const FlashEffect = forwardRef<FlashHandle, FlashEffectProps>((props, ref) => {
   const lightsRef = useRef<(PointLight | null)[]>([]);
 
-  // Initialize state ref with initial value to avoid useMemo side-effect warning
   const statesRef = useRef<{ active: boolean; age: number }[]>(
     new Array(10).fill(0).map(() => ({ active: false, age: 0 })),
   );
@@ -161,22 +131,28 @@ const FlashEffect = forwardRef<FlashHandle, FlashEffectProps>((props, ref) => {
   const cursor = useRef(0);
   const poolSize = 10;
 
-  useImperativeHandle(ref, () => ({
-    trigger: (pos: Vector3) => {
-      const idx = cursor.current;
-      cursor.current = (cursor.current + 1) % poolSize;
+  useEffect(() => {
+    const handle = ref as React.MutableRefObject<FlashHandle | null>;
+    handle.current = {
+      trigger: (pos: Vector3) => {
+        const idx = cursor.current;
+        cursor.current = (cursor.current + 1) % poolSize;
 
-      const light = lightsRef.current[idx];
-      if (light) {
-        light.position.copy(pos);
-        // Center it slightly above the block center
-        light.position.y += 0.5;
-        light.visible = true;
-        light.intensity = 10;
-        statesRef.current[idx] = { active: true, age: 0 };
-      }
-    },
-  }));
+        const light = lightsRef.current[idx];
+        if (light) {
+          light.position.copy(pos);
+          light.position.y += 0.5;
+          light.visible = true;
+          light.intensity = 10;
+          statesRef.current[idx] = { active: true, age: 0 };
+        }
+      },
+    };
+
+    return () => {
+      handle.current = null;
+    };
+  }, [ref]);
 
   useFrame((_, delta) => {
     statesRef.current.forEach((state, i) => {
@@ -187,12 +163,9 @@ const FlashEffect = forwardRef<FlashHandle, FlashEffectProps>((props, ref) => {
         if (state.age >= duration) {
           state.active = false;
           if (lightsRef.current[i]) lightsRef.current[i]!.visible = false;
-        } else {
-          if (lightsRef.current[i]) {
-            // Exponential decay for impact feel
-            const t = 1 - state.age / duration;
-            lightsRef.current[i]!.intensity = 10 * (t * t);
-          }
+        } else if (lightsRef.current[i]) {
+          const t = 1 - state.age / duration;
+          lightsRef.current[i]!.intensity = 10 * (t * t);
         }
       }
     });
@@ -207,7 +180,7 @@ const FlashEffect = forwardRef<FlashHandle, FlashEffectProps>((props, ref) => {
             lightsRef.current[i] = el;
           }}
           visible={false}
-          color="#ffffaa" // Bright warm white
+          color="#ffffaa"
           distance={6}
           decay={2}
         />
@@ -217,270 +190,82 @@ const FlashEffect = forwardRef<FlashHandle, FlashEffectProps>((props, ref) => {
 });
 FlashEffect.displayName = "FlashEffect";
 
-// --- Main Drone Logic ---
-
-export const Drones: React.FC<DronesProps> = ({ worldRef }) => {
-  const droneCount = useGameStore((state) => state.droneCount);
-  const moveSpeedLevel = useGameStore((state) => state.moveSpeedLevel);
-  const miningSpeedLevel = useGameStore((state) => state.miningSpeedLevel);
-  const prestigeLevel = useGameStore((state) => state.prestigeLevel);
-  const addCredits = useGameStore((state) => state.addCredits);
-
-  // Derived stats (config-driven)
-  const cfg = getConfig();
-  const moveSpeed = getDroneMoveSpeed(moveSpeedLevel, cfg);
-  const mineDuration = getMineDuration(miningSpeedLevel, cfg);
-
-  const dronesRef = useRef<DroneAgent[]>([]);
+export const Drones: React.FC = () => {
+  const meshRef = useRef<InstancedMesh>(null);
   const particlesRef = useRef<ParticleHandle>(null);
   const flashRef = useRef<FlashHandle>(null);
+  const cfg = getConfig();
+  const bridge = getSimBridge();
+  const positionsRef = useRef<Float32Array | null>(null);
+  const minedPositionsRef = useRef<Float32Array | null>(null);
+  const droneCountRef = useRef(0);
 
-  // Sync drone count
-  // Using useLayoutEffect to ensure refs are updated before painting
-  // We use a state to force re-render if we really needed to, but droneCount change already triggered this.
-  useLayoutEffect(() => {
-    const current = dronesRef.current;
-    const cfg = getConfig();
-    if (current.length < droneCount) {
-      for (let i = current.length; i < droneCount; i++) {
-        current.push(new DroneAgent(i, cfg.drones.startHeightBase, cfg.drones.startHeightRandom));
-      }
-    } else if (current.length > droneCount) {
-      dronesRef.current = current.slice(0, droneCount);
-    }
-  }, [droneCount]);
-
-  useFrame((state, delta) => {
-    if (!worldRef.current) return;
-
-    dronesRef.current.forEach((drone) => {
-      switch (drone.state) {
-        case "SEEKING": {
-          const target = worldRef.current!.getRandomTarget();
-          if (target) {
-            drone.targetIndex = target.index;
-            drone.targetPos = target.position.clone();
-            drone.state = "MOVING";
-          }
-          break;
-        }
-        case "MOVING": {
-          if (!drone.targetPos) {
-            drone.state = "SEEKING";
-            break;
-          }
-
-          const dest = drone.targetPos.clone().add(new Vector3(0, 2, 0));
-          const dir = dest.clone().sub(drone.position);
-          const dist = dir.length();
-
-          if (dist < 0.5) {
-            drone.state = "MINING";
-            drone.miningTimer = 0;
-          } else {
-            dir.normalize();
-            drone.position.add(dir.multiplyScalar(moveSpeed * delta));
-          }
-          break;
-        }
-        case "MINING": {
-          drone.miningTimer += delta;
-
-          // Spawn particles while mining (rate limited slightly by random)
-          if (drone.targetPos && particlesRef.current && Math.random() < 0.2) {
-            const blockColor = getVoxelColor(drone.targetPos.y);
-            particlesRef.current.spawn(drone.targetPos, blockColor);
-          }
-
-          if (drone.miningTimer >= mineDuration) {
-            const value = worldRef.current!.mineBlock(drone.targetIndex);
-            if (value > 0) {
-              addCredits(value * prestigeLevel);
-
-              // Success Effects
-              if (drone.targetPos) {
-                // 1. Flash Light
-                if (flashRef.current) {
-                  flashRef.current.trigger(drone.targetPos);
-                }
-                // 2. Particle Burst
-                if (particlesRef.current) {
-                  const blockColor = getVoxelColor(drone.targetPos.y);
-                  for (let i = 0; i < 8; i++) {
-                    particlesRef.current.spawn(drone.targetPos, blockColor);
-                  }
-                }
-              }
-            }
-            drone.state = "SEEKING";
-            drone.targetPos = null;
-          }
-          break;
-        }
-      }
+  useEffect(() => {
+    return bridge.onFrame((frame) => {
+      positionsRef.current = frame.delta.entities ?? null;
+      minedPositionsRef.current = frame.delta.minedPositions ?? null;
     });
+  }, [bridge]);
+
+  useLayoutEffect(() => {
+    if (meshRef.current) {
+      meshRef.current.count = Math.max(0, droneCountRef.current);
+    }
+  }, []);
+
+  const tempVec = useRef(new Vector3());
+  const maxDrones = 200;
+
+  useFrame((state) => {
+    const mesh = meshRef.current;
+    const positions = positionsRef.current;
+    if (!mesh || !positions) return;
+
+    const count = Math.floor(positions.length / 3);
+    droneCountRef.current = count;
+    mesh.count = count;
+
+    for (let i = 0; i < count; i += 1) {
+      const base = i * 3;
+      const x = positions[base];
+      const y = positions[base + 1];
+      const z = positions[base + 2];
+      const bob = Math.sin(state.clock.elapsedTime * 5 + i) * 0.05;
+
+      setInstanceTransform(mesh, i, {
+        position: { x, y: y + bob, z },
+      });
+    }
+
+    mesh.instanceMatrix.needsUpdate = true;
+
+    const minedPositions = minedPositionsRef.current;
+    if (minedPositions && minedPositions.length > 0) {
+      for (let i = 0; i < minedPositions.length; i += 3) {
+        const pos = tempVec.current;
+        pos.set(minedPositions[i], minedPositions[i + 1], minedPositions[i + 2]);
+        const blockColor = getVoxelColor(pos.y);
+        if (flashRef.current) {
+          flashRef.current.trigger(pos);
+        }
+        if (particlesRef.current) {
+          for (let j = 0; j < 8; j += 1) {
+            particlesRef.current.spawn(pos, blockColor);
+          }
+        }
+      }
+      minedPositionsRef.current = null;
+    }
   });
 
   return (
     <group>
       <Particles ref={particlesRef} />
       <FlashEffect ref={flashRef} />
-      {/* eslint-disable-next-line react-hooks/refs */}
-      {dronesRef.current.slice(0, droneCount).map((drone) => (
-        <DroneVisual key={drone.id} drone={drone} />
-      ))}
-    </group>
-  );
-};
-
-const DroneVisual: React.FC<{ drone: DroneAgent }> = ({ drone }) => {
-  const meshRef = useRef<Group>(null);
-  const miningLaserRef = useRef<Mesh>(null);
-  const scanningLaserRef = useRef<Mesh>(null);
-  const targetBoxRef = useRef<Mesh>(null);
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const impactLightRef = useRef<any>(null);
-
-  useFrame((state) => {
-    if (!meshRef.current) return;
-
-    // 1. Update Position
-    meshRef.current.position.lerp(drone.position, 0.2);
-
-    // 2. Bobbing animation
-    meshRef.current.position.y += Math.sin(state.clock.elapsedTime * 5 + drone.id) * 0.01;
-
-    // 3. Rotation
-    if (drone.targetPos && (drone.state === "MOVING" || drone.state === "MINING")) {
-      meshRef.current.lookAt(drone.targetPos);
-    }
-
-    // 4. Visual Effects Update
-    const isMining = drone.state === "MINING" && !!drone.targetPos;
-    const isMoving = drone.state === "MOVING" && !!drone.targetPos;
-    const hasTarget = !!drone.targetPos;
-
-    // -- Mining Laser (High Energy) --
-    if (miningLaserRef.current) {
-      miningLaserRef.current.visible = isMining;
-      if (isMining && drone.targetPos) {
-        const localTarget = meshRef.current.worldToLocal(drone.targetPos.clone());
-        // const start = new Vector3(0, 0, 0);
-        const dist = localTarget.length(); // local origin to local target
-
-        // Jitter width
-        const jitter = 1 + Math.sin(state.clock.elapsedTime * 40) * 0.3;
-        miningLaserRef.current.scale.set(1 * jitter, dist, 1 * jitter);
-
-        // Position and Orient
-        miningLaserRef.current.position.set(0, 0, 0).lerp(localTarget, 0.5);
-        miningLaserRef.current.lookAt(localTarget);
-        miningLaserRef.current.rotation.x += Math.PI / 2;
-
-        // Pulsing Opacity
-        const material = miningLaserRef.current.material as MeshBasicMaterial;
-        material.opacity = 0.5 + Math.sin(state.clock.elapsedTime * 30) * 0.3;
-      }
-    }
-
-    // -- Scanning/Lock-on Beam (Low Energy) --
-    if (scanningLaserRef.current) {
-      scanningLaserRef.current.visible = isMoving;
-      if (isMoving && drone.targetPos) {
-        const localTarget = meshRef.current.worldToLocal(drone.targetPos.clone());
-        // const start = new Vector3(0, 0, 0);
-        const dist = localTarget.length();
-
-        // Thin steady beam
-        scanningLaserRef.current.scale.set(1, dist, 1);
-
-        scanningLaserRef.current.position.set(0, 0, 0).lerp(localTarget, 0.5);
-        scanningLaserRef.current.lookAt(localTarget);
-        scanningLaserRef.current.rotation.x += Math.PI / 2;
-
-        const material = scanningLaserRef.current.material as MeshBasicMaterial;
-        material.opacity = 0.2 + Math.sin(state.clock.elapsedTime * 10) * 0.1;
-      }
-    }
-
-    // -- Target Block Highlight Box --
-    if (targetBoxRef.current) {
-      targetBoxRef.current.visible = hasTarget;
-      if (hasTarget && drone.targetPos) {
-        // Convert world target pos to local for the box to stay at the target while parent moves
-        const localTarget = meshRef.current.worldToLocal(drone.targetPos.clone());
-        targetBoxRef.current.position.copy(localTarget);
-
-        // Animation: pulse size
-        const scale = 1.05 + Math.sin(state.clock.elapsedTime * 8) * 0.05;
-        targetBoxRef.current.scale.setScalar(scale);
-        targetBoxRef.current.rotation.y += 0.02;
-
-        // Color State
-        const material = targetBoxRef.current.material as MeshBasicMaterial;
-        if (isMining) {
-          material.color.setHex(0xff3333); // Red when mining
-        } else {
-          material.color.setHex(0x00ffff); // Cyan when locking on
-        }
-      }
-    }
-
-    if (impactLightRef.current) {
-      impactLightRef.current.visible = isMining;
-      if (isMining && drone.targetPos) {
-        const localTarget = meshRef.current.worldToLocal(drone.targetPos.clone());
-        localTarget.y += 0.5;
-        impactLightRef.current.position.copy(localTarget);
-
-        // Flicker intensity
-        impactLightRef.current.intensity = 2 + Math.random() * 3;
-      }
-    }
-  });
-
-  return (
-    <group ref={meshRef}>
-      {/* Drone Body */}
-      <mesh castShadow rotation={[Math.PI / 2, 0, 0]}>
+      <instancedMesh ref={meshRef} args={[undefined, undefined, maxDrones]}>
         <coneGeometry args={[0.3, 0.8, 4]} />
         <meshStandardMaterial color="#00ffcc" emissive="#004444" roughness={0.2} />
-      </mesh>
-      {/* Engine Glow */}
-      <pointLight distance={3} intensity={0.5} color="cyan" />
-
-      {/* Mining Laser Mesh (Cylinder) */}
-      <mesh ref={miningLaserRef} visible={false}>
-        <cylinderGeometry args={[0.05, 0.05, 1, 8, 1, true]} />
-        <meshBasicMaterial
-          color="#ff3333"
-          transparent
-          opacity={0.7}
-          blending={2}
-          depthWrite={false}
-        />
-      </mesh>
-
-      {/* Scanning Laser Mesh (Thin Cylinder) */}
-      <mesh ref={scanningLaserRef} visible={false}>
-        <cylinderGeometry args={[0.015, 0.015, 1, 4, 1, true]} />
-        <meshBasicMaterial
-          color="#00ffff"
-          transparent
-          opacity={0.3}
-          blending={2}
-          depthWrite={false}
-        />
-      </mesh>
-
-      {/* Target Highlight Box */}
-      <mesh ref={targetBoxRef} visible={false}>
-        <boxGeometry args={[1, 1, 1]} />
-        <meshBasicMaterial wireframe color="#00ffff" transparent opacity={0.5} depthWrite={false} />
-      </mesh>
-
-      {/* Impact Light */}
-      <pointLight ref={impactLightRef} distance={4} decay={2} color="#ffaa00" />
+      </instancedMesh>
     </group>
   );
 };

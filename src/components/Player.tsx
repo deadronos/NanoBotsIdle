@@ -5,8 +5,8 @@ import { Euler, Vector3 } from "three";
 
 import { getConfig } from "../config/index";
 import { getPlayerGroundHeight } from "../sim/player";
-import { useGameStore } from "../store";
 import type { ViewMode } from "../types";
+import { useUiStore } from "../ui/store";
 
 interface PlayerProps {
   viewMode: ViewMode;
@@ -19,8 +19,7 @@ export const Player: React.FC<PlayerProps> = ({ viewMode }) => {
   const isJumping = useRef(false);
   const groupRef = useRef<Group>(null);
   const playerVisualsRef = useRef<Group>(null);
-
-  const prestigeLevel = useGameStore((s) => s.prestigeLevel);
+  const prestigeLevel = useUiStore((s) => s.snapshot.prestigeLevel);
 
   // Input State
   const keys = useRef<Record<string, boolean>>({});
@@ -61,8 +60,7 @@ export const Player: React.FC<PlayerProps> = ({ viewMode }) => {
           result.catch((err: unknown) => {
             // Ignore "The user has exited the lock..." error
             if (err instanceof Error) {
-              if (err.name === "NotSupportedError" || err.message?.includes("exited the lock"))
-                return;
+              if (err.name === "NotSupportedError" || err.message?.includes("exited the lock")) return;
               console.debug("Pointer lock interrupted:", err);
             }
           });
@@ -90,21 +88,18 @@ export const Player: React.FC<PlayerProps> = ({ viewMode }) => {
     const cfg = getConfig();
     const isUnderwater = position.y < cfg.terrain.waterLevel;
     const SWIM_SPEED = cfg.player.swimSpeed;
-    const BUOYANCY = cfg.player.buoyancy;
     const WATER_DRAG = cfg.player.waterDrag;
 
     // Movement Physics
     const speed =
-      isUnderwater ? SWIM_SPEED
+      isUnderwater ?
+        SWIM_SPEED
       : keys.current["ShiftLeft"] ? cfg.player.runningSpeed
       : cfg.player.walkingSpeed;
 
     const direction = new Vector3();
     const forward = new Vector3(0, 0, -1).applyAxisAngle(cameraAngle.current.yaw);
-    const right = new Vector3(1, 0, 0).applyAxisAngle(
-      new Vector3(0, 1, 0),
-      cameraAngle.current.yaw,
-    );
+    const right = new Vector3(1, 0, 0).applyAxisAngle(new Vector3(0, 1, 0), cameraAngle.current.yaw);
 
     if (keys.current["KeyW"]) direction.add(forward);
     if (keys.current["KeyS"]) direction.sub(forward);
@@ -129,10 +124,6 @@ export const Player: React.FC<PlayerProps> = ({ viewMode }) => {
 
       // Apply swim force
       velocity.current.y += swimVertical * cfg.player.swimForce * delta;
-
-      // Apply Buoyancy (pushes up towards surface)
-      // Stronger if deeper
-      const depth = cfg.terrain.waterLevel - position.y;
 
       // Apply Drag
       velocity.current.y -= velocity.current.y * WATER_DRAG * delta;
@@ -179,16 +170,12 @@ export const Player: React.FC<PlayerProps> = ({ viewMode }) => {
       camera.position.copy(eyePos);
 
       const lookTarget = new Vector3(0, 0, -1);
-      lookTarget.applyEuler(
-        new Euler(cameraAngle.current.pitch, cameraAngle.current.yaw, 0, "YXZ"),
-      );
+      lookTarget.applyEuler(new Euler(cameraAngle.current.pitch, cameraAngle.current.yaw, 0, "YXZ"));
       camera.lookAt(eyePos.add(lookTarget));
     } else {
       const cameraOffsetDist = 5;
       const lookTarget = new Vector3(0, 0, -1);
-      lookTarget.applyEuler(
-        new Euler(cameraAngle.current.pitch, cameraAngle.current.yaw, 0, "YXZ"),
-      );
+      lookTarget.applyEuler(new Euler(cameraAngle.current.pitch, cameraAngle.current.yaw, 0, "YXZ"));
 
       const camPos = position.clone().sub(lookTarget.clone().multiplyScalar(cameraOffsetDist));
       camPos.y += 1.0;

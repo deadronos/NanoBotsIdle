@@ -1,6 +1,6 @@
 # [TASK004] - Sim/Render Separation Foundation (Engine + Protocol + Worker Bridge)
 
-**Status:** Pending  
+**Status:** Completed  
 **Added:** 2025-12-29  
 **Updated:** 2025-12-29
 
@@ -39,24 +39,26 @@ This also aligns with the repo’s worker guidance (`js-worker-multithreading` s
   - simBridge gating behavior (never more than one `STEP` in flight)
 
 ## Progress Tracking
-**Overall Status:** Not Started - 0%
+**Overall Status:** Completed - 100%
 
 ### Subtasks
 
 | ID | Description | Status | Updated | Notes |
 | --- | --- | --- | --- | --- |
-| 4.1 | Add `src/shared/protocol.ts` | Not Started | - | Mirror `TECH001` shapes; keep serializable. |
-| 4.2 | Add `src/engine/engine.ts` skeleton | Not Started | - | Pure TS, no worker knowledge. |
-| 4.3 | Add `src/worker/sim.worker.ts` adapter | Not Started | - | INIT/STEP/FRAME/ERROR. |
-| 4.4 | Add `src/simBridge/simBridge.ts` | Not Started | - | Command queue + step gating. |
-| 4.5 | Wire simBridge into app (no gameplay change) | Not Started | - | Log FRAME stats; ensure no regressions. |
-| 4.6 | Add unit tests for gating + payload shapes | Not Started | - | Vitest: ensure we don’t regress into Vector3/class messages. |
+| 4.1 | Add `src/shared/protocol.ts` | Complete | 2025-12-29 | Mirror `TECH001` shapes; keep serializable. |
+| 4.2 | Add `src/engine/engine.ts` skeleton | Complete | 2025-12-29 | Pure TS, no worker knowledge. |
+| 4.3 | Add `src/worker/sim.worker.ts` adapter | Complete | 2025-12-29 | INIT/STEP/FRAME/ERROR. |
+| 4.4 | Add `src/simBridge/simBridge.ts` | Complete | 2025-12-29 | Command queue + step gating. |
+| 4.5 | Wire simBridge into app (no gameplay change) | Complete | 2025-12-29 | Logs FRAME stats (throttled). |
+| 4.6 | Add unit tests for gating + payload shapes | Complete | 2025-12-29 | Added protocol + sim-bridge tests. |
 
 ## Progress Log
 
 ### 2025-12-29
 - Created TASK004 with an implementation plan.
+- Implemented the initial protocol, engine skeleton, worker adapter, and sim bridge.
+- Added throttled sim logging in `App.tsx`.
+- Added tests for protocol payloads and step gating.
 
 ## Design Link
 - `memory/designs/DESIGN004-worker-authoritative-sim-engine-refactor.md`
-

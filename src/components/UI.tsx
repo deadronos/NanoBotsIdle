@@ -1,7 +1,8 @@
 import React, { useState } from "react";
-
-import { useGameStore } from "../store";
+import { getConfig } from "../config/index";
+import { getSimBridge } from "../simBridge/simBridge";
 import type { ViewMode } from "../types";
+import { useUiStore } from "../ui/store";
 import { SettingsModal } from "./SettingsModal";
 
 interface UIProps {
@@ -10,14 +11,13 @@ interface UIProps {
 }
 
 export const UI: React.FC<UIProps> = ({ viewMode, onToggleView }) => {
-  const credits = useGameStore((state) => state.credits);
-  const prestigeLevel = useGameStore((state) => state.prestigeLevel);
-  const minedBlocks = useGameStore((state) => state.minedBlocks);
-  const totalBlocks = useGameStore((state) => state.totalBlocks);
-
+  const snapshot = useUiStore((state) => state.snapshot);
+  const credits = snapshot.credits;
+  const prestigeLevel = snapshot.prestigeLevel;
+  const minedBlocks = snapshot.minedBlocks;
+  const totalBlocks = snapshot.totalBlocks;
   const [isShopOpen, setShopOpen] = useState(false);
   const [isSettingsOpen, setSettingsOpen] = useState(false);
-
   const percentMined = totalBlocks > 0 ? (minedBlocks / totalBlocks) * 100 : 0;
 
   return (
@@ -77,13 +77,9 @@ export const UI: React.FC<UIProps> = ({ viewMode, onToggleView }) => {
               <path
                 strokeLinecap="round"
                 strokeLinejoin="round"
-                d="M9.594 3.94c.09-.542.56-.94 1.11-.94h2.593c.55 0 1.02.398 1.11.94l.213 1.281c.063.374.313.686.645.87.074.04.147.083.22.127.324.196.72.257 1.075.124l1.217-.456a1.125 1.125 0 011.37.49l1.296 2.247a1.125 1.125 0 01-.26 1.431l-1.003.827c-.293.24-.438.613-.431.992a6.759 6.759 0 010 .255c-.007.378.138.75.43.99l1.005.828c.424.35.534.954.26 1.43l-1.298 2.247a1.125 1.125 0 01-1.369.491l-1.217-.456c-.355-.133-.75-.072-1.076.124a6.57 6.57 0 01-.22.128c-.331.183-.581.495-.644.869l-.213 1.28c-.09.543-.56.941-1.11.941h-2.594c-.55 0-1.02-.398-1.11-.94l-.213-1.281c-.062-.374-.312-.686-.644-.87a6.52 6.52 0 01-.22-.127c-.325-.196-.72-.257-1.076-.124l-1.217.456a1.125 1.125 0 01-1.369-.49l-1.297-2.247a1.125 1.125 0 01.26-1.431l1.004-.827c.292-.24.437-.613.43-.992a6.932 6.932 0 010-.255c.007-.378-.138-.75-.43-.99l-1.004-.828a1.125 1.125 0 01-.26-1.43l1.297-2.247a1.125 1.125 0 011.37-.491l1.216.456c.356.133.751.072 1.076-.124.072-.044.146-.087.22-.128.332-.183.581-.495.644-.869l.214-1.281z"
+                d="M9.594 3.94c.09-.542.56-.94 1.11-.94h2.593c.55 0 1.02.398 1.11.94l.213 1.281c.063.374.313.686.645.87.074.04.147.083.22.127.324.196.72.257 1.076.124l1.217-.456a1.125 1.125 0 011.37.49l1.296 2.247a1.125 1.125 0 01-.26 1.431l-1.003.827c-.293.24-.438.613-.431.992a6.759 6.759 0 010 .255c-.007.378.138.75.433.99l1.005.828c.424.35.534.954.26 1.43l-1.298 2.247a1.125 1.125 0 01-1.369.491l-1.217-.456c-.355-.133-.75-.072-1.076.124a6.57 6.57 0 01-.22.128c-.331.183-.581.495-.644.869l-.213 1.28c-.09.543-.56.941-1.11.941h-2.594c-.55 0-1.02-.398-1.11-.94l-.213-1.281c-.062-.374-.312-.686-.644-.87a6.52 6.52 0 01-.22-.127c-.325-.196-.72-.257-1.076-.124l-1.217.456a1.125 1.125 0 01-1.369-.49l-1.297-2.247a1.125 1.125 0 01.26-1.431l1.004-.827c.292-.24.437-.613.43-.992a6.932 6.932 0 010-.255c.007-.378-.138-.75-.43-.99l-1.004-.828a1.125 1.125 0 01-.26-1.43l1.297-2.247a1.125 1.125 0 011.37-.491l1.216.456c.356.133.751.072 1.076-.124.072-.044.146-.087.22-.128.332-.183.581-.495.644-.869l.214-1.281z"
               />
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
-              />
+              <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
             </svg>
           </button>
         </div>
@@ -117,7 +113,11 @@ export const UI: React.FC<UIProps> = ({ viewMode, onToggleView }) => {
 };
 
 const ShopModal: React.FC<{ onClose: () => void }> = ({ onClose }) => {
-  const store = useGameStore();
+  const snapshot = useUiStore((state) => state.snapshot);
+  const cfg = getConfig();
+  const nextCosts = snapshot.nextCosts ?? {};
+  const minPrestigeBlocks = cfg.economy.prestigeMinMinedBlocks;
+  const bridge = getSimBridge();
 
   // Stop click propagation to prevent pointer lock when clicking shop
   const handleContainerClick = (e: React.MouseEvent) => {
@@ -150,34 +150,34 @@ const ShopModal: React.FC<{ onClose: () => void }> = ({ onClose }) => {
         <div className="grid grid-cols-2 gap-4 mb-8">
           <UpgradeCard
             title="Drone Fleet"
-            level={store.droneCount}
-            cost={store.getUpgradeCost("drone")}
-            onClick={() => store.buyUpgrade("drone")}
-            canAfford={store.credits >= store.getUpgradeCost("drone")}
+            level={snapshot.droneCount}
+            cost={nextCosts.drone ?? 0}
+            onClick={() => bridge.enqueue({ t: "BUY_UPGRADE", id: "drone", n: 1 })}
+            canAfford={snapshot.credits >= (nextCosts.drone ?? Number.POSITIVE_INFINITY)}
             desc="Add another autonomous mining unit."
           />
           <UpgradeCard
             title="Mining Drill"
-            level={store.miningSpeedLevel}
-            cost={store.getUpgradeCost("speed")}
-            onClick={() => store.buyUpgrade("speed")}
-            canAfford={store.credits >= store.getUpgradeCost("speed")}
+            level={snapshot.miningSpeedLevel}
+            cost={nextCosts.speed ?? 0}
+            onClick={() => bridge.enqueue({ t: "BUY_UPGRADE", id: "speed", n: 1 })}
+            canAfford={snapshot.credits >= (nextCosts.speed ?? Number.POSITIVE_INFINITY)}
             desc="Decreases time required to mine a block."
           />
           <UpgradeCard
             title="Thrusters"
-            level={store.moveSpeedLevel}
-            cost={store.getUpgradeCost("move")}
-            onClick={() => store.buyUpgrade("move")}
-            canAfford={store.credits >= store.getUpgradeCost("move")}
+            level={snapshot.moveSpeedLevel}
+            cost={nextCosts.move ?? 0}
+            onClick={() => bridge.enqueue({ t: "BUY_UPGRADE", id: "move", n: 1 })}
+            canAfford={snapshot.credits >= (nextCosts.move ?? Number.POSITIVE_INFINITY)}
             desc="Drones fly faster between targets."
           />
           <UpgradeCard
             title="Laser Power"
-            level={store.laserPowerLevel}
-            cost={store.getUpgradeCost("laser")}
-            onClick={() => store.buyUpgrade("laser")}
-            canAfford={store.credits >= store.getUpgradeCost("laser")}
+            level={snapshot.laserPowerLevel}
+            cost={nextCosts.laser ?? 0}
+            onClick={() => bridge.enqueue({ t: "BUY_UPGRADE", id: "laser", n: 1 })}
+            canAfford={snapshot.credits >= (nextCosts.laser ?? Number.POSITIVE_INFINITY)}
             desc="Increases beam intensity (visual)."
           />
         </div>
@@ -192,13 +192,13 @@ const ShopModal: React.FC<{ onClose: () => void }> = ({ onClose }) => {
           </div>
           <button
             onClick={() => {
-              store.resetPrestige();
+              bridge.enqueue({ t: "PRESTIGE" });
               onClose();
             }}
-            disabled={store.minedBlocks < 50} // Minimum requirement
+            disabled={snapshot.minedBlocks < minPrestigeBlocks}
             className="bg-purple-600 hover:bg-purple-500 disabled:opacity-50 disabled:cursor-not-allowed text-white px-6 py-3 rounded-lg font-bold transition-colors"
           >
-            {store.minedBlocks < 50 ? "Mine 50 Blocks first" : "WARP JUMP"}
+            {snapshot.minedBlocks < minPrestigeBlocks ? `Mine ${minPrestigeBlocks} Blocks first` : "WARP JUMP"}
           </button>
         </div>
       </div>
@@ -224,9 +224,7 @@ const UpgradeCard: React.FC<{
       onClick={onClick}
       disabled={!canAfford}
       className={`w-full py-2 rounded font-bold text-sm flex justify-center items-center gap-1 ${
-        canAfford ?
-          "bg-green-600 hover:bg-green-500 text-white"
-        : "bg-gray-700 text-gray-400 cursor-not-allowed"
+        canAfford ? "bg-green-600 hover:bg-green-500 text-white" : "bg-gray-700 text-gray-400 cursor-not-allowed"
       }`}
     >
       Buy ${cost.toLocaleString()}
