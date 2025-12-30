@@ -2,6 +2,14 @@ import type { FromMeshingWorker, MeshResult, ToMeshingWorker } from "../shared/m
 
 export type ChunkCoord3 = { cx: number; cy: number; cz: number };
 
+type DirtyEntry = {
+  key: string;
+  coord: ChunkCoord3;
+  priority: number;
+  order: number;
+  token: number;
+};
+
 export type MeshingWorkerLike = {
   postMessage: (message: ToMeshingWorker, transfer?: Transferable[]) => void;
   addEventListener: (
@@ -31,7 +39,12 @@ export class MeshingScheduler {
   private readonly onApply: (result: MeshResult) => void;
   private readonly maxInFlight: number;
 
+  private getPriority: ((coord: ChunkCoord3) => number) | null;
+
   private readonly dirty = new Set<string>();
+  private readonly dirtyHeap: DirtyEntry[] = [];
+  private readonly dirtyTokenByKey = new Map<string, number>();
+  private dirtyOrder = 1;
   private readonly revByChunk = new Map<string, number>();
   private readonly inFlightByJob = new Map<number, { key: string; rev: number }>();
   private nextJobId = 1;
@@ -70,14 +83,35 @@ export class MeshingScheduler {
     };
     onApply: (result: MeshResult) => void;
     maxInFlight?: number;
+    getPriority?: (coord: ChunkCoord3) => number;
   }) {
     this.worker = options.worker;
     this.chunkSize = options.chunkSize;
     this.buildJob = options.buildJob;
     this.onApply = options.onApply;
     this.maxInFlight = options.maxInFlight ?? 1;
+    this.getPriority = options.getPriority ?? null;
 
     this.worker.addEventListener("message", this.onMessage);
+  }
+
+  setPriorityProvider(getPriority?: (coord: ChunkCoord3) => number) {
+    this.getPriority = getPriority ?? null;
+  }
+
+  /**
+   * Rebuilds the internal priority queue based on the current dirty set.
+   * Call this when your priority function depends on a moving focus (e.g., player chunk).
+   */
+  reprioritizeDirty() {
+    this.dirtyHeap.length = 0;
+    for (const key of this.dirty) {
+      const coord = parseChunkKey(key);
+      const token = this.dirtyTokenByKey.get(key) ?? 0;
+      const order = this.dirtyOrder++;
+      const priority = this.getPriority ? this.getPriority(coord) : 0;
+      this.heapPush({ key, coord, token, order, priority });
+    }
   }
 
   dispose() {
@@ -90,6 +124,13 @@ export class MeshingScheduler {
     const nextRev = (this.revByChunk.get(key) ?? 0) + 1;
     this.revByChunk.set(key, nextRev);
     this.dirty.add(key);
+
+    const token = (this.dirtyTokenByKey.get(key) ?? 0) + 1;
+    this.dirtyTokenByKey.set(key, token);
+
+    const order = this.dirtyOrder++;
+    const priority = this.getPriority ? this.getPriority(coord) : 0;
+    this.heapPush({ key, coord, token, order, priority });
   }
 
   markDirtyMany(coords: ChunkCoord3[]) {
@@ -98,15 +139,87 @@ export class MeshingScheduler {
 
   clearAll() {
     this.dirty.clear();
+    this.dirtyHeap.length = 0;
+    this.dirtyTokenByKey.clear();
     this.revByChunk.clear();
     this.inFlightByJob.clear();
   }
 
+  private heapLess(a: DirtyEntry, b: DirtyEntry) {
+    if (a.priority !== b.priority) return a.priority < b.priority;
+    return a.order < b.order;
+  }
+
+  private heapPush(entry: DirtyEntry) {
+    this.dirtyHeap.push(entry);
+    this.heapSiftUp(this.dirtyHeap.length - 1);
+  }
+
+  private heapSiftUp(index: number) {
+    let i = index;
+    while (i > 0) {
+      const parent = Math.floor((i - 1) / 2);
+      if (!this.heapLess(this.dirtyHeap[i]!, this.dirtyHeap[parent]!)) break;
+      const tmp = this.dirtyHeap[i]!;
+      this.dirtyHeap[i] = this.dirtyHeap[parent]!;
+      this.dirtyHeap[parent] = tmp;
+      i = parent;
+    }
+  }
+
+  private heapSiftDown(index: number) {
+    let i = index;
+    const n = this.dirtyHeap.length;
+    while (true) {
+      const left = i * 2 + 1;
+      const right = left + 1;
+      let smallest = i;
+
+      if (left < n && this.heapLess(this.dirtyHeap[left]!, this.dirtyHeap[smallest]!)) {
+        smallest = left;
+      }
+      if (right < n && this.heapLess(this.dirtyHeap[right]!, this.dirtyHeap[smallest]!)) {
+        smallest = right;
+      }
+      if (smallest === i) break;
+
+      const tmp = this.dirtyHeap[i]!;
+      this.dirtyHeap[i] = this.dirtyHeap[smallest]!;
+      this.dirtyHeap[smallest] = tmp;
+      i = smallest;
+    }
+  }
+
+  private heapPop(): DirtyEntry | null {
+    if (this.dirtyHeap.length === 0) return null;
+    const root = this.dirtyHeap[0]!;
+    const last = this.dirtyHeap.pop()!;
+    if (this.dirtyHeap.length > 0) {
+      this.dirtyHeap[0] = last;
+      this.heapSiftDown(0);
+    }
+    return root;
+  }
+
+  private popNextDirty(): DirtyEntry | null {
+    while (true) {
+      const entry = this.heapPop();
+      if (!entry) return null;
+      if (!this.dirty.has(entry.key)) continue;
+      const currentToken = this.dirtyTokenByKey.get(entry.key) ?? 0;
+      if (entry.token !== currentToken) continue;
+      return entry;
+    }
+  }
+
   pump() {
     while (this.inFlightByJob.size < this.maxInFlight && this.dirty.size > 0) {
-      const nextKey = this.dirty.values().next().value as string;
+      const next = this.popNextDirty();
+      if (!next) return;
+
+      const nextKey = next.key;
       this.dirty.delete(nextKey);
-      const coord = parseChunkKey(nextKey);
+      const coord = next.coord;
       const rev = this.revByChunk.get(nextKey) ?? 0;
       const jobId = this.nextJobId++;
 

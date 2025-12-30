@@ -52,25 +52,13 @@ const VoxelLayerInstanced: React.FC<{
     const cy = Math.floor(surfaceY / chunkSize);
     const baseCx = Math.floor(spawnX / chunkSize);
     const baseCz = Math.floor(spawnZ / chunkSize);
+    setFocusChunk(baseCx, cy, baseCz);
     for (let cx = -1; cx <= 1; cx += 1) {
       for (let cz = -1; cz <= 1; cz += 1) {
         addChunk(baseCx + cx, cy, baseCz + cz);
       }
     }
-  }, [addChunk, chunkSize, cfg.terrain.quantizeScale, cfg.terrain.surfaceBias, seed, spawnX, spawnZ]);
-
-  const ensureChunksRadius = useCallback(
-    (cx: number, cy: number, cz: number, radius: number) => {
-      for (let x = -radius; x <= radius; x++) {
-        for (let y = -radius; y <= radius; y++) {
-          for (let z = -radius; z <= radius; z++) {
-            addChunk(cx + x, cy + y, cz + z);
-          }
-        }
-      }
-    },
-    [addChunk],
-  );
+  }, [addChunk, chunkSize, cfg.terrain.quantizeScale, cfg.terrain.surfaceBias, seed, setFocusChunk, spawnX, spawnZ]);
 
   useEffect(() => {
     return bridge.onFrame((frame) => {
@@ -164,7 +152,6 @@ const VoxelLayerInstanced: React.FC<{
     chunkSize,
     clear,
     ensureCapacity,
-    ensureChunksRadius,
     ensureInitialChunk,
     flushRebuild,
     removeVoxel,
@@ -191,7 +178,7 @@ const VoxelLayerMeshed: React.FC<{
   const cfg = useConfig();
   const bridge = getSimBridge();
 
-  const { ensureChunk, groupRef, markDirtyForEdits, reset } = useMeshedChunks({
+  const { ensureChunk, groupRef, markDirtyForEdits, reset, setFocusChunk } = useMeshedChunks({
     chunkSize,
     prestigeLevel,
     waterLevel: cfg.terrain.waterLevel,
@@ -226,19 +213,6 @@ const VoxelLayerMeshed: React.FC<{
     }
   }, [addChunk, chunkSize, cfg.terrain.quantizeScale, cfg.terrain.surfaceBias, seed, spawnX, spawnZ]);
 
-  const ensureChunksRadius = useCallback(
-    (cx: number, cy: number, cz: number, radius: number) => {
-      for (let x = -radius; x <= radius; x++) {
-        for (let y = -radius; y <= radius; y++) {
-          for (let z = -radius; z <= radius; z++) {
-            addChunk(cx + x, cy + y, cz + z);
-          }
-        }
-      }
-    },
-    [addChunk],
-  );
-
   useEffect(() => {
     return bridge.onFrame((frame) => {
       if (frame.delta.frontierReset) {
@@ -266,6 +240,7 @@ const VoxelLayerMeshed: React.FC<{
         playerChunk.cx = pcx;
         playerChunk.cy = pcy;
         playerChunk.cz = pcz;
+        setFocusChunk(pcx, pcy, pcz);
         // Prioritize nearby chunks in radial order to fill nearest areas first
         {
           const offsets = generateRadialOffsets(1, 3);
@@ -275,7 +250,7 @@ const VoxelLayerMeshed: React.FC<{
         }
       }
     });
-  }, [bridge, chunkSize, ensureChunksRadius, ensureInitialChunk, markDirtyForEdits, reset]);
+  }, [bridge, chunkSize, ensureInitialChunk, markDirtyForEdits, reset, setFocusChunk]);
 
   return <group ref={groupRef} />;
 };

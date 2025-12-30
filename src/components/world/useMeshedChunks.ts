@@ -15,6 +15,8 @@ const chunkKey = (cx: number, cy: number, cz: number) => `${cx},${cy},${cz}`;
 export const useMeshedChunks = (options: { chunkSize: number; prestigeLevel: number; waterLevel: number }) => {
   const { chunkSize, prestigeLevel, waterLevel } = options;
 
+  const focusChunkRef = useRef<{ cx: number; cy: number; cz: number }>({ cx: 0, cy: 0, cz: 0 });
+
   // Color mapping kept local to avoid importing `three` types in worker code.
   // Reuse Color instances to avoid per-vertex allocations.
   const deepWater = useMemo(() => new Color("#1a4d8c"), []);
@@ -114,6 +116,14 @@ export const useMeshedChunks = (options: { chunkSize: number; prestigeLevel: num
   useEffect(() => {
     const worker = defaultMeshingWorkerFactory();
 
+    const priorityFromFocus = (coord: { cx: number; cy: number; cz: number }) => {
+      const focus = focusChunkRef.current;
+      const dx = coord.cx - focus.cx;
+      const dy = coord.cy - focus.cy;
+      const dz = coord.cz - focus.cz;
+      return dx * dx + dy * dy + dz * dz;
+    };
+
     const scheduler = new MeshingScheduler({
       worker,
       chunkSize,
@@ -145,6 +155,7 @@ export const useMeshedChunks = (options: { chunkSize: number; prestigeLevel: num
       },
       onApply: (res) => applyMeshResult(res),
       maxInFlight: 8,
+      getPriority: priorityFromFocus,
     });
 
     schedulerRef.current = scheduler;
@@ -191,10 +202,19 @@ export const useMeshedChunks = (options: { chunkSize: number; prestigeLevel: num
     disposeAllMeshes();
   }, [disposeAllMeshes]);
 
+  const setFocusChunk = useCallback((cx: number, cy: number, cz: number) => {
+    focusChunkRef.current = { cx, cy, cz };
+    const scheduler = schedulerRef.current;
+    if (!scheduler) return;
+    scheduler.reprioritizeDirty();
+    scheduler.pump();
+  }, []);
+
   return {
     groupRef,
     ensureChunk,
     markDirtyForEdits,
+    setFocusChunk,
     reset,
   };
 };
