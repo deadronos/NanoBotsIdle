@@ -9,6 +9,7 @@ import { defaultMeshingWorkerFactory } from "../../meshing/meshingWorkerFactory"
 import type { MeshResult } from "../../shared/meshingProtocol";
 import type { VoxelEdit } from "../../shared/protocol";
 import { getVoxelMaterialAt } from "../../sim/collision";
+import { chunkDistanceSq3 } from "../../utils";
 
 const chunkKey = (cx: number, cy: number, cz: number) => `${cx},${cy},${cz}`;
 
@@ -117,11 +118,7 @@ export const useMeshedChunks = (options: { chunkSize: number; prestigeLevel: num
     const worker = defaultMeshingWorkerFactory();
 
     const priorityFromFocus = (coord: { cx: number; cy: number; cz: number }) => {
-      const focus = focusChunkRef.current;
-      const dx = coord.cx - focus.cx;
-      const dy = coord.cy - focus.cy;
-      const dz = coord.cz - focus.cz;
-      return dx * dx + dy * dy + dz * dz;
+      return chunkDistanceSq3(coord, focusChunkRef.current);
     };
 
     const scheduler = new MeshingScheduler({

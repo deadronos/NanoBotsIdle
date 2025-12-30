@@ -1,5 +1,5 @@
 import { describe, test, expect } from "vitest";
-import { generateRadialOffsets } from "../src/utils";
+import { generateRadialOffsets } from "../src/utils/chunkPriority";
 
 describe("generateRadialOffsets", () => {
   test("center first and non-decreasing distances (3D)", () => {

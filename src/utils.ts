@@ -2,6 +2,8 @@ import { Color } from "three";
 
 import { getVoxelValueFromHeight, noise2D } from "./sim/terrain-core";
 
+export { chunkDistanceSq2, chunkDistanceSq3, forEachRadialChunk, generateRadialOffsets } from "./utils/chunkPriority";
+
 export { getVoxelValueFromHeight as getVoxelValue, noise2D };
 
 // Pseudo-random number generator
@@ -38,36 +40,4 @@ export const getTerrainHeight = (x: number, z: number): number => {
 // Continuous height for smoother physics/camera walking
 export const getSmoothHeight = (x: number, z: number): number => {
   return noise2D(x, z) * 2;
-};
-
-// Generate offsets within a cube/cross of radius sorted by squared distance ascending.
-// dims = 3 (default) includes x,y,z; dims = 2 uses only x,z (y=0) for horizontal scans.
-export const generateRadialOffsets = (radius: number, dims = 3): Array<{ dx: number; dy: number; dz: number }> => {
-  const offsets: Array<{ dx: number; dy: number; dz: number }> = [];
-  const min = -radius;
-  const max = radius;
-
-  for (let dx = min; dx <= max; dx++) {
-    for (let dz = min; dz <= max; dz++) {
-      if (dims === 2) {
-        offsets.push({ dx, dy: 0, dz });
-      } else {
-        for (let dy = min; dy <= max; dy++) {
-          offsets.push({ dx, dy, dz });
-        }
-      }
-    }
-  }
-
-  offsets.sort((a, b) => {
-    const da = a.dx * a.dx + a.dy * a.dy + a.dz * a.dz;
-    const db = b.dx * b.dx + b.dy * b.dy + b.dz * b.dz;
-    if (da !== db) return da - db;
-    // tie-break deterministically: by dx, then dy, then dz
-    if (a.dx !== b.dx) return a.dx - b.dx;
-    if (a.dy !== b.dy) return a.dy - b.dy;
-    return a.dz - b.dz;
-  });
-
-  return offsets;
 };
