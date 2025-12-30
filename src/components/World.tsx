@@ -10,10 +10,12 @@ import { getSeed } from "../sim/seed";
 import { getSurfaceHeightCore } from "../sim/terrain-core";
 import { getSimBridge } from "../simBridge/simBridge";
 import { useUiStore } from "../ui/store";
-import { forEachRadialChunk } from "../utils";
+import { forEachRadialChunk, getVoxelColor } from "../utils";
 import { chunkKey, ensureNeighborChunksForMinedVoxel, populateChunkVoxels } from "./world/chunkHelpers";
+import { ensureInstanceColors } from "./world/instancedVoxels/voxelInstanceMesh";
 import {
   countDenseSolidsInChunk,
+  getMissingFrontierVoxelsInChunk,
   makeVoxelBoundsForChunkRadius,
   makeXzBoundsForChunkRadius,
   voxelInBounds,
@@ -133,19 +135,29 @@ const VoxelLayerInstanced: React.FC<{
         }
       }
 
-      if ((voxelRenderMode === "frontier" || voxelRenderMode === "frontier-fill") && !sentFrontierChunkRef.current) {
+      const showFrontier = voxelRenderMode === "frontier" || voxelRenderMode === "frontier-fill";
+      if (showFrontier && !sentFrontierChunkRef.current) {
         bridge.enqueue({ t: "SET_PLAYER_CHUNK", cx: pcx, cy: pcy, cz: pcz });
         sentFrontierChunkRef.current = true;
       }
 
-      if (voxelRenderMode === "frontier" || voxelRenderMode === "frontier-fill") {
+      if (showFrontier) {
         if (frame.delta.frontierReset) {
           frontierKeysRef.current.clear();
         }
 
         if (frame.delta.frontierAdd && frame.delta.frontierAdd.length > 0) {
-          ensureCapacity(solidCountRef.current + frame.delta.frontierAdd.length / 3);
           const positions = frame.delta.frontierAdd;
+          const voxelCount = positions.length / 3;
+          let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity, minZ = Infinity, maxZ = -Infinity;
+          for (let i = 0; i < positions.length; i += 3) {
+            minX = Math.min(minX, positions[i]); maxX = Math.max(maxX, positions[i]);
+            minY = Math.min(minY, positions[i+1]); maxY = Math.max(maxY, positions[i+1]);
+            minZ = Math.min(minZ, positions[i+2]); maxZ = Math.max(maxZ, positions[i+2]);
+          }
+          console.log(`[client] Received frontierAdd: ${voxelCount} voxels, x=${minX}..${maxX}, y=${minY}..${maxY}, z=${minZ}..${maxZ}, frame ${frame.delta.tick}`);
+          
+          ensureCapacity(solidCountRef.current + voxelCount);
           for (let i = 0; i < positions.length; i += 3) {
             addVoxel(positions[i], positions[i + 1], positions[i + 2]);
             frontierKeysRef.current.add(voxelKey(positions[i], positions[i + 1], positions[i + 2]));
@@ -241,6 +253,25 @@ const VoxelLayerInstanced: React.FC<{
               }
             }
 
+            // Aggressive Compare: Check true frontier (all exposed faces) vs tracked keys.
+            let trueFrontierExpected = 0;
+            const trueFrontierMissingKeys: string[] = [];
+            
+            forEachRadialChunk({ cx: pcx, cy: pcy, cz: pcz }, radius, 3, (c) => {
+               const res = getMissingFrontierVoxelsInChunk({
+                 cx: c.cx, 
+                 cy: c.cy, 
+                 cz: c.cz, 
+                 chunkSize, 
+                 prestigeLevel, 
+                 trackedKeys: frontierKeysRef.current 
+               });
+               trueFrontierExpected += res.expectedFrontierCount;
+               if (res.missingKeys.length > 0) {
+                 trueFrontierMissingKeys.push(...res.missingKeys);
+               }
+            });
+
             console.groupCollapsed(
               `[render-debug] frontier pc=(${pcx},${pcy},${pcz}) radius=${radius} chunksize=${chunkSize}`,
             );
@@ -249,6 +280,11 @@ const VoxelLayerInstanced: React.FC<{
               frontierSurfaceExpected,
               frontierSurfaceMissingCount: missingSurfaceCount,
               frontierSurfaceMissingSample: missingSurfaceKeys,
+              
+              trueFrontierExpected,
+              trueFrontierMissingCount: trueFrontierMissingKeys.length,
+              trueFrontierMissingSample: trueFrontierMissingKeys.slice(0, 20),
+              
               frontierRenderedInRegion3d: frontierInRegion3d,
               frontierRenderedInRegionXz: frontierInRegionXz,
               frontierRenderedUniqueColumnsInXz: xzPairsInRegion.size,
@@ -269,6 +305,8 @@ const VoxelLayerInstanced: React.FC<{
               },
               deltaFrontierAdd: frame.delta.frontierAdd?.length ?? 0,
               deltaFrontierRemove: frame.delta.frontierRemove?.length ?? 0,
+              debugChunksProcessed: frame.delta.debugChunksProcessed,
+              debugQueueLengthAtTickStart: frame.delta.debugQueueLengthAtTickStart,
             });
             console.groupEnd();
 
@@ -355,42 +393,63 @@ const VoxelLayerInstanced: React.FC<{
         </mesh>
       ) : null}
 
-      {(voxelRenderMode === "frontier" && debugEnabled) || voxelRenderMode === "frontier-fill" ? (
-          <DebugFillOverlay
+      {voxelRenderMode === "frontier-fill" ? (
+          <FrontierFillRenderer
               chunkSize={chunkSize}
               prestigeLevel={prestigeLevel}
               center={playerChunk}
               radius={debugCfg.radiusChunks}
               bedrockY={cfg.terrain.bedrockY ?? -50}
+              waterLevel={cfg.terrain.waterLevel ?? -20}
           />
       ) : null}
+
+      {/* Debug-only fill overlay for standard frontier mode if enabled? (Optional, user didn't ask for this but good to keep clean) */}
+      {voxelRenderMode === "frontier" && debugEnabled ? (
+           <FrontierFillRenderer
+              chunkSize={chunkSize}
+              prestigeLevel={prestigeLevel}
+              center={playerChunk}
+              radius={debugCfg.radiusChunks}
+              bedrockY={cfg.terrain.bedrockY ?? -50}
+              waterLevel={cfg.terrain.waterLevel ?? -20}
+              debugVisuals={true}
+          />
+      ) : null}
+
 
     </group>
   );
 };
 
-const DebugFillOverlay: React.FC<{
+const FrontierFillRenderer: React.FC<{
   chunkSize: number;
   prestigeLevel: number;
   radius: number;
   center: { cx: number; cy: number; cz: number };
   bedrockY: number;
-}> = ({ bedrockY, center, chunkSize, prestigeLevel, radius }) => {
+  waterLevel: number;
+  debugVisuals?: boolean;
+}> = ({ bedrockY, center, chunkSize, prestigeLevel, radius, waterLevel, debugVisuals = false }) => {
   const meshRef = useRef<InstancedMesh>(null);
   const dummy = useMemo(() => new Object3D(), []);
-  // Use a reasonably high limit for debug fill (3x3 chunks * 20 depth ~ 45k voxels)
+  // Use a reasonably high limit for fill (3x3 chunks * 20 depth ~ 45k voxels)
   const MAX_INSTANCES = 150000;
 
   useEffect(() => {
     const mesh = meshRef.current;
     if (!mesh) return;
 
+    if (!debugVisuals) {
+       ensureInstanceColors(mesh, MAX_INSTANCES);
+    }
+
     let index = 0;
 
     // Radius 0 = 1 chunk, Radius 1 = 3x3 chunks.
     // Limit vertical fill depth to avoid overcrowding/lag.
     // We mainly care about holes near surface.
-    const FILL_DEPTH = 20;
+    const FILL_DEPTH = 30;
 
     forEachRadialChunk(center, radius, 3, (c) => {
       const minX = c.cx * chunkSize;
@@ -403,13 +462,24 @@ const DebugFillOverlay: React.FC<{
           if (index >= MAX_INSTANCES) break;
 
           const groundY = getGroundHeightWithEdits(x, z, prestigeLevel);
+          // Standard frontier renders the surface (groundY). We want to fill *below* it to plug holes.
+          // However, user reports "holes" persisting, which means the surface block ITSELF is often missing from the frontier stream.
+          // To fix this, we must render the fill starting AT groundY (the surface).
+          // This will cause Z-fighting (flickering) where the frontier *does* exist, but that is preferable to seeing through the world.
+          // In the future, we could pass the frontierKeys set to selectively fill only missing keys, but that requires frequent rebuilds.
           const startY = Math.max(bedrockY, groundY - FILL_DEPTH);
           
-          for (let y = groundY; y >= startY; y--) {
+          for (let y = groundY; y >= startY; y--) { 
             if (index >= MAX_INSTANCES) break;
+            
             dummy.position.set(x, y, z);
             dummy.updateMatrix();
             mesh.setMatrixAt(index, dummy.matrix);
+            
+            if (!debugVisuals && mesh.instanceColor) {
+               mesh.setColorAt(index, getVoxelColor(y, waterLevel));
+            }
+
             index++;
           }
         }
@@ -418,12 +488,17 @@ const DebugFillOverlay: React.FC<{
 
     mesh.count = index;
     if (mesh.instanceMatrix) mesh.instanceMatrix.needsUpdate = true;
-  }, [bedrockY, center, chunkSize, dummy, prestigeLevel, radius]);
+    if (mesh.instanceColor) mesh.instanceColor.needsUpdate = true;
+  }, [bedrockY, center, chunkSize, dummy, prestigeLevel, radius, debugVisuals, waterLevel, MAX_INSTANCES]);
 
   return (
     <instancedMesh ref={meshRef} args={[undefined, undefined, MAX_INSTANCES]}>
-      <boxGeometry args={[0.5, 0.5, 0.5]} />
-      <meshBasicMaterial color="#00ffff" transparent opacity={0.3} depthWrite={false} />
+      <boxGeometry args={[1, 1, 1]} />
+      {debugVisuals ? (
+         <meshBasicMaterial color="#00ffff" transparent opacity={0.3} depthWrite={false} />
+      ) : (
+         <meshStandardMaterial roughness={0.8} metalness={0.1} vertexColors={true} />
+      )}
     </instancedMesh>
   );
 };

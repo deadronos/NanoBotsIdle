@@ -129,3 +129,50 @@ export const countFrontierSolidsInChunk = (options: {
 
   return count;
 };
+
+export const getMissingFrontierVoxelsInChunk = (options: {
+  cx: number;
+  cy: number;
+  cz: number;
+  chunkSize: number;
+  prestigeLevel: number;
+  trackedKeys: Set<string>;
+}) => {
+  const { cx, cy, cz, chunkSize, prestigeLevel, trackedKeys } = options;
+  const baseX = cx * chunkSize;
+  const baseY = cy * chunkSize;
+  const baseZ = cz * chunkSize;
+
+  const missingKeys: string[] = [];
+  let expectedFrontierCount = 0;
+
+  for (let x = 0; x < chunkSize; x += 1) {
+    for (let y = 0; y < chunkSize; y += 1) {
+      for (let z = 0; z < chunkSize; z += 1) {
+        const wx = baseX + x;
+        const wy = baseY + y;
+        const wz = baseZ + z;
+
+        if (!isSolid(wx, wy, wz, prestigeLevel)) continue;
+
+        // Check if exposed (frontier)
+        if (
+          !isSolid(wx + 1, wy, wz, prestigeLevel) ||
+          !isSolid(wx - 1, wy, wz, prestigeLevel) ||
+          !isSolid(wx, wy + 1, wz, prestigeLevel) ||
+          !isSolid(wx, wy - 1, wz, prestigeLevel) ||
+          !isSolid(wx, wy, wz + 1, prestigeLevel) ||
+          !isSolid(wx, wy, wz - 1, prestigeLevel)
+        ) {
+          expectedFrontierCount++;
+          const key = `${wx},${wy},${wz}`;
+          if (!trackedKeys.has(key)) {
+            missingKeys.push(key);
+          }
+        }
+      }
+    }
+  }
+
+  return { expectedFrontierCount, missingKeys };
+};

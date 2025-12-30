@@ -23,6 +23,8 @@ export type RenderDelta = {
   frontierAdd?: Float32Array;
   frontierRemove?: Float32Array;
   frontierReset?: boolean;
+  debugChunksProcessed?: string[]; // Debug: list of chunks processed this tick
+  debugQueueLengthAtTickStart?: number; // Debug: queue length at tick start
   effects?: {
     kind: "beam";
     fromId: number;
