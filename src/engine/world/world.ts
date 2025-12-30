@@ -28,6 +28,7 @@ export class WorldModel {
   private readonly waterlineVoxelY: number;
   private readonly frontierSolid = new Set<string>();
   private readonly frontierAboveWater = new Set<string>();
+  private readonly visitedChunks = new Set<string>();
 
   constructor(options: WorldOptions) {
     this.seed = options.seed;
@@ -81,8 +82,10 @@ export class WorldModel {
   initializeFrontierFromSurface(worldRadius: number) {
     this.frontierSolid.clear();
     this.frontierAboveWater.clear();
+    this.visitedChunks.clear();
     let aboveWaterCount = 0;
     const cfg = getConfig();
+    const chunkSize = cfg.terrain.chunkSize ?? 16;
 
     for (let x = -worldRadius; x <= worldRadius; x += 1) {
       for (let z = -worldRadius; z <= worldRadius; z += 1) {
@@ -103,7 +106,62 @@ export class WorldModel {
       }
     }
 
+    // Populate visitedChunks based on the generated radius.
+    // Any chunk that is fully covered by worldRadius can be marked visited.
+    // However, to be safe and simple (since this only happens on prestige),
+    // we can just iterate the chunks we expect to be covered.
+    // Actually, simpler: we don't mark anything visited here.
+    // When ensureFrontierInChunk is called later for these chunks, it will check the voxels.
+    // But ensureFrontierInChunk is expensive.
+    // Let's iterate the chunks and if they are within radius-chunkSize, mark visited.
+    const czr = Math.floor((worldRadius - chunkSize) / chunkSize);
+    if (czr > 0) {
+      for (let cx = -czr; cx <= czr; cx++) {
+        for (let cz = -czr; cz <= czr; cz++) {
+          this.visitedChunks.add(`${cx},${cz}`);
+        }
+      }
+    }
+
     return aboveWaterCount;
+  }
+
+  ensureFrontierInChunk(cx: number, cz: number) {
+    const key = `${cx},${cz}`;
+    if (this.visitedChunks.has(key)) return null;
+    this.visitedChunks.add(key);
+
+    const cfg = getConfig();
+    const chunkSize = cfg.terrain.chunkSize ?? 16;
+    const startX = cx * chunkSize;
+    const startZ = cz * chunkSize;
+    const endX = startX + chunkSize;
+    const endZ = startZ + chunkSize;
+
+    const added: { x: number; y: number; z: number }[] = [];
+
+    for (let x = startX; x < endX; x++) {
+      for (let z = startZ; z < endZ; z++) {
+        const surfaceY = getSurfaceHeightCore(
+          x,
+          z,
+          this.seed,
+          cfg.terrain.surfaceBias,
+          cfg.terrain.quantizeScale,
+        );
+        if (surfaceY <= this.bedrockY) continue;
+        const vKey = this.key(x, surfaceY, z);
+        if (this.frontierSolid.has(vKey)) continue;
+
+        this.frontierSolid.add(vKey);
+        added.push({ x, y: surfaceY, z });
+        if (surfaceY >= this.waterlineVoxelY) {
+          this.frontierAboveWater.add(vKey);
+        }
+      }
+    }
+
+    return added;
   }
 
   getFrontierKeys() {

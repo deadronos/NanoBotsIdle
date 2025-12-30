@@ -4,10 +4,11 @@ import { computeNextUpgradeCosts, tryBuyUpgrade, type UpgradeType } from "../eco
 import type { Cmd, RenderDelta, UiSnapshot, VoxelEdit } from "../shared/protocol";
 import { type Drone, syncDroneCount } from "./drones";
 import { encodeDrones, toFloat32ArrayOrUndefined } from "./encode";
-import { createKeyIndex, resetKeyIndex } from "./keyIndex";
+import { addKey, createKeyIndex, resetKeyIndex } from "./keyIndex";
 import { tickDrones } from "./tickDrones";
 import { initWorldForPrestige } from "./world/initWorld";
 import type { WorldModel } from "./world/world";
+import { voxelKey } from "../shared/voxel";
 
 export type Engine = {
   dispatch: (cmd: Cmd) => void;
@@ -31,6 +32,7 @@ export const createEngine = (_seed?: number): Engine => {
   let pendingFrontierReset = false;
 
   let drones: Drone[] = [];
+  const playerChunksToScan: { cx: number; cy: number; cz: number }[] = [];
 
   const uiSnapshot: UiSnapshot = {
     credits: 0,
@@ -90,6 +92,10 @@ export const createEngine = (_seed?: number): Engine => {
         ensureSeedWithMinAboveWater(uiSnapshot.prestigeLevel);
         return;
       }
+      case "SET_PLAYER_CHUNK": {
+        playerChunksToScan.push({ cx: cmd.cx, cy: cmd.cy, cz: cmd.cz });
+        return;
+      }
     }
   };
 
@@ -110,6 +116,25 @@ export const createEngine = (_seed?: number): Engine => {
     const frontierRemoved: number[] = [];
 
     if (world) {
+      // Process player frontier expansion
+      while (playerChunksToScan.length > 0) {
+        const pc = playerChunksToScan.shift();
+        if (pc) {
+          const r = 2; // radius of chunks to auto-frontier
+          for (let cx = -r; cx <= r; cx++) {
+            for (let cz = -r; cz <= r; cz++) {
+              const added = world.ensureFrontierInChunk(pc.cx + cx, pc.cz + cz);
+              if (added && added.length > 0) {
+                for (const pos of added) {
+                  addKey(frontier, voxelKey(pos.x, pos.y, pos.z));
+                  frontierAdded.push(pos.x, pos.y, pos.z);
+                }
+              }
+            }
+          }
+        }
+      }
+
       tickDrones({
         world,
         drones,

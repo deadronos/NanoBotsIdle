@@ -129,6 +129,10 @@ const VoxelLayerInstanced: React.FC<{
         playerChunk.cy = pcy;
         playerChunk.cz = pcz;
         ensureChunksRadius(pcx, pcy, pcz, 1);
+
+        if (voxelRenderMode === "frontier") {
+          bridge.enqueue({ t: "SET_PLAYER_CHUNK", cx: pcx, cy: pcy, cz: pcz });
+        }
       }
 
       const mined = frame.delta.minedPositions;

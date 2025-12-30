@@ -144,6 +144,7 @@ export const useMeshedChunks = (options: { chunkSize: number; prestigeLevel: num
         };
       },
       onApply: (res) => applyMeshResult(res),
+      maxInFlight: 8,
     });
 
     schedulerRef.current = scheduler;
