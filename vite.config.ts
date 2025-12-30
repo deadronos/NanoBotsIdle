@@ -1,7 +1,29 @@
 import tailwindcss from "@tailwindcss/vite";
 import react from "@vitejs/plugin-react";
 import path from "path";
-import { defineConfig } from "vite";
+import { defineConfig, type Plugin } from "vite";
+
+// Plugin to strip console logs in production (except console.error)
+function stripConsolePlugin(): Plugin {
+  return {
+    name: "strip-console",
+    enforce: "pre",
+    transform(code, id) {
+      if (process.env.NODE_ENV === "production" && (id.endsWith(".ts") || id.endsWith(".tsx"))) {
+        // Strip console.debug, console.info, console.warn, console.log
+        // Keep console.error for critical error reporting
+        return {
+          code: code
+            .replace(/\bconsole\.(debug|info|warn|log)\s*\([^)]*\)\s*;?/g, "/* stripped */")
+            .replace(/\bconsole\.groupCollapsed\s*\([^)]*\)\s*;?/g, "/* stripped */")
+            .replace(/\bconsole\.groupEnd\s*\(\s*\)\s*;?/g, "/* stripped */"),
+          map: null,
+        };
+      }
+      return null;
+    },
+  };
+}
 
 export default defineConfig(() => {
   const isProd = process.env.NODE_ENV === "production";
@@ -14,7 +36,7 @@ export default defineConfig(() => {
       port: 3000,
       host: "0.0.0.0",
     },
-    plugins: [tailwindcss(), react()],
+    plugins: [tailwindcss(), react(), ...(isProd ? [stripConsolePlugin()] : [])],
     test: {
       include: ["tests/**/*.{test,spec}.{ts,tsx,js,jsx}"],
     },
@@ -23,15 +45,9 @@ export default defineConfig(() => {
         "@": path.resolve(__dirname, "./src"),
       },
     },
-    // Strip debug logs in production builds
-    esbuild: {
-      drop: isProd ? ["console", "debugger"] : undefined,
-      // Keep error logs even in production
-      pure: isProd ? ["console.log", "console.debug", "console.info", "console.warn"] : undefined,
-    },
     build: {
       // Improve dead-code elimination
-      minify: "esbuild",
+      minify: "esbuild" as const,
       target: "es2022",
     },
   };
