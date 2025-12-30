@@ -1,0 +1,163 @@
+import { useCallback, useEffect, useMemo, useRef } from "react";
+import type { Group} from "three";
+import { BufferAttribute, BufferGeometry, Mesh, MeshStandardMaterial } from "three";
+
+import { createApronField, fillApronField } from "../../meshing/apronField";
+import { getDirtyChunksForVoxelEdit } from "../../meshing/dirtyChunks";
+import { MeshingScheduler } from "../../meshing/meshingScheduler";
+import { defaultMeshingWorkerFactory } from "../../meshing/meshingWorkerFactory";
+import type { MeshResult } from "../../shared/meshingProtocol";
+import type { VoxelEdit } from "../../shared/protocol";
+import { getVoxelMaterialAt } from "../../sim/collision";
+
+const chunkKey = (cx: number, cy: number, cz: number) => `${cx},${cy},${cz}`;
+
+export const useMeshedChunks = (options: { chunkSize: number; prestigeLevel: number }) => {
+  const { chunkSize, prestigeLevel } = options;
+
+  const groupRef = useRef<Group>(null);
+  const meshesRef = useRef<Map<string, Mesh>>(new Map());
+  const schedulerRef = useRef<MeshingScheduler | null>(null);
+
+  const material = useMemo(
+    () =>
+      new MeshStandardMaterial({
+        color: "#a1adb6",
+        roughness: 0.85,
+        metalness: 0.05,
+      }),
+    [],
+  );
+
+  const disposeAllMeshes = useCallback(() => {
+    const group = groupRef.current;
+    const meshes = meshesRef.current;
+    for (const mesh of meshes.values()) {
+      group?.remove(mesh);
+      mesh.geometry.dispose();
+    }
+    meshes.clear();
+  }, []);
+
+  const applyMeshResult = useCallback(
+    (result: MeshResult) => {
+      const group = groupRef.current;
+      if (!group) return;
+
+      const key = chunkKey(result.chunk.cx, result.chunk.cy, result.chunk.cz);
+      const { positions, normals, indices } = result.geometry;
+
+      if (indices.length === 0 || positions.length === 0) {
+        const existing = meshesRef.current.get(key);
+        if (existing) {
+          group.remove(existing);
+          existing.geometry.dispose();
+          meshesRef.current.delete(key);
+        }
+        return;
+      }
+
+      let mesh = meshesRef.current.get(key);
+      if (!mesh) {
+        mesh = new Mesh(new BufferGeometry(), material);
+        mesh.castShadow = true;
+        mesh.receiveShadow = true;
+        group.add(mesh);
+        meshesRef.current.set(key, mesh);
+      }
+
+      const geometry = mesh.geometry as BufferGeometry;
+      geometry.setAttribute("position", new BufferAttribute(positions, 3));
+      geometry.setAttribute("normal", new BufferAttribute(normals, 3));
+      geometry.setIndex(new BufferAttribute(indices, 1));
+      geometry.computeBoundingSphere();
+    },
+    [material],
+  );
+
+  useEffect(() => {
+    const worker = defaultMeshingWorkerFactory();
+
+    const scheduler = new MeshingScheduler({
+      worker,
+      chunkSize,
+      buildJob: (coord, rev, jobId) => {
+        const origin = {
+          x: coord.cx * chunkSize,
+          y: coord.cy * chunkSize,
+          z: coord.cz * chunkSize,
+        };
+
+        const materials = createApronField(chunkSize);
+        fillApronField(materials, {
+          size: chunkSize,
+          origin,
+          materialAt: (x, y, z) => getVoxelMaterialAt(x, y, z, prestigeLevel),
+        });
+
+        return {
+          msg: {
+            t: "MESH_CHUNK",
+            jobId,
+            rev,
+            chunk: { ...coord, size: chunkSize },
+            origin,
+            materials,
+          },
+          transfer: [materials.buffer],
+        };
+      },
+      onApply: (res) => applyMeshResult(res),
+    });
+
+    schedulerRef.current = scheduler;
+    return () => {
+      schedulerRef.current = null;
+      scheduler.dispose();
+      disposeAllMeshes();
+    };
+  }, [applyMeshResult, chunkSize, disposeAllMeshes, prestigeLevel]);
+
+  useEffect(() => {
+    return () => {
+      material.dispose();
+    };
+  }, [material]);
+
+  const ensureChunk = useCallback((cx: number, cy: number, cz: number) => {
+    const scheduler = schedulerRef.current;
+    if (!scheduler) return;
+    scheduler.markDirty({ cx, cy, cz });
+    scheduler.pump();
+  }, []);
+
+  const markDirtyForEdits = useCallback(
+    (edits: VoxelEdit[]) => {
+      const scheduler = schedulerRef.current;
+      if (!scheduler) return;
+      for (const edit of edits) {
+        const dirty = getDirtyChunksForVoxelEdit({
+          x: edit.x,
+          y: edit.y,
+          z: edit.z,
+          chunkSize,
+        });
+        scheduler.markDirtyMany(dirty);
+      }
+      scheduler.pump();
+    },
+    [chunkSize],
+  );
+
+  const reset = useCallback(() => {
+    schedulerRef.current?.clearAll();
+    disposeAllMeshes();
+  }, [disposeAllMeshes]);
+
+  return {
+    groupRef,
+    ensureChunk,
+    markDirtyForEdits,
+    reset,
+  };
+};

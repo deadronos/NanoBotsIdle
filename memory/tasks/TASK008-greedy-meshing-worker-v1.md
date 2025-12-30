@@ -1,7 +1,7 @@
 # [TASK008] Greedy Meshing Worker v1 (Chunk Surface Geometry)
 
-**Status:** Pending  
-**Added:** 2025-12-30  
+**Status:** Completed
+**Added:** 2025-12-30
 **Updated:** 2025-12-30
 
 ## Original Request
@@ -142,7 +142,7 @@ Suggested commands:
 
 ## Progress Tracking
 
-**Overall Status:** Not Started — 0%
+**Overall Status:** Completed — 100%
 
 ### Subtasks
 
@@ -235,3 +235,4 @@ Suggested commands:
 
 - Created TASK008 with a TDD-structured implementation plan aligned to DESIGN007,
   TECH003, and DEC005.
+- Implemented the meshed voxel render mode, meshing worker + scheduler pipeline, and main-thread geometry adapter; validated with `npm test`, `npm run typecheck`, `npm run lint`, and `npm run build`.
