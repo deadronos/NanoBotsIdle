@@ -1,4 +1,5 @@
 import type { ChunkOrigin } from "../meshing/apronField";
+import type { MeshGeometry } from "../meshing/meshTypes";
 
 export type ChunkCoord = { cx: number; cy: number; cz: number; size: number };
 
@@ -16,11 +17,13 @@ export type MeshResult = {
   jobId: number;
   chunk: ChunkCoord;
   rev: number;
-  geometry: {
-    positions: Float32Array;
-    normals: Float32Array;
-    indices: Uint16Array | Uint32Array;
-  };
+  geometry: MeshGeometry;
+  lods?: MeshLodGeometry[];
+};
+
+export type MeshLodGeometry = {
+  level: "low";
+  geometry: MeshGeometry;
 };
 
 export type MeshError = {
