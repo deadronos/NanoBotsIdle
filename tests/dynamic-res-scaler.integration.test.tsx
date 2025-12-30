@@ -12,7 +12,8 @@ vi.mock("@react-three/fiber", () => ({
   useFrame: (cb: () => void) => {
     frameCallbacks.push(cb);
   },
-  useThree: (selector: (s: { setDpr: (d: number) => void }) => unknown) => selector({ setDpr: setDprMock }),
+  useThree: (selector: (s: { setDpr: (d: number) => void }) => unknown) =>
+    selector({ setDpr: setDprMock }),
 }));
 
 // Import after mock is set up so the module picks up the mocked hooks

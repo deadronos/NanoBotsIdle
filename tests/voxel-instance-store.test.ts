@@ -42,4 +42,3 @@ describe("voxel instance store (swap-with-last)", () => {
     expect(store.positions).toEqual([]);
   });
 });
-

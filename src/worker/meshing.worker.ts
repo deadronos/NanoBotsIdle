@@ -18,4 +18,3 @@ ctx.addEventListener("message", (event: MessageEvent<ToMeshingWorker>) => {
 
   ctx.postMessage(out satisfies FromMeshingWorker);
 });
-

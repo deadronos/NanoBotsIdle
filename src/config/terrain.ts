@@ -8,6 +8,8 @@ export type TerrainConfig = {
   waterLevel: number;
   bedrockY?: number;
   genRetries?: number;
+  // noiseType selects the terrain noise provider: 'sincos' (legacy) | 'open-simplex'
+  noiseType?: "sincos" | "open-simplex";
 };
 
 export const defaultTerrainConfig: TerrainConfig = {
@@ -16,8 +18,9 @@ export const defaultTerrainConfig: TerrainConfig = {
   worldRadius: 30,
   chunkSize: 16,
   surfaceBias: 2.0,
-  quantizeScale: 4,
-  waterLevel: -20,
+  quantizeScale: 3,
+  waterLevel: -12,
   bedrockY: -50,
   genRetries: 5,
+  noiseType: "open-simplex",
 };

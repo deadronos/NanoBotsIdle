@@ -1,6 +1,6 @@
-import { describe, expect,it } from "vitest";
+import { describe, expect, it } from "vitest";
 
-import { resetConfig,updateConfig } from "../src/config/index";
+import { resetConfig, updateConfig } from "../src/config/index";
 import { useGameStore } from "../src/store";
 
 describe("economy config integration (TDD)", () => {

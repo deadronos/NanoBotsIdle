@@ -1,6 +1,6 @@
 import { useFrame } from "@react-three/fiber";
 import React, { forwardRef, useEffect, useRef } from "react";
-import type { PointLight , Vector3 } from "three";
+import type { PointLight, Vector3 } from "three";
 
 export interface FlashHandle {
   trigger: (pos: Vector3) => void;

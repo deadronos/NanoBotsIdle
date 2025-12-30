@@ -50,8 +50,7 @@ export const updatePlayerFrame = (options: {
 
   const isUnderwater = position.y < cfg.terrain.waterLevel;
   const speed =
-    isUnderwater ?
-      cfg.player.swimSpeed
+    isUnderwater ? cfg.player.swimSpeed
     : keys["ShiftLeft"] ? cfg.player.runningSpeed
     : cfg.player.walkingSpeed;
 
@@ -128,4 +127,3 @@ export const updatePlayerFrame = (options: {
   camera.position.lerp(camPos, 0.2);
   camera.lookAt(position);
 };
-

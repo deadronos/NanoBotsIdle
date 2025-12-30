@@ -41,3 +41,11 @@ This decision is specified in more detail by:
 - The engine can add a dense chunk cache later without coupling storage decisions to rendering.
 - The renderer must maintain a mapping from “visible voxel keys” to GPU instance indices (or mesh chunk buffers) and support efficient removal (e.g., swap-with-last).
 - Debug modes may still render dense volumes, but this is explicitly non-default and non-performance-oriented.
+
+### Amendment: Recent renderer fixes (vertex colors & surface fill)
+
+- Recent renderer fixes addressed two visual classes of issues observed after render-mode changes:
+  - **Vertex color initialization**: ensure the geometry used for instanced voxels includes a vertex color attribute (see `ensureGeometryHasVertexColors()`), otherwise uninitialized colors may appear black. This is now a required renderer precondition when using `vertexColors`.
+  - **Surface fill to avoid holes**: the front-end renderer now prefers filling from `groundY` downwards (rather than starting below the surface) to avoid visible "holes" where the authoritative frontier may have missing surface voxels. This approach accepts the risk of Z-fighting in rare cases as preferable to visible gaps; it can be made conditional later with better frontier-diff synchronization.
+
+These changes are small, pragmatic fixes that prioritize user-visible correctness (no see-through terrain) while keeping performance characteristics acceptable for the current prototype.

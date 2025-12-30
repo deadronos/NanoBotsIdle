@@ -10,4 +10,3 @@ export const coordsFromVoxelKey = (key: string) => {
   const [x, y, z] = key.split(",").map((value) => Number(value));
   return { x, y, z };
 };
-

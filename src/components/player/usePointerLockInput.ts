@@ -1,4 +1,4 @@
-import { type MutableRefObject,useEffect, useRef } from "react";
+import { type MutableRefObject, useEffect, useRef } from "react";
 
 export type PointerLockInput = {
   keys: MutableRefObject<Record<string, boolean>>;
@@ -44,7 +44,8 @@ export const usePointerLockInput = (): PointerLockInput => {
         if (result && typeof result.catch === "function") {
           result.catch((err: unknown) => {
             if (err instanceof Error) {
-              if (err.name === "NotSupportedError" || err.message?.includes("exited the lock")) return;
+              if (err.name === "NotSupportedError" || err.message?.includes("exited the lock"))
+                return;
               console.debug("Pointer lock interrupted:", err);
             }
           });

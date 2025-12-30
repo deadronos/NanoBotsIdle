@@ -118,4 +118,3 @@ export const createSimBridge = (options: SimBridgeOptions = {}): SimBridge => {
     isRunning: () => running,
   };
 };
-

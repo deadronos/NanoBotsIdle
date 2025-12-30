@@ -15,4 +15,3 @@ export type DroneEffectRefs = {
   particles: ParticleHandle | null;
   flash: FlashHandle | null;
 };
-

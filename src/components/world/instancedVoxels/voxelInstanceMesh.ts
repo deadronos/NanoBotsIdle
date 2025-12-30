@@ -1,8 +1,14 @@
-import type { InstancedMesh, Object3D } from "three";
+import type { Color, InstancedMesh, Object3D } from "three";
 import { InstancedBufferAttribute } from "three";
 
 import { ensureGeometryHasVertexColors } from "../../../render/instanced";
 import { getVoxelColor } from "../../../utils";
+
+export type VoxelColorFn = (x: number, y: number, z: number) => Color;
+
+export const makeHeightColorFn = (waterLevel: number): VoxelColorFn => {
+  return (_x: number, y: number, _z: number) => getVoxelColor(y, waterLevel);
+};
 
 export const getInitialCapacity = (chunkSize: number) => {
   return Math.max(512, chunkSize * chunkSize * chunkSize);
@@ -15,21 +21,34 @@ export const setVoxelInstance = (
   x: number,
   y: number,
   z: number,
-  waterLevel: number,
+  getColor: VoxelColorFn,
 ) => {
   tmp.position.set(x, y, z);
   tmp.rotation.set(0, 0, 0);
   tmp.scale.set(1, 1, 1);
   tmp.updateMatrix();
   mesh.setMatrixAt(index, tmp.matrix);
-  mesh.setColorAt(index, getVoxelColor(y, waterLevel));
+  mesh.setColorAt(index, getColor(x, y, z));
 };
 
-export const rebuildVoxelInstances = (mesh: InstancedMesh, tmp: Object3D, positions: number[], waterLevel: number) => {
+export const rebuildVoxelInstances = (
+  mesh: InstancedMesh,
+  tmp: Object3D,
+  positions: number[],
+  getColor: VoxelColorFn,
+) => {
   const count = Math.floor(positions.length / 3);
   for (let i = 0; i < count; i += 1) {
     const base = i * 3;
-    setVoxelInstance(mesh, tmp, i, positions[base], positions[base + 1], positions[base + 2], waterLevel);
+    setVoxelInstance(
+      mesh,
+      tmp,
+      i,
+      positions[base],
+      positions[base + 1],
+      positions[base + 2],
+      getColor,
+    );
   }
 
   mesh.count = count;
@@ -50,4 +69,3 @@ export const ensureInstanceColors = (mesh: InstancedMesh, capacity: number) => {
 
   return false;
 };
-

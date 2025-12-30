@@ -4,12 +4,13 @@ import { getConfig } from "../src/config/index";
 import { getVoxelColor, getVoxelValue } from "../src/utils";
 
 describe("voxel utils", () => {
-  it("getVoxelValue boundaries (relative to waterLevel -20)", () => {
-    expect(getVoxelValue(-20)).toBe(1); // water
-    expect(getVoxelValue(-19)).toBe(2); // near water
-    expect(getVoxelValue(-16)).toBe(5); // shallow land
-    expect(getVoxelValue(-13)).toBe(15); // rock/ore band
-    expect(getVoxelValue(-10)).toBe(50); // high land/snow
+  it("getVoxelValue boundaries (relative to waterLevel)", () => {
+    const water = getConfig().terrain.waterLevel;
+    expect(getVoxelValue(water)).toBe(1); // water
+    expect(getVoxelValue(water + 1)).toBe(2); // near water
+    expect(getVoxelValue(water + 4)).toBe(5); // shallow land
+    expect(getVoxelValue(water + 7)).toBe(15); // rock/ore band
+    expect(getVoxelValue(water + 10)).toBe(50); // high land/snow
   });
 
   it("getVoxelColor boundaries (relative to waterLevel via config)", () => {
