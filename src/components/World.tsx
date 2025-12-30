@@ -17,6 +17,7 @@ import { getSurfaceHeightCore } from "../sim/terrain-core";
 import { getSimBridge } from "../simBridge/simBridge";
 import { useUiStore } from "../ui/store";
 import { forEachRadialChunk, getVoxelColor } from "../utils";
+import { debug, groupCollapsed, groupEnd } from "../utils/logger";
 import {
   chunkKey,
   ensureNeighborChunksForMinedVoxel,
@@ -32,7 +33,7 @@ import {
   xzInBounds,
 } from "./world/renderDebugCompare";
 import { useInstancedVoxels } from "./world/useInstancedVoxels";
-import { useMeshedChunks } from "./world/useMeshedChunks";
+import { useMeshedChunks } from "./world/useMeshedChunks";;
 
 const VoxelLayerInstanced: React.FC<{
   chunkSize: number;
@@ -348,10 +349,10 @@ const VoxelLayerInstanced: React.FC<{
 
             // Only emit verbose render-debug output in development to avoid noisy production logs
             if (process.env.NODE_ENV === "development") {
-              console.groupCollapsed(
+              groupCollapsed(
                 `[render-debug] frontier pc=(${pcx},${pcy},${pcz}) radius=${radius} chunksize=${chunkSize}`,
               );
-              console.log({
+              debug({
                 denseBaselineSolidCount: denseSolids,
                 frontierSurfaceExpected,
                 frontierSurfaceMissingCount: missingSurfaceCount,
@@ -384,7 +385,7 @@ const VoxelLayerInstanced: React.FC<{
                 debugChunksProcessed: frame.delta.debugChunksProcessed,
                 debugQueueLengthAtTickStart: frame.delta.debugQueueLengthAtTickStart,
               });
-              console.groupEnd();
+              groupEnd();
             }
 
             // Place a visible marker on the first missing expected surface voxel (helps find ridge-line gaps).
@@ -741,10 +742,10 @@ const VoxelLayerMeshed: React.FC<{
 
           // Only emit verbose render-debug output in development to avoid noisy production logs
           if (process.env.NODE_ENV === "development") {
-            console.groupCollapsed(
+            groupCollapsed(
               `[render-debug] meshed pc=(${pcx},${pcy},${pcz}) radius=${radius} chunksize=${chunkSize}`,
             );
-            console.log({
+            debug({
               denseBaselineSolidCount: denseSolids,
               expectedChunkCount: expectedChunkKeys.length,
               requestedChunkCount,
@@ -761,7 +762,7 @@ const VoxelLayerMeshed: React.FC<{
               missingRequestedEmpty: missingRequestedEmpty.slice(0, 20),
               missingRequestedEmptyCount: missingRequestedEmpty.length,
             });
-            console.groupEnd();
+            groupEnd();
           }
         }
       }

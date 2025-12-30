@@ -9,6 +9,7 @@ import {
 } from "../../shared/voxel";
 import { getSurfaceHeightCore } from "../../sim/terrain-core";
 import { getBaseMaterialAt } from "../../sim/voxelBaseMaterial";
+import { debug } from "../../utils/logger";
 
 export { MATERIAL_AIR, MATERIAL_BEDROCK, MATERIAL_SOLID };
 
@@ -202,7 +203,7 @@ export class WorldModel {
 
     // Emit debugging info only in development to avoid noisy logs in CI/production
     if (process.env.NODE_ENV === "development") {
-      console.debug(
+      debug(
         `[sim-world] ensureFrontierInChunk ${cx},${cz} range x=${startX}..${endX} z=${startZ}..${endZ}`,
       );
     }
@@ -267,7 +268,7 @@ export class WorldModel {
 
     if (added.length > 0) {
       if (process.env.NODE_ENV === "development") {
-        console.debug(`[sim-world] ensureFrontierInChunk ${cx},${cz} added ${added.length} voxels`);
+        debug(`[sim-world] ensureFrontierInChunk ${cx},${cz} added ${added.length} voxels`);
       }
     }
 

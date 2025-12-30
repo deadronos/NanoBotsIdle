@@ -1,4 +1,5 @@
 import type { Cmd, FromWorker, ToWorker } from "../shared/protocol";
+import { error } from "../utils/logger";
 import type { FrameHandler, FrameMessage, SimBridge, SimBridgeOptions, WorkerLike } from "./types";
 import { defaultWorkerFactory } from "./workerFactory";
 
@@ -6,7 +7,7 @@ export const createSimBridge = (options: SimBridgeOptions = {}): SimBridge => {
   const workerFactory = options.workerFactory ?? defaultWorkerFactory;
   const budgetMs = options.budgetMs ?? 8;
   const maxSubsteps = options.maxSubsteps ?? 4;
-  const onError = options.onError ?? ((message) => console.error(message));
+  const onError = options.onError ?? ((message) => error(message));
 
   let worker: WorkerLike | null = null;
   let running = false;

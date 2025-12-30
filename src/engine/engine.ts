@@ -1,9 +1,12 @@
+/* eslint-disable simple-import-sort/imports */
 import { getDroneMoveSpeed, getMineDuration } from "../config/drones";
 import { getConfig } from "../config/index";
 import { computeNextUpgradeCosts, tryBuyUpgrade, type UpgradeType } from "../economy/upgrades";
 import type { Cmd, RenderDelta, UiSnapshot, VoxelEdit } from "../shared/protocol";
 import { voxelKey } from "../shared/voxel";
 import { forEachRadialChunk } from "../utils";
+import { debug } from "../utils/logger";
+
 import { type Drone, syncDroneCount } from "./drones";
 import { encodeDrones, toFloat32ArrayOrUndefined } from "./encode";
 import { addKey, createKeyIndex, resetKeyIndex } from "./keyIndex";
@@ -98,7 +101,7 @@ export const createEngine = (_seed?: number): Engine => {
         // Debug-only logging to avoid noisy output in production/CI
 
         if (process.env.NODE_ENV === "development") {
-          console.debug(
+          debug(
             `[engine] SET_PLAYER_CHUNK cx=${cmd.cx} cy=${cmd.cy} cz=${cmd.cz}, queue size before: ${playerChunksToScan.length}`,
           );
         }
