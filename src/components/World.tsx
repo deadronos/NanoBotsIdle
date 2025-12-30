@@ -38,7 +38,7 @@ const VoxelLayerInstanced: React.FC<{
   const debugCfg = cfg.render.voxels.debugCompare;
   const debugEnabled = debugCfg.enabled;
   const debugLastLogAtMsRef = useRef(0);
-  const debugFrontierKeysRef = useRef<Set<string>>(new Set());
+  const frontierKeysRef = useRef<Set<string>>(new Set());
   const debugBoundsRef = useRef(
     makeVoxelBoundsForChunkRadius({ cx: 0, cy: 0, cz: 0 }, debugCfg.radiusChunks, chunkSize),
   );
@@ -136,8 +136,8 @@ const VoxelLayerInstanced: React.FC<{
       }
 
       if (voxelRenderMode === "frontier") {
-        if (debugEnabled && frame.delta.frontierReset) {
-          debugFrontierKeysRef.current.clear();
+        if (frame.delta.frontierReset) {
+          frontierKeysRef.current.clear();
         }
 
         if (frame.delta.frontierAdd && frame.delta.frontierAdd.length > 0) {
@@ -145,9 +145,7 @@ const VoxelLayerInstanced: React.FC<{
           const positions = frame.delta.frontierAdd;
           for (let i = 0; i < positions.length; i += 3) {
             addVoxel(positions[i], positions[i + 1], positions[i + 2]);
-            if (debugEnabled) {
-              debugFrontierKeysRef.current.add(voxelKey(positions[i], positions[i + 1], positions[i + 2]));
-            }
+            frontierKeysRef.current.add(voxelKey(positions[i], positions[i + 1], positions[i + 2]));
           }
         }
 
@@ -155,9 +153,7 @@ const VoxelLayerInstanced: React.FC<{
           const positions = frame.delta.frontierRemove;
           for (let i = 0; i < positions.length; i += 3) {
             removeVoxel(positions[i], positions[i + 1], positions[i + 2]);
-            if (debugEnabled) {
-              debugFrontierKeysRef.current.delete(voxelKey(positions[i], positions[i + 1], positions[i + 2]));
-            }
+            frontierKeysRef.current.delete(voxelKey(positions[i], positions[i + 1], positions[i + 2]));
           }
         }
 
@@ -179,7 +175,7 @@ const VoxelLayerInstanced: React.FC<{
             let trackedMinZ = Number.POSITIVE_INFINITY;
             let trackedMaxZ = Number.NEGATIVE_INFINITY;
             const xzPairsInRegion = new Set<string>();
-            for (const k of debugFrontierKeysRef.current) {
+            for (const k of frontierKeysRef.current) {
               const [x, y, z] = k.split(",").map((v) => Number(v));
               trackedMinX = Math.min(trackedMinX, x);
               trackedMaxX = Math.max(trackedMaxX, x);
@@ -217,8 +213,18 @@ const VoxelLayerInstanced: React.FC<{
 
             // Engine frontier is surface-based: one voxel per (x,z) at the surface height.
             const bedrockY = cfg.terrain.bedrockY ?? -50;
-            for (let x = xzBounds.minX; x <= xzBounds.maxX; x += 1) {
-              for (let z = xzBounds.minZ; z <= xzBounds.maxZ; z += 1) {
+            const worldRadius = cfg.terrain.worldRadius;
+
+            // Compare only within configured world bounds.
+            const minX = Math.max(xzBounds.minX, -worldRadius);
+            const maxX = Math.min(xzBounds.maxX, worldRadius);
+            const minZ = Math.max(xzBounds.minZ, -worldRadius);
+            const maxZ = Math.min(xzBounds.maxZ, worldRadius);
+
+            const missingSurfaceKeys: string[] = [];
+            let missingSurfaceCount = 0;
+            for (let x = minX; x <= maxX; x += 1) {
+              for (let z = minZ; z <= maxZ; z += 1) {
                 const surfaceY = getSurfaceHeightCore(
                   x,
                   z,
@@ -228,6 +234,12 @@ const VoxelLayerInstanced: React.FC<{
                 );
                 if (surfaceY <= bedrockY) continue;
                 frontierSurfaceExpected += 1;
+
+                const expectedKey = voxelKey(x, surfaceY, z);
+                if (!frontierKeysRef.current.has(expectedKey)) {
+                  missingSurfaceCount += 1;
+                  if (missingSurfaceKeys.length < 20) missingSurfaceKeys.push(expectedKey);
+                }
               }
             }
 
@@ -237,11 +249,13 @@ const VoxelLayerInstanced: React.FC<{
             console.log({
               denseBaselineSolidCount: denseSolids,
               frontierSurfaceExpected,
+              frontierSurfaceMissingCount: missingSurfaceCount,
+              frontierSurfaceMissingSample: missingSurfaceKeys,
               frontierRenderedInRegion3d: frontierInRegion3d,
               frontierRenderedInRegionXz: frontierInRegionXz,
               frontierRenderedUniqueColumnsInXz: xzPairsInRegion.size,
               frontierRenderedYRangeInXz: [frontierMinY, frontierMaxY],
-              frontierTotalRenderedTracked: debugFrontierKeysRef.current.size,
+              frontierTotalRenderedTracked: frontierKeysRef.current.size,
               trackedXzRange: {
                 minX: trackedMinX,
                 maxX: trackedMaxX,
