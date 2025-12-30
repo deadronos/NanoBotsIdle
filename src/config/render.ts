@@ -39,7 +39,7 @@ export type SunConfig = {
   position: [number, number, number];
   intensity: number;
   shadowMapSize: [number, number];
-  cameraBounds: { left: number; right: number; top: number; bottom: number };   
+  cameraBounds: { left: number; right: number; top: number; bottom: number };
 };
 
 export type VoxelRenderMode = "frontier" | "dense";
