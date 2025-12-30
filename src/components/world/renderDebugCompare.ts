@@ -11,6 +11,13 @@ export type VoxelBounds = {
   maxZ: number;
 };
 
+export type XzBounds = {
+  minX: number;
+  maxX: number;
+  minZ: number;
+  maxZ: number;
+};
+
 export const makeVoxelBoundsForChunkRadius = (
   center: ChunkCoord3,
   radiusChunks: number,
@@ -35,6 +42,23 @@ export const makeVoxelBoundsForChunkRadius = (
 
 export const voxelInBounds = (b: VoxelBounds, x: number, y: number, z: number) => {
   return x >= b.minX && x <= b.maxX && y >= b.minY && y <= b.maxY && z >= b.minZ && z <= b.maxZ;
+};
+
+export const makeXzBoundsForChunkRadius = (center: ChunkCoord3, radiusChunks: number, chunkSize: number): XzBounds => {
+  const minCx = center.cx - radiusChunks;
+  const maxCx = center.cx + radiusChunks;
+  const minCz = center.cz - radiusChunks;
+  const maxCz = center.cz + radiusChunks;
+  return {
+    minX: minCx * chunkSize,
+    maxX: (maxCx + 1) * chunkSize - 1,
+    minZ: minCz * chunkSize,
+    maxZ: (maxCz + 1) * chunkSize - 1,
+  };
+};
+
+export const xzInBounds = (b: XzBounds, x: number, z: number) => {
+  return x >= b.minX && x <= b.maxX && z >= b.minZ && z <= b.maxZ;
 };
 
 export const countDenseSolidsInChunk = (options: {

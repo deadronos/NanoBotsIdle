@@ -13,9 +13,10 @@ import { forEachRadialChunk } from "../utils";
 import { chunkKey, ensureNeighborChunksForMinedVoxel, populateChunkVoxels } from "./world/chunkHelpers";
 import {
   countDenseSolidsInChunk,
-  countFrontierSolidsInChunk,
   makeVoxelBoundsForChunkRadius,
+  makeXzBoundsForChunkRadius,
   voxelInBounds,
+  xzInBounds,
 } from "./world/renderDebugCompare";
 import { useInstancedVoxels } from "./world/useInstancedVoxels";
 import { useMeshedChunks } from "./world/useMeshedChunks";
@@ -155,15 +156,28 @@ const VoxelLayerInstanced: React.FC<{
             debugLastLogAtMsRef.current = now;
 
             const bounds = debugBoundsRef.current;
-            let frontierInRegion = 0;
+            const xzBounds = makeXzBoundsForChunkRadius({ cx: pcx, cy: pcy, cz: pcz }, debugCfg.radiusChunks, chunkSize);
+
+            let frontierInRegion3d = 0;
+            let frontierInRegionXz = 0;
+            let frontierMinY = Number.POSITIVE_INFINITY;
+            let frontierMaxY = Number.NEGATIVE_INFINITY;
             for (const k of debugFrontierKeysRef.current) {
               const [x, y, z] = k.split(",").map((v) => Number(v));
-              if (voxelInBounds(bounds, x, y, z)) frontierInRegion += 1;
+              if (voxelInBounds(bounds, x, y, z)) frontierInRegion3d += 1;
+              if (xzInBounds(xzBounds, x, z)) {
+                frontierInRegionXz += 1;
+                frontierMinY = Math.min(frontierMinY, y);
+                frontierMaxY = Math.max(frontierMaxY, y);
+              }
             }
 
-            // Baselines (compute-only): dense solids + frontier solids in the same region
+            if (frontierMinY === Number.POSITIVE_INFINITY) frontierMinY = 0;
+            if (frontierMaxY === Number.NEGATIVE_INFINITY) frontierMaxY = 0;
+
+            // Baselines (compute-only): dense solids in the same chunk cube, plus expected surface-frontier in the XZ region.
             let denseSolids = 0;
-            let frontierExpected = 0;
+            let frontierSurfaceExpected = 0;
             const radius = debugCfg.radiusChunks;
             forEachRadialChunk({ cx: pcx, cy: pcy, cz: pcz }, radius, 3, (c) => {
               denseSolids += countDenseSolidsInChunk({
@@ -173,22 +187,33 @@ const VoxelLayerInstanced: React.FC<{
                 chunkSize,
                 prestigeLevel,
               });
-              frontierExpected += countFrontierSolidsInChunk({
-                cx: c.cx,
-                cy: c.cy,
-                cz: c.cz,
-                chunkSize,
-                prestigeLevel,
-              });
             });
+
+            // Engine frontier is surface-based: one voxel per (x,z) at the surface height.
+            const bedrockY = cfg.terrain.bedrockY ?? -50;
+            for (let x = xzBounds.minX; x <= xzBounds.maxX; x += 1) {
+              for (let z = xzBounds.minZ; z <= xzBounds.maxZ; z += 1) {
+                const surfaceY = getSurfaceHeightCore(
+                  x,
+                  z,
+                  seed,
+                  cfg.terrain.surfaceBias,
+                  cfg.terrain.quantizeScale,
+                );
+                if (surfaceY <= bedrockY) continue;
+                frontierSurfaceExpected += 1;
+              }
+            }
 
             console.groupCollapsed(
               `[render-debug] frontier pc=(${pcx},${pcy},${pcz}) radius=${radius} chunksize=${chunkSize}`,
             );
             console.log({
               denseBaselineSolidCount: denseSolids,
-              frontierBaselineCount: frontierExpected,
-              frontierRenderedInRegion: frontierInRegion,
+              frontierSurfaceExpected,
+              frontierRenderedInRegion3d: frontierInRegion3d,
+              frontierRenderedInRegionXz: frontierInRegionXz,
+              frontierRenderedYRangeInXz: [frontierMinY, frontierMaxY],
               frontierTotalRenderedTracked: debugFrontierKeysRef.current.size,
               deltaFrontierAdd: frame.delta.frontierAdd?.length ?? 0,
               deltaFrontierRemove: frame.delta.frontierRemove?.length ?? 0,
@@ -235,6 +260,9 @@ const VoxelLayerInstanced: React.FC<{
     bridge,
     chunkSize,
     clear,
+    cfg.terrain.bedrockY,
+    cfg.terrain.quantizeScale,
+    cfg.terrain.surfaceBias,
     ensureCapacity,
     ensureInitialChunk,
     flushRebuild,
@@ -244,6 +272,7 @@ const VoxelLayerInstanced: React.FC<{
     debugCfg.radiusChunks,
     debugEnabled,
     prestigeLevel,
+    seed,
     voxelRenderMode,
   ]);
 
