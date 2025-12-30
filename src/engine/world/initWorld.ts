@@ -4,6 +4,7 @@ import { WorldModel } from "./world";
 
 export type WorldInitResult = {
   world: WorldModel;
+  actualSeed: number;
   frontierKeys: string[];
   frontierPositions: Float32Array;
   aboveWaterCount: number;
@@ -21,6 +22,7 @@ export const initWorldForPrestige = (prestigeLevel: number, cfg: Config): WorldI
     if (aboveWater >= minBlocks) {
       return {
         world: candidateWorld,
+        actualSeed: candidateSeed,
         frontierKeys: candidateWorld.getFrontierKeys(),
         frontierPositions: candidateWorld.getFrontierPositionsArray(),
         aboveWaterCount: aboveWater,
@@ -32,6 +34,7 @@ export const initWorldForPrestige = (prestigeLevel: number, cfg: Config): WorldI
   const aboveWater = world.initializeFrontierFromSurface(cfg.terrain.worldRadius);
   return {
     world,
+    actualSeed: baseSeed,
     frontierKeys: world.getFrontierKeys(),
     frontierPositions: world.getFrontierPositionsArray(),
     aboveWaterCount: aboveWater,
