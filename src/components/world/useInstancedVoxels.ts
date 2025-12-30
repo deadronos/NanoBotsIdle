@@ -26,16 +26,17 @@ export const useInstancedVoxels = (chunkSize: number, waterLevel: number) => {
   const UPDATE_BOTH = useMemo(() => ({ matrix: true, color: true }) as const, []);
 
   const [capacity, setCapacity] = useState(() => getInitialCapacity(chunkSize));
+  const capacityRef = useRef(capacity);
 
-  const ensureCapacity = useCallback(
-    (count: number) => {
-      if (count <= capacity) return;
-      const nextCapacity = Math.max(count, Math.ceil(capacity * 1.5));
-      needsRebuild.current = true;
-      setCapacity(nextCapacity);
-    },
-    [capacity],
-  );
+  const ensureCapacity = useCallback((count: number) => {
+    const currentCapacity = capacityRef.current;
+    if (count <= currentCapacity) return;
+
+    const nextCapacity = Math.max(count, Math.ceil(currentCapacity * 1.5));
+    capacityRef.current = nextCapacity;
+    needsRebuild.current = true;
+    setCapacity(nextCapacity);
+  }, []);
 
   const addVoxel = useCallback(
     (x: number, y: number, z: number) => {
@@ -94,15 +95,16 @@ export const useInstancedVoxels = (chunkSize: number, waterLevel: number) => {
   const flushRebuild = useCallback(() => {
     if (!needsRebuild.current) return;
     if (!meshRef.current) return;
-    if (storeRef.current.count > capacity) return;
+    if (storeRef.current.count > capacityRef.current) return;
     rebuildVoxelInstances(meshRef.current, tmp, storeRef.current.positions, waterLevel);
     needsRebuild.current = false;
-  }, [capacity, tmp, waterLevel]);
+  }, [tmp, waterLevel]);
 
   useLayoutEffect(() => {
     const mesh = meshRef.current;
     if (!mesh) return;
 
+    capacityRef.current = capacity;
     if (ensureInstanceColors(mesh, capacity)) {
       needsRebuild.current = true;
     }

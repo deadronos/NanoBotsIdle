@@ -1,6 +1,6 @@
 # [DESIGN006] Visibility-Driven Render Adapter v1 (Frontier Instancing)
 
-**Status:** Proposed  
+**Status:** Completed  
 **Added:** 2025-12-30  
 **Updated:** 2025-12-30
 

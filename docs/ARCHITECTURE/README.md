@@ -40,6 +40,8 @@ implementation without rediscovering decisions.
 - `DEC004-render-visibility-driven-and-chunk-caches.md`: renderer draws a
   visibility set (frontier/surfaces) by default; dense chunk formats are caches,
   not the world source of truth.
+- `DEC005-greedy-meshing-for-block-voxel-surfaces.md`: prefer greedy meshing as
+  the first surface-meshing algorithm for block voxels; worker-friendly per-chunk jobs.
 
 ## Update rules
 

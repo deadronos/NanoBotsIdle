@@ -47,4 +47,39 @@ describe("world model (v1)", () => {
     const edit = world.mineVoxel(3, interiorY, 3);
     expect(edit).toBeNull();
   });
+
+  it("emits bounded frontier deltas (edit affects <= 7 voxels)", () => {
+    resetConfig();
+    updateConfig({ terrain: { bedrockY: -50 } });
+    const seed = getSeed(1);
+    const world = new WorldModel({ seed });
+    const cfg = getConfig();
+    world.initializeFrontierFromSurface(cfg.terrain.worldRadius);
+
+    const x = 2;
+    const z = 2;
+    const y = getSurfaceHeight(x, z, seed);
+    const result = world.mineVoxel(x, y, z);
+
+    expect(result).not.toBeNull();
+    expect(result?.frontierAdded.length).toBeLessThanOrEqual(7);
+    expect(result?.frontierRemoved.length).toBeLessThanOrEqual(7);
+  });
+
+  it("removes the mined voxel from the frontier", () => {
+    resetConfig();
+    updateConfig({ terrain: { bedrockY: -50 } });
+    const seed = getSeed(1);
+    const world = new WorldModel({ seed });
+    const cfg = getConfig();
+    world.initializeFrontierFromSurface(cfg.terrain.worldRadius);
+
+    const x = 2;
+    const z = 2;
+    const y = getSurfaceHeight(x, z, seed);
+    const result = world.mineVoxel(x, y, z);
+
+    expect(result).not.toBeNull();
+    expect(result?.frontierRemoved).toContainEqual({ x, y, z });
+  });
 });

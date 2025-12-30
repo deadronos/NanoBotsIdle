@@ -1,8 +1,8 @@
 // @vitest-environment jsdom
-import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import React from "react";
 import { createRoot } from "react-dom/client";
-import { act } from "react";
+import { act } from "react-dom/test-utils";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 // We'll mock @react-three/fiber so the component registers frame callbacks we can call
 const frameCallbacks: (() => void)[] = [];
@@ -29,7 +29,7 @@ describe("DynamicResScaler integration", () => {
     vi.restoreAllMocks();
   });
 
-  it("initializes DPR on mount and reacts to low FPS", () => {
+  it("initializes DPR on mount and reacts to low FPS", async () => {
     const container = document.createElement("div");
     document.body.appendChild(container);
     const root = createRoot(container);
@@ -38,7 +38,8 @@ describe("DynamicResScaler integration", () => {
     let now = 1000;
     vi.spyOn(performance, "now").mockImplementation(() => now);
 
-    act(() => {
+    // eslint-disable-next-line testing-library/no-unnecessary-act
+    await act(async () => {
       root.render(<DynamicResScaler />);
     });
 

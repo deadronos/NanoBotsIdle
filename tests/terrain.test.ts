@@ -1,10 +1,10 @@
 import { describe, expect, it } from "vitest";
 
+import { getConfig } from "../src/config/index";
 import * as C from "../src/constants";
 // TDD: expect terrain module to implement specific, deterministic behavior
 import * as T from "../src/sim/terrain";
 import { getVoxelValue, noise2D } from "../src/utils";
-import { getConfig } from "../src/config/index";
 
 describe("terrain module (TDD)", () => {
   it("should export getSeed and computeVoxel functions", () => {

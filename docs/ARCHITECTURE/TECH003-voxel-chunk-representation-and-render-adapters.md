@@ -89,11 +89,76 @@ Renderer should support interchangeable adapters:
   - Draw only frontier voxels (or other visibility set), not all solids.
   - Apply `frontierAdd/frontierRemove` deltas from the engine.
   - Use swap-with-last removal to keep updates O(1).
-- **Meshed surfaces (v2+)**:
-  - Chunk-local mesh generation of exposed faces.
-  - Can run on a Worker/pool and ship vertex/index buffers to main thread.
+- **Greedy-meshed surfaces (recommended v2+)**:
+  - Chunk-local mesh generation of exposed faces for blocky voxels.
+  - Produces stable, bounded work units (one dirty chunk → one mesh job).
+  - Worker-friendly: input is materials; output is typed-array geometry buffers.
 - **Debug volume (dev only)**:
   - Render all solids for debugging correctness, not performance.
+
+## Greedy meshing (recommended v2): best practices
+
+Greedy meshing is the preferred first surface-meshing algorithm for this repo
+because the world is discrete “block voxels” (not smooth SDF terrain). It
+reduces geometry by merging adjacent coplanar faces of the same material.
+
+### Inputs (chunk-local, pure)
+
+- Operate on a single chunk `(cx, cy, cz)` with `CHUNK_SIZE = 16`.
+- Provide materials for the chunk plus a **1-voxel apron** on each side so face
+  visibility at chunk boundaries is correct without cross-chunk reads.
+  - Practical shape: `(CHUNK_SIZE + 2)³` material samples.
+
+Recommended material encoding:
+
+- Use a compact typed array (e.g., `Uint8Array`) holding material ids.
+- Keep material ids stable across sim/render.
+
+### Face visibility rule
+
+For each voxel face, emit geometry only when:
+
+- voxel material is not `AIR`, and
+- the neighbor voxel in the face direction is `AIR`.
+
+This ensures interior voxels never generate faces.
+
+### Greedy merge strategy
+
+- Run greedy merging per axis/plane:
+  - build a 2D mask for each slice plane
+  - merge maximal rectangles of identical “face type” (material + normal)
+- Keep the algorithm deterministic and allocation-light (reuse mask buffers).
+
+### Outputs (typed arrays; transferable)
+
+Prefer returning indexed geometry:
+
+- `positions: Float32Array` (xyz)
+- `normals: Int8Array | Float32Array` (constant per face; consider packed)
+- `indices: Uint32Array` (or `Uint16Array` if guaranteed < 65k vertices)
+- optional: `colors: Uint8Array` or per-vertex material ids for shader mapping
+
+Guidelines:
+
+- Use transferables for the underlying ArrayBuffers when posting from worker.
+- Reuse buffers via pooling when feasible to avoid GC spikes.
+
+### Dirtying and scheduling
+
+- A voxel edit dirties the chunk containing it.
+- If the edit is on a chunk boundary, dirty the neighbor chunk(s) that share the
+  affected faces.
+- Coalesce repeated dirties in the same tick (set semantics).
+
+### Worker boundary
+
+- Keep meshing code pure: no `three` imports, no DOM/WebGL.
+- Input is `(chunkId, chunkOrigin, materialsTypedArray)`.
+- Output is `(chunkId, geometryBuffers)`.
+
+This boundary is intentionally clean and is easier to scale than frontier
+instancing because it is per-chunk and uses transferables.
 
 ## Data flow & payload design
 
