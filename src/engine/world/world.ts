@@ -200,9 +200,12 @@ export class WorldModel {
     const endX = startX + chunkSize;
     const endZ = startZ + chunkSize;
 
-    console.log(
-      `[sim-world] ensureFrontierInChunk ${cx},${cz} range x=${startX}..${endX} z=${startZ}..${endZ}`,
-    );
+    // Emit debugging info only in development to avoid noisy logs in CI/production
+    if (process.env.NODE_ENV === "development") {
+      console.debug(
+        `[sim-world] ensureFrontierInChunk ${cx},${cz} range x=${startX}..${endX} z=${startZ}..${endZ}`,
+      );
+    }
 
     const added: { x: number; y: number; z: number }[] = [];
 
@@ -263,7 +266,9 @@ export class WorldModel {
     }
 
     if (added.length > 0) {
-      console.log(`[sim-world] ensureFrontierInChunk ${cx},${cz} added ${added.length} voxels`);
+      if (process.env.NODE_ENV === "development") {
+        console.debug(`[sim-world] ensureFrontierInChunk ${cx},${cz} added ${added.length} voxels`);
+      }
     }
 
     return added;

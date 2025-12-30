@@ -95,9 +95,13 @@ export const createEngine = (_seed?: number): Engine => {
         return;
       }
       case "SET_PLAYER_CHUNK": {
-        console.log(
-          `[engine] SET_PLAYER_CHUNK cx=${cmd.cx} cy=${cmd.cy} cz=${cmd.cz}, queue size before: ${playerChunksToScan.length}`,
-        );
+        // Debug-only logging to avoid noisy output in production/CI
+
+        if (process.env.NODE_ENV === "development") {
+          console.debug(
+            `[engine] SET_PLAYER_CHUNK cx=${cmd.cx} cy=${cmd.cy} cz=${cmd.cz}, queue size before: ${playerChunksToScan.length}`,
+          );
+        }
         playerChunksToScan.push({ cx: cmd.cx, cy: cmd.cy, cz: cmd.cz });
         return;
       }

@@ -346,43 +346,46 @@ const VoxelLayerInstanced: React.FC<{
               }
             });
 
-            console.groupCollapsed(
-              `[render-debug] frontier pc=(${pcx},${pcy},${pcz}) radius=${radius} chunksize=${chunkSize}`,
-            );
-            console.log({
-              denseBaselineSolidCount: denseSolids,
-              frontierSurfaceExpected,
-              frontierSurfaceMissingCount: missingSurfaceCount,
-              frontierSurfaceMissingSample: missingSurfaceKeys,
+            // Only emit verbose render-debug output in development to avoid noisy production logs
+            if (process.env.NODE_ENV === "development") {
+              console.groupCollapsed(
+                `[render-debug] frontier pc=(${pcx},${pcy},${pcz}) radius=${radius} chunksize=${chunkSize}`,
+              );
+              console.log({
+                denseBaselineSolidCount: denseSolids,
+                frontierSurfaceExpected,
+                frontierSurfaceMissingCount: missingSurfaceCount,
+                frontierSurfaceMissingSample: missingSurfaceKeys,
 
-              trueFrontierExpected,
-              trueFrontierMissingCount: trueFrontierMissingKeys.length,
-              trueFrontierMissingSample: trueFrontierMissingKeys.slice(0, 20),
+                trueFrontierExpected,
+                trueFrontierMissingCount: trueFrontierMissingKeys.length,
+                trueFrontierMissingSample: trueFrontierMissingKeys.slice(0, 20),
 
-              frontierRenderedInRegion3d: frontierInRegion3d,
-              frontierRenderedInRegionXz: frontierInRegionXz,
-              frontierRenderedUniqueColumnsInXz: xzPairsInRegion.size,
-              frontierRenderedYRangeInXz: [frontierMinY, frontierMaxY],
-              frontierTotalRenderedTracked: frontierKeysRef.current.size,
-              trackedXzRange: {
-                minX: trackedMinX,
-                maxX: trackedMaxX,
-                minZ: trackedMinZ,
-                maxZ: trackedMaxZ,
-              },
-              xzBounds,
-              terrain: {
-                worldRadius: cfg.terrain.worldRadius,
-                bedrockY: cfg.terrain.bedrockY ?? -50,
-                surfaceBias: cfg.terrain.surfaceBias,
-                quantizeScale: cfg.terrain.quantizeScale,
-              },
-              deltaFrontierAdd: frame.delta.frontierAdd?.length ?? 0,
-              deltaFrontierRemove: frame.delta.frontierRemove?.length ?? 0,
-              debugChunksProcessed: frame.delta.debugChunksProcessed,
-              debugQueueLengthAtTickStart: frame.delta.debugQueueLengthAtTickStart,
-            });
-            console.groupEnd();
+                frontierRenderedInRegion3d: frontierInRegion3d,
+                frontierRenderedInRegionXz: frontierInRegionXz,
+                frontierRenderedUniqueColumnsInXz: xzPairsInRegion.size,
+                frontierRenderedYRangeInXz: [frontierMinY, frontierMaxY],
+                frontierTotalRenderedTracked: frontierKeysRef.current.size,
+                trackedXzRange: {
+                  minX: trackedMinX,
+                  maxX: trackedMaxX,
+                  minZ: trackedMinZ,
+                  maxZ: trackedMaxZ,
+                },
+                xzBounds,
+                terrain: {
+                  worldRadius: cfg.terrain.worldRadius,
+                  bedrockY: cfg.terrain.bedrockY ?? -50,
+                  surfaceBias: cfg.terrain.surfaceBias,
+                  quantizeScale: cfg.terrain.quantizeScale,
+                },
+                deltaFrontierAdd: frame.delta.frontierAdd?.length ?? 0,
+                deltaFrontierRemove: frame.delta.frontierRemove?.length ?? 0,
+                debugChunksProcessed: frame.delta.debugChunksProcessed,
+                debugQueueLengthAtTickStart: frame.delta.debugQueueLengthAtTickStart,
+              });
+              console.groupEnd();
+            }
 
             // Place a visible marker on the first missing expected surface voxel (helps find ridge-line gaps).
             const nextMarkerKey = missingSurfaceKeys[0] ?? null;
@@ -736,27 +739,30 @@ const VoxelLayerMeshed: React.FC<{
             activeChunks.current.has(k),
           ).length;
 
-          console.groupCollapsed(
-            `[render-debug] meshed pc=(${pcx},${pcy},${pcz}) radius=${radius} chunksize=${chunkSize}`,
-          );
-          console.log({
-            denseBaselineSolidCount: denseSolids,
-            expectedChunkCount: expectedChunkKeys.length,
-            requestedChunkCount,
-            meshedMeshChunkCount: dbg.meshChunkKeys.length,
-            meshedProcessedChunkCount: dbg.processedChunkKeys.length,
-            meshedEmptyChunkCount: dbg.emptyChunkKeys.length,
-            meshingDirtyCount: dbg.dirtyKeys.length,
-            meshingInFlight: dbg.inFlight,
-            surfaceChunk: initialSurfaceChunkRef.current,
-            missingNotRequested: missingNotRequested.slice(0, 20),
-            missingNotRequestedCount: missingNotRequested.length,
-            missingRequestedPending: missingRequestedPending.slice(0, 20),
-            missingRequestedPendingCount: missingRequestedPending.length,
-            missingRequestedEmpty: missingRequestedEmpty.slice(0, 20),
-            missingRequestedEmptyCount: missingRequestedEmpty.length,
-          });
-          console.groupEnd();
+          // Only emit verbose render-debug output in development to avoid noisy production logs
+          if (process.env.NODE_ENV === "development") {
+            console.groupCollapsed(
+              `[render-debug] meshed pc=(${pcx},${pcy},${pcz}) radius=${radius} chunksize=${chunkSize}`,
+            );
+            console.log({
+              denseBaselineSolidCount: denseSolids,
+              expectedChunkCount: expectedChunkKeys.length,
+              requestedChunkCount,
+              meshedMeshChunkCount: dbg.meshChunkKeys.length,
+              meshedProcessedChunkCount: dbg.processedChunkKeys.length,
+              meshedEmptyChunkCount: dbg.emptyChunkKeys.length,
+              meshingDirtyCount: dbg.dirtyKeys.length,
+              meshingInFlight: dbg.inFlight,
+              surfaceChunk: initialSurfaceChunkRef.current,
+              missingNotRequested: missingNotRequested.slice(0, 20),
+              missingNotRequestedCount: missingNotRequested.length,
+              missingRequestedPending: missingRequestedPending.slice(0, 20),
+              missingRequestedPendingCount: missingRequestedPending.length,
+              missingRequestedEmpty: missingRequestedEmpty.slice(0, 20),
+              missingRequestedEmptyCount: missingRequestedEmpty.length,
+            });
+            console.groupEnd();
+          }
         }
       }
     });
