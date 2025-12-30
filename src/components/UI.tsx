@@ -25,9 +25,16 @@ export const UI: React.FC<UIProps> = ({ viewMode, onToggleView }) => {
   const percentMined = totalBlocks > 0 ? (minedBlocks / totalBlocks) * 100 : 0;
 
   return (
-    <div className="absolute top-0 left-0 w-full h-full pointer-events-none z-10 font-sans" data-ui-overlay>
+    <div
+      className="absolute top-0 left-0 w-full h-full pointer-events-none z-10 font-sans"
+      data-ui-overlay
+    >
       <Hud credits={credits} prestigeLevel={prestigeLevel} />
-      <ViewControls viewMode={viewMode} onToggleView={onToggleView} onOpenShop={() => setShopOpen(true)} />
+      <ViewControls
+        viewMode={viewMode}
+        onToggleView={onToggleView}
+        onOpenShop={() => setShopOpen(true)}
+      />
       <TitlePanel percentMined={percentMined} onOpenSettings={() => setSettingsOpen(true)} />
 
       {/* Reticle */}

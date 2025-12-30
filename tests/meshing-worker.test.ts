@@ -37,4 +37,3 @@ describe("meshing worker handler (TDD)", () => {
     expect(out.geometry.indices.buffer).toBeInstanceOf(ArrayBuffer);
   });
 });
-

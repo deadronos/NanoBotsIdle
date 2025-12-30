@@ -1,5 +1,5 @@
-import { Color } from "three";
 import { makeNoise2D } from "open-simplex-noise";
+import { Color } from "three";
 
 export type BiomeId =
   | "ocean"
@@ -38,7 +38,13 @@ const getBiomeNoises = (seed: number) => {
 
 const norm01 = (n: number) => clamp01((n + 1) * 0.5);
 
-export const getBiomeAt = (x: number, z: number, seed: number, surfaceY: number, waterLevel: number): BiomeSample => {
+export const getBiomeAt = (
+  x: number,
+  z: number,
+  seed: number,
+  surfaceY: number,
+  waterLevel: number,
+): BiomeSample => {
   // Region-scale noise: low frequency, intended to vary over tens of blocks.
   const { heat, moisture } = getBiomeNoises(seed);
   const heat01 = norm01(heat(x * 0.02, z * 0.02));

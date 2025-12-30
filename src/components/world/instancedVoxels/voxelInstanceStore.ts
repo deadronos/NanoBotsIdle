@@ -22,7 +22,12 @@ export const addVoxelToStore = (store: VoxelInstanceStore, x: number, y: number,
   return { index, count: store.count };
 };
 
-export const removeVoxelFromStore = (store: VoxelInstanceStore, x: number, y: number, z: number) => {
+export const removeVoxelFromStore = (
+  store: VoxelInstanceStore,
+  x: number,
+  y: number,
+  z: number,
+) => {
   const key = voxelKey(x, y, z);
   const index = store.indexByKey.get(key);
   if (index === undefined) return null;

@@ -38,4 +38,3 @@ export const encodeDrones = (drones: Drone[]) => {
 
   return { entities, entityTargets, entityStates } as const;
 };
-

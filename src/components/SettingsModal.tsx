@@ -76,7 +76,9 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ onClose }) => {
               className="accent-blue-500"
               checked={cfg.render.voxels.debugCompare.enabled}
               onChange={(e) => {
-                updateConfig({ render: { voxels: { debugCompare: { enabled: e.target.checked } } } });
+                updateConfig({
+                  render: { voxels: { debugCompare: { enabled: e.target.checked } } },
+                });
               }}
             />
             Debug compare (logs dense baseline vs current renderer)
@@ -88,7 +90,9 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ onClose }) => {
               className="accent-blue-500"
               checked={cfg.render.voxels.biomeOverlay.enabled}
               onChange={(e) => {
-                updateConfig({ render: { voxels: { biomeOverlay: { enabled: e.target.checked } } } });
+                updateConfig({
+                  render: { voxels: { biomeOverlay: { enabled: e.target.checked } } },
+                });
               }}
             />
             Biome overlay (debug voxel colors)

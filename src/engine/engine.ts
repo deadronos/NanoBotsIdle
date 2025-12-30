@@ -95,7 +95,9 @@ export const createEngine = (_seed?: number): Engine => {
         return;
       }
       case "SET_PLAYER_CHUNK": {
-        console.log(`[engine] SET_PLAYER_CHUNK cx=${cmd.cx} cy=${cmd.cy} cz=${cmd.cz}, queue size before: ${playerChunksToScan.length}`);
+        console.log(
+          `[engine] SET_PLAYER_CHUNK cx=${cmd.cx} cy=${cmd.cy} cz=${cmd.cz}, queue size before: ${playerChunksToScan.length}`,
+        );
         playerChunksToScan.push({ cx: cmd.cx, cy: cmd.cy, cz: cmd.cz });
         return;
       }
@@ -109,11 +111,7 @@ export const createEngine = (_seed?: number): Engine => {
     }
   };
 
-  const tickEngine = (
-    _dtSeconds: number,
-    _budgetMs: number,
-    _maxSubsteps: number,
-  ) => {
+  const tickEngine = (_dtSeconds: number, _budgetMs: number, _maxSubsteps: number) => {
     tick += 1;
     drones = syncDroneCount(drones, uiSnapshot.droneCount, cfg);
 
@@ -136,7 +134,7 @@ export const createEngine = (_seed?: number): Engine => {
           const r = 2; // radius of chunks to auto-frontier
           forEachRadialChunk({ cx: pc.cx, cy: pc.cy, cz: pc.cz }, r, 2, (c) => {
             const added = w.ensureFrontierInChunk(c.cx, c.cz);
-            debugChunksProcessed.push(`${c.cx},${c.cz}:${added ? added.length : 'skip'}`);
+            debugChunksProcessed.push(`${c.cx},${c.cz}:${added ? added.length : "skip"}`);
             if (added && added.length > 0) {
               for (const pos of added) {
                 addKey(frontier, voxelKey(pos.x, pos.y, pos.z));

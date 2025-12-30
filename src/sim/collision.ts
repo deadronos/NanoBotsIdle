@@ -31,7 +31,13 @@ export const resetVoxelEdits = () => {
   edits.clear();
 };
 
-export const getVoxelMaterialAt = (x: number, y: number, z: number, prestigeLevel = 1, seedOverride?: number) => {
+export const getVoxelMaterialAt = (
+  x: number,
+  y: number,
+  z: number,
+  prestigeLevel = 1,
+  seedOverride?: number,
+) => {
   const seed = seedOverride ?? getSeed(prestigeLevel);
   return materialAt(x, y, z, seed);
 };

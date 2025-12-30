@@ -6,10 +6,11 @@
 
 import fs from "fs";
 import path from "path";
-import { getSeed } from "../src/sim/seed";
+
 import { getConfig, updateConfig } from "../src/config/index";
-import { getVoxelColor } from "../src/utils";
+import { getSeed } from "../src/sim/seed";
 import { getSurfaceHeight } from "../src/sim/terrain";
+import { getVoxelColor } from "../src/utils";
 
 const metaPath = path.resolve(process.cwd(), "verification/baselines/meta.json");
 const meta = JSON.parse(fs.readFileSync(metaPath, "utf8"));
@@ -19,7 +20,13 @@ const prev = { ...cfg.terrain };
 
 for (const entry of meta) {
   console.log(`Generating baseline: ${entry.file} (seed=${entry.seed}, size=${entry.size})`);
-  updateConfig({ terrain: { noiseType: entry.noiseType, surfaceBias: entry.surfaceBias, quantizeScale: entry.quantizeScale } });
+  updateConfig({
+    terrain: {
+      noiseType: entry.noiseType,
+      surfaceBias: entry.surfaceBias,
+      quantizeScale: entry.quantizeScale,
+    },
+  });
 
   const seed = getSeed(entry.seed);
   const size = entry.size;

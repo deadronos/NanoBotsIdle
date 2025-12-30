@@ -7,7 +7,7 @@ export default defineConfig(() => {
   return {
     // Use repository sub-path for GitHub Pages when building for production.
     // This makes the app work at https://deadronos.github.io/NanoBotsIdle/
-    base: process.env.NODE_ENV === 'production' ? '/NanoBotsIdle/' : '/',
+    base: process.env.NODE_ENV === "production" ? "/NanoBotsIdle/" : "/",
     server: {
       port: 3000,
       host: "0.0.0.0",

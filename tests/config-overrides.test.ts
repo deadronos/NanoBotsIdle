@@ -1,6 +1,6 @@
-import { beforeEach,describe, expect, it } from "vitest";
+import { beforeEach, describe, expect, it } from "vitest";
 
-import { getConfig, resetConfig,updateConfig } from "../src/config/index";
+import { getConfig, resetConfig, updateConfig } from "../src/config/index";
 import { computeVoxel, getSeed } from "../src/sim/terrain";
 import { noise2D } from "../src/utils";
 

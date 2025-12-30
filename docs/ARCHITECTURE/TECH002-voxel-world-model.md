@@ -1,7 +1,7 @@
 ## TECH002: Voxel World Model (True 3D Digging)
 
 **Status:** Draft (intended target architecture)  
-**Last updated:** 2025-12-29
+**Last updated:** 2025-12-30
 
 ## Summary
 

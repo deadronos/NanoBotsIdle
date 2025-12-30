@@ -33,4 +33,3 @@ export type MeshError = {
 
 export type ToMeshingWorker = MeshingJob;
 export type FromMeshingWorker = MeshResult | MeshError;
-

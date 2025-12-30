@@ -29,7 +29,13 @@ export const DroneInstance: React.FC<{
         visible={false}
       >
         <cylinderGeometry args={[0.05, 0.05, 1, 8, 1, true]} />
-        <meshBasicMaterial color="#ff3333" transparent opacity={0.7} blending={2} depthWrite={false} />
+        <meshBasicMaterial
+          color="#ff3333"
+          transparent
+          opacity={0.7}
+          blending={2}
+          depthWrite={false}
+        />
       </mesh>
 
       <mesh
@@ -39,7 +45,13 @@ export const DroneInstance: React.FC<{
         visible={false}
       >
         <cylinderGeometry args={[0.015, 0.015, 1, 4, 1, true]} />
-        <meshBasicMaterial color="#00ffff" transparent opacity={0.3} blending={2} depthWrite={false} />
+        <meshBasicMaterial
+          color="#00ffff"
+          transparent
+          opacity={0.3}
+          blending={2}
+          depthWrite={false}
+        />
       </mesh>
 
       <mesh

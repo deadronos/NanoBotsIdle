@@ -1,7 +1,7 @@
 # NanoBotsIdle Architecture (Source of Truth)
 
 **Status:** Alpha (prototype; evolves quickly)  
-**Last updated:** 2025-12-29
+**Last updated:** 2025-12-30
 
 This document is the source of truth for NanoBotsIdle's high-level architecture
 and design intent. If the code and this doc diverge, either:
@@ -113,7 +113,7 @@ Implementation details and constraints are specified in `docs/ARCHITECTURE/TECH0
   - `worldRadius: 30`
   - `chunkSize: 16`
   - `surfaceBias: 2.0`
-  - `quantizeScale: 4`
+  - `quantizeScale: 3`
   - `waterLevel: -12`
   - `bedrockY: -50`
 
@@ -121,7 +121,7 @@ Implementation details and constraints are specified in `docs/ARCHITECTURE/TECH0
   - Quantized height `y` is converted to a voxel value via `getVoxelValueFromHeight(y, waterLevel)` which returns discrete value bands (water, sand, ore/rock bands, etc.).
   - Color mapping is implemented in `getVoxelColor(y, waterLevel)` and depends on offsets from `waterLevel` (see above for bands).
 
-> Note: The project previously documented use of "Perlin" noise. The current codebase uses a deterministic, sin/cos-based noise generator; consider this an implementation detail that affects tunability. If we standardize on a different noise algorithm (Perlin/Worley/OpenSimplex), update both implementation and docs and add tests demonstrating expected height distributions.
+> Note: Historical docs referenced "Perlin" noise. The current codebase supports multiple providers via `terrain.noiseType`; the default is `open-simplex` and `sincos` remains available for parity/tuning. See `docs/ARCHITECTURE/DEC006-noise-and-init-generation.md`.
 
 - **Design constraint**: World generation must avoid prestige soft locks — ensure the combination of `surfaceBias`, `quantizeScale`, and `waterLevel` produces a sufficient number of above-water, mineable blocks for starter drones. Recent sampling with the default params (seed 222) shows a healthy grass/dark-grass presence (~31% combined), but distribution may vary by seed and radius; consider adding automated assertions or generation checks in initialization to enforce minima.
 

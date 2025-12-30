@@ -1,4 +1,5 @@
-import { test, expect } from "vitest";
+import { expect, test } from "vitest";
+
 import { createNoiseProvider } from "../src/sim/noise";
 
 test("createNoiseProvider deterministic for given seed and coords (sincos)", () => {

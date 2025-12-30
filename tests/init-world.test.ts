@@ -1,11 +1,16 @@
-import { test, expect } from "vitest";
-import { initWorldForPrestige } from "../src/engine/world/initWorld";
+import { expect, test } from "vitest";
+
 import { getConfig } from "../src/config/index";
+import { initWorldForPrestige } from "../src/engine/world/initWorld";
 
 test("initWorldForPrestige respects minimum above-water frontier when possible", () => {
   const cfg = getConfig();
   // Make a shallow copy and ensure the minBlocks is modest so the default seed should meet it
-  const localCfg = { ...cfg, economy: { ...cfg.economy, prestigeMinMinedBlocks: 10 }, terrain: { ...cfg.terrain } };
+  const localCfg = {
+    ...cfg,
+    economy: { ...cfg.economy, prestigeMinMinedBlocks: 10 },
+    terrain: { ...cfg.terrain },
+  };
 
   const result = initWorldForPrestige(1, localCfg);
   expect(result.aboveWaterCount).toBeGreaterThanOrEqual(localCfg.economy.prestigeMinMinedBlocks);

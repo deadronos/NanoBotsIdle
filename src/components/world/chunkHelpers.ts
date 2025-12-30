@@ -57,4 +57,3 @@ export const ensureNeighborChunksForMinedVoxel = (options: {
   if (lz === 0) addChunk(cx, cy, cz - 1);
   if (lz === chunkSize - 1) addChunk(cx, cy, cz + 1);
 };
-

@@ -18,13 +18,20 @@ import {
   removeVoxelFromStore,
 } from "./instancedVoxels/voxelInstanceStore";
 
-export const useInstancedVoxels = (chunkSize: number, waterLevel: number, getColor?: VoxelColorFn) => {
+export const useInstancedVoxels = (
+  chunkSize: number,
+  waterLevel: number,
+  getColor?: VoxelColorFn,
+) => {
   const meshRef = useRef<InstancedMesh>(null);
   const storeRef = useRef(createVoxelInstanceStore());
   const solidCountRef = useRef(0);
   const needsRebuild = useRef(false);
   const tmp = useMemo(() => new Object3D(), []);
-  const getColorFn = useMemo(() => getColor ?? makeHeightColorFn(waterLevel), [getColor, waterLevel]);
+  const getColorFn = useMemo(
+    () => getColor ?? makeHeightColorFn(waterLevel),
+    [getColor, waterLevel],
+  );
 
   const UPDATE_BOTH = useMemo(() => ({ matrix: true, color: true }) as const, []);
 
@@ -67,7 +74,15 @@ export const useInstancedVoxels = (chunkSize: number, waterLevel: number, getCol
       const mesh = meshRef.current;
       if (mesh && !needsRebuild.current) {
         if (result.moved) {
-          setVoxelInstance(mesh, tmp, result.index, result.moved.x, result.moved.y, result.moved.z, getColorFn);
+          setVoxelInstance(
+            mesh,
+            tmp,
+            result.index,
+            result.moved.x,
+            result.moved.y,
+            result.moved.z,
+            getColorFn,
+          );
         }
         mesh.count = result.count;
         applyInstanceUpdates(mesh, UPDATE_BOTH);

@@ -1,17 +1,21 @@
 import fs from "fs";
 import path from "path";
-import { test, expect } from "vitest";
-import { getSeed } from "../src/sim/seed";
+import { expect, test } from "vitest";
+
 import { getConfig, updateConfig } from "../src/config/index";
+import { getSeed } from "../src/sim/seed";
+import { getSurfaceHeight } from "../src/sim/terrain";
 import { getVoxelColor } from "../src/utils";
-import { generateInstances, getSurfaceHeight } from "../src/sim/terrain";
 
 const parsePPMPixels = (content: string) => {
   const lines = content.split(/\r?\n/).slice(3); // skip header
-  const pixels: Array<[number, number, number]> = [];
+  const pixels: [number, number, number][] = [];
   for (const line of lines) {
     if (!line.trim()) continue;
-    const parts = line.trim().split(/\s+/).map((s) => parseInt(s, 10));
+    const parts = line
+      .trim()
+      .split(/\s+/)
+      .map((s) => parseInt(s, 10));
     // Parts are triples; sometimes grouped per line
     for (let i = 0; i < parts.length; i += 3) {
       pixels.push([parts[i], parts[i + 1], parts[i + 2]]);
@@ -50,7 +54,7 @@ test("visual diff against baseline is below threshold", () => {
   updateConfig({ terrain: { noiseType: "open-simplex", surfaceBias: 2, quantizeScale: 3 } });
 
   const seed = 222;
-  const out = generatePPM(seed, cfg);
+  generatePPM(seed, cfg);
 
   const metaPath = path.resolve(process.cwd(), "verification/baselines/meta.json");
   const meta = JSON.parse(fs.readFileSync(metaPath, "utf8"));
@@ -84,7 +88,9 @@ test("visual diff against baseline is below threshold", () => {
     }
 
     const pct = diffCount / pA.length;
-    console.log(`${entry.file} visual diff: ${diffCount} pixels (${(pct * 100).toFixed(4)}%) threshold=${entry.threshold}`);
+    console.log(
+      `${entry.file} visual diff: ${diffCount} pixels (${(pct * 100).toFixed(4)}%) threshold=${entry.threshold}`,
+    );
 
     expect(pct).toBeLessThan(entry.threshold);
   }

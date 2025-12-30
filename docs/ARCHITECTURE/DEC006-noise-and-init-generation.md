@@ -5,31 +5,38 @@
 
 ## Context
 
-Historical docs described terrain generation as using "Perlin" noise. During a rapid prototype phase, a deterministic sum-of-sines/cosines function was used instead (`src/sim/terrain-core.ts`). This function is simple, deterministic, and fast for the current prototype; however, it has different frequency/amplitude characteristics than canonical Perlin/OpenSimplex noise.
+Historical docs described terrain generation as using "Perlin" noise. During a rapid prototype phase, a deterministic sum-of-sines/cosines function was used instead. The project has since added a configurable noise provider abstraction and switched the default provider to OpenSimplex for improved coherence, while keeping the legacy sin/cos provider for parity and tuning.
 
 Separately, to prevent prestige-time soft-locks (where a generated world offers too few above-water mineable voxels for starter drones), an initialization retry strategy was added that regenerates candidate seeds and selects the first candidate that meets a configurable minimum frontier criterion.
 
 ## Decision
 
-1. Keep the current deterministic sin/cos-based noise implementation for the prototype. Its trade-offs are:
-   - Pros: simple, deterministic, and easy to reason about during early iteration; fast and easy to test.
-   - Cons: less natural/coherent-looking compared to Perlin/OpenSimplex in some cases; parameters will need careful tuning to avoid edge cases.
+1. Use an explicit noise provider abstraction (`src/sim/noise.ts`) selected via config `terrain.noiseType`.
+   - Default provider: `open-simplex`.
+   - Legacy provider retained: `sincos` (for parity/regression and tuning comparisons).
+   - OpenSimplex implementation uses `open-simplex-noise` (`makeNoise2D`) with frequency and amplitude scaling (see `src/sim/noise.ts`).
 
 2. Use an explicit initialization check and bounded retry strategy during prestige-time world init.
    - Implementation location: `src/engine/world/initWorld.ts` (`initWorldForPrestige`).
    - Behavior: derive `candidateSeed = baseSeed + attempt * 101` for attempt = 0..`genRetries`; accept the first seed whose `initializeFrontierFromSurface()` returns a frontier size >= `cfg.economy.prestigeMinMinedBlocks`.
    - If no candidate meets the requirement, fall back to `baseSeed` and proceed.
 
+3. Treat terrain visuals as a testable artifact.
+   - `tests/visual-diff.test.ts` compares generated PPM maps against approved baselines under `verification/baselines/`.
+   - Per-baseline thresholds live in `verification/baselines/meta.json`.
+   - Baselines are updated locally via `npm run update:baselines` (CI runs the diff; it does not overwrite baselines).
+
 ## Rationale
 
-- Prevents deterministic soft-locks where a randomly chosen seed would produce too few mineable blocks for player progression at prestige-time.
-- Keeps initialization bounded and predictable (max attempts = `terrain.genRetries`).
-- Keeps the prototype moving: changing noise implementations is higher-risk and should happen only if we need more natural-looking terrain or to achieve specific distribution guarantees.
+- OpenSimplex provides more coherent terrain patterns than the legacy sin/cos generator while remaining deterministic and seedable.
+- Keeping `sincos` as an option makes it easy to compare distributions and avoid regressions during tuning.
+- The bounded init retry strategy prevents deterministic prestige-time soft-locks while keeping initialization predictable (max attempts = `terrain.genRetries`).
+- Visual baselines provide a pragmatic guardrail: terrain changes are expected, but large unintended diffs should be caught early.
 
 ## Consequences
 
-- The codebase must document the noise function and key parameters (see `src/sim/terrain-core.ts`, `src/config/terrain.ts`) so designers can tune `surfaceBias`, `quantizeScale`, and `waterLevel` with realistic expectations.
-- If the project later moves to Perlin/OpenSimplex noise for better visual fidelity, update this DEC with a migration plan and add tests that assert distribution properties (e.g., minimum above-water frontier guarantee under tuned parameters).
+- The codebase must document the active noise providers and key parameters (see `src/sim/noise.ts`, `src/config/terrain.ts`) so designers can tune `surfaceBias`, `quantizeScale`, and `waterLevel` with realistic expectations.
+- Any change that affects terrain distributions or visuals should update sampling tests and, if intended, refresh `verification/baselines/` and thresholds.
 
 ## Action items
 

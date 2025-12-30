@@ -40,7 +40,15 @@ export const rebuildVoxelInstances = (
   const count = Math.floor(positions.length / 3);
   for (let i = 0; i < count; i += 1) {
     const base = i * 3;
-    setVoxelInstance(mesh, tmp, i, positions[base], positions[base + 1], positions[base + 2], getColor);
+    setVoxelInstance(
+      mesh,
+      tmp,
+      i,
+      positions[base],
+      positions[base + 1],
+      positions[base + 2],
+      getColor,
+    );
   }
 
   mesh.count = count;
@@ -61,4 +69,3 @@ export const ensureInstanceColors = (mesh: InstancedMesh, capacity: number) => {
 
   return false;
 };
-

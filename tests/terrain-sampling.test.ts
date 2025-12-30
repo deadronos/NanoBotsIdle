@@ -1,14 +1,13 @@
-import { test, expect } from "vitest";
-import { generateInstances, getSurfaceHeight } from "../src/sim/terrain";
-import { getSeed } from "../src/sim/seed";
-import { getConfig, updateConfig } from "../src/config/index";
-import { getVoxelColor } from "../src/utils";
-import { noise2D } from "../src/sim/terrain-core";
-
 import fs from "fs";
 import path from "path";
+import { expect, test } from "vitest";
 
-const noiseTypes: Array<"sincos" | "open-simplex"> = ["sincos", "open-simplex"];
+import { getConfig } from "../src/config/index";
+import { getSeed } from "../src/sim/seed";
+import { generateInstances, getSurfaceHeight } from "../src/sim/terrain";
+import { getVoxelColor } from "../src/utils";
+
+const noiseTypes: ("sincos" | "open-simplex")[] = ["sincos", "open-simplex"];
 
 noiseTypes.forEach((noiseType) => {
   test(`terrain sampling distribution report (${noiseType})`, () => {
@@ -71,7 +70,9 @@ noiseTypes.forEach((noiseType) => {
 
     console.log(`\nTerrain sampling report (${noiseType}):`);
     console.log(`seed: ${seed}`);
-    console.log(`config: waterLevel=${cfg.terrain.waterLevel}, surfaceBias=${cfg.terrain.surfaceBias}, quantizeScale=${cfg.terrain.quantizeScale}, worldRadius=${cfg.terrain.worldRadius}`);
+    console.log(
+      `config: waterLevel=${cfg.terrain.waterLevel}, surfaceBias=${cfg.terrain.surfaceBias}, quantizeScale=${cfg.terrain.quantizeScale}, worldRadius=${cfg.terrain.worldRadius}`,
+    );
     console.log(`voxels sampled: ${total}`);
     console.log(`height: min=${minY}, max=${maxY}`);
     console.log("counts:");
@@ -96,7 +97,9 @@ noiseTypes.forEach((noiseType) => {
         // If not found, compute directly
         let y: number;
         if (v) y = v.y;
-        else y = getSurfaceHeight(x, z, seed);        const color = getVoxelColor(y, cfg.terrain.waterLevel).getHexString();
+        else y = getSurfaceHeight(x, z, seed);
+
+        const color = getVoxelColor(y, cfg.terrain.waterLevel).getHexString();
         const r = parseInt(color.slice(0, 2), 16);
         const g = parseInt(color.slice(2, 4), 16);
         const b = parseInt(color.slice(4, 6), 16);

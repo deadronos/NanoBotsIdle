@@ -4,7 +4,10 @@ export type NoiseProvider = {
   noise2D: (x: number, z: number) => number;
 };
 
-export const createNoiseProvider = (seed: number, type: "sincos" | "open-simplex" | string = "sincos"): NoiseProvider => {
+export const createNoiseProvider = (
+  seed: number,
+  type: "sincos" | "open-simplex" | string = "sincos",
+): NoiseProvider => {
   if (type === "open-simplex") {
     // open-simplex returns -1..1
     const noise2d = makeNoise2D(Number(seed || 0));

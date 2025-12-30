@@ -42,4 +42,3 @@ export const getDirtyChunksForVoxelEdit = (options: {
 
   return out;
 };
-

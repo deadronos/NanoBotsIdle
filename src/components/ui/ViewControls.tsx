@@ -25,4 +25,3 @@ export const ViewControls: React.FC<{
     </div>
   );
 };
-

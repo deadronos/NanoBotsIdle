@@ -39,7 +39,8 @@ export const updateDroneVisuals = (options: {
     const z = positions[base + 2];
 
     const bob =
-      Math.sin(elapsedTime * cfg.drones.visual.bobbing.speed + i) * cfg.drones.visual.bobbing.amplitude;
+      Math.sin(elapsedTime * cfg.drones.visual.bobbing.speed + i) *
+      cfg.drones.visual.bobbing.amplitude;
     group.position.set(x, y + bob, z);
 
     const targetX = targets[base];

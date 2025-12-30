@@ -8,12 +8,26 @@ const createApron = (size: number) => {
   return new Uint8Array(dim * dim * dim);
 };
 
-const setInteriorVoxel = (materials: Uint8Array, size: number, x: number, y: number, z: number, mat: number) => {
+const setInteriorVoxel = (
+  materials: Uint8Array,
+  size: number,
+  x: number,
+  y: number,
+  z: number,
+  mat: number,
+) => {
   const dim = size + 2;
   materials[index3D(x + 1, y + 1, z + 1, dim)] = mat;
 };
 
-const setApronVoxel = (materials: Uint8Array, size: number, x: number, y: number, z: number, mat: number) => {
+const setApronVoxel = (
+  materials: Uint8Array,
+  size: number,
+  x: number,
+  y: number,
+  z: number,
+  mat: number,
+) => {
   const dim = size + 2;
   // x/y/z are in [-1..size] for apron-inclusive coordinates
   materials[index3D(x + 1, y + 1, z + 1, dim)] = mat;
@@ -140,4 +154,3 @@ describe("greedy mesher (TDD)", () => {
     expect(result.normals.length).toBe(0);
   });
 });
-

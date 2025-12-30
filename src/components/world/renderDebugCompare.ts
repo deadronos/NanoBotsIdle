@@ -44,7 +44,11 @@ export const voxelInBounds = (b: VoxelBounds, x: number, y: number, z: number) =
   return x >= b.minX && x <= b.maxX && y >= b.minY && y <= b.maxY && z >= b.minZ && z <= b.maxZ;
 };
 
-export const makeXzBoundsForChunkRadius = (center: ChunkCoord3, radiusChunks: number, chunkSize: number): XzBounds => {
+export const makeXzBoundsForChunkRadius = (
+  center: ChunkCoord3,
+  radiusChunks: number,
+  chunkSize: number,
+): XzBounds => {
   const minCx = center.cx - radiusChunks;
   const maxCx = center.cx + radiusChunks;
   const minCz = center.cz - radiusChunks;

@@ -1,8 +1,9 @@
 import fs from "fs";
 import path from "path";
-import { test, expect } from "vitest";
-import { getSeed } from "../src/sim/seed";
+import { expect, test } from "vitest";
+
 import { getConfig, updateConfig } from "../src/config/index";
+import { getSeed } from "../src/sim/seed";
 import { generateInstances } from "../src/sim/terrain";
 import { getVoxelColor } from "../src/utils";
 
@@ -60,11 +61,13 @@ test("validate open-simplex tuned params (bias=2, scale=3)", () => {
   }
 
   const frac = above / total;
-  console.log(`Tuned open-simplex combined grass fraction: ${(frac * 100).toFixed(2)}% minY=${minY} maxY=${maxY}`);
+  console.log(
+    `Tuned open-simplex combined grass fraction: ${(frac * 100).toFixed(2)}% minY=${minY} maxY=${maxY}`,
+  );
 
   // Expect fraction within 3% absolute of previous sincos baseline (approx 16.9%)
   expect(frac).toBeGreaterThan(0.13); // >13%
-  expect(frac).toBeLessThan(0.20); // <20%
+  expect(frac).toBeLessThan(0.2); // <20%
 
   // restore
   updateConfig({ terrain: prev });
