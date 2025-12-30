@@ -1,18 +1,17 @@
 import React, { useCallback, useEffect, useRef } from "react";
 
 import { getConfig } from "../config/index";
+import { playerChunk, playerPosition } from "../engine/playerState";
 import { applyVoxelEdits, MATERIAL_SOLID, resetVoxelEdits } from "../sim/collision";
 import { getSeed } from "../sim/seed";
 import { getSurfaceHeightCore } from "../sim/terrain-core";
 import { getSimBridge } from "../simBridge/simBridge";
 import { useUiStore } from "../ui/store";
-import { playerChunk, playerPosition } from "../engine/playerState";
 import { chunkKey, ensureNeighborChunksForMinedVoxel, populateChunkVoxels } from "./world/chunkHelpers";
 import { useInstancedVoxels } from "./world/useInstancedVoxels";
 
 export const World: React.FC = () => {
   const activeChunks = useRef<Set<string>>(new Set());
-
   const cfg = getConfig();
   const bridge = getSimBridge();
   const prestigeLevel = useUiStore((state) => state.snapshot.prestigeLevel);
@@ -20,6 +19,7 @@ export const World: React.FC = () => {
   const chunkSize = cfg.terrain.chunkSize ?? 16;
   const spawnX = cfg.player.spawnX ?? 0;
   const spawnZ = cfg.player.spawnZ ?? 0;
+  const voxelRenderMode = cfg.render.voxels.mode;
 
   const { addVoxel, capacity, clear, ensureCapacity, flushRebuild, meshRef, removeVoxel, solidCountRef } =
     useInstancedVoxels(chunkSize, cfg.terrain.waterLevel);
@@ -70,8 +70,38 @@ export const World: React.FC = () => {
 
   useEffect(() => {
     return bridge.onFrame((frame) => {
+      if (frame.delta.frontierReset) {
+        activeChunks.current.clear();
+        clear();
+        resetVoxelEdits();
+      }
+
       if (frame.delta.edits && frame.delta.edits.length > 0) {
         applyVoxelEdits(frame.delta.edits);
+      }
+
+      if (voxelRenderMode === "frontier") {
+        if (frame.delta.frontierAdd && frame.delta.frontierAdd.length > 0) {
+          ensureCapacity(solidCountRef.current + frame.delta.frontierAdd.length / 3);
+          const positions = frame.delta.frontierAdd;
+          for (let i = 0; i < positions.length; i += 3) {
+            addVoxel(positions[i], positions[i + 1], positions[i + 2]);
+          }
+        }
+
+        if (frame.delta.frontierRemove && frame.delta.frontierRemove.length > 0) {
+          const positions = frame.delta.frontierRemove;
+          for (let i = 0; i < positions.length; i += 3) {
+            removeVoxel(positions[i], positions[i + 1], positions[i + 2]);
+          }
+        }
+
+        flushRebuild();
+        return;
+      }
+
+      // Debug fallback: dense chunk volume scan.
+      if (frame.delta.edits && frame.delta.edits.length > 0) {
         frame.delta.edits.forEach((edit) => {
           if (edit.mat === MATERIAL_SOLID) {
             addVoxel(edit.x, edit.y, edit.z);
@@ -79,12 +109,6 @@ export const World: React.FC = () => {
             removeVoxel(edit.x, edit.y, edit.z);
           }
         });
-      }
-
-      if (frame.delta.frontierReset) {
-        activeChunks.current.clear();
-        clear();
-        resetVoxelEdits();
       }
 
       ensureInitialChunk();
@@ -123,13 +147,15 @@ export const World: React.FC = () => {
     addChunk,
     addVoxel,
     bridge,
-    capacity,
     chunkSize,
     clear,
+    ensureCapacity,
     ensureChunksRadius,
     ensureInitialChunk,
     flushRebuild,
     removeVoxel,
+    solidCountRef,
+    voxelRenderMode,
   ]);
 
   return (
@@ -153,3 +179,4 @@ export const World: React.FC = () => {
     </group>
   );
 };
+

@@ -4,12 +4,12 @@ import type { Group } from "three";
 import { Vector3 } from "three";
 
 import { getConfig } from "../config/index";
+import { playerPosition } from "../engine/playerState";
 import type { ViewMode } from "../types";
 import { useUiStore } from "../ui/store";
 import { PlayerVisuals } from "./player/PlayerVisuals";
 import { updatePlayerFrame } from "./player/updatePlayerFrame";
 import { usePointerLockInput } from "./player/usePointerLockInput";
-import { playerPosition } from "../engine/playerState";
 
 interface PlayerProps {
   viewMode: ViewMode;

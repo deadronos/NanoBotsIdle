@@ -1,6 +1,6 @@
 # [TASK007] Visibility-Driven Render Adapter v1 (Frontier Instancing)
 
-**Status:** Pending  
+**Status:** Completed  
 **Added:** 2025-12-30  
 **Updated:** 2025-12-30
 
@@ -29,7 +29,7 @@ Architecture:
 
 Design:
 
-- `memory/designs/DESIGN006-visibility-driven-render-adapter-v1.md`
+- `memory/designs/COMPLETED/DESIGN006-visibility-driven-render-adapter-v1.md`
 
 ## Scope
 
@@ -105,7 +105,7 @@ Rules:
 
 ## Progress Tracking
 
-**Overall Status:** Not Started — 0%
+**Overall Status:** Completed — 100%
 
 ### Subtasks
 
@@ -178,3 +178,8 @@ Rules:
 
 - Created TASK007 with a TDD-structured implementation plan aligned to DESIGN006,
   TECH003, and DEC004.
+- Implemented frontier-driven voxel rendering as the default path:
+  - Added `cfg.render.voxels.mode` (default: `frontier`) with `dense` as a debug fallback.
+  - Updated `src/components/World.tsx` to consume `frontierAdd/frontierRemove/frontierReset` and stop populating voxels via chunk volume scans by default.
+  - Added tests for frontier delta invariants and the swap-with-last voxel instance store.
+  - Validation: `npm test`, `npm run typecheck`, `npm run lint`, `npm run build`.

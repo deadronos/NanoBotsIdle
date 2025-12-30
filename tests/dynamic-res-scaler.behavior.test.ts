@@ -1,5 +1,6 @@
-import { describe, it, expect, vi } from "vitest";
-import { computeNextDpr, initDpr, TARGET_FPS, STEP, MIN_DPR, MAX_DPR } from "../src/utils/dynamicResScaler";
+import { describe, expect, it, vi } from "vitest";
+
+import { computeNextDpr, initDpr, MAX_DPR,MIN_DPR, STEP, TARGET_FPS } from "../src/utils/dynamicResScaler";
 
 describe("computeNextDpr", () => {
   it("returns same DPR when FPS within tolerance", () => {

@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 
-import { getVoxelColor, getVoxelValue } from "../src/utils";
 import { getConfig } from "../src/config/index";
+import { getVoxelColor, getVoxelValue } from "../src/utils";
 
 describe("voxel utils", () => {
   it("getVoxelValue boundaries (relative to waterLevel -20)", () => {
