@@ -50,6 +50,7 @@ export const useMeshedChunks = (options: { chunkSize: number; prestigeLevel: num
   const meshesRef = useRef<Map<string, Mesh>>(new Map());
   const processedChunkKeysRef = useRef<Set<string>>(new Set());
   const emptyChunkKeysRef = useRef<Set<string>>(new Set());
+  const pendingResultsRef = useRef<Map<string, MeshResult>>(new Map());
   const schedulerRef = useRef<MeshingScheduler | null>(null);
 
   const material = useMemo(
@@ -72,20 +73,26 @@ export const useMeshedChunks = (options: { chunkSize: number; prestigeLevel: num
     meshes.clear();
     processedChunkKeysRef.current.clear();
     emptyChunkKeysRef.current.clear();
+    pendingResultsRef.current.clear();
   }, []);
 
   const applyMeshResult = useCallback(
     (result: MeshResult) => {
-      const group = groupRef.current;
-      if (!group) return;
-
       const key = chunkKey(result.chunk.cx, result.chunk.cy, result.chunk.cz);
-      const { positions, normals, indices } = result.geometry;
-
       processedChunkKeysRef.current.add(key);
+
+      const group = groupRef.current;
+      if (!group) {
+        // If results arrive before the group is mounted, cache and apply later.
+        pendingResultsRef.current.set(key, result);
+        return;
+      }
+
+      const { positions, normals, indices } = result.geometry;
 
       if (indices.length === 0 || positions.length === 0) {
         emptyChunkKeysRef.current.add(key);
+        pendingResultsRef.current.delete(key);
         const existing = meshesRef.current.get(key);
         if (existing) {
           group.remove(existing);
@@ -96,6 +103,7 @@ export const useMeshedChunks = (options: { chunkSize: number; prestigeLevel: num
       }
 
       emptyChunkKeysRef.current.delete(key);
+      pendingResultsRef.current.delete(key);
 
       let mesh = meshesRef.current.get(key);
       if (!mesh) {
@@ -122,6 +130,21 @@ export const useMeshedChunks = (options: { chunkSize: number; prestigeLevel: num
     },
     [material, writeVertexColor],
   );
+
+  useEffect(() => {
+    let raf = 0;
+    const tick = () => {
+      const group = groupRef.current;
+      if (group && pendingResultsRef.current.size > 0) {
+        const pending = Array.from(pendingResultsRef.current.values());
+        pendingResultsRef.current.clear();
+        pending.forEach((res) => applyMeshResult(res));
+      }
+      raf = requestAnimationFrame(tick);
+    };
+    raf = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(raf);
+  }, [applyMeshResult]);
 
   useEffect(() => {
     const worker = defaultMeshingWorkerFactory();
@@ -222,6 +245,7 @@ export const useMeshedChunks = (options: { chunkSize: number; prestigeLevel: num
       meshChunkKeys: Array.from(meshesRef.current.keys()),
       processedChunkKeys: Array.from(processedChunkKeysRef.current.keys()),
       emptyChunkKeys: Array.from(emptyChunkKeysRef.current.keys()),
+      pendingResultCount: pendingResultsRef.current.size,
       dirtyKeys: scheduler?.getDirtyKeys() ?? [],
       inFlight: scheduler?.getInFlightCount() ?? 0,
     };

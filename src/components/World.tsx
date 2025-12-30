@@ -31,6 +31,7 @@ const VoxelLayerInstanced: React.FC<{
   const activeChunks = useRef<Set<string>>(new Set());
   const cfg = useConfig();
   const bridge = getSimBridge();
+  const sentFrontierChunkRef = useRef(false);
 
   const debugCfg = cfg.render.voxels.debugCompare;
   const debugEnabled = debugCfg.enabled;
@@ -78,6 +79,7 @@ const VoxelLayerInstanced: React.FC<{
         activeChunks.current.clear();
         clear();
         resetVoxelEdits();
+        sentFrontierChunkRef.current = false;
       }
 
       if (frame.delta.edits && frame.delta.edits.length > 0) {
@@ -107,12 +109,18 @@ const VoxelLayerInstanced: React.FC<{
 
         if (voxelRenderMode === "frontier") {
           bridge.enqueue({ t: "SET_PLAYER_CHUNK", cx: pcx, cy: pcy, cz: pcz });
+          sentFrontierChunkRef.current = true;
         } else {
           // Prioritize nearby chunks in radial order to fill nearest areas first
           forEachRadialChunk({ cx: pcx, cy: pcy, cz: pcz }, 1, 3, (c) => {
             addChunk(c.cx, c.cy, c.cz);
           });
         }
+      }
+
+      if (voxelRenderMode === "frontier" && !sentFrontierChunkRef.current) {
+        bridge.enqueue({ t: "SET_PLAYER_CHUNK", cx: pcx, cy: pcy, cz: pcz });
+        sentFrontierChunkRef.current = true;
       }
 
       if (voxelRenderMode === "frontier") {
@@ -256,6 +264,7 @@ const VoxelLayerMeshed: React.FC<{
 }> = ({ chunkSize, prestigeLevel, seed, spawnX, spawnZ }) => {
   const activeChunks = useRef<Set<string>>(new Set());
   const initialSurfaceChunkRef = useRef<{ cx: number; cy: number; cz: number } | null>(null);
+  const lastRequestedPlayerChunkRef = useRef<{ cx: number; cy: number; cz: number } | null>(null);
   const cfg = useConfig();
   const bridge = getSimBridge();
 
@@ -321,12 +330,15 @@ const VoxelLayerMeshed: React.FC<{
       const pcy = Math.floor(py / chunkSize);
       const pcz = Math.floor(pz / chunkSize);
 
-      if (pcx !== playerChunk.cx || pcy !== playerChunk.cy || pcz !== playerChunk.cz) {
+      const lastReq = lastRequestedPlayerChunkRef.current;
+      const shouldRequest = !lastReq || lastReq.cx !== pcx || lastReq.cy !== pcy || lastReq.cz !== pcz;
+      if (shouldRequest) {
+        lastRequestedPlayerChunkRef.current = { cx: pcx, cy: pcy, cz: pcz };
         playerChunk.cx = pcx;
         playerChunk.cy = pcy;
         playerChunk.cz = pcz;
         setFocusChunk(pcx, pcy, pcz);
-        // Prioritize nearby chunks in radial order to fill nearest areas first
+        // Ensure the same 3D neighborhood we debug/expect is actually requested.
         forEachRadialChunk({ cx: pcx, cy: pcy, cz: pcz }, 1, 3, (c) => {
           addChunk(c.cx, c.cy, c.cz);
         });
