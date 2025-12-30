@@ -3,7 +3,8 @@ export type Cmd =
   | { t: "PRESTIGE" }
   | { t: "CLICK_VOXEL"; x: number; y: number; z: number }
   | { t: "SET_TOOL"; tool: "mine" | "build" }
-  | { t: "SET_PLAYER_CHUNK"; cx: number; cy: number; cz: number };
+  | { t: "SET_PLAYER_CHUNK"; cx: number; cy: number; cz: number }
+  | { t: "REQUEST_FRONTIER_SNAPSHOT" };
 
 export type VoxelEdit = {
   x: number;

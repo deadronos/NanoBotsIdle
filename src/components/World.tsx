@@ -33,6 +33,7 @@ const VoxelLayerInstanced: React.FC<{
   const cfg = useConfig();
   const bridge = getSimBridge();
   const sentFrontierChunkRef = useRef(false);
+  const requestedFrontierSnapshotRef = useRef(false);
 
   const debugCfg = cfg.render.voxels.debugCompare;
   const debugEnabled = debugCfg.enabled;
@@ -75,6 +76,16 @@ const VoxelLayerInstanced: React.FC<{
   }, [addChunk, chunkSize, cfg.terrain.quantizeScale, cfg.terrain.surfaceBias, seed, spawnX, spawnZ]);
 
   useEffect(() => {
+    if (voxelRenderMode === "frontier" && !requestedFrontierSnapshotRef.current) {
+      requestedFrontierSnapshotRef.current = true;
+      bridge.enqueue({ t: "REQUEST_FRONTIER_SNAPSHOT" });
+    }
+
+    if (voxelRenderMode !== "frontier") {
+      requestedFrontierSnapshotRef.current = false;
+      sentFrontierChunkRef.current = false;
+    }
+
     return bridge.onFrame((frame) => {
       if (frame.delta.frontierReset) {
         activeChunks.current.clear();
@@ -162,11 +173,22 @@ const VoxelLayerInstanced: React.FC<{
             let frontierInRegionXz = 0;
             let frontierMinY = Number.POSITIVE_INFINITY;
             let frontierMaxY = Number.NEGATIVE_INFINITY;
+
+            let trackedMinX = Number.POSITIVE_INFINITY;
+            let trackedMaxX = Number.NEGATIVE_INFINITY;
+            let trackedMinZ = Number.POSITIVE_INFINITY;
+            let trackedMaxZ = Number.NEGATIVE_INFINITY;
+            const xzPairsInRegion = new Set<string>();
             for (const k of debugFrontierKeysRef.current) {
               const [x, y, z] = k.split(",").map((v) => Number(v));
+              trackedMinX = Math.min(trackedMinX, x);
+              trackedMaxX = Math.max(trackedMaxX, x);
+              trackedMinZ = Math.min(trackedMinZ, z);
+              trackedMaxZ = Math.max(trackedMaxZ, z);
               if (voxelInBounds(bounds, x, y, z)) frontierInRegion3d += 1;
               if (xzInBounds(xzBounds, x, z)) {
                 frontierInRegionXz += 1;
+                xzPairsInRegion.add(`${x},${z}`);
                 frontierMinY = Math.min(frontierMinY, y);
                 frontierMaxY = Math.max(frontierMaxY, y);
               }
@@ -174,6 +196,10 @@ const VoxelLayerInstanced: React.FC<{
 
             if (frontierMinY === Number.POSITIVE_INFINITY) frontierMinY = 0;
             if (frontierMaxY === Number.NEGATIVE_INFINITY) frontierMaxY = 0;
+            if (trackedMinX === Number.POSITIVE_INFINITY) trackedMinX = 0;
+            if (trackedMaxX === Number.NEGATIVE_INFINITY) trackedMaxX = 0;
+            if (trackedMinZ === Number.POSITIVE_INFINITY) trackedMinZ = 0;
+            if (trackedMaxZ === Number.NEGATIVE_INFINITY) trackedMaxZ = 0;
 
             // Baselines (compute-only): dense solids in the same chunk cube, plus expected surface-frontier in the XZ region.
             let denseSolids = 0;
@@ -213,8 +239,22 @@ const VoxelLayerInstanced: React.FC<{
               frontierSurfaceExpected,
               frontierRenderedInRegion3d: frontierInRegion3d,
               frontierRenderedInRegionXz: frontierInRegionXz,
+              frontierRenderedUniqueColumnsInXz: xzPairsInRegion.size,
               frontierRenderedYRangeInXz: [frontierMinY, frontierMaxY],
               frontierTotalRenderedTracked: debugFrontierKeysRef.current.size,
+              trackedXzRange: {
+                minX: trackedMinX,
+                maxX: trackedMaxX,
+                minZ: trackedMinZ,
+                maxZ: trackedMaxZ,
+              },
+              xzBounds,
+              terrain: {
+                worldRadius: cfg.terrain.worldRadius,
+                bedrockY: cfg.terrain.bedrockY ?? -50,
+                surfaceBias: cfg.terrain.surfaceBias,
+                quantizeScale: cfg.terrain.quantizeScale,
+              },
               deltaFrontierAdd: frame.delta.frontierAdd?.length ?? 0,
               deltaFrontierRemove: frame.delta.frontierRemove?.length ?? 0,
             });
@@ -263,6 +303,7 @@ const VoxelLayerInstanced: React.FC<{
     cfg.terrain.bedrockY,
     cfg.terrain.quantizeScale,
     cfg.terrain.surfaceBias,
+    cfg.terrain.worldRadius,
     ensureCapacity,
     ensureInitialChunk,
     flushRebuild,

@@ -97,6 +97,13 @@ export const createEngine = (_seed?: number): Engine => {
         playerChunksToScan.push({ cx: cmd.cx, cy: cmd.cy, cz: cmd.cz });
         return;
       }
+      case "REQUEST_FRONTIER_SNAPSHOT": {
+        const w = world;
+        if (!w) return;
+        pendingFrontierSnapshot = w.getFrontierPositionsArray();
+        pendingFrontierReset = true;
+        return;
+      }
     }
   };
 
