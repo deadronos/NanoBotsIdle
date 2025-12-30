@@ -15,3 +15,9 @@
 ## Known notes
 
 - Vite build warns about large chunks (>500kB) after minification; not currently blocking.
+
+## Recent updates
+
+### 2025-12-30
+
+- Synchronized Memory Bank entries and design docs with `docs/ARCHITECTURE` changes: standardized `open-simplex` naming, replaced references to Playwright/screenshots with deterministic PPM-based visual baselining and visual-diff tests, and updated TASK009/TASK010/DESIGN008 to reflect the final implementation and baselines.

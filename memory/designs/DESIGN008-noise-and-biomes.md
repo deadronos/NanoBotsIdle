@@ -50,10 +50,8 @@ biome-driven gameplay & visuals.
 
 - Add sampling tests (`tests/terrain-sampling.test.ts`) to verify per-seed
   distributions (min/max height, band percentages) and compare sincos vs
-  simplex outputs. Use multiple seeds and compute averages.
-- Add a headless visual test to capture a spawn-area screenshot for human
-  review (Playwright or Node headless Three render). Store baseline images as
-  `verification/` artifacts when approved.
+  open-simplex outputs. Use multiple seeds and compute averages.
+- Add a headless visual test to produce deterministic PPM top-down maps (Node PPM generator) for spawn-area visual baselining. Store approved baselines under `verification/baselines/` and validate with a visual-diff test.
 - **Initial tuning result (2025-12-30)**: searching a small grid found a good
   match for `open-simplex` at **`surfaceBias = 2` and `quantizeScale = 3`**
   (matched `sincos` above-water fraction within ~0.6% across sample seeds).
@@ -71,7 +69,7 @@ biome-driven gameplay & visuals.
 
 ## Migration plan
 
-1. Implement provider abstraction and add `simplex` provider behind flag.
+1. Implement provider abstraction and add `open-simplex` provider (seeded) behind flag.
 2. Run sampling tests & adjust `surfaceBias`/`quantizeScale` for parity.
 3. Add `open-simplex` provider and choose default after comparing visuals.
 4. Implement `biomes` with conservative defaults and expose simple demo UI.
@@ -88,5 +86,5 @@ biome-driven gameplay & visuals.
 - New providers are implemented and configurable via `terrain.noiseType`.
 - Sampling tests (multi-seed) show above-water fraction >= configured min in
   > 80% of seeds or `initWorldForPrestige` reliably finds acceptable seeds.
-- Headless spawn-area screenshots are generated and reviewed, with baselines
-  stored under `verification/`.
+- Headless PPM spawn-area maps are generated and reviewed, with baselines
+  stored under `verification/baselines/` (meta.json lists thresholds).
