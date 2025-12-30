@@ -4,7 +4,7 @@ import type { VoxelRenderMode } from "../config/render";
 import { useConfig } from "../config/useConfig";
 import { playerChunk, playerPosition } from "../engine/playerState";
 import { voxelKey } from "../shared/voxel";
-import { applyVoxelEdits, MATERIAL_SOLID, resetVoxelEdits } from "../sim/collision";
+import { applyVoxelEdits, getGroundHeightWithEdits, MATERIAL_SOLID, resetVoxelEdits } from "../sim/collision";
 import { getSeed } from "../sim/seed";
 import { getSurfaceHeightCore } from "../sim/terrain-core";
 import { getSimBridge } from "../simBridge/simBridge";
@@ -211,7 +211,8 @@ const VoxelLayerInstanced: React.FC<{
               });
             });
 
-            // Engine frontier is surface-based: one voxel per (x,z) at the surface height.
+            // Engine frontier starts as surface-based, but drones can mine and expose new frontier.
+            // For debug compare under active mining, use edits-aware ground height per (x,z).
             const bedrockY = cfg.terrain.bedrockY ?? -50;
             const worldRadius = cfg.terrain.worldRadius;
 
@@ -225,17 +226,11 @@ const VoxelLayerInstanced: React.FC<{
             let missingSurfaceCount = 0;
             for (let x = minX; x <= maxX; x += 1) {
               for (let z = minZ; z <= maxZ; z += 1) {
-                const surfaceY = getSurfaceHeightCore(
-                  x,
-                  z,
-                  seed,
-                  cfg.terrain.surfaceBias,
-                  cfg.terrain.quantizeScale,
-                );
-                if (surfaceY <= bedrockY) continue;
+                const groundY = getGroundHeightWithEdits(x, z, prestigeLevel);
+                if (groundY <= bedrockY) continue;
                 frontierSurfaceExpected += 1;
 
-                const expectedKey = voxelKey(x, surfaceY, z);
+                const expectedKey = voxelKey(x, groundY, z);
                 if (!frontierKeysRef.current.has(expectedKey)) {
                   missingSurfaceCount += 1;
                   if (missingSurfaceKeys.length < 20) missingSurfaceKeys.push(expectedKey);
