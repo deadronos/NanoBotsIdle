@@ -148,16 +148,7 @@ const VoxelLayerInstanced: React.FC<{
 
         if (frame.delta.frontierAdd && frame.delta.frontierAdd.length > 0) {
           const positions = frame.delta.frontierAdd;
-          const voxelCount = positions.length / 3;
-          let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity, minZ = Infinity, maxZ = -Infinity;
-          for (let i = 0; i < positions.length; i += 3) {
-            minX = Math.min(minX, positions[i]); maxX = Math.max(maxX, positions[i]);
-            minY = Math.min(minY, positions[i+1]); maxY = Math.max(maxY, positions[i+1]);
-            minZ = Math.min(minZ, positions[i+2]); maxZ = Math.max(maxZ, positions[i+2]);
-          }
-          console.log(`[client] Received frontierAdd: ${voxelCount} voxels, x=${minX}..${maxX}, y=${minY}..${maxY}, z=${minZ}..${maxZ}, frame ${frame.delta.tick}`);
-          
-          ensureCapacity(solidCountRef.current + voxelCount);
+          ensureCapacity(solidCountRef.current + positions.length / 3);
           for (let i = 0; i < positions.length; i += 3) {
             addVoxel(positions[i], positions[i + 1], positions[i + 2]);
             frontierKeysRef.current.add(voxelKey(positions[i], positions[i + 1], positions[i + 2]));

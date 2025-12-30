@@ -85,13 +85,11 @@ export const useMeshedChunks = (options: {
   const applyMeshResult = useCallback(
     (result: MeshResult) => {
       const key = chunkKey(result.chunk.cx, result.chunk.cy, result.chunk.cz);
-      console.log(`[meshing] applyMeshResult chunk=${key} positions=${result.geometry.positions.length} indices=${result.geometry.indices.length}`);
       processedChunkKeysRef.current.add(key);
 
       const group = groupRef.current;
       if (!group) {
         // If results arrive before the group is mounted, cache and apply later.
-        console.log(`[meshing] group is null, caching result for ${key} (pending count: ${pendingResultsRef.current.size})`);
         pendingResultsRef.current.set(key, result);
         return;
       }
@@ -120,7 +118,6 @@ export const useMeshedChunks = (options: {
         mesh.receiveShadow = true;
         group.add(mesh);
         meshesRef.current.set(key, mesh);
-        console.log(`[meshing] Created mesh for ${key}, total meshes: ${meshesRef.current.size}`);
       }
 
       const geometry = mesh.geometry as BufferGeometry;
