@@ -87,7 +87,7 @@ export const defaultRenderConfig: RenderConfig = {
     cameraBounds: { left: -50, right: 50, top: 50, bottom: -50 },
   },
   voxels: {
-    mode: "dense",
+    mode: "meshed",
   },
 };
 
