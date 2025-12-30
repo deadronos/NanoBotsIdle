@@ -46,6 +46,7 @@ export type UiSnapshot = {
   totalBlocks: number;
   upgrades: Record<string, number>;
   nextCosts?: Record<string, number>;
+  actualSeed?: number;
 };
 
 export type ToWorker =

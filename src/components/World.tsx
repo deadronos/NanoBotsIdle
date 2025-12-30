@@ -516,10 +516,19 @@ const VoxelLayerMeshed: React.FC<{
   const cfg = useConfig();
   const bridge = getSimBridge();
 
+  const handleSchedulerChange = useCallback(() => {
+    // Clear activeChunks when scheduler is recreated (e.g., when actualSeed arrives)
+    activeChunks.current.clear();
+    initialSurfaceChunkRef.current = null;
+    lastRequestedPlayerChunkRef.current = null;
+  }, []);
+
   const { ensureChunk, getDebugState, groupRef, markDirtyForEdits, reset, setFocusChunk } = useMeshedChunks({
     chunkSize,
     prestigeLevel,
     waterLevel: cfg.terrain.waterLevel,
+    seed,
+    onSchedulerChange: handleSchedulerChange,
   });
 
   const debugCfg = cfg.render.voxels.debugCompare;
@@ -675,7 +684,8 @@ const VoxelLayerMeshed: React.FC<{
 export const World: React.FC = () => {
   const cfg = useConfig();
   const prestigeLevel = useUiStore((state) => state.snapshot.prestigeLevel);
-  const seed = getSeed(prestigeLevel);
+  const actualSeed = useUiStore((state) => state.snapshot.actualSeed);
+  const seed = actualSeed ?? getSeed(prestigeLevel); // Use actualSeed if available, fall back to computed
   const chunkSize = cfg.terrain.chunkSize ?? 16;
   const spawnX = cfg.player.spawnX ?? 0;
   const spawnZ = cfg.player.spawnZ ?? 0;

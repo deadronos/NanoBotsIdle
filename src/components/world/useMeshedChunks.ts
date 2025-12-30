@@ -13,8 +13,14 @@ import { chunkDistanceSq3 } from "../../utils";
 
 const chunkKey = (cx: number, cy: number, cz: number) => `${cx},${cy},${cz}`;
 
-export const useMeshedChunks = (options: { chunkSize: number; prestigeLevel: number; waterLevel: number }) => {
-  const { chunkSize, prestigeLevel, waterLevel } = options;
+export const useMeshedChunks = (options: { 
+  chunkSize: number; 
+  prestigeLevel: number; 
+  waterLevel: number;
+  seed?: number;
+  onSchedulerChange?: () => void;
+}) => {
+  const { chunkSize, prestigeLevel, waterLevel, seed, onSchedulerChange } = options;
 
   const focusChunkRef = useRef<{ cx: number; cy: number; cz: number }>({ cx: 0, cy: 0, cz: 0 });
 
@@ -79,11 +85,13 @@ export const useMeshedChunks = (options: { chunkSize: number; prestigeLevel: num
   const applyMeshResult = useCallback(
     (result: MeshResult) => {
       const key = chunkKey(result.chunk.cx, result.chunk.cy, result.chunk.cz);
+      console.log(`[meshing] applyMeshResult chunk=${key} positions=${result.geometry.positions.length} indices=${result.geometry.indices.length}`);
       processedChunkKeysRef.current.add(key);
 
       const group = groupRef.current;
       if (!group) {
         // If results arrive before the group is mounted, cache and apply later.
+        console.log(`[meshing] group is null, caching result for ${key} (pending count: ${pendingResultsRef.current.size})`);
         pendingResultsRef.current.set(key, result);
         return;
       }
@@ -112,6 +120,7 @@ export const useMeshedChunks = (options: { chunkSize: number; prestigeLevel: num
         mesh.receiveShadow = true;
         group.add(mesh);
         meshesRef.current.set(key, mesh);
+        console.log(`[meshing] Created mesh for ${key}, total meshes: ${meshesRef.current.size}`);
       }
 
       const geometry = mesh.geometry as BufferGeometry;
@@ -167,7 +176,7 @@ export const useMeshedChunks = (options: { chunkSize: number; prestigeLevel: num
         fillApronField(materials, {
           size: chunkSize,
           origin,
-          materialAt: (x, y, z) => getVoxelMaterialAt(x, y, z, prestigeLevel),
+          materialAt: (x, y, z) => getVoxelMaterialAt(x, y, z, prestigeLevel, seed),
         });
 
         return {
@@ -183,17 +192,19 @@ export const useMeshedChunks = (options: { chunkSize: number; prestigeLevel: num
         };
       },
       onApply: (res) => applyMeshResult(res),
-      maxInFlight: 8,
+      maxInFlight: 16,
       getPriority: priorityFromFocus,
     });
 
     schedulerRef.current = scheduler;
+    // Notify parent that scheduler was (re)created so it can re-sync its chunk tracking
+    onSchedulerChange?.();
     return () => {
       schedulerRef.current = null;
       scheduler.dispose();
       disposeAllMeshes();
     };
-  }, [applyMeshResult, chunkSize, disposeAllMeshes, prestigeLevel]);
+  }, [applyMeshResult, chunkSize, disposeAllMeshes, onSchedulerChange, prestigeLevel, seed]);
 
   useEffect(() => {
     return () => {

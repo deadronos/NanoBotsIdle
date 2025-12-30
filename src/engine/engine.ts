@@ -63,6 +63,7 @@ export const createEngine = (_seed?: number): Engine => {
     world = result.world;
     resetKeyIndex(frontier, result.frontierKeys);
     uiSnapshot.totalBlocks = result.aboveWaterCount;
+    uiSnapshot.actualSeed = result.actualSeed;
     pendingFrontierSnapshot = result.frontierPositions;
     pendingFrontierReset = true;
   };
