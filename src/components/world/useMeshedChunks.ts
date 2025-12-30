@@ -6,6 +6,8 @@ import { createApronField, fillApronField } from "../../meshing/apronField";
 import { getDirtyChunksForVoxelEdit } from "../../meshing/dirtyChunks";
 import { MeshingScheduler } from "../../meshing/meshingScheduler";
 import { defaultMeshingWorkerFactory } from "../../meshing/meshingWorkerFactory";
+import { applyLodGeometry, disposeLodGeometries, type LodGeometries } from "../../render/lodGeometry";
+import type { LodLevel } from "../../render/lodUtils";
 import type { MeshResult } from "../../shared/meshingProtocol";
 import type { VoxelEdit } from "../../shared/protocol";
 import { getVoxelMaterialAt } from "../../sim/collision";
@@ -74,13 +76,33 @@ export const useMeshedChunks = (options: {
     const meshes = meshesRef.current;
     for (const mesh of meshes.values()) {
       group?.remove(mesh);
-      mesh.geometry.dispose();
+      disposeLodGeometries(mesh.userData.lodGeometries as LodGeometries | undefined);
     }
     meshes.clear();
     processedChunkKeysRef.current.clear();
     emptyChunkKeysRef.current.clear();
     pendingResultsRef.current.clear();
   }, []);
+
+  const buildBufferGeometry = useCallback(
+    (geometry: MeshResult["geometry"]): BufferGeometry => {
+      const buffer = new BufferGeometry();
+      buffer.setAttribute("position", new BufferAttribute(geometry.positions, 3));
+      buffer.setAttribute("normal", new BufferAttribute(geometry.normals, 3));
+
+      const colors = new Float32Array(geometry.positions.length);
+      for (let i = 0; i < geometry.positions.length; i += 3) {
+        // positions are already in world coordinates
+        writeVertexColor(colors, i, geometry.positions[i + 1]);
+      }
+      buffer.setAttribute("color", new BufferAttribute(colors, 3));
+
+      buffer.setIndex(new BufferAttribute(geometry.indices, 1));
+      buffer.computeBoundingSphere();
+      return buffer;
+    },
+    [writeVertexColor],
+  );
 
   const applyMeshResult = useCallback(
     (result: MeshResult) => {
@@ -94,7 +116,7 @@ export const useMeshedChunks = (options: {
         return;
       }
 
-      const { positions, normals, indices } = result.geometry;
+      const { positions, indices } = result.geometry;
 
       if (indices.length === 0 || positions.length === 0) {
         emptyChunkKeysRef.current.add(key);
@@ -102,7 +124,7 @@ export const useMeshedChunks = (options: {
         const existing = meshesRef.current.get(key);
         if (existing) {
           group.remove(existing);
-          existing.geometry.dispose();
+          disposeLodGeometries(existing.userData.lodGeometries as LodGeometries | undefined);
           meshesRef.current.delete(key);
         }
         return;
@@ -120,21 +142,22 @@ export const useMeshedChunks = (options: {
         meshesRef.current.set(key, mesh);
       }
 
-      const geometry = mesh.geometry as BufferGeometry;
-      geometry.setAttribute("position", new BufferAttribute(positions, 3));
-      geometry.setAttribute("normal", new BufferAttribute(normals, 3));
+      const previous = mesh.userData.lodGeometries as LodGeometries | undefined;
 
-      const colors = new Float32Array(positions.length);
-      for (let i = 0; i < positions.length; i += 3) {
-        // positions are already in world coordinates
-        writeVertexColor(colors, i, positions[i + 1]);
-      }
-      geometry.setAttribute("color", new BufferAttribute(colors, 3));
+      const highGeometry = buildBufferGeometry(result.geometry);
+      const lowInput = result.lods?.find((lod) => lod.level === "low");
+      const lowGeometry = lowInput ? buildBufferGeometry(lowInput.geometry) : undefined;
 
-      geometry.setIndex(new BufferAttribute(indices, 1));
-      geometry.computeBoundingSphere();
+      const lodGeometries: LodGeometries = { high: highGeometry, low: lowGeometry };
+      mesh.userData.lodGeometries = lodGeometries;
+
+      const desiredLod: LodLevel = (mesh.userData.lod as LodLevel | undefined) ?? "high";
+      mesh.userData.lod = desiredLod;
+      applyLodGeometry(mesh, desiredLod);
+
+      disposeLodGeometries(previous);
     },
-    [material, writeVertexColor],
+    [buildBufferGeometry, material],
   );
 
   useEffect(() => {
