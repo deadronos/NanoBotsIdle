@@ -6,6 +6,7 @@ import { type Drone, syncDroneCount } from "./drones";
 import { encodeDrones, toFloat32ArrayOrUndefined } from "./encode";
 import { addKey, createKeyIndex, resetKeyIndex } from "./keyIndex";
 import { tickDrones } from "./tickDrones";
+import { generateRadialOffsets } from "../utils";
 import { initWorldForPrestige } from "./world/initWorld";
 import type { WorldModel } from "./world/world";
 import { voxelKey } from "../shared/voxel";
@@ -121,14 +122,13 @@ export const createEngine = (_seed?: number): Engine => {
         const pc = playerChunksToScan.shift();
         if (pc) {
           const r = 2; // radius of chunks to auto-frontier
-          for (let cx = -r; cx <= r; cx++) {
-            for (let cz = -r; cz <= r; cz++) {
-              const added = world.ensureFrontierInChunk(pc.cx + cx, pc.cz + cz);
-              if (added && added.length > 0) {
-                for (const pos of added) {
-                  addKey(frontier, voxelKey(pos.x, pos.y, pos.z));
-                  frontierAdded.push(pos.x, pos.y, pos.z);
-                }
+          const offsets = generateRadialOffsets(r, 2);
+          for (const off of offsets) {
+            const added = world.ensureFrontierInChunk(pc.cx + off.dx, pc.cz + off.dz);
+            if (added && added.length > 0) {
+              for (const pos of added) {
+                addKey(frontier, voxelKey(pos.x, pos.y, pos.z));
+                frontierAdded.push(pos.x, pos.y, pos.z);
               }
             }
           }

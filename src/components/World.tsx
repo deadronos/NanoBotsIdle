@@ -9,6 +9,7 @@ import { getSurfaceHeightCore } from "../sim/terrain-core";
 import { getSimBridge } from "../simBridge/simBridge";
 import { useUiStore } from "../ui/store";
 import { chunkKey, ensureNeighborChunksForMinedVoxel, populateChunkVoxels } from "./world/chunkHelpers";
+import { generateRadialOffsets } from "../utils";
 import { useInstancedVoxels } from "./world/useInstancedVoxels";
 import { useMeshedChunks } from "./world/useMeshedChunks";
 
@@ -128,7 +129,13 @@ const VoxelLayerInstanced: React.FC<{
         playerChunk.cx = pcx;
         playerChunk.cy = pcy;
         playerChunk.cz = pcz;
-        ensureChunksRadius(pcx, pcy, pcz, 1);
+        // Prioritize nearby chunks in radial order to fill nearest areas first
+        {
+          const offsets = generateRadialOffsets(1, 3);
+          for (const off of offsets) {
+            addChunk(pcx + off.dx, pcy + off.dy, pcz + off.dz);
+          }
+        }
 
         if (voxelRenderMode === "frontier") {
           bridge.enqueue({ t: "SET_PLAYER_CHUNK", cx: pcx, cy: pcy, cz: pcz });
@@ -259,7 +266,13 @@ const VoxelLayerMeshed: React.FC<{
         playerChunk.cx = pcx;
         playerChunk.cy = pcy;
         playerChunk.cz = pcz;
-        ensureChunksRadius(pcx, pcy, pcz, 1);
+        // Prioritize nearby chunks in radial order to fill nearest areas first
+        {
+          const offsets = generateRadialOffsets(1, 3);
+          for (const off of offsets) {
+            addChunk(pcx + off.dx, pcy + off.dy, pcz + off.dz);
+          }
+        }
       }
     });
   }, [bridge, chunkSize, ensureChunksRadius, ensureInitialChunk, markDirtyForEdits, reset]);
