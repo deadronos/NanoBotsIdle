@@ -59,6 +59,9 @@ export type RenderConfig = {
       radiusChunks: number;
       logIntervalMs: number;
     };
+    biomeOverlay: {
+      enabled: boolean;
+    };
   };
 };
 
@@ -99,6 +102,9 @@ export const defaultRenderConfig: RenderConfig = {
       enabled: false,
       radiusChunks: 1,
       logIntervalMs: 1000,
+    },
+    biomeOverlay: {
+      enabled: false,
     },
   },
 };

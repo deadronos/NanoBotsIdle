@@ -1,6 +1,6 @@
 # [TASK009] Design: Noise Replacement & Biome Mapping
 
-**Status:** In Progress  
+**Status:** Completed  
 **Added:** 2025-12-30  
 **Updated:** 2025-12-30
 
@@ -27,19 +27,25 @@ To lower risk, we will add the noise provider behind a feature flag, add statist
 - [ ] Replace default `noiseType` only after acceptance
 
 ## Progress Log
+
 ### 2025-12-30
+
 - Design document added to `memory/designs/DESIGN008-noise-and-biomes.md`.
 - Task skeleton created and added to `_index.md`.
-- Next step: create low-risk prototype `simplex` noise provider behind flag.
+- Implemented `src/sim/biomes.ts` (deterministic temperature/moisture + biome id).
+- Added debug UI toggle `cfg.render.voxels.biomeOverlay.enabled` and wired voxel coloring in `World.tsx`.
+- Added unit test coverage (`tests/biomes.test.ts`) and updated render defaults test.
+- Note: `simplex` provider was scoped out; current providers are `sincos` and `open-simplex`.
 
 ## Subtasks
-| ID  | Description                              | Status     | Updated | Notes |
-| --- | ---------------------------------------- | ---------- | ------- | ----- |
-| 9.1 | Add noise provider abstraction           | Completed | 2025-12-30 | provider cached per seed/type |
-| 9.2 | Add `simplex` provider (seeded)          | Completed | 2025-12-30 | open-simplex implemented via `open-simplex-noise` |
-| 9.3 | Add sampling tests and reports           | Completed | 2025-12-30 | sampling + tuning tests added |
-| 9.4 | Add headless screenshot test harness     | Completed | 2025-12-30 | PPM generator + visual-diff tests + baselines added |
-| 9.5 | Add `biomes` module and UI overlay       | Not Started|         |      |
+
+|ID|Description|Status|Updated|Notes|
+|---|---|---|---|---|
+|9.1|Add noise provider abstraction|Completed|2025-12-30|provider cached per seed/type|
+|9.2|Add `simplex` provider (seeded)|Completed|2025-12-30|open-simplex implemented via `open-simplex-noise`|
+|9.3|Add sampling tests and reports|Completed|2025-12-30|sampling + tuning tests added|
+|9.4|Add headless screenshot test harness|Completed|2025-12-30|PPM generator + visual-diff tests + baselines added|
+|9.5|Add `biomes` module and UI overlay|Completed|2025-12-30|Debug overlay via Settings modal|
 
 
 ---

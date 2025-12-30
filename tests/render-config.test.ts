@@ -10,6 +10,7 @@ describe("render config defaults (TDD)", () => {
     expect(defaultRenderConfig.ambientLightIntensity).toBeCloseTo(0.4, 5);
     expect(defaultRenderConfig.voxels.mode).toBe("meshed");
     expect(defaultRenderConfig.voxels.debugCompare.enabled).toBe(false);
+    expect(defaultRenderConfig.voxels.biomeOverlay.enabled).toBe(false);
   });
 
   it("should allow meshed voxel mode (type-level)", () => {

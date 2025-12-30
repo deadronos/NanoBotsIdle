@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { type InstancedMesh,Object3D } from "three";
+import { Color, type InstancedMesh, Object3D } from "three";
 
 import type { VoxelRenderMode } from "../config/render";
 import { useConfig } from "../config/useConfig";
@@ -7,6 +7,7 @@ import { playerChunk, playerPosition } from "../engine/playerState";
 import { voxelKey } from "../shared/voxel";
 import { applyVoxelEdits, getGroundHeightWithEdits, MATERIAL_SOLID, resetVoxelEdits } from "../sim/collision";
 import { getSeed } from "../sim/seed";
+import { getBiomeAt, getBiomeColor } from "../sim/biomes";
 import { getSurfaceHeightCore } from "../sim/terrain-core";
 import { getSimBridge } from "../simBridge/simBridge";
 import { useUiStore } from "../ui/store";
@@ -38,6 +39,13 @@ const VoxelLayerInstanced: React.FC<{
   const sentFrontierChunkRef = useRef(false);
   const requestedFrontierSnapshotRef = useRef(false);
 
+  const biomeOverlayEnabled = cfg.render.voxels.biomeOverlay.enabled;
+  const biomeColorCacheRef = useRef<Map<string, Color>>(new Map());
+
+  useEffect(() => {
+    biomeColorCacheRef.current.clear();
+  }, [biomeOverlayEnabled, cfg.terrain.quantizeScale, cfg.terrain.surfaceBias, cfg.terrain.waterLevel, seed]);
+
   const debugCfg = cfg.render.voxels.debugCompare;
   const debugEnabled = debugCfg.enabled;
   const debugLastLogAtMsRef = useRef(0);
@@ -48,8 +56,33 @@ const VoxelLayerInstanced: React.FC<{
     makeVoxelBoundsForChunkRadius({ cx: 0, cy: 0, cz: 0 }, debugCfg.radiusChunks, chunkSize),
   );
 
+  const getInstanceColor = useCallback(
+    (x: number, y: number, z: number) => {
+      if (!biomeOverlayEnabled) return getVoxelColor(y, cfg.terrain.waterLevel);
+
+      const xi = Math.floor(x);
+      const zi = Math.floor(z);
+      const key = `${xi},${zi}`;
+      const cached = biomeColorCacheRef.current.get(key);
+      if (cached) return cached;
+
+      const surfaceY = getSurfaceHeightCore(
+        xi,
+        zi,
+        seed,
+        cfg.terrain.surfaceBias,
+        cfg.terrain.quantizeScale,
+      );
+      const biome = getBiomeAt(xi, zi, seed, surfaceY, cfg.terrain.waterLevel);
+      const color = getBiomeColor(biome);
+      biomeColorCacheRef.current.set(key, color);
+      return color;
+    },
+    [biomeOverlayEnabled, cfg.terrain.quantizeScale, cfg.terrain.surfaceBias, cfg.terrain.waterLevel, seed],
+  );
+
   const { addVoxel, capacity, clear, ensureCapacity, flushRebuild, meshRef, removeVoxel, solidCountRef } =
-    useInstancedVoxels(chunkSize, cfg.terrain.waterLevel);
+    useInstancedVoxels(chunkSize, cfg.terrain.waterLevel, getInstanceColor);
 
   const addChunk = useCallback(
     (cx: number, cy: number, cz: number) => {
@@ -247,15 +280,15 @@ const VoxelLayerInstanced: React.FC<{
             // Aggressive Compare: Check true frontier (all exposed faces) vs tracked keys.
             let trueFrontierExpected = 0;
             const trueFrontierMissingKeys: string[] = [];
-            
+
             forEachRadialChunk({ cx: pcx, cy: pcy, cz: pcz }, radius, 3, (c) => {
                const res = getMissingFrontierVoxelsInChunk({
-                 cx: c.cx, 
-                 cy: c.cy, 
-                 cz: c.cz, 
-                 chunkSize, 
-                 prestigeLevel, 
-                 trackedKeys: frontierKeysRef.current 
+                 cx: c.cx,
+                 cy: c.cy,
+                 cz: c.cz,
+                 chunkSize,
+                 prestigeLevel,
+                 trackedKeys: frontierKeysRef.current
                });
                trueFrontierExpected += res.expectedFrontierCount;
                if (res.missingKeys.length > 0) {
@@ -271,11 +304,11 @@ const VoxelLayerInstanced: React.FC<{
               frontierSurfaceExpected,
               frontierSurfaceMissingCount: missingSurfaceCount,
               frontierSurfaceMissingSample: missingSurfaceKeys,
-              
+
               trueFrontierExpected,
               trueFrontierMissingCount: trueFrontierMissingKeys.length,
               trueFrontierMissingSample: trueFrontierMissingKeys.slice(0, 20),
-              
+
               frontierRenderedInRegion3d: frontierInRegion3d,
               frontierRenderedInRegionXz: frontierInRegionXz,
               frontierRenderedUniqueColumnsInXz: xzPairsInRegion.size,
@@ -459,14 +492,14 @@ const FrontierFillRenderer: React.FC<{
           // This will cause Z-fighting (flickering) where the frontier *does* exist, but that is preferable to seeing through the world.
           // In the future, we could pass the frontierKeys set to selectively fill only missing keys, but that requires frequent rebuilds.
           const startY = Math.max(bedrockY, groundY - FILL_DEPTH);
-          
-          for (let y = groundY; y >= startY; y--) { 
+
+          for (let y = groundY; y >= startY; y--) {
             if (index >= MAX_INSTANCES) break;
-            
+
             dummy.position.set(x, y, z);
             dummy.updateMatrix();
             mesh.setMatrixAt(index, dummy.matrix);
-            
+
             if (!debugVisuals && mesh.instanceColor) {
                mesh.setColorAt(index, getVoxelColor(y, waterLevel));
             }

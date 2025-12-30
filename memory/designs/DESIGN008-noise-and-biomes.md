@@ -1,13 +1,13 @@
-# DESIGN008 - Noise replacement (OpenSimplex/Simplex) and Biome Mapping
+# DESIGN008 - Noise replacement (OpenSimplex) and Biome Mapping
 
-**Status:** Draft
+**Status:** Accepted
 **Added:** 2025-12-30
 **Updated:** 2025-12-30
 
 ## Summary
 
 Replace the current sin/cos-based procedural height generator with a configurable
-noise provider (OpenSimplex or Simplex) and add an optional biome layer driven
+noise provider (OpenSimplex; legacy sin/cos still supported) and add an optional biome layer driven
 by extra noise maps (temperature and moisture). The immediate goal is to
 improve base-terrain visual quality and provide a stable foundation for
 biome-driven gameplay & visuals.
@@ -32,26 +32,18 @@ biome-driven gameplay & visuals.
 
 ## Design
 
-1. Introduce a noise provider interface in `src/sim/noise.ts`:
-   - createNoiseProvider(seed): { noise2D(x,z): number }
-   - built-in providers: `sincos` (current), `simplex`, `open-simplex` (via lib)
-2. Add `terrain.noiseType` config option (`sincos|simplex|open-simplex`) and
-   ensure `getSeed(prestigeLevel)` is used to seed the provider deterministically.
-3. Make `getSurfaceHeightCore()` and `getSmoothHeight()` use the provider's
-   `noise2D()` instead of the current inline function. Keep existing helper
-   `getVoxelValueFromHeight()` and color mapping to keep behavior stable while
-   tuning.
-4. Add a biome mapping module `src/sim/biomes.ts`:
-   - Expose `getBiome(x,z,seed)` returning `{ id: 'grassland'|'tundra'|..., heat, moisture }`.
-   - Biome rules are threshold tables combining normalized height, temperature,
-     and moisture.
-5. Keep the generation fallback and `initWorldForPrestige()` retry loop; tune
-   default parameters after sampling.
+1. Introduce a noise provider interface in `src/sim/noise.ts` via `createNoiseProvider(seed, type)`.
+1. Provide built-in noise providers: `sincos` (legacy) and `open-simplex` (via `open-simplex-noise`).
+1. Add `terrain.noiseType` config option (`sincos|open-simplex`) and ensure `getSeed(prestigeLevel)` seeds it deterministically.
+1. Make `getSurfaceHeightCore()` and `getSmoothHeight()` use the provider's `noise2D()` instead of inline sin/cos.
+1. Add biome mapping module `src/sim/biomes.ts` with `getBiomeAt(x, z, seed, surfaceY, waterLevel)` returning `{ id, heat01, moisture01 }`.
+1. Add a debug visualizer toggle at `render.voxels.biomeOverlay.enabled` (world colors by biome).
+1. Keep the generation fallback and `initWorldForPrestige()` retry loop; tune default parameters after sampling.
 
 ## Interfaces
 
 - `createNoiseProvider(seed)` — returns object with `noise2D(x,z)` and `noise3D?(x,y,z)` (optional)
-- `getBiome(x,z,seed)` — returns biome id and metrics
+- `getBiomeAt(x,z,seed,surfaceY,waterLevel)` — returns biome id and climate metrics
 - `getSurfaceHeightCore(x,z,seed,surfaceBias,quantizeScale)` — uses provider under the hood
 
 ## Tuning & Validation

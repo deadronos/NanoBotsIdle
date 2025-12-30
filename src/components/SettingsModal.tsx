@@ -81,6 +81,18 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ onClose }) => {
             />
             Debug compare (logs dense baseline vs current renderer)
           </label>
+
+          <label className="mt-2 flex items-center gap-2 text-xs text-gray-300">
+            <input
+              type="checkbox"
+              className="accent-blue-500"
+              checked={cfg.render.voxels.biomeOverlay.enabled}
+              onChange={(e) => {
+                updateConfig({ render: { voxels: { biomeOverlay: { enabled: e.target.checked } } } });
+              }}
+            />
+            Biome overlay (debug voxel colors)
+          </label>
         </div>
 
         <div className="bg-white/5 p-4 rounded-xl">
