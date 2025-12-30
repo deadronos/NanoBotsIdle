@@ -1,7 +1,8 @@
+// @vitest-environment jsdom
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import React from "react";
 import { createRoot } from "react-dom/client";
-import { act } from "react-dom/test-utils";
+import { act } from "react";
 
 // We'll mock @react-three/fiber so the component registers frame callbacks we can call
 const frameCallbacks: (() => void)[] = [];
@@ -18,7 +19,7 @@ vi.mock("@react-three/fiber", () => ({
 import { DynamicResScaler } from "../src/components/DynamicResScaler";
 import { MAX_DPR } from "../src/utils/dynamicResScaler";
 
-describe.skip("DynamicResScaler integration", () => {
+describe("DynamicResScaler integration", () => {
   beforeEach(() => {
     frameCallbacks.length = 0;
     setDprMock.mockReset();
@@ -38,7 +39,7 @@ describe.skip("DynamicResScaler integration", () => {
     vi.spyOn(performance, "now").mockImplementation(() => now);
 
     act(() => {
-      root.render(<DynamicRescaler />);
+      root.render(<DynamicResScaler />);
     });
 
     // After mount, initDpr should have called setDpr with MAX_DPR
