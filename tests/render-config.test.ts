@@ -8,7 +8,7 @@ describe("render config defaults (TDD)", () => {
     expect(defaultRenderConfig.sky.azimuth).toBeCloseTo(0.25, 5);
     expect(defaultRenderConfig.clouds.rotationSpeed).toBeCloseTo(0.01, 5);
     expect(defaultRenderConfig.ambientLightIntensity).toBeCloseTo(0.4, 5);
-    expect(defaultRenderConfig.voxels.mode).toBe("frontier");
+    expect(defaultRenderConfig.voxels.mode).toBe("meshed");
   });
 
   it("should allow meshed voxel mode (type-level)", () => {

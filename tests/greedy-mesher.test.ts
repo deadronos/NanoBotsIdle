@@ -13,6 +13,12 @@ const setInteriorVoxel = (materials: Uint8Array, size: number, x: number, y: num
   materials[index3D(x + 1, y + 1, z + 1, dim)] = mat;
 };
 
+const setApronVoxel = (materials: Uint8Array, size: number, x: number, y: number, z: number, mat: number) => {
+  const dim = size + 2;
+  // x/y/z are in [-1..size] for apron-inclusive coordinates
+  materials[index3D(x + 1, y + 1, z + 1, dim)] = mat;
+};
+
 const length3 = (x: number, y: number, z: number) => Math.sqrt(x * x + y * y + z * z);
 
 describe("greedy mesher (TDD)", () => {
@@ -114,6 +120,24 @@ describe("greedy mesher (TDD)", () => {
       const dot = inx * vnx + iny * vny + inz * vnz;
       expect(dot).toBeGreaterThan(0.9);
     }
+  });
+
+  it("should not emit faces for solids that exist only in the apron", () => {
+    const size = 1;
+    const materials = createApron(size);
+
+    // Solid voxel is outside chunk interior (apron), chunk interior remains air.
+    setApronVoxel(materials, size, -1, 0, 0, 1);
+
+    const result = greedyMeshChunk({
+      size,
+      origin: { x: 0, y: 0, z: 0 },
+      materials,
+    });
+
+    expect(result.positions.length).toBe(0);
+    expect(result.indices.length).toBe(0);
+    expect(result.normals.length).toBe(0);
   });
 });
 

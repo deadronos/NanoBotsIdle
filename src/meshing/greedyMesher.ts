@@ -62,10 +62,16 @@ export const greedyMeshChunk = (input: GreedyMeshInput): MeshGeometry => {
           const a = getMat(ax, ay, az);
           const b = getMat(ax + q[0], ay + q[1], az + q[2]);
 
+          // Avoid emitting faces for solids that are only present in the apron.
+          // We only own faces whose solid voxel lies within the chunk interior.
+          const slice = x[d];
+
           if (a !== MATERIAL_AIR && b === MATERIAL_AIR) {
-            mask[n] = a;
+            // solid is `a` at coordinate slice
+            mask[n] = slice < 0 ? 0 : a;
           } else if (b !== MATERIAL_AIR && a === MATERIAL_AIR) {
-            mask[n] = -b;
+            // solid is `b` at coordinate slice+1
+            mask[n] = slice >= dims[d] - 1 ? 0 : -b;
           } else {
             mask[n] = 0;
           }

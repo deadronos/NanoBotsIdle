@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useRef } from "react";
 
-import { getConfig } from "../config/index";
+import { useConfig } from "../config/useConfig";
 import type { VoxelRenderMode } from "../config/render";
 import { playerChunk, playerPosition } from "../engine/playerState";
 import { applyVoxelEdits, MATERIAL_SOLID, resetVoxelEdits } from "../sim/collision";
@@ -21,7 +21,7 @@ const VoxelLayerInstanced: React.FC<{
   voxelRenderMode: Exclude<VoxelRenderMode, "meshed">;
 }> = ({ chunkSize, prestigeLevel, seed, spawnX, spawnZ, voxelRenderMode }) => {
   const activeChunks = useRef<Set<string>>(new Set());
-  const cfg = getConfig();
+  const cfg = useConfig();
   const bridge = getSimBridge();
 
   const { addVoxel, capacity, clear, ensureCapacity, flushRebuild, meshRef, removeVoxel, solidCountRef } =
@@ -177,12 +177,13 @@ const VoxelLayerMeshed: React.FC<{
   seed: number;
 }> = ({ chunkSize, prestigeLevel, seed, spawnX, spawnZ }) => {
   const activeChunks = useRef<Set<string>>(new Set());
-  const cfg = getConfig();
+  const cfg = useConfig();
   const bridge = getSimBridge();
 
   const { ensureChunk, groupRef, markDirtyForEdits, reset } = useMeshedChunks({
     chunkSize,
     prestigeLevel,
+    waterLevel: cfg.terrain.waterLevel,
   });
 
   const addChunk = useCallback(
@@ -263,7 +264,7 @@ const VoxelLayerMeshed: React.FC<{
 };
 
 export const World: React.FC = () => {
-  const cfg = getConfig();
+  const cfg = useConfig();
   const prestigeLevel = useUiStore((state) => state.snapshot.prestigeLevel);
   const seed = getSeed(prestigeLevel);
   const chunkSize = cfg.terrain.chunkSize ?? 16;

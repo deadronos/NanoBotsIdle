@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef } from "react";
-import type { Group} from "three";
-import { BufferAttribute, BufferGeometry, Mesh, MeshStandardMaterial } from "three";
+import type { Group } from "three";
+import { BufferAttribute, BufferGeometry, Color, Mesh, MeshStandardMaterial } from "three";
 
 import { createApronField, fillApronField } from "../../meshing/apronField";
 import { getDirtyChunksForVoxelEdit } from "../../meshing/dirtyChunks";
@@ -12,8 +12,36 @@ import { getVoxelMaterialAt } from "../../sim/collision";
 
 const chunkKey = (cx: number, cy: number, cz: number) => `${cx},${cy},${cz}`;
 
-export const useMeshedChunks = (options: { chunkSize: number; prestigeLevel: number }) => {
-  const { chunkSize, prestigeLevel } = options;
+export const useMeshedChunks = (options: { chunkSize: number; prestigeLevel: number; waterLevel: number }) => {
+  const { chunkSize, prestigeLevel, waterLevel } = options;
+
+  // Color mapping kept local to avoid importing `three` types in worker code.
+  // Reuse Color instances to avoid per-vertex allocations.
+  const deepWater = useMemo(() => new Color("#1a4d8c"), []);
+  const water = useMemo(() => new Color("#2d73bf"), []);
+  const sand = useMemo(() => new Color("#e3dba3"), []);
+  const grass = useMemo(() => new Color("#59a848"), []);
+  const darkGrass = useMemo(() => new Color("#3b7032"), []);
+  const rock = useMemo(() => new Color("#6e6e6e"), []);
+  const snow = useMemo(() => new Color("#f2f4f8"), []);
+
+  const writeVertexColor = useCallback(
+    (out: Float32Array, base: number, y: number) => {
+      // Mirrors the intent of `getVoxelColor()` without allocations.
+      let c: Color;
+      if (y < waterLevel - 2) c = deepWater;
+      else if (y < waterLevel + 0.5) c = water;
+      else if (y < waterLevel + 2.5) c = sand;
+      else if (y < waterLevel + 6) c = grass;
+      else if (y < waterLevel + 12) c = darkGrass;
+      else if (y < waterLevel + 20) c = rock;
+      else c = snow;
+      out[base] = c.r;
+      out[base + 1] = c.g;
+      out[base + 2] = c.b;
+    },
+    [darkGrass, deepWater, grass, rock, sand, snow, water, waterLevel],
+  );
 
   const groupRef = useRef<Group>(null);
   const meshesRef = useRef<Map<string, Mesh>>(new Map());
@@ -22,9 +50,9 @@ export const useMeshedChunks = (options: { chunkSize: number; prestigeLevel: num
   const material = useMemo(
     () =>
       new MeshStandardMaterial({
-        color: "#a1adb6",
         roughness: 0.85,
         metalness: 0.05,
+        vertexColors: true,
       }),
     [],
   );
@@ -69,10 +97,18 @@ export const useMeshedChunks = (options: { chunkSize: number; prestigeLevel: num
       const geometry = mesh.geometry as BufferGeometry;
       geometry.setAttribute("position", new BufferAttribute(positions, 3));
       geometry.setAttribute("normal", new BufferAttribute(normals, 3));
+
+      const colors = new Float32Array(positions.length);
+      for (let i = 0; i < positions.length; i += 3) {
+        // positions are already in world coordinates
+        writeVertexColor(colors, i, positions[i + 1]);
+      }
+      geometry.setAttribute("color", new BufferAttribute(colors, 3));
+
       geometry.setIndex(new BufferAttribute(indices, 1));
       geometry.computeBoundingSphere();
     },
-    [material],
+    [material, writeVertexColor],
   );
 
   useEffect(() => {

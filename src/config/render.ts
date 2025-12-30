@@ -42,7 +42,9 @@ export type SunConfig = {
   cameraBounds: { left: number; right: number; top: number; bottom: number };
 };
 
-export type VoxelRenderMode = "frontier" | "dense" | "meshed";
+export const voxelRenderModes = ["frontier", "dense", "meshed"] as const;
+
+export type VoxelRenderMode = (typeof voxelRenderModes)[number];
 
 export type RenderConfig = {
   sky: SkyConfig;
