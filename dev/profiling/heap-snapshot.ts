@@ -5,9 +5,9 @@ import * as path from "node:path";
 
 /**
  * Heap snapshot utility for capturing and comparing V8 heap snapshots.
- * 
+ *
  * Note: This requires Node.js v8.x+ with the `v8` module.
- * 
+ *
  * Usage:
  * 1. Take baseline: `node --expose-gc -r ts-node/register dev/profiling/baseline-generator.ts`
  * 2. Compare with: `compareSnapshots('baseline.heapsnapshot', 'current.heapsnapshot')`
@@ -76,7 +76,7 @@ export async function takeHeapSnapshot(
 
 /**
  * Compare two heap snapshots and generate a diff report.
- * 
+ *
  * This is a basic comparison. For detailed analysis, use Chrome DevTools:
  * 1. Open Chrome DevTools
  * 2. Go to Memory tab

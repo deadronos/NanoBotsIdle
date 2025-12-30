@@ -2,13 +2,13 @@
 /* eslint-disable no-console */
 /**
  * Baseline memory profile generator.
- * 
+ *
  * This script generates a baseline memory profile for the application
  * by simulating common operations and capturing heap snapshots.
- * 
+ *
  * Usage:
  *   node --expose-gc dev/profiling/baseline-generator.js
- * 
+ *
  * Or with ts-node:
  *   node --expose-gc -r ts-node/register dev/profiling/baseline-generator.ts
  */
