@@ -69,6 +69,18 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ onClose }) => {
               </option>
             ))}
           </select>
+
+          <label className="mt-4 flex items-center gap-2 text-xs text-gray-300">
+            <input
+              type="checkbox"
+              className="accent-blue-500"
+              checked={cfg.render.voxels.debugCompare.enabled}
+              onChange={(e) => {
+                updateConfig({ render: { voxels: { debugCompare: { enabled: e.target.checked } } } });
+              }}
+            />
+            Debug compare (logs dense baseline vs current renderer)
+          </label>
         </div>
 
         <div className="bg-white/5 p-4 rounded-xl">

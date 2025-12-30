@@ -207,11 +207,21 @@ export const useMeshedChunks = (options: { chunkSize: number; prestigeLevel: num
     scheduler.pump();
   }, []);
 
+  const getDebugState = useCallback(() => {
+    const scheduler = schedulerRef.current;
+    return {
+      meshChunkKeys: Array.from(meshesRef.current.keys()),
+      dirtyKeys: scheduler?.getDirtyKeys() ?? [],
+      inFlight: scheduler?.getInFlightCount() ?? 0,
+    };
+  }, []);
+
   return {
     groupRef,
     ensureChunk,
     markDirtyForEdits,
     setFocusChunk,
+    getDebugState,
     reset,
   };
 };

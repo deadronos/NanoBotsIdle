@@ -3,6 +3,7 @@ import React, { useCallback, useEffect, useRef } from "react";
 import type { VoxelRenderMode } from "../config/render";
 import { useConfig } from "../config/useConfig";
 import { playerChunk, playerPosition } from "../engine/playerState";
+import { voxelKey } from "../shared/voxel";
 import { applyVoxelEdits, MATERIAL_SOLID, resetVoxelEdits } from "../sim/collision";
 import { getSeed } from "../sim/seed";
 import { getSurfaceHeightCore } from "../sim/terrain-core";
@@ -10,6 +11,12 @@ import { getSimBridge } from "../simBridge/simBridge";
 import { useUiStore } from "../ui/store";
 import { forEachRadialChunk } from "../utils";
 import { chunkKey, ensureNeighborChunksForMinedVoxel, populateChunkVoxels } from "./world/chunkHelpers";
+import {
+  countDenseSolidsInChunk,
+  countFrontierSolidsInChunk,
+  makeVoxelBoundsForChunkRadius,
+  voxelInBounds,
+} from "./world/renderDebugCompare";
 import { useInstancedVoxels } from "./world/useInstancedVoxels";
 import { useMeshedChunks } from "./world/useMeshedChunks";
 
@@ -24,6 +31,14 @@ const VoxelLayerInstanced: React.FC<{
   const activeChunks = useRef<Set<string>>(new Set());
   const cfg = useConfig();
   const bridge = getSimBridge();
+
+  const debugCfg = cfg.render.voxels.debugCompare;
+  const debugEnabled = debugCfg.enabled;
+  const debugLastLogAtMsRef = useRef(0);
+  const debugFrontierKeysRef = useRef<Set<string>>(new Set());
+  const debugBoundsRef = useRef(
+    makeVoxelBoundsForChunkRadius({ cx: 0, cy: 0, cz: 0 }, debugCfg.radiusChunks, chunkSize),
+  );
 
   const { addVoxel, capacity, clear, ensureCapacity, flushRebuild, meshRef, removeVoxel, solidCountRef } =
     useInstancedVoxels(chunkSize, cfg.terrain.waterLevel);
@@ -82,6 +97,14 @@ const VoxelLayerInstanced: React.FC<{
         playerChunk.cy = pcy;
         playerChunk.cz = pcz;
 
+        if (debugEnabled) {
+          debugBoundsRef.current = makeVoxelBoundsForChunkRadius(
+            { cx: pcx, cy: pcy, cz: pcz },
+            debugCfg.radiusChunks,
+            chunkSize,
+          );
+        }
+
         if (voxelRenderMode === "frontier") {
           bridge.enqueue({ t: "SET_PLAYER_CHUNK", cx: pcx, cy: pcy, cz: pcz });
         } else {
@@ -93,11 +116,18 @@ const VoxelLayerInstanced: React.FC<{
       }
 
       if (voxelRenderMode === "frontier") {
+        if (debugEnabled && frame.delta.frontierReset) {
+          debugFrontierKeysRef.current.clear();
+        }
+
         if (frame.delta.frontierAdd && frame.delta.frontierAdd.length > 0) {
           ensureCapacity(solidCountRef.current + frame.delta.frontierAdd.length / 3);
           const positions = frame.delta.frontierAdd;
           for (let i = 0; i < positions.length; i += 3) {
             addVoxel(positions[i], positions[i + 1], positions[i + 2]);
+            if (debugEnabled) {
+              debugFrontierKeysRef.current.add(voxelKey(positions[i], positions[i + 1], positions[i + 2]));
+            }
           }
         }
 
@@ -105,6 +135,57 @@ const VoxelLayerInstanced: React.FC<{
           const positions = frame.delta.frontierRemove;
           for (let i = 0; i < positions.length; i += 3) {
             removeVoxel(positions[i], positions[i + 1], positions[i + 2]);
+            if (debugEnabled) {
+              debugFrontierKeysRef.current.delete(voxelKey(positions[i], positions[i + 1], positions[i + 2]));
+            }
+          }
+        }
+
+        if (debugEnabled) {
+          const now = performance.now();
+          if (now - debugLastLogAtMsRef.current >= debugCfg.logIntervalMs) {
+            debugLastLogAtMsRef.current = now;
+
+            const bounds = debugBoundsRef.current;
+            let frontierInRegion = 0;
+            for (const k of debugFrontierKeysRef.current) {
+              const [x, y, z] = k.split(",").map((v) => Number(v));
+              if (voxelInBounds(bounds, x, y, z)) frontierInRegion += 1;
+            }
+
+            // Baselines (compute-only): dense solids + frontier solids in the same region
+            let denseSolids = 0;
+            let frontierExpected = 0;
+            const radius = debugCfg.radiusChunks;
+            forEachRadialChunk({ cx: pcx, cy: pcy, cz: pcz }, radius, 3, (c) => {
+              denseSolids += countDenseSolidsInChunk({
+                cx: c.cx,
+                cy: c.cy,
+                cz: c.cz,
+                chunkSize,
+                prestigeLevel,
+              });
+              frontierExpected += countFrontierSolidsInChunk({
+                cx: c.cx,
+                cy: c.cy,
+                cz: c.cz,
+                chunkSize,
+                prestigeLevel,
+              });
+            });
+
+            console.groupCollapsed(
+              `[render-debug] frontier pc=(${pcx},${pcy},${pcz}) radius=${radius} chunksize=${chunkSize}`,
+            );
+            console.log({
+              denseBaselineSolidCount: denseSolids,
+              frontierBaselineCount: frontierExpected,
+              frontierRenderedInRegion: frontierInRegion,
+              frontierTotalRenderedTracked: debugFrontierKeysRef.current.size,
+              deltaFrontierAdd: frame.delta.frontierAdd?.length ?? 0,
+              deltaFrontierRemove: frame.delta.frontierRemove?.length ?? 0,
+            });
+            console.groupEnd();
           }
         }
 
@@ -151,6 +232,10 @@ const VoxelLayerInstanced: React.FC<{
     flushRebuild,
     removeVoxel,
     solidCountRef,
+    debugCfg.logIntervalMs,
+    debugCfg.radiusChunks,
+    debugEnabled,
+    prestigeLevel,
     voxelRenderMode,
   ]);
 
@@ -173,11 +258,15 @@ const VoxelLayerMeshed: React.FC<{
   const cfg = useConfig();
   const bridge = getSimBridge();
 
-  const { ensureChunk, groupRef, markDirtyForEdits, reset, setFocusChunk } = useMeshedChunks({
+  const { ensureChunk, getDebugState, groupRef, markDirtyForEdits, reset, setFocusChunk } = useMeshedChunks({
     chunkSize,
     prestigeLevel,
     waterLevel: cfg.terrain.waterLevel,
   });
+
+  const debugCfg = cfg.render.voxels.debugCompare;
+  const debugEnabled = debugCfg.enabled;
+  const debugLastLogAtMsRef = useRef(0);
 
   const addChunk = useCallback(
     (cx: number, cy: number, cz: number) => {
@@ -240,8 +329,63 @@ const VoxelLayerMeshed: React.FC<{
           addChunk(c.cx, c.cy, c.cz);
         });
       }
+
+      if (debugEnabled) {
+        const now = performance.now();
+        if (now - debugLastLogAtMsRef.current >= debugCfg.logIntervalMs) {
+          debugLastLogAtMsRef.current = now;
+
+          const radius = debugCfg.radiusChunks;
+          const expectedChunkKeys: string[] = [];
+          forEachRadialChunk({ cx: pcx, cy: pcy, cz: pcz }, radius, 3, (c) => {
+            expectedChunkKeys.push(chunkKey(c.cx, c.cy, c.cz));
+          });
+
+          let denseSolids = 0;
+          forEachRadialChunk({ cx: pcx, cy: pcy, cz: pcz }, radius, 3, (c) => {
+            denseSolids += countDenseSolidsInChunk({
+              cx: c.cx,
+              cy: c.cy,
+              cz: c.cz,
+              chunkSize,
+              prestigeLevel,
+            });
+          });
+
+          const dbg = getDebugState();
+          const meshKeySet = new Set(dbg.meshChunkKeys);
+          const missing = expectedChunkKeys.filter((k) => !meshKeySet.has(k));
+
+          console.groupCollapsed(
+            `[render-debug] meshed pc=(${pcx},${pcy},${pcz}) radius=${radius} chunksize=${chunkSize}`,
+          );
+          console.log({
+            denseBaselineSolidCount: denseSolids,
+            expectedChunkCount: expectedChunkKeys.length,
+            meshedMeshChunkCount: dbg.meshChunkKeys.length,
+            meshingDirtyCount: dbg.dirtyKeys.length,
+            meshingInFlight: dbg.inFlight,
+            missingMeshes: missing.slice(0, 20),
+            missingMeshesCount: missing.length,
+          });
+          console.groupEnd();
+        }
+      }
     });
-  }, [addChunk, bridge, chunkSize, ensureInitialChunk, markDirtyForEdits, reset, setFocusChunk]);
+  }, [
+    addChunk,
+    bridge,
+    chunkSize,
+    debugCfg.logIntervalMs,
+    debugCfg.radiusChunks,
+    debugEnabled,
+    ensureInitialChunk,
+    getDebugState,
+    markDirtyForEdits,
+    prestigeLevel,
+    reset,
+    setFocusChunk,
+  ]);
 
   return <group ref={groupRef} />;
 };

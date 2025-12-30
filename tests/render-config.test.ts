@@ -1,4 +1,4 @@
-import { describe, expect,it } from "vitest";
+import { describe, expect, it } from "vitest";
 
 import { defaultRenderConfig, type VoxelRenderMode } from "../src/config/render";
 
@@ -9,6 +9,7 @@ describe("render config defaults (TDD)", () => {
     expect(defaultRenderConfig.clouds.rotationSpeed).toBeCloseTo(0.01, 5);
     expect(defaultRenderConfig.ambientLightIntensity).toBeCloseTo(0.4, 5);
     expect(defaultRenderConfig.voxels.mode).toBe("meshed");
+    expect(defaultRenderConfig.voxels.debugCompare.enabled).toBe(false);
   });
 
   it("should allow meshed voxel mode (type-level)", () => {
