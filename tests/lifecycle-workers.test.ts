@@ -1,6 +1,5 @@
 import { describe, expect, it } from "vitest";
 
-import { defaultMeshingWorkerFactory } from "../src/meshing/meshingWorkerFactory";
 import { MeshingScheduler, type MeshingWorkerLike } from "../src/meshing/meshingScheduler";
 import type { FromMeshingWorker, ToMeshingWorker } from "../src/shared/meshingProtocol";
 

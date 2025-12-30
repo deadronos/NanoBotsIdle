@@ -26,7 +26,7 @@ export interface MemoryDelta {
 }
 
 export class MemoryTracker {
-  private snapshots: Map<string, MemorySnapshot> = new Map();
+  private snapshots = new Map<string, MemorySnapshot>();
 
   /**
    * Take a memory snapshot with the given label.
