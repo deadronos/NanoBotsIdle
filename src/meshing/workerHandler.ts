@@ -1,5 +1,5 @@
 import type { FromMeshingWorker, ToMeshingWorker } from "../shared/meshingProtocol";
-import { greedyMeshChunk } from "./greedyMesher";
+import { downsampleMaterials, greedyMeshChunk } from "./greedyMesher";
 
 export const handleMeshingJob = (job: ToMeshingWorker): FromMeshingWorker => {
   if (job.t !== "MESH_CHUNK") {
@@ -24,12 +24,25 @@ export const handleMeshingJob = (job: ToMeshingWorker): FromMeshingWorker => {
       materials: job.materials,
     });
 
+    const lods = [] as { level: "low"; geometry: typeof geometry }[];
+    if (job.chunk.size >= 2) {
+      const downsampled = downsampleMaterials(job.materials, job.chunk.size, 2);
+      const low = greedyMeshChunk({
+        size: downsampled.size,
+        origin: job.origin,
+        voxelSize: downsampled.voxelSize,
+        materials: downsampled.materials,
+      });
+      lods.push({ level: "low", geometry: low });
+    }
+
     return {
       t: "MESH_RESULT",
       jobId: job.jobId,
       chunk: job.chunk,
       rev: job.rev,
       geometry,
+      lods: lods.length > 0 ? lods : undefined,
     };
   } catch (err) {
     return {

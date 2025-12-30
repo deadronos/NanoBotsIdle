@@ -50,6 +50,9 @@ export const applyChunkVisibility = (
   meshes: Iterable<Object3D>,
   camera: Camera,
   thresholds: LodThresholds,
+  options?: {
+    onLodChange?: (mesh: Mesh, lod: LodLevel) => void;
+  },
 ) => {
   const frustum = getFrustumFromCamera(camera);
 
@@ -71,9 +74,14 @@ export const applyChunkVisibility = (
     const distanceSq = distanceSqToPoint(camera.position, boundingSphere.center);
     const lod = selectLodLevel(distanceSq, thresholds);
 
+    const prevLod: LodLevel | undefined = mesh.userData.lod;
     mesh.userData.lod = lod;
     mesh.userData.culledByFrustum = !frustumVisible;
     mesh.userData.culledByDistance = lod === "hidden";
     mesh.visible = frustumVisible && lod !== "hidden";
+
+    if (options?.onLodChange && prevLod !== lod) {
+      options.onLodChange(mesh, lod);
+    }
   }
 };

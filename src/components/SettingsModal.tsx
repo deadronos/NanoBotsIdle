@@ -97,6 +97,20 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ onClose }) => {
             />
             Biome overlay (debug voxel colors)
           </label>
+
+          <label className="mt-2 flex items-center gap-2 text-xs text-gray-300">
+            <input
+              type="checkbox"
+              className="accent-blue-500"
+              checked={cfg.render.voxels.occlusion.enabled}
+              onChange={(e) => {
+                updateConfig({
+                  render: { voxels: { occlusion: { enabled: e.target.checked } } },
+                });
+              }}
+            />
+            Occlusion culling (experimental WebGL2)
+          </label>
         </div>
 
         <div className="bg-white/5 p-4 rounded-xl">

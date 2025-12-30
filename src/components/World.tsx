@@ -5,6 +5,7 @@ import { type Color, type InstancedMesh, Object3D } from "three";
 import type { VoxelRenderMode } from "../config/render";
 import { useConfig } from "../config/useConfig";
 import { playerChunk, playerPosition } from "../engine/playerState";
+import { applyLodGeometry } from "../render/lodGeometry";
 import { applyChunkVisibility, createLodThresholds } from "../render/lodUtils";
 import { voxelKey } from "../shared/voxel";
 import { getBiomeAt, getBiomeColor } from "../sim/biomes";
@@ -787,11 +788,18 @@ const VoxelLayerMeshed: React.FC<{
     setFocusChunk,
   ]);
 
+  const lodVisibilityOptions = useMemo(
+    () => ({
+      onLodChange: applyLodGeometry,
+    }),
+    [],
+  );
+
   useFrame(() => {
     const group = groupRef.current;
     if (!group) return;
 
-    applyChunkVisibility(group.children, camera, lodThresholds);
+    applyChunkVisibility(group.children, camera, lodThresholds, lodVisibilityOptions);
   });
 
   return <group ref={groupRef} />;
