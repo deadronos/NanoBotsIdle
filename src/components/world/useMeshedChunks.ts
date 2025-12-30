@@ -48,6 +48,8 @@ export const useMeshedChunks = (options: { chunkSize: number; prestigeLevel: num
 
   const groupRef = useRef<Group>(null);
   const meshesRef = useRef<Map<string, Mesh>>(new Map());
+  const processedChunkKeysRef = useRef<Set<string>>(new Set());
+  const emptyChunkKeysRef = useRef<Set<string>>(new Set());
   const schedulerRef = useRef<MeshingScheduler | null>(null);
 
   const material = useMemo(
@@ -68,6 +70,8 @@ export const useMeshedChunks = (options: { chunkSize: number; prestigeLevel: num
       mesh.geometry.dispose();
     }
     meshes.clear();
+    processedChunkKeysRef.current.clear();
+    emptyChunkKeysRef.current.clear();
   }, []);
 
   const applyMeshResult = useCallback(
@@ -78,7 +82,10 @@ export const useMeshedChunks = (options: { chunkSize: number; prestigeLevel: num
       const key = chunkKey(result.chunk.cx, result.chunk.cy, result.chunk.cz);
       const { positions, normals, indices } = result.geometry;
 
+      processedChunkKeysRef.current.add(key);
+
       if (indices.length === 0 || positions.length === 0) {
+        emptyChunkKeysRef.current.add(key);
         const existing = meshesRef.current.get(key);
         if (existing) {
           group.remove(existing);
@@ -87,6 +94,8 @@ export const useMeshedChunks = (options: { chunkSize: number; prestigeLevel: num
         }
         return;
       }
+
+      emptyChunkKeysRef.current.delete(key);
 
       let mesh = meshesRef.current.get(key);
       if (!mesh) {
@@ -211,6 +220,8 @@ export const useMeshedChunks = (options: { chunkSize: number; prestigeLevel: num
     const scheduler = schedulerRef.current;
     return {
       meshChunkKeys: Array.from(meshesRef.current.keys()),
+      processedChunkKeys: Array.from(processedChunkKeysRef.current.keys()),
+      emptyChunkKeys: Array.from(emptyChunkKeysRef.current.keys()),
       dirtyKeys: scheduler?.getDirtyKeys() ?? [],
       inFlight: scheduler?.getInFlightCount() ?? 0,
     };

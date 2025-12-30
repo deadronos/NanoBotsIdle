@@ -255,6 +255,7 @@ const VoxelLayerMeshed: React.FC<{
   seed: number;
 }> = ({ chunkSize, prestigeLevel, seed, spawnX, spawnZ }) => {
   const activeChunks = useRef<Set<string>>(new Set());
+  const initialSurfaceChunkRef = useRef<{ cx: number; cy: number; cz: number } | null>(null);
   const cfg = useConfig();
   const bridge = getSimBridge();
 
@@ -290,6 +291,7 @@ const VoxelLayerMeshed: React.FC<{
     const cy = Math.floor(surfaceY / chunkSize);
     const baseCx = Math.floor(spawnX / chunkSize);
     const baseCz = Math.floor(spawnZ / chunkSize);
+    initialSurfaceChunkRef.current = { cx: baseCx, cy, cz: baseCz };
     setFocusChunk(baseCx, cy, baseCz);
     forEachRadialChunk({ cx: baseCx, cy, cz: baseCz }, 1, 2, (c) => {
       addChunk(c.cx, cy, c.cz);
@@ -354,7 +356,19 @@ const VoxelLayerMeshed: React.FC<{
 
           const dbg = getDebugState();
           const meshKeySet = new Set(dbg.meshChunkKeys);
-          const missing = expectedChunkKeys.filter((k) => !meshKeySet.has(k));
+          const processedKeySet = new Set(dbg.processedChunkKeys);
+          const emptyKeySet = new Set(dbg.emptyChunkKeys);
+
+          const missingMeshes = expectedChunkKeys.filter((k) => !meshKeySet.has(k));
+          const missingNotRequested = missingMeshes.filter((k) => !activeChunks.current.has(k));
+          const missingRequestedPending = missingMeshes.filter(
+            (k) => activeChunks.current.has(k) && !processedKeySet.has(k),
+          );
+          const missingRequestedEmpty = missingMeshes.filter(
+            (k) => activeChunks.current.has(k) && emptyKeySet.has(k),
+          );
+
+          const requestedChunkCount = expectedChunkKeys.filter((k) => activeChunks.current.has(k)).length;
 
           console.groupCollapsed(
             `[render-debug] meshed pc=(${pcx},${pcy},${pcz}) radius=${radius} chunksize=${chunkSize}`,
@@ -362,11 +376,19 @@ const VoxelLayerMeshed: React.FC<{
           console.log({
             denseBaselineSolidCount: denseSolids,
             expectedChunkCount: expectedChunkKeys.length,
+            requestedChunkCount,
             meshedMeshChunkCount: dbg.meshChunkKeys.length,
+            meshedProcessedChunkCount: dbg.processedChunkKeys.length,
+            meshedEmptyChunkCount: dbg.emptyChunkKeys.length,
             meshingDirtyCount: dbg.dirtyKeys.length,
             meshingInFlight: dbg.inFlight,
-            missingMeshes: missing.slice(0, 20),
-            missingMeshesCount: missing.length,
+            surfaceChunk: initialSurfaceChunkRef.current,
+            missingNotRequested: missingNotRequested.slice(0, 20),
+            missingNotRequestedCount: missingNotRequested.length,
+            missingRequestedPending: missingRequestedPending.slice(0, 20),
+            missingRequestedPendingCount: missingRequestedPending.length,
+            missingRequestedEmpty: missingRequestedEmpty.slice(0, 20),
+            missingRequestedEmptyCount: missingRequestedEmpty.length,
           });
           console.groupEnd();
         }
