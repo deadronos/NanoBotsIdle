@@ -65,3 +65,52 @@ A 3D Voxel Incremental/Idle game built with React Three Fiber. Command a fleet o
    ```bash
    npm run build
    ```
+
+## 🐛 Debugging & Logging
+
+This project uses a centralized logger utility (`src/utils/logger.ts`) for consistent logging across the codebase.
+
+### Logger Usage
+
+The logger provides environment-aware logging methods that:
+- **Development:** Display debug logs in the browser console
+- **Production:** Strip all debug logs from the build (only errors remain)
+
+```typescript
+import { debug, info, warn, error } from '@/utils/logger';
+
+// Debug logs (development only)
+debug('Player position:', { x, y, z });
+
+// Info logs (development only)
+info('Drone started mining block');
+
+// Warning logs (development only)
+warn('Low credit balance');
+
+// Error logs (always visible)
+error('Failed to load configuration:', err);
+```
+
+### Runtime Debug Toggle
+
+In development, you can toggle debug logging at runtime via the browser console:
+
+```javascript
+// Enable debug logging
+import { enableDebug } from './src/utils/logger';
+enableDebug();
+
+// Disable debug logging
+import { disableDebug } from './src/utils/logger';
+disableDebug();
+
+// Check debug status
+import { isDebugEnabled } from './src/utils/logger';
+console.log(isDebugEnabled());
+```
+
+### ESLint Rule
+
+Direct `console.*` usage is prohibited in `src/` to ensure consistent logging. Use the logger utility instead.
+Exceptions: tests, scripts, workers, and the logger utility itself.
