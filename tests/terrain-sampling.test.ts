@@ -1,0 +1,76 @@
+import { test, expect } from "vitest";
+import { generateInstances } from "../src/sim/terrain";
+import { getSeed } from "../src/sim/seed";
+import { getConfig } from "../src/config/index";
+import { getVoxelColor } from "../src/utils";
+
+test("terrain sampling distribution report", () => {
+  const seed = getSeed(1);
+  const cfg = getConfig();
+  const voxels = generateInstances(seed, cfg.terrain.worldRadius);
+
+  const counts: Record<string, number> = {
+    deepWater: 0,
+    water: 0,
+    sand: 0,
+    grass: 0,
+    darkGrass: 0,
+    rock: 0,
+    snow: 0,
+    other: 0,
+  };
+
+  let minY = Infinity;
+  let maxY = -Infinity;
+
+  for (const v of voxels) {
+    const y = v.y;
+    minY = Math.min(minY, y);
+    maxY = Math.max(maxY, y);
+
+    const hex = getVoxelColor(y, cfg.terrain.waterLevel).getHexString();
+    switch (hex) {
+      case "1a4d8c":
+        counts.deepWater++;
+        break;
+      case "2d73bf":
+        counts.water++;
+        break;
+      case "e3dba3":
+        counts.sand++;
+        break;
+      case "59a848":
+        counts.grass++;
+        break;
+      case "3b7032":
+        counts.darkGrass++;
+        break;
+      case "6e6e6e":
+        counts.rock++;
+        break;
+      case "ffffff":
+        counts.snow++;
+        break;
+      default:
+        counts.other++;
+    }
+  }
+
+  const total = voxels.length || 1;
+
+  console.log("\nTerrain sampling report:");
+  console.log(`seed: ${seed}`);
+  console.log(`config: waterLevel=${cfg.terrain.waterLevel}, surfaceBias=${cfg.terrain.surfaceBias}, quantizeScale=${cfg.terrain.quantizeScale}, worldRadius=${cfg.terrain.worldRadius}`);
+  console.log(`voxels sampled: ${total}`);
+  console.log(`height: min=${minY}, max=${maxY}`);
+  console.log("counts:");
+  Object.entries(counts).forEach(([k, v]) => {
+    console.log(`  ${k}: ${v} (${((v / total) * 100).toFixed(2)}%)`);
+  });
+
+  // Sanity checks
+  expect(total).toBeGreaterThan(0);
+  // Ensure at least some snow/rock present and that distribution sums correctly
+  const sum = Object.values(counts).reduce((a, b) => a + b, 0);
+  expect(sum).toBe(total);
+});

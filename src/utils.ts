@@ -12,7 +12,7 @@ export const random = (seed: number) => {
   return x - Math.floor(x);
 };
 
-export const getVoxelColor = (y: number, waterLevel = -20): Color => {
+export const getVoxelColor = (y: number, waterLevel = -12): Color => {
   // Height-based coloring relative to water level
   if (y < waterLevel - 2) return new Color("#1a4d8c"); // Deep Water
   if (y < waterLevel + 0.5) return new Color("#2d73bf"); // Water
@@ -23,7 +23,7 @@ export const getVoxelColor = (y: number, waterLevel = -20): Color => {
   return new Color("#ffffff"); // Snow
 };
 
-export const getVoxelType = (y: number, waterLevel = -20): "water" | "solid" => {
+export const getVoxelType = (y: number, waterLevel = -12): "water" | "solid" => {
   if (y <= waterLevel) return "water";
   return "solid";
 };

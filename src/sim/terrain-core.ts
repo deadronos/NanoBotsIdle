@@ -17,7 +17,7 @@ export const getSurfaceHeightCore = (
   return Math.floor((raw + surfaceBias) * quantizeScale);
 };
 
-export const getVoxelValueFromHeight = (y: number, waterLevel = -20): number => {
+export const getVoxelValueFromHeight = (y: number, waterLevel = -12): number => {
   if (y <= waterLevel) return 1;
   const heightAboveWater = y - waterLevel;
   if (heightAboveWater < 4) return 2;
