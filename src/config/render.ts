@@ -42,7 +42,7 @@ export type SunConfig = {
   cameraBounds: { left: number; right: number; top: number; bottom: number };
 };
 
-export const voxelRenderModes = ["frontier", "dense", "meshed"] as const;
+export const voxelRenderModes = ["frontier", "frontier-fill", "dense", "meshed"] as const;
 
 export type VoxelRenderMode = (typeof voxelRenderModes)[number];
 

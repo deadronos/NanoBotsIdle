@@ -1,4 +1,5 @@
-import React, { useCallback, useEffect, useRef, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { type InstancedMesh,Object3D } from "three";
 
 import type { VoxelRenderMode } from "../config/render";
 import { useConfig } from "../config/useConfig";
@@ -78,12 +79,12 @@ const VoxelLayerInstanced: React.FC<{
   }, [addChunk, chunkSize, cfg.terrain.quantizeScale, cfg.terrain.surfaceBias, seed, spawnX, spawnZ]);
 
   useEffect(() => {
-    if (voxelRenderMode === "frontier" && !requestedFrontierSnapshotRef.current) {
+    if ((voxelRenderMode === "frontier" || voxelRenderMode === "frontier-fill") && !requestedFrontierSnapshotRef.current) {
       requestedFrontierSnapshotRef.current = true;
       bridge.enqueue({ t: "REQUEST_FRONTIER_SNAPSHOT" });
     }
 
-    if (voxelRenderMode !== "frontier") {
+    if (voxelRenderMode !== "frontier" && voxelRenderMode !== "frontier-fill") {
       requestedFrontierSnapshotRef.current = false;
       sentFrontierChunkRef.current = false;
     }
@@ -121,7 +122,7 @@ const VoxelLayerInstanced: React.FC<{
           );
         }
 
-        if (voxelRenderMode === "frontier") {
+        if (voxelRenderMode === "frontier" || voxelRenderMode === "frontier-fill") {
           bridge.enqueue({ t: "SET_PLAYER_CHUNK", cx: pcx, cy: pcy, cz: pcz });
           sentFrontierChunkRef.current = true;
         } else {
@@ -132,12 +133,12 @@ const VoxelLayerInstanced: React.FC<{
         }
       }
 
-      if (voxelRenderMode === "frontier" && !sentFrontierChunkRef.current) {
+      if ((voxelRenderMode === "frontier" || voxelRenderMode === "frontier-fill") && !sentFrontierChunkRef.current) {
         bridge.enqueue({ t: "SET_PLAYER_CHUNK", cx: pcx, cy: pcy, cz: pcz });
         sentFrontierChunkRef.current = true;
       }
 
-      if (voxelRenderMode === "frontier") {
+      if (voxelRenderMode === "frontier" || voxelRenderMode === "frontier-fill") {
         if (frame.delta.frontierReset) {
           frontierKeysRef.current.clear();
         }
@@ -347,13 +348,83 @@ const VoxelLayerInstanced: React.FC<{
         <meshStandardMaterial roughness={0.8} metalness={0.1} vertexColors={true} />
       </instancedMesh>
 
-      {voxelRenderMode === "frontier" && debugEnabled && missingSurfaceMarker ? (
+      {(voxelRenderMode === "frontier" || voxelRenderMode === "frontier-fill") && debugEnabled && missingSurfaceMarker ? (
         <mesh position={[missingSurfaceMarker.x, missingSurfaceMarker.y, missingSurfaceMarker.z]}>
           <boxGeometry args={[1.1, 1.1, 1.1]} />
           <meshBasicMaterial color="#ff00ff" wireframe={true} transparent={true} opacity={0.9} />
         </mesh>
       ) : null}
+
+      {(voxelRenderMode === "frontier" && debugEnabled) || voxelRenderMode === "frontier-fill" ? (
+          <DebugFillOverlay
+              chunkSize={chunkSize}
+              prestigeLevel={prestigeLevel}
+              center={playerChunk}
+              radius={debugCfg.radiusChunks}
+              bedrockY={cfg.terrain.bedrockY ?? -50}
+          />
+      ) : null}
+
     </group>
+  );
+};
+
+const DebugFillOverlay: React.FC<{
+  chunkSize: number;
+  prestigeLevel: number;
+  radius: number;
+  center: { cx: number; cy: number; cz: number };
+  bedrockY: number;
+}> = ({ bedrockY, center, chunkSize, prestigeLevel, radius }) => {
+  const meshRef = useRef<InstancedMesh>(null);
+  const dummy = useMemo(() => new Object3D(), []);
+  // Use a reasonably high limit for debug fill (3x3 chunks * 20 depth ~ 45k voxels)
+  const MAX_INSTANCES = 150000;
+
+  useEffect(() => {
+    const mesh = meshRef.current;
+    if (!mesh) return;
+
+    let index = 0;
+
+    // Radius 0 = 1 chunk, Radius 1 = 3x3 chunks.
+    // Limit vertical fill depth to avoid overcrowding/lag.
+    // We mainly care about holes near surface.
+    const FILL_DEPTH = 20;
+
+    forEachRadialChunk(center, radius, 3, (c) => {
+      const minX = c.cx * chunkSize;
+      const maxX = minX + chunkSize;
+      const minZ = c.cz * chunkSize;
+      const maxZ = minZ + chunkSize;
+
+      for (let x = minX; x < maxX; x++) {
+        for (let z = minZ; z < maxZ; z++) {
+          if (index >= MAX_INSTANCES) break;
+
+          const groundY = getGroundHeightWithEdits(x, z, prestigeLevel);
+          const startY = Math.max(bedrockY, groundY - FILL_DEPTH);
+          
+          for (let y = groundY; y >= startY; y--) {
+            if (index >= MAX_INSTANCES) break;
+            dummy.position.set(x, y, z);
+            dummy.updateMatrix();
+            mesh.setMatrixAt(index, dummy.matrix);
+            index++;
+          }
+        }
+      }
+    });
+
+    mesh.count = index;
+    if (mesh.instanceMatrix) mesh.instanceMatrix.needsUpdate = true;
+  }, [bedrockY, center, chunkSize, dummy, prestigeLevel, radius]);
+
+  return (
+    <instancedMesh ref={meshRef} args={[undefined, undefined, MAX_INSTANCES]}>
+      <boxGeometry args={[0.5, 0.5, 0.5]} />
+      <meshBasicMaterial color="#00ffff" transparent opacity={0.3} depthWrite={false} />
+    </instancedMesh>
   );
 };
 
