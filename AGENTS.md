@@ -56,9 +56,19 @@ Use the Memory Bank instructions at `.github/instructions/memory-bank.instructio
 ## Workflow expectations
 
 - Prefer small, surgical changes that match existing patterns.
+- Prefer a TDD loop for implementation work:
+  - Red: add one failing test for the next behavior
+  - Green: minimal code to pass
+  - Refactor: improve design/quality and keep tests green
 - Keep `useFrame()` work allocation-free when possible (R3F performance).
 - Validate changes with the repo scripts:
   - `npm run lint` / `npm run lint:fix`
   - `npm run typecheck`
   - `npm test`
   - `npm run build`
+
+Tip: the repo includes TDD-focused agents in `.github/agents/`:
+
+- `tdd-red.agent.md`
+- `tdd-green.agent.md`
+- `tdd-refactor.agent.md`
