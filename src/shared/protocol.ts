@@ -2,7 +2,9 @@ export type Cmd =
   | { t: "BUY_UPGRADE"; id: string; n: number }
   | { t: "PRESTIGE" }
   | { t: "CLICK_VOXEL"; x: number; y: number; z: number }
-  | { t: "SET_TOOL"; tool: "mine" | "build" };
+  | { t: "SET_TOOL"; tool: "mine" | "build" }
+  | { t: "SET_PLAYER_CHUNK"; cx: number; cy: number; cz: number }
+  | { t: "REQUEST_FRONTIER_SNAPSHOT" };
 
 export type VoxelEdit = {
   x: number;
@@ -21,6 +23,8 @@ export type RenderDelta = {
   frontierAdd?: Float32Array;
   frontierRemove?: Float32Array;
   frontierReset?: boolean;
+  debugChunksProcessed?: string[]; // Debug: list of chunks processed this tick
+  debugQueueLengthAtTickStart?: number; // Debug: queue length at tick start
   effects?: {
     kind: "beam";
     fromId: number;
@@ -42,6 +46,7 @@ export type UiSnapshot = {
   totalBlocks: number;
   upgrades: Record<string, number>;
   nextCosts?: Record<string, number>;
+  actualSeed?: number;
 };
 
 export type ToWorker =

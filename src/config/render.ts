@@ -42,7 +42,7 @@ export type SunConfig = {
   cameraBounds: { left: number; right: number; top: number; bottom: number };
 };
 
-export const voxelRenderModes = ["frontier", "dense", "meshed"] as const;
+export const voxelRenderModes = ["frontier", "frontier-fill", "dense", "meshed"] as const;
 
 export type VoxelRenderMode = (typeof voxelRenderModes)[number];
 
@@ -54,6 +54,11 @@ export type RenderConfig = {
   sun: SunConfig;
   voxels: {
     mode: VoxelRenderMode;
+    debugCompare: {
+      enabled: boolean;
+      radiusChunks: number;
+      logIntervalMs: number;
+    };
   };
 };
 
@@ -90,6 +95,11 @@ export const defaultRenderConfig: RenderConfig = {
   },
   voxels: {
     mode: "meshed",
+    debugCompare: {
+      enabled: false,
+      radiusChunks: 1,
+      logIntervalMs: 1000,
+    },
   },
 };
 

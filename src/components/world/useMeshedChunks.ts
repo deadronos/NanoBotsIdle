@@ -9,11 +9,20 @@ import { defaultMeshingWorkerFactory } from "../../meshing/meshingWorkerFactory"
 import type { MeshResult } from "../../shared/meshingProtocol";
 import type { VoxelEdit } from "../../shared/protocol";
 import { getVoxelMaterialAt } from "../../sim/collision";
+import { chunkDistanceSq3 } from "../../utils";
 
 const chunkKey = (cx: number, cy: number, cz: number) => `${cx},${cy},${cz}`;
 
-export const useMeshedChunks = (options: { chunkSize: number; prestigeLevel: number; waterLevel: number }) => {
-  const { chunkSize, prestigeLevel, waterLevel } = options;
+export const useMeshedChunks = (options: { 
+  chunkSize: number; 
+  prestigeLevel: number; 
+  waterLevel: number;
+  seed?: number;
+  onSchedulerChange?: () => void;
+}) => {
+  const { chunkSize, prestigeLevel, waterLevel, seed, onSchedulerChange } = options;
+
+  const focusChunkRef = useRef<{ cx: number; cy: number; cz: number }>({ cx: 0, cy: 0, cz: 0 });
 
   // Color mapping kept local to avoid importing `three` types in worker code.
   // Reuse Color instances to avoid per-vertex allocations.
@@ -45,6 +54,9 @@ export const useMeshedChunks = (options: { chunkSize: number; prestigeLevel: num
 
   const groupRef = useRef<Group>(null);
   const meshesRef = useRef<Map<string, Mesh>>(new Map());
+  const processedChunkKeysRef = useRef<Set<string>>(new Set());
+  const emptyChunkKeysRef = useRef<Set<string>>(new Set());
+  const pendingResultsRef = useRef<Map<string, MeshResult>>(new Map());
   const schedulerRef = useRef<MeshingScheduler | null>(null);
 
   const material = useMemo(
@@ -65,17 +77,28 @@ export const useMeshedChunks = (options: { chunkSize: number; prestigeLevel: num
       mesh.geometry.dispose();
     }
     meshes.clear();
+    processedChunkKeysRef.current.clear();
+    emptyChunkKeysRef.current.clear();
+    pendingResultsRef.current.clear();
   }, []);
 
   const applyMeshResult = useCallback(
     (result: MeshResult) => {
-      const group = groupRef.current;
-      if (!group) return;
-
       const key = chunkKey(result.chunk.cx, result.chunk.cy, result.chunk.cz);
+      processedChunkKeysRef.current.add(key);
+
+      const group = groupRef.current;
+      if (!group) {
+        // If results arrive before the group is mounted, cache and apply later.
+        pendingResultsRef.current.set(key, result);
+        return;
+      }
+
       const { positions, normals, indices } = result.geometry;
 
       if (indices.length === 0 || positions.length === 0) {
+        emptyChunkKeysRef.current.add(key);
+        pendingResultsRef.current.delete(key);
         const existing = meshesRef.current.get(key);
         if (existing) {
           group.remove(existing);
@@ -84,6 +107,9 @@ export const useMeshedChunks = (options: { chunkSize: number; prestigeLevel: num
         }
         return;
       }
+
+      emptyChunkKeysRef.current.delete(key);
+      pendingResultsRef.current.delete(key);
 
       let mesh = meshesRef.current.get(key);
       if (!mesh) {
@@ -112,7 +138,26 @@ export const useMeshedChunks = (options: { chunkSize: number; prestigeLevel: num
   );
 
   useEffect(() => {
+    let raf = 0;
+    const tick = () => {
+      const group = groupRef.current;
+      if (group && pendingResultsRef.current.size > 0) {
+        const pending = Array.from(pendingResultsRef.current.values());
+        pendingResultsRef.current.clear();
+        pending.forEach((res) => applyMeshResult(res));
+      }
+      raf = requestAnimationFrame(tick);
+    };
+    raf = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(raf);
+  }, [applyMeshResult]);
+
+  useEffect(() => {
     const worker = defaultMeshingWorkerFactory();
+
+    const priorityFromFocus = (coord: { cx: number; cy: number; cz: number }) => {
+      return chunkDistanceSq3(coord, focusChunkRef.current);
+    };
 
     const scheduler = new MeshingScheduler({
       worker,
@@ -128,7 +173,7 @@ export const useMeshedChunks = (options: { chunkSize: number; prestigeLevel: num
         fillApronField(materials, {
           size: chunkSize,
           origin,
-          materialAt: (x, y, z) => getVoxelMaterialAt(x, y, z, prestigeLevel),
+          materialAt: (x, y, z) => getVoxelMaterialAt(x, y, z, prestigeLevel, seed),
         });
 
         return {
@@ -144,15 +189,19 @@ export const useMeshedChunks = (options: { chunkSize: number; prestigeLevel: num
         };
       },
       onApply: (res) => applyMeshResult(res),
+      maxInFlight: 16,
+      getPriority: priorityFromFocus,
     });
 
     schedulerRef.current = scheduler;
+    // Notify parent that scheduler was (re)created so it can re-sync its chunk tracking
+    onSchedulerChange?.();
     return () => {
       schedulerRef.current = null;
       scheduler.dispose();
       disposeAllMeshes();
     };
-  }, [applyMeshResult, chunkSize, disposeAllMeshes, prestigeLevel]);
+  }, [applyMeshResult, chunkSize, disposeAllMeshes, onSchedulerChange, prestigeLevel, seed]);
 
   useEffect(() => {
     return () => {
@@ -190,10 +239,32 @@ export const useMeshedChunks = (options: { chunkSize: number; prestigeLevel: num
     disposeAllMeshes();
   }, [disposeAllMeshes]);
 
+  const setFocusChunk = useCallback((cx: number, cy: number, cz: number) => {
+    focusChunkRef.current = { cx, cy, cz };
+    const scheduler = schedulerRef.current;
+    if (!scheduler) return;
+    scheduler.reprioritizeDirty();
+    scheduler.pump();
+  }, []);
+
+  const getDebugState = useCallback(() => {
+    const scheduler = schedulerRef.current;
+    return {
+      meshChunkKeys: Array.from(meshesRef.current.keys()),
+      processedChunkKeys: Array.from(processedChunkKeysRef.current.keys()),
+      emptyChunkKeys: Array.from(emptyChunkKeysRef.current.keys()),
+      pendingResultCount: pendingResultsRef.current.size,
+      dirtyKeys: scheduler?.getDirtyKeys() ?? [],
+      inFlight: scheduler?.getInFlightCount() ?? 0,
+    };
+  }, []);
+
   return {
     groupRef,
     ensureChunk,
     markDirtyForEdits,
+    setFocusChunk,
+    getDebugState,
     reset,
   };
 };

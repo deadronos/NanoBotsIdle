@@ -2,6 +2,8 @@ import { Color } from "three";
 
 import { getVoxelValueFromHeight, noise2D } from "./sim/terrain-core";
 
+export { chunkDistanceSq2, chunkDistanceSq3, forEachRadialChunk, generateRadialOffsets } from "./utils/chunkPriority";
+
 export { getVoxelValueFromHeight as getVoxelValue, noise2D };
 
 // Pseudo-random number generator

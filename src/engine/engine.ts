@@ -2,9 +2,11 @@ import { getDroneMoveSpeed, getMineDuration } from "../config/drones";
 import { getConfig } from "../config/index";
 import { computeNextUpgradeCosts, tryBuyUpgrade, type UpgradeType } from "../economy/upgrades";
 import type { Cmd, RenderDelta, UiSnapshot, VoxelEdit } from "../shared/protocol";
+import { voxelKey } from "../shared/voxel";
+import { forEachRadialChunk } from "../utils";
 import { type Drone, syncDroneCount } from "./drones";
 import { encodeDrones, toFloat32ArrayOrUndefined } from "./encode";
-import { createKeyIndex, resetKeyIndex } from "./keyIndex";
+import { addKey, createKeyIndex, resetKeyIndex } from "./keyIndex";
 import { tickDrones } from "./tickDrones";
 import { initWorldForPrestige } from "./world/initWorld";
 import type { WorldModel } from "./world/world";
@@ -31,6 +33,7 @@ export const createEngine = (_seed?: number): Engine => {
   let pendingFrontierReset = false;
 
   let drones: Drone[] = [];
+  const playerChunksToScan: { cx: number; cy: number; cz: number }[] = [];
 
   const uiSnapshot: UiSnapshot = {
     credits: 0,
@@ -60,6 +63,7 @@ export const createEngine = (_seed?: number): Engine => {
     world = result.world;
     resetKeyIndex(frontier, result.frontierKeys);
     uiSnapshot.totalBlocks = result.aboveWaterCount;
+    uiSnapshot.actualSeed = result.actualSeed;
     pendingFrontierSnapshot = result.frontierPositions;
     pendingFrontierReset = true;
   };
@@ -90,6 +94,18 @@ export const createEngine = (_seed?: number): Engine => {
         ensureSeedWithMinAboveWater(uiSnapshot.prestigeLevel);
         return;
       }
+      case "SET_PLAYER_CHUNK": {
+        console.log(`[engine] SET_PLAYER_CHUNK cx=${cmd.cx} cy=${cmd.cy} cz=${cmd.cz}, queue size before: ${playerChunksToScan.length}`);
+        playerChunksToScan.push({ cx: cmd.cx, cy: cmd.cy, cz: cmd.cz });
+        return;
+      }
+      case "REQUEST_FRONTIER_SNAPSHOT": {
+        const w = world;
+        if (!w) return;
+        pendingFrontierSnapshot = w.getFrontierPositionsArray();
+        pendingFrontierReset = true;
+        return;
+      }
     }
   };
 
@@ -108,10 +124,31 @@ export const createEngine = (_seed?: number): Engine => {
     const editsThisTick: VoxelEdit[] = [];
     const frontierAdded: number[] = [];
     const frontierRemoved: number[] = [];
+    const debugChunksProcessed: string[] = [];
+    const debugQueueLengthAtTickStart = playerChunksToScan.length;
 
-    if (world) {
+    const w = world;
+    if (w) {
+      // Process player frontier expansion
+      while (playerChunksToScan.length > 0) {
+        const pc = playerChunksToScan.shift();
+        if (pc) {
+          const r = 2; // radius of chunks to auto-frontier
+          forEachRadialChunk({ cx: pc.cx, cy: pc.cy, cz: pc.cz }, r, 2, (c) => {
+            const added = w.ensureFrontierInChunk(c.cx, c.cz);
+            debugChunksProcessed.push(`${c.cx},${c.cz}:${added ? added.length : 'skip'}`);
+            if (added && added.length > 0) {
+              for (const pos of added) {
+                addKey(frontier, voxelKey(pos.x, pos.y, pos.z));
+                frontierAdded.push(pos.x, pos.y, pos.z);
+              }
+            }
+          });
+        }
+      }
+
       tickDrones({
-        world,
+        world: w,
         drones,
         dtSeconds,
         cfg,
@@ -140,10 +177,20 @@ export const createEngine = (_seed?: number): Engine => {
       minedPositions: toFloat32ArrayOrUndefined(minedPositions),
       frontierAdd: toFloat32ArrayOrUndefined(frontierAdded),
       frontierRemove: toFloat32ArrayOrUndefined(frontierRemoved),
+      debugChunksProcessed: debugChunksProcessed.length > 0 ? debugChunksProcessed : undefined,
+      debugQueueLengthAtTickStart,
     };
 
     if (pendingFrontierSnapshot) {
-      delta.frontierAdd = pendingFrontierSnapshot;
+      // Merge pendingFrontierSnapshot with any incremental frontierAdded (don't discard incremental updates!)
+      if (frontierAdded.length > 0) {
+        const merged = new Float32Array(pendingFrontierSnapshot.length + frontierAdded.length);
+        merged.set(pendingFrontierSnapshot, 0);
+        merged.set(new Float32Array(frontierAdded), pendingFrontierSnapshot.length);
+        delta.frontierAdd = merged;
+      } else {
+        delta.frontierAdd = pendingFrontierSnapshot;
+      }
       delta.frontierReset = pendingFrontierReset;
       pendingFrontierSnapshot = null;
       pendingFrontierReset = false;
