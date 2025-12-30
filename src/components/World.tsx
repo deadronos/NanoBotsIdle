@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useRef } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 
 import type { VoxelRenderMode } from "../config/render";
 import { useConfig } from "../config/useConfig";
@@ -39,6 +39,8 @@ const VoxelLayerInstanced: React.FC<{
   const debugEnabled = debugCfg.enabled;
   const debugLastLogAtMsRef = useRef(0);
   const frontierKeysRef = useRef<Set<string>>(new Set());
+  const lastMissingMarkerKeyRef = useRef<string | null>(null);
+  const [missingSurfaceMarker, setMissingSurfaceMarker] = useState<{ x: number; y: number; z: number } | null>(null);
   const debugBoundsRef = useRef(
     makeVoxelBoundsForChunkRadius({ cx: 0, cy: 0, cz: 0 }, debugCfg.radiusChunks, chunkSize),
   );
@@ -268,6 +270,18 @@ const VoxelLayerInstanced: React.FC<{
               deltaFrontierRemove: frame.delta.frontierRemove?.length ?? 0,
             });
             console.groupEnd();
+
+            // Place a visible marker on the first missing expected surface voxel (helps find ridge-line gaps).
+            const nextMarkerKey = missingSurfaceKeys[0] ?? null;
+            if (nextMarkerKey !== lastMissingMarkerKeyRef.current) {
+              lastMissingMarkerKeyRef.current = nextMarkerKey;
+              if (nextMarkerKey) {
+                const [mx, my, mz] = nextMarkerKey.split(",").map((v) => Number(v));
+                setMissingSurfaceMarker({ x: mx, y: my, z: mz });
+              } else {
+                setMissingSurfaceMarker(null);
+              }
+            }
           }
         }
 
@@ -327,10 +341,19 @@ const VoxelLayerInstanced: React.FC<{
   ]);
 
   return (
-    <instancedMesh ref={meshRef} args={[undefined, undefined, capacity]} castShadow receiveShadow>
-      <boxGeometry args={[1, 1, 1]} />
-      <meshStandardMaterial roughness={0.8} metalness={0.1} vertexColors={true} />
-    </instancedMesh>
+    <group>
+      <instancedMesh ref={meshRef} args={[undefined, undefined, capacity]} castShadow receiveShadow>
+        <boxGeometry args={[1, 1, 1]} />
+        <meshStandardMaterial roughness={0.8} metalness={0.1} vertexColors={true} />
+      </instancedMesh>
+
+      {voxelRenderMode === "frontier" && debugEnabled && missingSurfaceMarker ? (
+        <mesh position={[missingSurfaceMarker.x, missingSurfaceMarker.y, missingSurfaceMarker.z]}>
+          <boxGeometry args={[1.1, 1.1, 1.1]} />
+          <meshBasicMaterial color="#ff00ff" wireframe={true} transparent={true} opacity={0.9} />
+        </mesh>
+      ) : null}
+    </group>
   );
 };
 
