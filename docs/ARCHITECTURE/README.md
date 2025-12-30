@@ -21,6 +21,8 @@ implementation without rediscovering decisions.
   and tick scheduling rules.
 - `TECH002-voxel-world-model.md`: true 3D voxel digging model (bedrock, edits,
   mineability/frontier, chunking).
+- `TECH003-voxel-chunk-representation-and-render-adapters.md`: clarifies chunking
+  vs storage vs rendering, and outlines modular performance optimizations.
 
 ### Gameplay
 
@@ -35,6 +37,11 @@ implementation without rediscovering decisions.
   main thread drives tick scheduling; no backlogs.
 - `DEC003-procedural-base-plus-edits.md`: represent the voxel world as
   deterministic procedural base plus sparse edits overlay.
+- `DEC004-render-visibility-driven-and-chunk-caches.md`: renderer draws a
+  visibility set (frontier/surfaces) by default; dense chunk formats are caches,
+  not the world source of truth.
+- `DEC005-greedy-meshing-for-block-voxel-surfaces.md`: prefer greedy meshing as
+  the first surface-meshing algorithm for block voxels; worker-friendly per-chunk jobs.
 
 ## Update rules
 

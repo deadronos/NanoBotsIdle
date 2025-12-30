@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 
+import { getConfig } from "../src/config/index";
 import * as C from "../src/constants";
 // TDD: expect terrain module to implement specific, deterministic behavior
 import * as T from "../src/sim/terrain";
@@ -18,14 +19,15 @@ describe("terrain module (TDD)", () => {
     expect(seed).toBe(C.BASE_SEED + C.PRESTIGE_SEED_DELTA * 1);
   });
 
-  it("computeVoxel y should match legacy World math (floor((noise+0.6)*4)) and value should match getVoxelValue", () => {
+  it("computeVoxel y should match surfaceBias/quantizeScale formula and value should match getVoxelValue", () => {
     const x = 2;
     const z = 3;
     const seed = T.getSeed(1);
     const v = T.computeVoxel(x, z, seed);
 
     const raw = noise2D(x, z, seed);
-    const expectedY = Math.floor((raw + 0.6) * 4);
+    const cfg = getConfig();
+    const expectedY = Math.floor((raw + cfg.terrain.surfaceBias) * cfg.terrain.quantizeScale);
 
     expect(v.y).toBe(expectedY);
     expect(v.value).toBe(getVoxelValue(v.y));

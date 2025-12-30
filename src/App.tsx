@@ -2,6 +2,7 @@ import { Canvas } from "@react-three/fiber";
 import React, { Suspense, useEffect, useState } from "react";
 
 import { Drones } from "./components/Drones";
+import { DynamicResScaler } from "./components/DynamicResScaler";
 import { Environment } from "./components/Environment";
 import { Player } from "./components/Player";
 import { UI } from "./components/UI";
@@ -43,6 +44,7 @@ function App() {
       <UI viewMode={viewMode} onToggleView={toggleView} />
       <Canvas shadows camera={{ fov: 60 }}>
         <Suspense fallback={null}>
+          <DynamicResScaler />
           <Environment />
           <World />
           <Player viewMode={viewMode} />

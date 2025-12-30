@@ -115,6 +115,16 @@ Also look at `memory/` folder and `memory/designs` for spec/design docs and `mem
 - Prefer small, deterministic unit tests for store logic and utility functions.
 - For 3D rendering logic, prefer testing pure helpers (e.g., cost functions, noise/value mapping) and keep `useFrame` logic testable by extracting pure functions when feasible.
 
+## Workflow (Spec-driven + TDD)
+
+- Use the architecture docs + Memory Bank to keep work spec-driven (Analyze →
+  Design → Implement → Validate → Reflect → Handoff).
+- During **Implement**, prefer a strict TDD cycle:
+  - Red: write one failing test for the next behavior
+  - Green: minimal code to pass
+  - Refactor: improve design/quality while keeping tests green
+- Record the plan and progress in `memory/tasks/` so work is resumable.
+
 ## Change guidelines (how to make PR-sized edits)
 
 - Make surgical edits: change the minimum code needed for the requested feature/bugfix.

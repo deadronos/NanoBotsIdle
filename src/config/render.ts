@@ -42,12 +42,19 @@ export type SunConfig = {
   cameraBounds: { left: number; right: number; top: number; bottom: number };
 };
 
+export const voxelRenderModes = ["frontier", "dense", "meshed"] as const;
+
+export type VoxelRenderMode = (typeof voxelRenderModes)[number];
+
 export type RenderConfig = {
   sky: SkyConfig;
   stars: StarsConfig;
   clouds: CloudConfig;
   ambientLightIntensity: number;
   sun: SunConfig;
+  voxels: {
+    mode: VoxelRenderMode;
+  };
 };
 
 export const defaultRenderConfig: RenderConfig = {
@@ -80,6 +87,9 @@ export const defaultRenderConfig: RenderConfig = {
     intensity: 1.5,
     shadowMapSize: [2048, 2048],
     cameraBounds: { left: -50, right: 50, top: 50, bottom: -50 },
+  },
+  voxels: {
+    mode: "meshed",
   },
 };
 

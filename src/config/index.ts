@@ -17,6 +17,20 @@ export type Config = {
   economy: EconomyConfig;
 };
 
+type ConfigListener = () => void;
+const _listeners = new Set<ConfigListener>();
+
+export const subscribeConfig = (listener: ConfigListener) => {
+  _listeners.add(listener);
+  return () => {
+    _listeners.delete(listener);
+  };
+};
+
+const notifyConfigChanged = () => {
+  _listeners.forEach((l) => l());
+};
+
 type PlainObject = Record<string, unknown>;
 type DeepPartial<T> = {
   [K in keyof T]?: T[K] extends PlainObject ? DeepPartial<T[K]> : T[K];
@@ -53,6 +67,7 @@ export const getConfig = (): Config => _config;
 
 export const updateConfig = (partial: DeepPartial<Config>) => {
   _config = deepMerge(_config as PlainObject, partial as PlainObject) as Config;
+  notifyConfigChanged();
   return _config;
 };
 
@@ -64,6 +79,7 @@ export const resetConfig = () => {
     render: _defaultRender,
     economy: _defaultEconomy,
   };
+  notifyConfigChanged();
   return _config;
 };
 

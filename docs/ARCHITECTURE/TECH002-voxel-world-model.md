@@ -18,6 +18,17 @@ read-only collision proxy that mirrors voxel edits.
 - Chunking is used for addressing and mesh rebuild scheduling.
   - Recommended `CHUNK_SIZE`: 16.
 
+For details on chunk representation tradeoffs (dense formats vs sparse/procedural)
+and how rendering should avoid expanding the world into full voxel volumes, see:
+
+- `TECH003-voxel-chunk-representation-and-render-adapters.md`
+
+Recommended evolution of the renderer:
+
+- v1: frontier-only visibility set (instanced cubes)
+- v2: chunk-local surface rendering using **greedy meshing** (preferred first
+  meshing algorithm for block voxels)
+
 ## Materials
 
 Materials are engine-defined integers (renderer maps them to colors/materials).

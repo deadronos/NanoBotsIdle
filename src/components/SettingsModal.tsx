@@ -1,5 +1,9 @@
 import React, { useRef } from "react";
 
+import type { VoxelRenderMode } from "../config/render";
+import { voxelRenderModes } from "../config/render";
+import { updateConfig } from "../config/index";
+import { useConfig } from "../config/useConfig";
 import { exportSave, importSave, resetGame } from "../utils/saveUtils";
 import { ModalShell } from "./ui/ModalShell";
 
@@ -9,6 +13,7 @@ interface SettingsModalProps {
 
 export const SettingsModal: React.FC<SettingsModalProps> = ({ onClose }) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const cfg = useConfig();
 
   const handleImportClick = () => {
     fileInputRef.current?.click();
@@ -41,6 +46,32 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ onClose }) => {
         </h2>
 
         <div className="space-y-4">
+          <div className="bg-white/5 p-4 rounded-xl">
+            <h3 className="text-white font-bold mb-2">Rendering</h3>
+            <p className="text-xs text-gray-400 mb-4">
+              Choose how voxels are rendered. "Meshed" is experimental.
+            </p>
+
+            <label className="block text-xs text-gray-300 mb-2" htmlFor="voxel-render-mode">
+              Voxel render mode
+            </label>
+            <select
+              id="voxel-render-mode"
+              className="w-full bg-gray-800 border border-white/10 text-white rounded px-3 py-2 text-sm"
+              value={cfg.render.voxels.mode}
+              onChange={(e) => {
+                const mode = e.target.value as VoxelRenderMode;
+                updateConfig({ render: { voxels: { mode } } });
+              }}
+            >
+              {voxelRenderModes.map((mode) => (
+                <option key={mode} value={mode}>
+                  {mode}
+                </option>
+              ))}
+            </select>
+          </div>
+
           <div className="bg-white/5 p-4 rounded-xl">
             <h3 className="text-white font-bold mb-2">Save Management</h3>
             <p className="text-xs text-gray-400 mb-4">Export your progress or load a backup.</p>
