@@ -3,6 +3,7 @@ import type { FC } from "react";
 import { useEffect, useRef } from "react";
 
 import { computeNextDpr, initDpr, MAX_DPR } from "../utils/dynamicResScaler";
+import { debug } from "../utils/logger";
 
 const CHECK_INTERVAL = 500; // ms
 
@@ -33,9 +34,7 @@ export const DynamicResScaler: FC = () => {
       if (nextDpr !== dprRef.current) {
         dprRef.current = nextDpr;
         setDpr(nextDpr);
-        if (process.env.NODE_ENV === "development") {
-          console.debug(`[DynamicResScaler] FPS: ${fps}, DPR: ${nextDpr.toFixed(2)}`);
-        }
+        debug(`[DynamicResScaler] FPS: ${fps}, DPR: ${nextDpr.toFixed(2)}`);
       }
     }
   });

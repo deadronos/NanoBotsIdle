@@ -5,6 +5,8 @@ export type PointerLockInput = {
   cameraAngle: MutableRefObject<{ yaw: number; pitch: number }>;
 };
 
+import { debug, warn } from "../../utils/logger";
+
 export const usePointerLockInput = (): PointerLockInput => {
   const keys = useRef<Record<string, boolean>>({});
   const cameraAngle = useRef({ yaw: 0, pitch: 0 });
@@ -46,12 +48,12 @@ export const usePointerLockInput = (): PointerLockInput => {
             if (err instanceof Error) {
               if (err.name === "NotSupportedError" || err.message?.includes("exited the lock"))
                 return;
-              console.debug("Pointer lock interrupted:", err);
+              debug("Pointer lock interrupted:", err);
             }
           });
         }
       } catch (e) {
-        console.warn("Pointer lock error:", e);
+        warn("Pointer lock error:", e);
       }
     };
 

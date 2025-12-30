@@ -1,5 +1,6 @@
-import { Canvas } from "@react-three/fiber";
+/* eslint-disable simple-import-sort/imports */
 import React, { Suspense, useEffect, useState } from "react";
+import { Canvas } from "@react-three/fiber";
 
 import { Drones } from "./components/Drones";
 import { DynamicResScaler } from "./components/DynamicResScaler";
@@ -8,6 +9,7 @@ import { Player } from "./components/Player";
 import { UI } from "./components/UI";
 import { World } from "./components/World";
 import { getSimBridge } from "./simBridge/simBridge";
+import { debug } from "./utils/logger";
 import type { ViewMode } from "./types";
 import { useUiStore } from "./ui/store";
 
@@ -28,7 +30,7 @@ function App() {
       const now = performance.now();
       if (now - lastLog < 1000) return;
       lastLog = now;
-      console.debug(
+      debug(
         `[sim] frame=${frame.frameId} simMs=${frame.stats.simMs.toFixed(2)} backlog=${frame.stats.backlog}`,
       );
     });
