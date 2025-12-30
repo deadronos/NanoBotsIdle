@@ -35,10 +35,10 @@ To lower risk, we will add the noise provider behind a feature flag, add statist
 ## Subtasks
 | ID  | Description                              | Status     | Updated | Notes |
 | --- | ---------------------------------------- | ---------- | ------- | ----- |
-| 9.1 | Add noise provider abstraction           | Not Started|         |      |
-| 9.2 | Add `simplex` provider (seeded)          | Not Started|         |      |
-| 9.3 | Add sampling tests and reports           | Not Started|         |      |
-| 9.4 | Add headless screenshot test harness     | Not Started|         |      |
+| 9.1 | Add noise provider abstraction           | Completed | 2025-12-30 | provider cached per seed/type |
+| 9.2 | Add `simplex` provider (seeded)          | Completed | 2025-12-30 | open-simplex implemented via `open-simplex-noise` |
+| 9.3 | Add sampling tests and reports           | Completed | 2025-12-30 | sampling + tuning tests added |
+| 9.4 | Add headless screenshot test harness     | Completed | 2025-12-30 | PPM generator + visual-diff tests added |
 | 9.5 | Add `biomes` module and UI overlay       | Not Started|         |      |
 
 

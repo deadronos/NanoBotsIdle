@@ -62,6 +62,12 @@ biome-driven gameplay & visuals.
 - Add a headless visual test to capture a spawn-area screenshot for human
   review (Playwright or Node headless Three render). Store baseline images as
   `verification/` artifacts when approved.
+- **Initial tuning result (2025-12-30)**: searching a small grid found a good
+  match for `open-simplex` at **`surfaceBias = 2` and `quantizeScale = 3`**
+  (matched `sincos` above-water fraction within ~0.6% across sample seeds).
+  Use these as recommended starting defaults when switching `noiseType` to
+  `open-simplex`, then validate more seeds and visual baselines before making
+  the switch permanent.
 - Validate `initWorldForPrestige()` still meets `prestigeMinMinedBlocks` for a
   majority of seeds within `genRetries`.
 

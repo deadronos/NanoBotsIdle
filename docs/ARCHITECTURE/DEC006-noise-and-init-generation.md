@@ -35,3 +35,4 @@ Separately, to prevent prestige-time soft-locks (where a generated world offers 
 
 - Add documentation in `docs/ARCHITECTURE.md` and `TECH002-voxel-world-model.md` describing the implementation and init retry behavior (completed 2025-12-30).
 - Add tests that verify `initWorldForPrestige()` respects the `prestigeMinMinedBlocks` minimum when possible (added to tests on 2025-12-30).
+- **Default change (2025-12-30)**: After tuning, the default noise provider was switched to `open-simplex` and tuned parameters (`surfaceBias=2`, `quantizeScale=3`) were adopted to preserve above-water distribution characteristics while improving terrain coherence.

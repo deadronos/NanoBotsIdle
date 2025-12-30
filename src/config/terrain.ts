@@ -18,9 +18,9 @@ export const defaultTerrainConfig: TerrainConfig = {
   worldRadius: 30,
   chunkSize: 16,
   surfaceBias: 2.0,
-  quantizeScale: 4,
+  quantizeScale: 3,
   waterLevel: -12,
   bedrockY: -50,
   genRetries: 5,
-  noiseType: "sincos",
+  noiseType: "open-simplex",
 };

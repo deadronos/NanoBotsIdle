@@ -100,8 +100,8 @@ Implementation details and constraints are specified in `docs/ARCHITECTURE/TECH0
   - Voxels at `y <= waterLevel` are logically "water".
   - This threshold is authoritative across simulation, rendering, and AI.
 - **Generation Strategy**:
-  - Uses a deterministic 2D procedural noise function to determine surface height $y$ at $(x, z)$. The current implementation in `src/sim/terrain-core.ts` uses a sum-of-sines/cosines style noise function (not Perlin); this affects frequency and amplitude characteristics and should be considered when tuning.
-  - Heights are quantized in `getSurfaceHeightCore()` via `Math.floor((rawNoise + surfaceBias) * quantizeScale)`; defaults are `surfaceBias = 2.0` and `quantizeScale = 4`.
+  - Uses a deterministic 2D procedural noise function to determine surface height $y$ at $(x, z)$. The current implementation in `src/sim/terrain-core.ts` supports multiple providers; the default is now **OpenSimplex** (`open-simplex`) and a tuned default parameter set aimed to match previous distribution characteristics. Previously the repository used a sin/cos-based function; the change improves terrain coherence.
+  - Heights are quantized in `getSurfaceHeightCore()` via `Math.floor((rawNoise + surfaceBias) * quantizeScale)`; current tuned defaults are `surfaceBias = 2.0` and `quantizeScale = 3` (as of 2025-12-30) for `open-simplex`.
   - The resulting quantized heights map into material/value/color bands (see `src/sim/terrain-core.ts` and `src/utils.ts`). For example, the grass band is defined as `y < waterLevel + 6`, dark grass `y < waterLevel + 12`, rock `y < waterLevel + 20`, otherwise snow.
   - Mining logic, frontier initialization, and many systems use the quantized surface heights; some systems (player smooth walking) may use a continuous/unquantized height helper (`getSmoothHeight`) for smoother motion.
 
