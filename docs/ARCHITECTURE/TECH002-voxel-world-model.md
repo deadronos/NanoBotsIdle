@@ -97,11 +97,12 @@ World generation must guarantee a minimum number of above-water mineable voxels
 to avoid soft locks.
 
 - Target requirement: `prestige.minAboveWaterBlocks > 50` (exact number is a
-  config value).
-- On world init:
-  - compute initial frontier set (or a cheaper approximation)
-  - if count is below requirement, retry generation with a different seed and/or
-    adjusted bias for up to `terrain.genRetries`
+  config value; see `src/config/economy.ts`).
+- On world init (implementation):
+  - `initWorldForPrestige(prestigeLevel, cfg)` computes the initial frontier set using a candidate seed derived from `getSeed(prestigeLevel)`.
+  - If the computed above-water frontier count is below the configured minimum (`cfg.economy.prestigeMinMinedBlocks`), the function will iterate up to `cfg.terrain.genRetries` (default 5), deriving a new candidate seed for each attempt (current algo: `candidateSeed = baseSeed + attempt * 101`) and regenerating the world.
+  - If none of the candidate seeds meet the requirement, the base seed is used as a fallback and the init completes (see `src/engine/world/initWorld.ts`).
+  - This regeneration behavior ensures the system avoids trivial soft-locks at prestige-time while keeping initialization bounded.
 
 ## Starter drone constraint (above water)
 

@@ -96,13 +96,34 @@ Implementation details and constraints are specified in `docs/ARCHITECTURE/TECH0
 ## Terrain & Water Generation
 
 - **Coordinate System**: Pure Y-up.
-- **Water Level**: Defined in `src/config/terrain.ts` (e.g., `-20`).
+- **Water Level**: Defined in `src/config/terrain.ts` (default: `-12` as of 2025-12-30).
   - Voxels at `y <= waterLevel` are logically "water".
   - This threshold is authoritative across simulation, rendering, and AI.
 - **Generation Strategy**:
-  - Uses 2D Perlin noise to determine surface height $y$ at $(x, z)$.
-  - `surfaceBias` shifts the entire terrain up/down to ensure sufficient landmass above water.
-  - Mining logic respects `waterLevel` to distinguish "underwater" vs "surface" operations.
+  - Uses a deterministic 2D procedural noise function to determine surface height $y$ at $(x, z)$. The current implementation in `src/sim/terrain-core.ts` uses a sum-of-sines/cosines style noise function (not Perlin); this affects frequency and amplitude characteristics and should be considered when tuning.
+  - Heights are quantized in `getSurfaceHeightCore()` via `Math.floor((rawNoise + surfaceBias) * quantizeScale)`; defaults are `surfaceBias = 2.0` and `quantizeScale = 4`.
+  - The resulting quantized heights map into material/value/color bands (see `src/sim/terrain-core.ts` and `src/utils.ts`). For example, the grass band is defined as `y < waterLevel + 6`, dark grass `y < waterLevel + 12`, rock `y < waterLevel + 20`, otherwise snow.
+  - Mining logic, frontier initialization, and many systems use the quantized surface heights; some systems (player smooth walking) may use a continuous/unquantized height helper (`getSmoothHeight`) for smoother motion.
+
+### Terrain parameters & mappings
+
+- Defaults (source: `src/config/terrain.ts`):
+  - `baseSeed: 123`
+  - `prestigeSeedDelta: 99`
+  - `worldRadius: 30`
+  - `chunkSize: 16`
+  - `surfaceBias: 2.0`
+  - `quantizeScale: 4`
+  - `waterLevel: -12`
+  - `bedrockY: -50`
+
+- Material/value mapping (implementation details):
+  - Quantized height `y` is converted to a voxel value via `getVoxelValueFromHeight(y, waterLevel)` which returns discrete value bands (water, sand, ore/rock bands, etc.).
+  - Color mapping is implemented in `getVoxelColor(y, waterLevel)` and depends on offsets from `waterLevel` (see above for bands).
+
+> Note: The project previously documented use of "Perlin" noise. The current codebase uses a deterministic, sin/cos-based noise generator; consider this an implementation detail that affects tunability. If we standardize on a different noise algorithm (Perlin/Worley/OpenSimplex), update both implementation and docs and add tests demonstrating expected height distributions.
+
+- **Design constraint**: World generation must avoid prestige soft locks — ensure the combination of `surfaceBias`, `quantizeScale`, and `waterLevel` produces a sufficient number of above-water, mineable blocks for starter drones. Recent sampling with the default params (seed 222) shows a healthy grass/dark-grass presence (~31% combined), but distribution may vary by seed and radius; consider adding automated assertions or generation checks in initialization to enforce minima.
 
 ## Player collision (main thread)
 
