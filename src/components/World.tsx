@@ -1,9 +1,12 @@
+import { useFrame, useThree } from "@react-three/fiber";
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { type Color, type InstancedMesh, Object3D } from "three";
 
 import type { VoxelRenderMode } from "../config/render";
 import { useConfig } from "../config/useConfig";
 import { playerChunk, playerPosition } from "../engine/playerState";
+import { applyLodGeometry } from "../render/lodGeometry";
+import { applyChunkVisibility, createLodThresholds } from "../render/lodUtils";
 import { voxelKey } from "../shared/voxel";
 import { getBiomeAt, getBiomeColor } from "../sim/biomes";
 import {
@@ -33,7 +36,7 @@ import {
   xzInBounds,
 } from "./world/renderDebugCompare";
 import { useInstancedVoxels } from "./world/useInstancedVoxels";
-import { useMeshedChunks } from "./world/useMeshedChunks";;
+import { useMeshedChunks } from "./world/useMeshedChunks";
 
 const VoxelLayerInstanced: React.FC<{
   chunkSize: number;
@@ -603,6 +606,9 @@ const VoxelLayerMeshed: React.FC<{
   const lastRequestedPlayerChunkRef = useRef<{ cx: number; cy: number; cz: number } | null>(null);
   const cfg = useConfig();
   const bridge = getSimBridge();
+  const { camera } = useThree();
+
+  const lodThresholds = useMemo(() => createLodThresholds(chunkSize), [chunkSize]);
 
   const handleSchedulerChange = useCallback(() => {
     // Clear activeChunks when scheduler is recreated (e.g., when actualSeed arrives)
@@ -781,6 +787,20 @@ const VoxelLayerMeshed: React.FC<{
     reset,
     setFocusChunk,
   ]);
+
+  const lodVisibilityOptions = useMemo(
+    () => ({
+      onLodChange: applyLodGeometry,
+    }),
+    [],
+  );
+
+  useFrame(() => {
+    const group = groupRef.current;
+    if (!group) return;
+
+    applyChunkVisibility(group.children, camera, lodThresholds, lodVisibilityOptions);
+  });
 
   return <group ref={groupRef} />;
 };
