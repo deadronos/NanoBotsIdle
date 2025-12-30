@@ -62,7 +62,7 @@ describe("Chunk Lifecycle Tests", () => {
           transfer: [materials.buffer],
         };
       },
-      onApply: () => {},
+      onApply: () => undefined,
     });
 
     // Repeatedly mark dirty and clear to simulate chunk load/unload
@@ -105,7 +105,7 @@ describe("Chunk Lifecycle Tests", () => {
           transfer: [materials.buffer],
         };
       },
-      onApply: () => {},
+      onApply: () => undefined,
     });
 
     const coord = { cx: 0, cy: 0, cz: 0 };
@@ -145,7 +145,7 @@ describe("Chunk Lifecycle Tests", () => {
           transfer: [materials.buffer],
         };
       },
-      onApply: () => {},
+      onApply: () => undefined,
     });
 
     // Add some work
@@ -183,7 +183,7 @@ describe("Chunk Lifecycle Tests", () => {
           transfer: [materials.buffer],
         };
       },
-      onApply: () => {},
+      onApply: () => undefined,
       getPriority: () => {
         priorityCallCount++;
         return 0;

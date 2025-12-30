@@ -1,6 +1,8 @@
 import * as fs from "node:fs";
 import * as path from "node:path";
 
+/* eslint-disable no-console */
+
 /**
  * Heap snapshot utility for capturing and comparing V8 heap snapshots.
  * 
@@ -26,13 +28,15 @@ export async function takeHeapSnapshot(
   outputDir: string,
   label: string,
 ): Promise<SnapshotMetadata> {
-  // Dynamically import v8 to avoid errors in environments where it's not available
-  let v8: typeof import("node:v8");
-  try {
-    v8 = await import("node:v8");
-  } catch (error) {
-    throw new Error("v8 module not available. Heap snapshots require Node.js v8.x+");
-  }
+  // Dynamically import v8 to avoid errors in environments where it's not available.
+  // Keep this ESM-safe and avoid explicit `import()` type annotations.
+  const v8 = await (async () => {
+    try {
+      return await import("node:v8");
+    } catch {
+      throw new Error("v8 module not available. Heap snapshots require Node.js v8.x+");
+    }
+  })();
 
   // Force GC if available
   if (global.gc) {

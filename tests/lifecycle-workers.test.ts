@@ -13,8 +13,9 @@ class TestableWorker implements MeshingWorkerLike {
   public terminated = false;
   public eventHandlerCount = 0;
 
-  postMessage(message: ToMeshingWorker, transfer?: Transferable[]) {
+  postMessage(_message: ToMeshingWorker, _transfer?: Transferable[]) {
     // No-op for testing
+    return;
   }
 
   addEventListener(type: "message", handler: (event: MessageEvent<FromMeshingWorker>) => void) {
@@ -62,7 +63,7 @@ describe("Worker Lifecycle Tests", () => {
           transfer: [materials.buffer],
         };
       },
-      onApply: () => {},
+      onApply: () => undefined,
     });
 
     // Verify handler is attached
@@ -101,7 +102,7 @@ describe("Worker Lifecycle Tests", () => {
             transfer: [materials.buffer],
           };
         },
-        onApply: () => {},
+        onApply: () => undefined,
       });
 
       // Do some work
@@ -181,7 +182,7 @@ describe("Worker Lifecycle Tests", () => {
           transfer: [materials.buffer],
         };
       },
-      onApply: () => {},
+      onApply: () => undefined,
     });
 
     scheduler1.markDirty({ cx: 0, cy: 0, cz: 0 });
@@ -209,7 +210,7 @@ describe("Worker Lifecycle Tests", () => {
           transfer: [materials.buffer],
         };
       },
-      onApply: () => {},
+      onApply: () => undefined,
     });
 
     // New worker should be operational
@@ -228,10 +229,10 @@ describe("Worker Lifecycle Tests", () => {
 
     // The worker factory should return an object with these methods
     const mockFactory = (): MeshingWorkerLike => ({
-      postMessage: () => {},
-      addEventListener: () => {},
-      removeEventListener: () => {},
-      terminate: () => {},
+      postMessage: () => undefined,
+      addEventListener: () => undefined,
+      removeEventListener: () => undefined,
+      terminate: () => undefined,
     });
 
     const worker = mockFactory();
@@ -267,7 +268,7 @@ describe("Worker Lifecycle Tests", () => {
           transfer: [materials.buffer],
         };
       },
-      onApply: () => {},
+      onApply: () => undefined,
     });
 
     const scheduler2 = new MeshingScheduler({
@@ -287,7 +288,7 @@ describe("Worker Lifecycle Tests", () => {
           transfer: [materials.buffer],
         };
       },
-      onApply: () => {},
+      onApply: () => undefined,
     });
 
     // Both workers should be operational

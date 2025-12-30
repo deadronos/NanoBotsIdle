@@ -110,9 +110,9 @@ describe("InstancedMesh Lifecycle Tests", () => {
     } as unknown as InstancedMesh;
 
     const instanceData = [
-      { transform: { position: { x: 0, y: 0, z: 0 }, scale: { x: 1, y: 1, z: 1 } } },
-      { transform: { position: { x: 1, y: 1, z: 1 }, scale: { x: 1, y: 1, z: 1 } } },
-      { transform: { position: { x: 2, y: 2, z: 2 }, scale: { x: 1, y: 1, z: 1 } } },
+      { x: 0, y: 0, z: 0 },
+      { x: 1, y: 1, z: 1 },
+      { x: 2, y: 2, z: 2 },
     ];
 
     I.populateInstancedMesh(mesh, instanceData);
@@ -146,8 +146,8 @@ describe("InstancedMesh Lifecycle Tests", () => {
 
     for (let cycle = 0; cycle < cycles; cycle++) {
       const instanceData = [
-        { transform: { position: { x: cycle, y: 0, z: 0 }, scale: { x: 1, y: 1, z: 1 } } },
-        { transform: { position: { x: 0, y: cycle, z: 0 }, scale: { x: 1, y: 1, z: 1 } } },
+        { x: cycle, y: 0, z: 0 },
+        { x: 0, y: cycle, z: 0 },
       ];
 
       // Reset flag

@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+/* eslint-disable no-console */
 /**
  * Baseline memory profile generator.
  * 
@@ -13,6 +14,7 @@
  */
 
 import * as path from "node:path";
+import { fileURLToPath } from "node:url";
 
 import { MeshingScheduler, type MeshingWorkerLike } from "../../src/meshing/meshingScheduler";
 import type { FromMeshingWorker, ToMeshingWorker } from "../../src/shared/meshingProtocol";
@@ -23,7 +25,7 @@ import { MemoryTracker } from "./memory-tracker";
 class MockWorker implements MeshingWorkerLike {
   private handler: ((event: MessageEvent<FromMeshingWorker>) => void) | null = null;
 
-  postMessage(message: ToMeshingWorker, transfer?: Transferable[]) {
+  postMessage(message: ToMeshingWorker, _transfer?: Transferable[]) {
     // Simulate async work
     setTimeout(() => {
       if (this.handler && message.t === "MESH_CHUNK") {
@@ -93,7 +95,7 @@ async function generateBaseline() {
         transfer: [materials.buffer],
       };
     },
-    onApply: () => {},
+    onApply: () => undefined,
   });
 
   // Simulate chunk load/unload cycles
@@ -142,7 +144,13 @@ async function generateBaseline() {
 }
 
 // Run if executed directly
-if (require.main === module) {
+const isMain = (() => {
+  const entryPath = process.argv[1];
+  if (!entryPath) return false;
+  return path.resolve(entryPath) === fileURLToPath(import.meta.url);
+})();
+
+if (isMain) {
   generateBaseline().catch((error) => {
     console.error("Error generating baseline:", error);
     process.exit(1);
