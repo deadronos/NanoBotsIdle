@@ -1,7 +1,10 @@
 # [TASK010] Implement: OpenSimplex/Simplex provider, Tests & Visuals
 
-**Status:** Pending  
-**Added:** 2025-12-30
+**Status:** Completed  
+**Added:** 2025-12-30  
+**Updated:** 2025-12-30
+
+**Summary of completion:** Implemented `open-simplex` provider, sampling & tuning tests, PPM visual baselining, per-baseline thresholds, a baseline update helper, and a CI workflow that runs visual diff tests.
 
 ## Original Request
 Implement a new noise provider (OpenSimplex/Simplex), add tests and sampling reports, and create automated spawn-area screenshots for visual review; optionally follow with biome mapping.
@@ -41,10 +44,13 @@ Implement a new noise provider (OpenSimplex/Simplex), add tests and sampling rep
    - Create acceptance tests that rely on deterministic outputs for seed+coord pairs.
 
 ## Acceptance Criteria
+
 - New noise providers implemented and selectable via config.
 - Tests show deterministic outputs and sampling reports for `sincos` and `simplex` providers.
 - Headless screenshots of spawn area are available and baselined for visual review.
 - `initWorldForPrestige()` continues to prevent soft-locks in practice (most seeds pass within `genRetries`).
+- Baselines are generated for at least three (seed,size) combinations and stored in `verification/baselines` with per-baseline thresholds defined in `verification/baselines/meta.json`.
+- Visual diff tests are automated and run in CI; thresholds are tuned per-baseline.
 
 ## Risks & Mitigations
 - Visual regressions: provide visual baselines and human review before switching defaults.

@@ -52,41 +52,42 @@ test("visual diff against baseline is below threshold", () => {
   const seed = 222;
   const out = generatePPM(seed, cfg);
 
-  const baselinePath = path.resolve(process.cwd(), "verification/baselines/terrain-open-simplex-tuned-seed222.ppm");
+  const metaPath = path.resolve(process.cwd(), "verification/baselines/meta.json");
+  const meta = JSON.parse(fs.readFileSync(metaPath, "utf8"));
 
-  // Support a one-time baseline update mode: set UPDATE_BASELINE=1 to overwrite the baseline
-  if (process.env.UPDATE_BASELINE === "1") {
-    fs.writeFileSync(baselinePath, out, "utf8");
-    console.log(`Baseline updated at ${baselinePath}`);
-    // restore
-    updateConfig({ terrain: prev });
-    return;
-  }
+  for (const entry of meta) {
+    const baselinePath = path.resolve(process.cwd(), `verification/baselines/${entry.file}`);
+    console.log(`Comparing ${entry.file} (seed ${entry.seed})`);
 
-  expect(fs.existsSync(baselinePath)).toBe(true);
-  const baseline = fs.readFileSync(baselinePath, "utf8");
+    // Support a one-time baseline update mode: set UPDATE_BASELINE=1 to overwrite the baseline
+    if (process.env.UPDATE_BASELINE === "1") {
+      fs.writeFileSync(baselinePath, generatePPM(entry.seed, cfg), "utf8");
+      console.log(`Baseline updated at ${baselinePath}`);
+      continue;
+    }
 
-  const pA = parsePPMPixels(out);
-  const pB = parsePPMPixels(baseline);
-  expect(pA.length).toBe(pB.length);
+    expect(fs.existsSync(baselinePath)).toBe(true);
+    const baseline = fs.readFileSync(baselinePath, "utf8");
 
-  let diffCount = 0;
-  for (let i = 0; i < pA.length; i++) {
-    const [ar, ag, ab] = pA[i];
-    const [br, bg, bb] = pB[i];
-    if (ar !== br || ag !== bg || ab !== bb) {
-      diffCount += 1;
-      if (diffCount <= 10) {
-        console.log(`diff at ${i}: A=${ar},${ag},${ab} B=${br},${bg},${bb}`);
+    const outForEntry = generatePPM(entry.seed, cfg);
+    const pA = parsePPMPixels(outForEntry);
+    const pB = parsePPMPixels(baseline);
+    expect(pA.length).toBe(pB.length);
+
+    let diffCount = 0;
+    for (let i = 0; i < pA.length; i++) {
+      const [ar, ag, ab] = pA[i];
+      const [br, bg, bb] = pB[i];
+      if (ar !== br || ag !== bg || ab !== bb) {
+        diffCount += 1;
       }
     }
+
+    const pct = diffCount / pA.length;
+    console.log(`${entry.file} visual diff: ${diffCount} pixels (${(pct * 100).toFixed(4)}%) threshold=${entry.threshold}`);
+
+    expect(pct).toBeLessThan(entry.threshold);
   }
-
-  const pct = diffCount / pA.length;
-  console.log(`visual diff: ${diffCount} pixels (${(pct * 100).toFixed(4)}%)`);
-
-  // threshold: allow up to 0.5% pixel difference
-  expect(pct).toBeLessThan(0.005);
 
   // restore
   updateConfig({ terrain: prev });
