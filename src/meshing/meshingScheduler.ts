@@ -1,4 +1,5 @@
 import type { FromMeshingWorker, MeshResult, ToMeshingWorker } from "../shared/meshingProtocol";
+import { getTelemetryCollector } from "../telemetry";
 
 export type ChunkCoord3 = { cx: number; cy: number; cz: number };
 
@@ -50,7 +51,7 @@ export class MeshingScheduler {
   private readonly dirtyTokenByKey = new Map<string, number>();
   private dirtyOrder = 1;
   private readonly revByChunk = new Map<string, number>();
-  private readonly inFlightByJob = new Map<number, { key: string; rev: number }>();
+  private readonly inFlightByJob = new Map<number, { key: string; rev: number; queuedAt: number }>();
   private nextJobId = 1;
 
   private readonly onMessage = (event: MessageEvent<FromMeshingWorker>) => {
@@ -59,7 +60,20 @@ export class MeshingScheduler {
     if (msg.t === "MESH_RESULT") {
       const key = chunkKey(msg.chunk.cx, msg.chunk.cy, msg.chunk.cz);
       const currentRev = this.revByChunk.get(key) ?? 0;
+      const inFlightData = this.inFlightByJob.get(msg.jobId);
       this.inFlightByJob.delete(msg.jobId);
+
+      // Track telemetry if timing data is available
+      const telemetry = getTelemetryCollector();
+      if (telemetry.isEnabled()) {
+        if (msg.meshingTimeMs !== undefined) {
+          telemetry.recordMeshingTime(msg.meshingTimeMs);
+        }
+        if (inFlightData) {
+          const waitTime = performance.now() - inFlightData.queuedAt;
+          telemetry.recordMeshingWaitTime(waitTime);
+        }
+      }
 
       if (msg.rev !== currentRev) {
         // stale result (out-of-order or chunk dirtied while job was in flight)
@@ -221,6 +235,12 @@ export class MeshingScheduler {
   }
 
   pump() {
+    // Update telemetry with current queue state
+    const telemetry = getTelemetryCollector();
+    if (telemetry.isEnabled()) {
+      telemetry.recordMeshingQueue(this.dirty.size, this.inFlightByJob.size);
+    }
+
     while (this.inFlightByJob.size < this.maxInFlight && this.dirty.size > 0) {
       const next = this.popNextDirty();
       if (!next) return;
@@ -230,10 +250,11 @@ export class MeshingScheduler {
       const coord = next.coord;
       const rev = this.revByChunk.get(nextKey) ?? 0;
       const jobId = this.nextJobId++;
+      const queuedAt = performance.now();
 
       const { msg, transfer } = this.buildJob(coord, rev, jobId);
 
-      this.inFlightByJob.set(jobId, { key: nextKey, rev });
+      this.inFlightByJob.set(jobId, { key: nextKey, rev, queuedAt });
       this.worker.postMessage(msg, transfer);
     }
   }

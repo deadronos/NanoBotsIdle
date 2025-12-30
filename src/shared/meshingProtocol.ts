@@ -9,6 +9,7 @@ export type MeshingJob = {
   origin: ChunkOrigin;
   rev: number;
   materials: Uint8Array;
+  queuedAt?: number; // Timestamp when job was queued
 };
 
 export type MeshResult = {
@@ -21,6 +22,7 @@ export type MeshResult = {
     normals: Float32Array;
     indices: Uint16Array | Uint32Array;
   };
+  meshingTimeMs?: number; // Time spent meshing
 };
 
 export type MeshError = {

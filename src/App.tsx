@@ -8,13 +8,17 @@ import { Environment } from "./components/Environment";
 import { Player } from "./components/Player";
 import { UI } from "./components/UI";
 import { World } from "./components/World";
+import { useConfig } from "./config/useConfig";
 import { getSimBridge } from "./simBridge/simBridge";
-import { debug } from "./utils/logger";
+import { getTelemetryCollector } from "./telemetry";
 import type { ViewMode } from "./types";
 import { useUiStore } from "./ui/store";
+import { debug } from "./utils/logger";
 
 function App() {
   const [viewMode, setViewMode] = useState<ViewMode>("THIRD_PERSON");
+  const config = useConfig();
+  const telemetry = getTelemetryCollector();
 
   const toggleView = () => {
     setViewMode((prev) => (prev === "FIRST_PERSON" ? "THIRD_PERSON" : "FIRST_PERSON"));
@@ -27,6 +31,12 @@ function App() {
     const unsubscribe = bridge.onFrame((frame) => {
       setSnapshot(frame.ui);
       if (!frame.stats) return;
+      
+      // Record worker stats in telemetry
+      if (config.telemetry.enabled) {
+        telemetry.recordWorkerStats(frame.stats.simMs, frame.stats.backlog);
+      }
+      
       const now = performance.now();
       if (now - lastLog < 1000) return;
       lastLog = now;
@@ -39,7 +49,21 @@ function App() {
       unsubscribe();
       bridge.stop();
     };
-  }, []);
+  }, [config.telemetry.enabled, telemetry]);
+
+  // Expose telemetry API to window for external access (dev/profiling)
+  useEffect(() => {
+    if (config.telemetry.enabled) {
+      (window as unknown as { getTelemetrySnapshot?: () => string }).getTelemetrySnapshot = () => {
+        return telemetry.exportJSON();
+      };
+    }
+    return () => {
+      if ((window as unknown as { getTelemetrySnapshot?: () => string }).getTelemetrySnapshot) {
+        delete (window as unknown as { getTelemetrySnapshot?: () => string }).getTelemetrySnapshot;
+      }
+    };
+  }, [config.telemetry.enabled, telemetry]);
 
   return (
     <>
