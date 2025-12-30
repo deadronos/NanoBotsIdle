@@ -4,10 +4,11 @@
 
 - [TASK002] Centralize terrain & shared constants — Deterministic terrain API shared by World + Player (In Progress)
 - [TASK003] Config-driven constants extraction — Scan and extract magic values into `/src/config` (In Progress)
+- [TASK009] Design: Noise Replacement & Biome Mapping — Design doc and runbook for implementing OpenSimplex/Simplex and biomes (In Progress)
 
 ## Pending
 
-- (none)
+- [TASK010] Implement: OpenSimplex/Simplex provider, Tests & Visuals — Implement noise provider, add sampling tests, and add headless spawn-area screenshots (Pending)
 
 ## Completed
 

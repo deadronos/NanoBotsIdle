@@ -4,6 +4,7 @@ This repository is a small React + React Three Fiber game prototype: a voxel-ish
 
 ## Agent guidance
 also cross-reference root folder `AGENTS.md`
+Consider updating this file if the architecture or coding style changes significantly.
 
 Architecture docs:
 

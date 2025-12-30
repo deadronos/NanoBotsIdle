@@ -12,6 +12,8 @@ Use this file as the starting point for any agentic work (Copilot, automation, o
   - `.github/prompts/` (prompt templates)
   - `.github/workflows/` (CI expectations)
 
+  Consider updating this file if the architecture or coding style changes significantly.
+
 ## When to use subagents
 
 If a task is broad or uncertain, prefer delegating to a purpose-built subagent rather than guessing.
