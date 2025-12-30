@@ -56,7 +56,7 @@ describe("MeshingScheduler priority", () => {
           transfer: [materials.buffer],
         };
       },
-      onApply: () => {},
+      onApply: () => undefined,
     });
 
     // Far enqueued first
@@ -101,7 +101,7 @@ describe("MeshingScheduler priority", () => {
           transfer: [materials.buffer],
         };
       },
-      onApply: () => {},
+      onApply: () => undefined,
     });
 
     scheduler.markDirty({ cx: 0, cy: 0, cz: 0 });

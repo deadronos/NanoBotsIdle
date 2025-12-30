@@ -2,14 +2,14 @@ import { getDroneMoveSpeed, getMineDuration } from "../config/drones";
 import { getConfig } from "../config/index";
 import { computeNextUpgradeCosts, tryBuyUpgrade, type UpgradeType } from "../economy/upgrades";
 import type { Cmd, RenderDelta, UiSnapshot, VoxelEdit } from "../shared/protocol";
+import { voxelKey } from "../shared/voxel";
+import { forEachRadialChunk } from "../utils";
 import { type Drone, syncDroneCount } from "./drones";
 import { encodeDrones, toFloat32ArrayOrUndefined } from "./encode";
 import { addKey, createKeyIndex, resetKeyIndex } from "./keyIndex";
 import { tickDrones } from "./tickDrones";
-import { forEachRadialChunk } from "../utils";
 import { initWorldForPrestige } from "./world/initWorld";
 import type { WorldModel } from "./world/world";
-import { voxelKey } from "../shared/voxel";
 
 export type Engine = {
   dispatch: (cmd: Cmd) => void;
@@ -116,14 +116,15 @@ export const createEngine = (_seed?: number): Engine => {
     const frontierAdded: number[] = [];
     const frontierRemoved: number[] = [];
 
-    if (world) {
+    const w = world;
+    if (w) {
       // Process player frontier expansion
       while (playerChunksToScan.length > 0) {
         const pc = playerChunksToScan.shift();
         if (pc) {
           const r = 2; // radius of chunks to auto-frontier
           forEachRadialChunk({ cx: pc.cx, cy: pc.cy, cz: pc.cz }, r, 2, (c) => {
-            const added = world.ensureFrontierInChunk(c.cx, c.cz);
+            const added = w.ensureFrontierInChunk(c.cx, c.cz);
             if (added && added.length > 0) {
               for (const pos of added) {
                 addKey(frontier, voxelKey(pos.x, pos.y, pos.z));
@@ -135,7 +136,7 @@ export const createEngine = (_seed?: number): Engine => {
       }
 
       tickDrones({
-        world,
+        world: w,
         drones,
         dtSeconds,
         cfg,

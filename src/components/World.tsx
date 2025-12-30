@@ -1,15 +1,15 @@
 import React, { useCallback, useEffect, useRef } from "react";
 
-import { useConfig } from "../config/useConfig";
 import type { VoxelRenderMode } from "../config/render";
+import { useConfig } from "../config/useConfig";
 import { playerChunk, playerPosition } from "../engine/playerState";
 import { applyVoxelEdits, MATERIAL_SOLID, resetVoxelEdits } from "../sim/collision";
 import { getSeed } from "../sim/seed";
 import { getSurfaceHeightCore } from "../sim/terrain-core";
 import { getSimBridge } from "../simBridge/simBridge";
 import { useUiStore } from "../ui/store";
-import { chunkKey, ensureNeighborChunksForMinedVoxel, populateChunkVoxels } from "./world/chunkHelpers";
 import { forEachRadialChunk } from "../utils";
+import { chunkKey, ensureNeighborChunksForMinedVoxel, populateChunkVoxels } from "./world/chunkHelpers";
 import { useInstancedVoxels } from "./world/useInstancedVoxels";
 import { useMeshedChunks } from "./world/useMeshedChunks";
 
@@ -52,13 +52,10 @@ const VoxelLayerInstanced: React.FC<{
     const cy = Math.floor(surfaceY / chunkSize);
     const baseCx = Math.floor(spawnX / chunkSize);
     const baseCz = Math.floor(spawnZ / chunkSize);
-    setFocusChunk(baseCx, cy, baseCz);
-    for (let cx = -1; cx <= 1; cx += 1) {
-      for (let cz = -1; cz <= 1; cz += 1) {
-        addChunk(baseCx + cx, cy, baseCz + cz);
-      }
-    }
-  }, [addChunk, chunkSize, cfg.terrain.quantizeScale, cfg.terrain.surfaceBias, seed, setFocusChunk, spawnX, spawnZ]);
+    forEachRadialChunk({ cx: baseCx, cy, cz: baseCz }, 1, 2, (c) => {
+      addChunk(c.cx, cy, c.cz);
+    });
+  }, [addChunk, chunkSize, cfg.terrain.quantizeScale, cfg.terrain.surfaceBias, seed, spawnX, spawnZ]);
 
   useEffect(() => {
     return bridge.onFrame((frame) => {
@@ -70,6 +67,29 @@ const VoxelLayerInstanced: React.FC<{
 
       if (frame.delta.edits && frame.delta.edits.length > 0) {
         applyVoxelEdits(frame.delta.edits);
+      }
+
+      // Poll player chunk (used by frontier mode to expand frontier; used by dense mode to load chunks)
+      const px = playerPosition.x;
+      const py = playerPosition.y;
+      const pz = playerPosition.z;
+      const pcx = Math.floor(px / chunkSize);
+      const pcy = Math.floor(py / chunkSize);
+      const pcz = Math.floor(pz / chunkSize);
+
+      if (pcx !== playerChunk.cx || pcy !== playerChunk.cy || pcz !== playerChunk.cz) {
+        playerChunk.cx = pcx;
+        playerChunk.cy = pcy;
+        playerChunk.cz = pcz;
+
+        if (voxelRenderMode === "frontier") {
+          bridge.enqueue({ t: "SET_PLAYER_CHUNK", cx: pcx, cy: pcy, cz: pcz });
+        } else {
+          // Prioritize nearby chunks in radial order to fill nearest areas first
+          forEachRadialChunk({ cx: pcx, cy: pcy, cz: pcz }, 1, 3, (c) => {
+            addChunk(c.cx, c.cy, c.cz);
+          });
+        }
       }
 
       if (voxelRenderMode === "frontier") {
@@ -104,28 +124,6 @@ const VoxelLayerInstanced: React.FC<{
       }
 
       ensureInitialChunk();
-
-      // Poll player chunk
-      const px = playerPosition.x;
-      const py = playerPosition.y;
-      const pz = playerPosition.z;
-      const pcx = Math.floor(px / chunkSize);
-      const pcy = Math.floor(py / chunkSize);
-      const pcz = Math.floor(pz / chunkSize);
-
-      if (pcx !== playerChunk.cx || pcy !== playerChunk.cy || pcz !== playerChunk.cz) {
-        playerChunk.cx = pcx;
-        playerChunk.cy = pcy;
-        playerChunk.cz = pcz;
-        // Prioritize nearby chunks in radial order to fill nearest areas first
-        forEachRadialChunk({ cx: pcx, cy: pcy, cz: pcz }, 1, 3, (c) => {
-          addChunk(c.cx, c.cy, c.cz);
-        });
-
-        if (voxelRenderMode === "frontier") {
-          bridge.enqueue({ t: "SET_PLAYER_CHUNK", cx: pcx, cy: pcy, cz: pcz });
-        }
-      }
 
       const mined = frame.delta.minedPositions;
       if (mined && mined.length > 0) {
@@ -203,12 +201,11 @@ const VoxelLayerMeshed: React.FC<{
     const cy = Math.floor(surfaceY / chunkSize);
     const baseCx = Math.floor(spawnX / chunkSize);
     const baseCz = Math.floor(spawnZ / chunkSize);
-    for (let cx = -1; cx <= 1; cx += 1) {
-      for (let cz = -1; cz <= 1; cz += 1) {
-        addChunk(baseCx + cx, cy, baseCz + cz);
-      }
-    }
-  }, [addChunk, chunkSize, cfg.terrain.quantizeScale, cfg.terrain.surfaceBias, seed, spawnX, spawnZ]);
+    setFocusChunk(baseCx, cy, baseCz);
+    forEachRadialChunk({ cx: baseCx, cy, cz: baseCz }, 1, 2, (c) => {
+      addChunk(c.cx, cy, c.cz);
+    });
+  }, [addChunk, chunkSize, cfg.terrain.quantizeScale, cfg.terrain.surfaceBias, seed, setFocusChunk, spawnX, spawnZ]);
 
   useEffect(() => {
     return bridge.onFrame((frame) => {
@@ -244,7 +241,7 @@ const VoxelLayerMeshed: React.FC<{
         });
       }
     });
-  }, [bridge, chunkSize, ensureInitialChunk, markDirtyForEdits, reset, setFocusChunk]);
+  }, [addChunk, bridge, chunkSize, ensureInitialChunk, markDirtyForEdits, reset, setFocusChunk]);
 
   return <group ref={groupRef} />;
 };
