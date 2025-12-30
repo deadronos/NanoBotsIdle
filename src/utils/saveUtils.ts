@@ -17,6 +17,8 @@ export const exportSave = () => {
   URL.revokeObjectURL(url);
 };
 
+import { error } from "./logger";
+
 export const importSave = (file: File) => {
   return new Promise<void>((resolve, reject) => {
     const reader = new FileReader();
@@ -32,7 +34,7 @@ export const importSave = (file: File) => {
         useGameStore.setState(json.data);
         resolve();
       } catch (err) {
-        console.error("Failed to import save:", err);
+        error("Failed to import save:", err);
         reject(err);
       }
     };
