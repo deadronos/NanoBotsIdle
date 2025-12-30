@@ -7,7 +7,7 @@
 
 ## Pending
 
-- (none)
+- [TASK008] Greedy meshing worker v1 — Chunk surface meshing + worker pipeline (Pending)
 
 ## Completed
 
