@@ -5,7 +5,7 @@
 
 ## Context
 
-Historical docs described terrain generation as using "Perlin" noise. During a rapid prototype phase, a deterministic sum-of-sines/cosines function was used instead. The project has since added a configurable noise provider abstraction and switched the default provider to OpenSimplex for improved coherence, while keeping the legacy sin/cos provider for parity and tuning.
+Historical docs described terrain generation as using "Perlin" noise. During a rapid prototype phase, a deterministic sum-of-sines/cosines function was used instead. The project has since added a configurable noise provider abstraction and switched the default provider to OpenSimplex (config: `open-simplex`) for improved coherence, while keeping the legacy sin/cos provider (config: `sincos`) for parity and tuning.
 
 Separately, to prevent prestige-time soft-locks (where a generated world offers too few above-water mineable voxels for starter drones), an initialization retry strategy was added that regenerates candidate seeds and selects the first candidate that meets a configurable minimum frontier criterion.
 
@@ -42,4 +42,4 @@ Separately, to prevent prestige-time soft-locks (where a generated world offers 
 
 - Add documentation in `docs/ARCHITECTURE.md` and `TECH002-voxel-world-model.md` describing the implementation and init retry behavior (completed 2025-12-30).
 - Add tests that verify `initWorldForPrestige()` respects the `prestigeMinMinedBlocks` minimum when possible (added to tests on 2025-12-30).
-- **Default change (2025-12-30)**: After tuning, the default noise provider was switched to `open-simplex` and tuned parameters (`surfaceBias=2`, `quantizeScale=3`) were adopted to preserve above-water distribution characteristics while improving terrain coherence.
+- **Default change (2025-12-30)**: After tuning, the default noise provider was switched to OpenSimplex (config: `open-simplex`) and tuned parameters (`surfaceBias=2`, `quantizeScale=3`) were adopted to preserve above-water distribution characteristics while improving terrain coherence.
