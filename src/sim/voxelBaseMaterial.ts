@@ -1,5 +1,10 @@
 import type { Config } from "../config/index";
-import { MATERIAL_AIR, MATERIAL_BEDROCK, MATERIAL_SOLID, type VoxelMaterial } from "../shared/voxel";
+import {
+  MATERIAL_AIR,
+  MATERIAL_BEDROCK,
+  MATERIAL_SOLID,
+  type VoxelMaterial,
+} from "../shared/voxel";
 import { getSurfaceHeightCore } from "./terrain-core";
 
 export const getBaseMaterialAt = (
@@ -23,4 +28,3 @@ export const getBaseMaterialAt = (
   if (y <= surfaceY) return MATERIAL_SOLID;
   return MATERIAL_AIR;
 };
-

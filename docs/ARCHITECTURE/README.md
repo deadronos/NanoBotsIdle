@@ -42,6 +42,7 @@ implementation without rediscovering decisions.
   not the world source of truth.
 - `DEC005-greedy-meshing-for-block-voxel-surfaces.md`: prefer greedy meshing as
   the first surface-meshing algorithm for block voxels; worker-friendly per-chunk jobs.
+- `DEC006-noise-and-init-generation.md`: noise providers (`terrain.noiseType`), tuned OpenSimplex defaults, and prestige-time init retry strategy.
 
 ## Update rules
 

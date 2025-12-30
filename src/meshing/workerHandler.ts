@@ -1,4 +1,4 @@
-import type { FromMeshingWorker,ToMeshingWorker } from "../shared/meshingProtocol";
+import type { FromMeshingWorker, ToMeshingWorker } from "../shared/meshingProtocol";
 import { greedyMeshChunk } from "./greedyMesher";
 
 export const handleMeshingJob = (job: ToMeshingWorker): FromMeshingWorker => {
@@ -41,4 +41,3 @@ export const handleMeshingJob = (job: ToMeshingWorker): FromMeshingWorker => {
     };
   }
 };
-

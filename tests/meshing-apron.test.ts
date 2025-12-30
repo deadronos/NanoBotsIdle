@@ -40,4 +40,3 @@ describe("meshing apron field (TDD)", () => {
     expect(field[index3D(3, 2, 2, dim)]).toBe(9);
   });
 });
-

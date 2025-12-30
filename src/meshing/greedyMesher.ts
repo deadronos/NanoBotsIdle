@@ -135,7 +135,14 @@ export const greedyMeshChunk = (input: GreedyMeshInput): MeshGeometry => {
           pushVertex(verts[2].x, verts[2].y, verts[2].z, nx, ny, nz);
           pushVertex(verts[3].x, verts[3].y, verts[3].z, nx, ny, nz);
 
-          indices.push(baseIndex, baseIndex + 1, baseIndex + 2, baseIndex, baseIndex + 2, baseIndex + 3);
+          indices.push(
+            baseIndex,
+            baseIndex + 1,
+            baseIndex + 2,
+            baseIndex,
+            baseIndex + 2,
+            baseIndex + 3,
+          );
 
           // clear mask rect
           for (let y = 0; y < h; y += 1) {
@@ -166,4 +173,3 @@ export const greedyMeshChunk = (input: GreedyMeshInput): MeshGeometry => {
 export const __testing = {
   chooseIndexArray,
 };
-

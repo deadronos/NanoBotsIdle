@@ -32,7 +32,11 @@ const parseChunkKey = (key: string): ChunkCoord3 => {
 export class MeshingScheduler {
   private readonly worker: MeshingWorkerLike;
   private readonly chunkSize: number;
-  private readonly buildJob: (coord: ChunkCoord3, rev: number, jobId: number) => {
+  private readonly buildJob: (
+    coord: ChunkCoord3,
+    rev: number,
+    jobId: number,
+  ) => {
     msg: ToMeshingWorker;
     transfer: Transferable[];
   };
@@ -77,7 +81,11 @@ export class MeshingScheduler {
   constructor(options: {
     worker: MeshingWorkerLike;
     chunkSize: number;
-    buildJob: (coord: ChunkCoord3, rev: number, jobId: number) => {
+    buildJob: (
+      coord: ChunkCoord3,
+      rev: number,
+      jobId: number,
+    ) => {
       msg: ToMeshingWorker;
       transfer: Transferable[];
     };
@@ -246,4 +254,3 @@ export class MeshingScheduler {
     return this.chunkSize;
   }
 }
-

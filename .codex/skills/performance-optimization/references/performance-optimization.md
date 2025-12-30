@@ -332,13 +332,13 @@ Performance isn't just a buzzword—it's the difference between a product people
 
 ```javascript
 // BAD: Triggers API call on every keystroke
-input.addEventListener('input', (e) => {
+input.addEventListener("input", (e) => {
   fetch(`/search?q=${e.target.value}`);
 });
 
 // GOOD: Debounce API calls
 let timeout;
-input.addEventListener('input', (e) => {
+input.addEventListener("input", (e) => {
   clearTimeout(timeout);
   timeout = setTimeout(() => {
     fetch(`/search?q=${e.target.value}`);
@@ -388,10 +388,10 @@ result = expensive_function(x)
 
 ```javascript
 // BAD: Blocking file read
-const data = fs.readFileSync('file.txt');
+const data = fs.readFileSync("file.txt");
 
 // GOOD: Non-blocking file read
-fs.readFile('file.txt', (err, data) => {
+fs.readFile("file.txt", (err, data) => {
   if (err) throw err;
   // process data
 });
@@ -416,7 +416,7 @@ p.sort_stats('cumulative').print_stats(10)
 ### Example 7: Using Redis for Caching in Node.js
 
 ```javascript
-const redis = require('redis');
+const redis = require("redis");
 const client = redis.createClient();
 
 function getCachedData(key, fetchFunction) {

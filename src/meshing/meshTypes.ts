@@ -12,4 +12,3 @@ export type GreedyMeshInput = {
   // (size+2)^3 samples (1-voxel apron)
   materials: Uint8Array;
 };
-

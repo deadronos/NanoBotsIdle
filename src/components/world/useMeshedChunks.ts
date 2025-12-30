@@ -13,9 +13,9 @@ import { chunkDistanceSq3 } from "../../utils";
 
 const chunkKey = (cx: number, cy: number, cz: number) => `${cx},${cy},${cz}`;
 
-export const useMeshedChunks = (options: { 
-  chunkSize: number; 
-  prestigeLevel: number; 
+export const useMeshedChunks = (options: {
+  chunkSize: number;
+  prestigeLevel: number;
   waterLevel: number;
   seed?: number;
   onSchedulerChange?: () => void;

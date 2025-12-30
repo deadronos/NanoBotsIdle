@@ -30,7 +30,7 @@ The core architectural rule is:
 ## Non-goals
 
 - Commit to a Minecraft-compatible chunk serialization.
-- Implement advanced meshing immediately (greedy meshing / surface nets can come later).
+- Implement advanced meshing immediately beyond the current greedy meshing path (e.g., surface nets / marching cubes).
 - Implement persistence format requirements (save/load) in this spec.
 
 ## Terminology

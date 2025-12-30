@@ -6,7 +6,10 @@ export type FrameHandler = (frame: FrameMessage) => void;
 export type WorkerLike = {
   postMessage: Worker["postMessage"];
   addEventListener: (type: "message", listener: (event: MessageEvent<FromWorker>) => void) => void;
-  removeEventListener: (type: "message", listener: (event: MessageEvent<FromWorker>) => void) => void;
+  removeEventListener: (
+    type: "message",
+    listener: (event: MessageEvent<FromWorker>) => void,
+  ) => void;
   terminate?: () => void;
 };
 
@@ -25,4 +28,3 @@ export type SimBridge = {
   onFrame: (handler: FrameHandler) => () => void;
   isRunning: () => boolean;
 };
-

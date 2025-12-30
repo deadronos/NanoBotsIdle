@@ -127,4 +127,3 @@ export const tickDrones = (options: {
 
   uiSnapshot.totalBlocks = world.countFrontierAboveWater();
 };
-
