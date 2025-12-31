@@ -10,6 +10,7 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
+    "coverage:open": "npx open-cli coverage/index.html",
     "test:lifecycle": "vitest run lifecycle",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
