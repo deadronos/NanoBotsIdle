@@ -13,8 +13,9 @@ ctx.addEventListener("message", (event: MessageEvent<ToMeshingWorker>) => {
 
   if (out.t === "MESH_RESULT") {
     const resultWithTiming = { ...out, meshingTimeMs };
-    const { positions, normals, indices } = out.geometry;
+    const { positions, normals, indices, colors } = out.geometry;
     const transfer: Transferable[] = [positions.buffer, normals.buffer, indices.buffer];
+    if (colors) transfer.push(colors.buffer);
 
     if (out.lods) {
       for (const lod of out.lods) {
@@ -23,6 +24,7 @@ ctx.addEventListener("message", (event: MessageEvent<ToMeshingWorker>) => {
           lod.geometry.normals.buffer,
           lod.geometry.indices.buffer,
         );
+        if (lod.geometry.colors) transfer.push(lod.geometry.colors.buffer);
       }
     }
     ctx.postMessage(resultWithTiming satisfies FromMeshingWorker, transfer);

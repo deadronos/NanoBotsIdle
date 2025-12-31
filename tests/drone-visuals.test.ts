@@ -1,176 +1,132 @@
-import type { Group, Mesh } from "three";
-import { Vector3 } from "three";
+import type { InstancedMesh } from "three";
 import { describe, expect, it, vi } from "vitest";
 
 import { updateDroneVisuals } from "../src/components/drones/droneVisuals";
-import type { DroneVisualRefs } from "../src/components/drones/types";
 import { getConfig } from "../src/config/index";
 import { DRONE_STATE_ID } from "../src/shared/droneState";
 
-/**
- * Mock Material with tracking for performance optimization validation
- */
 class MockMaterial {
-  public color = {
-    _hex: 0x000000, // Start with black (no role color)
-    setHex: vi.fn((hex: number) => {
-      this.color._hex = hex;
-    }),
-    getHex: vi.fn(() => this.color._hex),
-  };
   public opacity = 0.5;
 }
 
-/**
- * Mock Mesh with material tracking
- */
-class MockMesh {
+class MockInstancedMesh {
+  public count = 0;
+  public userData: Record<string, unknown> = {};
+  public instanceMatrix = { count: 32, needsUpdate: false };
+  public instanceColor: { count?: number; needsUpdate: boolean } | null = { needsUpdate: false };
   public material = new MockMaterial();
-  public visible = false;
-  public position = new Vector3();
-  public scale = new Vector3(1, 1, 1);
-  public rotation = new Vector3();
 
-  lookAt = vi.fn();
-}
-
-/**
- * Mock Group for drone representation
- */
-class MockGroup {
-  public position = new Vector3();
-  public rotation = new Vector3();
-
-  lookAt = vi.fn();
-  worldToLocal = vi.fn((v: Vector3) => v.clone());
+  public setMatrixAt = vi.fn();
+  public setColorAt = vi.fn();
 }
 
 describe("droneVisuals performance optimization (TDD)", () => {
-  it("should not call setHex when color hasn't changed for same role", () => {
+  it("should not call setColorAt when role hasn't changed", () => {
     const cfg = getConfig();
     const droneCount = 2;
     const positions = new Float32Array([0, 10, 0, 5, 10, 5]);
-    const targets = new Float32Array([0, 0, 0, 0, 0, 0]);
+    const targets = new Float32Array([Number.NaN, Number.NaN, Number.NaN, Number.NaN, Number.NaN, Number.NaN]);
     const states = new Uint8Array([DRONE_STATE_ID.SEEKING, DRONE_STATE_ID.SEEKING]);
     const roles = new Uint8Array([0, 1]); // miner, hauler
 
-    const group0 = new MockGroup();
-    const body0 = new MockMesh();
-    const group1 = new MockGroup();
-    const body1 = new MockMesh();
+    const bodyMesh = new MockInstancedMesh();
+    const miningLaserMesh = new MockInstancedMesh();
+    const scanningLaserMesh = new MockInstancedMesh();
+    const targetBoxMesh = new MockInstancedMesh();
 
-    const refs: DroneVisualRefs = {
-      groupRefs: [group0 as unknown as Group, group1 as unknown as Group],
-      bodyRefs: [body0 as unknown as Mesh, body1 as unknown as Mesh],
-      miningLaserRefs: [null, null],
-      scanningLaserRefs: [null, null],
-      targetBoxRefs: [null, null],
-      impactLightRefs: [null, null],
-    };
-
-    const tempWorldTarget = new Vector3();
-    const tempLocalTarget = new Vector3();
+    // Enable instance colors on body only for this test.
+    bodyMesh.instanceColor = { needsUpdate: false };
+    targetBoxMesh.instanceColor = null;
 
     // First frame - should set colors
-    updateDroneVisuals({
+    updateDroneVisuals(
       cfg,
       droneCount,
       positions,
       targets,
       states,
       roles,
-      refs,
-      tempWorldTarget,
-      tempLocalTarget,
-      elapsedTime: 0,
-    });
+      bodyMesh as unknown as InstancedMesh,
+      miningLaserMesh as unknown as InstancedMesh,
+      scanningLaserMesh as unknown as InstancedMesh,
+      targetBoxMesh as unknown as InstancedMesh,
+      0,
+    );
 
-    expect(body0.material.color.setHex).toHaveBeenCalledTimes(1);
-    expect(body0.material.color.setHex).toHaveBeenCalledWith(0x00ffcc); // miner
-    expect(body1.material.color.setHex).toHaveBeenCalledTimes(1);
-    expect(body1.material.color.setHex).toHaveBeenCalledWith(0xffaa00); // hauler
+    expect(bodyMesh.setColorAt).toHaveBeenCalledTimes(2);
+    bodyMesh.setColorAt.mockClear();
 
-    // Reset mocks
-    body0.material.color.setHex.mockClear();
-    body1.material.color.setHex.mockClear();
-
-    // Second frame - should NOT call setHex again (same roles, colors already set)
-    updateDroneVisuals({
+    // Second frame - should NOT call setColorAt again (same roles)
+    updateDroneVisuals(
       cfg,
       droneCount,
       positions,
       targets,
       states,
       roles,
-      refs,
-      tempWorldTarget,
-      tempLocalTarget,
-      elapsedTime: 0.016,
-    });
+      bodyMesh as unknown as InstancedMesh,
+      miningLaserMesh as unknown as InstancedMesh,
+      scanningLaserMesh as unknown as InstancedMesh,
+      targetBoxMesh as unknown as InstancedMesh,
+      0.016,
+    );
 
-    expect(body0.material.color.setHex).not.toHaveBeenCalled();
-    expect(body1.material.color.setHex).not.toHaveBeenCalled();
+    expect(bodyMesh.setColorAt).not.toHaveBeenCalled();
   });
 
-  it("should call setHex when role changes", () => {
+  it("should call setColorAt when role changes", () => {
     const cfg = getConfig();
     const droneCount = 1;
     const positions = new Float32Array([0, 10, 0]);
-    const targets = new Float32Array([0, 0, 0]);
+    const targets = new Float32Array([Number.NaN, Number.NaN, Number.NaN]);
     const states = new Uint8Array([DRONE_STATE_ID.SEEKING]);
     const roles = new Uint8Array([0]); // miner
 
-    const group = new MockGroup();
-    const body = new MockMesh();
+    const bodyMesh = new MockInstancedMesh();
+    const miningLaserMesh = new MockInstancedMesh();
+    const scanningLaserMesh = new MockInstancedMesh();
+    const targetBoxMesh = new MockInstancedMesh();
 
-    const refs: DroneVisualRefs = {
-      groupRefs: [group as unknown as Group],
-      bodyRefs: [body as unknown as Mesh],
-      miningLaserRefs: [null],
-      scanningLaserRefs: [null],
-      targetBoxRefs: [null],
-      impactLightRefs: [null],
-    };
-
-    const tempWorldTarget = new Vector3();
-    const tempLocalTarget = new Vector3();
+    bodyMesh.instanceColor = { needsUpdate: false };
+    targetBoxMesh.instanceColor = null;
 
     // First frame - miner
-    updateDroneVisuals({
+    updateDroneVisuals(
       cfg,
       droneCount,
       positions,
       targets,
       states,
       roles,
-      refs,
-      tempWorldTarget,
-      tempLocalTarget,
-      elapsedTime: 0,
-    });
+      bodyMesh as unknown as InstancedMesh,
+      miningLaserMesh as unknown as InstancedMesh,
+      scanningLaserMesh as unknown as InstancedMesh,
+      targetBoxMesh as unknown as InstancedMesh,
+      0,
+    );
 
-    expect(body.material.color.setHex).toHaveBeenCalledWith(0x00ffcc);
-    body.material.color.setHex.mockClear();
+    expect(bodyMesh.setColorAt).toHaveBeenCalledTimes(1);
+    bodyMesh.setColorAt.mockClear();
 
     // Change role to hauler
     roles[0] = 1;
 
     // Second frame - should detect role change and update color
-    updateDroneVisuals({
+    updateDroneVisuals(
       cfg,
       droneCount,
       positions,
       targets,
       states,
       roles,
-      refs,
-      tempWorldTarget,
-      tempLocalTarget,
-      elapsedTime: 0.016,
-    });
+      bodyMesh as unknown as InstancedMesh,
+      miningLaserMesh as unknown as InstancedMesh,
+      scanningLaserMesh as unknown as InstancedMesh,
+      targetBoxMesh as unknown as InstancedMesh,
+      0.016,
+    );
 
-    expect(body.material.color.setHex).toHaveBeenCalledTimes(1);
-    expect(body.material.color.setHex).toHaveBeenCalledWith(0xffaa00);
+    expect(bodyMesh.setColorAt).toHaveBeenCalledTimes(1);
   });
 
   it("should not update opacity every frame for mining laser when value is stable", () => {
@@ -181,62 +137,56 @@ describe("droneVisuals performance optimization (TDD)", () => {
     const states = new Uint8Array([DRONE_STATE_ID.MINING]);
     const roles = new Uint8Array([0]);
 
-    const group = new MockGroup();
-    const body = new MockMesh();
-    const miningLaser = new MockMesh();
+    const bodyMesh = new MockInstancedMesh();
+    const miningLaserMesh = new MockInstancedMesh();
+    const scanningLaserMesh = new MockInstancedMesh();
+    const targetBoxMesh = new MockInstancedMesh();
+
     // Set initial opacity
-    miningLaser.material.opacity = cfg.drones.visual.miningLaser.opacityBase;
-
-    const refs: DroneVisualRefs = {
-      groupRefs: [group as unknown as Group],
-      bodyRefs: [body as unknown as Mesh],
-      miningLaserRefs: [miningLaser as unknown as Mesh],
-      scanningLaserRefs: [null],
-      targetBoxRefs: [null],
-      impactLightRefs: [null],
-    };
-
-    const tempWorldTarget = new Vector3();
-    const tempLocalTarget = new Vector3();
+    miningLaserMesh.material.opacity = cfg.drones.visual.miningLaser.opacityBase;
+    bodyMesh.instanceColor = null;
+    targetBoxMesh.instanceColor = null;
 
     // First frame at time = 0
     const time1 = 0;
-    updateDroneVisuals({
+    updateDroneVisuals(
       cfg,
       droneCount,
       positions,
       targets,
       states,
       roles,
-      refs,
-      tempWorldTarget,
-      tempLocalTarget,
-      elapsedTime: time1,
-    });
+      bodyMesh as unknown as InstancedMesh,
+      miningLaserMesh as unknown as InstancedMesh,
+      scanningLaserMesh as unknown as InstancedMesh,
+      targetBoxMesh as unknown as InstancedMesh,
+      time1,
+    );
 
-    const opacity1 = miningLaser.material.opacity;
+    const opacity1 = miningLaserMesh.material.opacity;
 
     // Second frame at same time (simulating redundant update) - opacity should not change
-    updateDroneVisuals({
+    updateDroneVisuals(
       cfg,
       droneCount,
       positions,
       targets,
       states,
       roles,
-      refs,
-      tempWorldTarget,
-      tempLocalTarget,
-      elapsedTime: time1,
-    });
+      bodyMesh as unknown as InstancedMesh,
+      miningLaserMesh as unknown as InstancedMesh,
+      scanningLaserMesh as unknown as InstancedMesh,
+      targetBoxMesh as unknown as InstancedMesh,
+      time1,
+    );
 
-    const opacity2 = miningLaser.material.opacity;
+    const opacity2 = miningLaserMesh.material.opacity;
 
     // Opacity should remain the same between identical frames
     expect(opacity2).toBe(opacity1);
   });
 
-  it("should not call setHex on targetBox when state hasn't changed", () => {
+  it("should not call setColorAt on targetBox when state hasn't changed", () => {
     const cfg = getConfig();
     const droneCount = 1;
     const positions = new Float32Array([0, 10, 0]);
@@ -244,57 +194,50 @@ describe("droneVisuals performance optimization (TDD)", () => {
     const states = new Uint8Array([DRONE_STATE_ID.MOVING]);
     const roles = new Uint8Array([0]);
 
-    const group = new MockGroup();
-    const body = new MockMesh();
-    const targetBox = new MockMesh();
-
-    const refs: DroneVisualRefs = {
-      groupRefs: [group as unknown as Group],
-      bodyRefs: [body as unknown as Mesh],
-      miningLaserRefs: [null],
-      scanningLaserRefs: [null],
-      targetBoxRefs: [targetBox as unknown as Mesh],
-      impactLightRefs: [null],
-    };
-
-    const tempWorldTarget = new Vector3();
-    const tempLocalTarget = new Vector3();
+    const bodyMesh = new MockInstancedMesh();
+    const miningLaserMesh = new MockInstancedMesh();
+    const scanningLaserMesh = new MockInstancedMesh();
+    const targetBoxMesh = new MockInstancedMesh();
+    bodyMesh.instanceColor = null;
+    targetBoxMesh.instanceColor = { needsUpdate: false };
 
     // First frame - moving state
-    updateDroneVisuals({
+    updateDroneVisuals(
       cfg,
       droneCount,
       positions,
       targets,
       states,
       roles,
-      refs,
-      tempWorldTarget,
-      tempLocalTarget,
-      elapsedTime: 0,
-    });
+      bodyMesh as unknown as InstancedMesh,
+      miningLaserMesh as unknown as InstancedMesh,
+      scanningLaserMesh as unknown as InstancedMesh,
+      targetBoxMesh as unknown as InstancedMesh,
+      0,
+    );
 
-    expect(targetBox.material.color.setHex).toHaveBeenCalledWith(0x00ffff); // cyan for moving
-    targetBox.material.color.setHex.mockClear();
+    expect(targetBoxMesh.setColorAt).toHaveBeenCalledTimes(1);
+    targetBoxMesh.setColorAt.mockClear();
 
     // Second frame - still moving, color should not change
-    updateDroneVisuals({
+    updateDroneVisuals(
       cfg,
       droneCount,
       positions,
       targets,
       states,
       roles,
-      refs,
-      tempWorldTarget,
-      tempLocalTarget,
-      elapsedTime: 0.016,
-    });
+      bodyMesh as unknown as InstancedMesh,
+      miningLaserMesh as unknown as InstancedMesh,
+      scanningLaserMesh as unknown as InstancedMesh,
+      targetBoxMesh as unknown as InstancedMesh,
+      0.016,
+    );
 
-    expect(targetBox.material.color.setHex).not.toHaveBeenCalled();
+    expect(targetBoxMesh.setColorAt).not.toHaveBeenCalled();
   });
 
-  it("should call setHex on targetBox when state changes from moving to mining", () => {
+  it("should call setColorAt on targetBox when state changes from moving to mining", () => {
     const cfg = getConfig();
     const droneCount = 1;
     const positions = new Float32Array([0, 10, 0]);
@@ -302,57 +245,49 @@ describe("droneVisuals performance optimization (TDD)", () => {
     const states = new Uint8Array([DRONE_STATE_ID.MOVING]);
     const roles = new Uint8Array([0]);
 
-    const group = new MockGroup();
-    const body = new MockMesh();
-    const targetBox = new MockMesh();
-
-    const refs: DroneVisualRefs = {
-      groupRefs: [group as unknown as Group],
-      bodyRefs: [body as unknown as Mesh],
-      miningLaserRefs: [null],
-      scanningLaserRefs: [null],
-      targetBoxRefs: [targetBox as unknown as Mesh],
-      impactLightRefs: [null],
-    };
-
-    const tempWorldTarget = new Vector3();
-    const tempLocalTarget = new Vector3();
+    const bodyMesh = new MockInstancedMesh();
+    const miningLaserMesh = new MockInstancedMesh();
+    const scanningLaserMesh = new MockInstancedMesh();
+    const targetBoxMesh = new MockInstancedMesh();
+    bodyMesh.instanceColor = null;
+    targetBoxMesh.instanceColor = { needsUpdate: false };
 
     // First frame - moving state
-    updateDroneVisuals({
+    updateDroneVisuals(
       cfg,
       droneCount,
       positions,
       targets,
       states,
       roles,
-      refs,
-      tempWorldTarget,
-      tempLocalTarget,
-      elapsedTime: 0,
-    });
+      bodyMesh as unknown as InstancedMesh,
+      miningLaserMesh as unknown as InstancedMesh,
+      scanningLaserMesh as unknown as InstancedMesh,
+      targetBoxMesh as unknown as InstancedMesh,
+      0,
+    );
 
-    expect(targetBox.material.color.setHex).toHaveBeenCalledWith(0x00ffff);
-    targetBox.material.color.setHex.mockClear();
+    expect(targetBoxMesh.setColorAt).toHaveBeenCalledTimes(1);
+    targetBoxMesh.setColorAt.mockClear();
 
     // Change state to mining
     states[0] = DRONE_STATE_ID.MINING;
 
     // Second frame - mining state
-    updateDroneVisuals({
+    updateDroneVisuals(
       cfg,
       droneCount,
       positions,
       targets,
       states,
       roles,
-      refs,
-      tempWorldTarget,
-      tempLocalTarget,
-      elapsedTime: 0.016,
-    });
+      bodyMesh as unknown as InstancedMesh,
+      miningLaserMesh as unknown as InstancedMesh,
+      scanningLaserMesh as unknown as InstancedMesh,
+      targetBoxMesh as unknown as InstancedMesh,
+      0.016,
+    );
 
-    expect(targetBox.material.color.setHex).toHaveBeenCalledTimes(1);
-    expect(targetBox.material.color.setHex).toHaveBeenCalledWith(0xff3333); // red for mining
+    expect(targetBoxMesh.setColorAt).toHaveBeenCalledTimes(1);
   });
 });

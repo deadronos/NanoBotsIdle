@@ -1,6 +1,10 @@
 import { describe, expect, it } from "vitest";
 
-import dronesConfig, { getDroneMoveSpeed, getMineDuration } from "../src/config/drones";
+import dronesConfig, {
+  getDroneCargo,
+  getDroneMoveSpeed,
+  getMineDuration,
+} from "../src/config/drones";
 import { getConfig } from "../src/config/index";
 
 describe("drones config & helpers (TDD)", () => {
@@ -18,5 +22,12 @@ describe("drones config & helpers (TDD)", () => {
     expect(getDroneMoveSpeed(1, cfg)).toBe(7);
     expect(getMineDuration(0, cfg)).toBe(2.0);
     expect(getMineDuration(5, cfg)).toBeGreaterThanOrEqual(0.2);
+  });
+
+  it("should compute drone cargo and validate cfg presence", () => {
+    const cfg = getConfig();
+    expect(getDroneCargo(0, cfg)).toBe(cfg.drones.baseCargo);
+    expect(getDroneCargo(2, cfg)).toBeGreaterThan(getDroneCargo(1, cfg));
+    expect(() => getDroneCargo(0)).toThrow("cfg is required");
   });
 });

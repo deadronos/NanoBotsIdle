@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useRef } from "react";
 import { Color,type InstancedMesh, Object3D } from "three";
 
+import { applyInstanceUpdates } from "../../render/instanced";
 import { getGroundHeightWithEdits } from "../../sim/collision";
 import { forEachRadialChunk, getVoxelColor } from "../../utils";
 import { ensureInstanceColors } from "./instancedVoxels/voxelInstanceMesh";
@@ -73,8 +74,14 @@ export const FrontierFillRenderer: React.FC<{
     });
 
     mesh.count = index;
-    if (mesh.instanceMatrix) mesh.instanceMatrix.needsUpdate = true;
-    if (mesh.instanceColor) mesh.instanceColor.needsUpdate = true;
+    if (index > 0) {
+      applyInstanceUpdates(mesh, {
+        matrixRange: { start: 0, end: index - 1 },
+        colorRange: debugVisuals ? undefined : { start: 0, end: index - 1 },
+      });
+    } else {
+      applyInstanceUpdates(mesh, { matrix: true, color: !debugVisuals });
+    }
   }, [
     bedrockY,
     center,
