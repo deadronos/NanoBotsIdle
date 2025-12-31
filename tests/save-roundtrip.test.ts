@@ -1,5 +1,6 @@
 import fs from "node:fs";
 import path from "node:path";
+
 import { describe, expect, it } from "vitest";
 
 import { applyMigrations, getMigrationsPath } from "../src/utils/migrations/registry";
@@ -60,7 +61,7 @@ describe("Save Roundtrip Tests", () => {
 
       // Apply migration
       const migrations = getMigrationsPath(v1Save.version, CURRENT_SAVE_VERSION);
-      const migratedData = applyMigrations(v1Save.data, migrations);
+      const migratedData = applyMigrations(v1Save.data, migrations) as Partial<typeof v1Save.data>;
 
       // Validate migrated data
       const stateResult = validateGameState(migratedData);
@@ -78,7 +79,7 @@ describe("Save Roundtrip Tests", () => {
       const minimalV1 = loadFixture("minimal-v1.json") as SaveData;
 
       const migrations = getMigrationsPath(minimalV1.version, CURRENT_SAVE_VERSION);
-      const migratedData = applyMigrations(minimalV1.data, migrations);
+      const migratedData = applyMigrations(minimalV1.data, migrations) as Partial<typeof minimalV1.data>;
 
       const sanitized = sanitizeGameState(migratedData);
 
@@ -130,7 +131,7 @@ describe("Save Roundtrip Tests", () => {
       const originalData = v1Save.data;
 
       const migrations = getMigrationsPath(v1Save.version, CURRENT_SAVE_VERSION);
-      const migratedData = applyMigrations(v1Save.data, migrations);
+      const migratedData = applyMigrations(v1Save.data, migrations) as Partial<typeof v1Save.data>;
       const sanitized = sanitizeGameState(migratedData);
 
       // All original fields should be preserved
@@ -159,7 +160,7 @@ describe("Save Roundtrip Tests", () => {
       } as SaveData;
 
       const migrations = getMigrationsPath(edgeCaseV1.version, CURRENT_SAVE_VERSION);
-      const migratedData = applyMigrations(edgeCaseV1.data, migrations);
+      const migratedData = applyMigrations(edgeCaseV1.data, migrations) as Partial<typeof edgeCaseV1.data>;
       const sanitized = sanitizeGameState(migratedData);
 
       // All minimum values should be preserved

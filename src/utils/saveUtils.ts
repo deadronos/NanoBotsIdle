@@ -1,8 +1,8 @@
 import { useGameStore } from "../store";
 import { error, warn } from "./logger";
 import { applyMigrations, getMigrationsPath } from "./migrations/registry";
-import { CURRENT_SAVE_VERSION } from "./migrations/types";
 import type { SaveData } from "./migrations/types";
+import { CURRENT_SAVE_VERSION } from "./migrations/types";
 import {
   sanitizeGameState,
   validateGameState,
@@ -17,7 +17,7 @@ export const exportSave = () => {
   const state = useGameStore.getState();
 
   // Extract only the data fields (exclude actions)
-  const { addCredits, incrementMinedBlocks, setTotalBlocks, buyUpgrade, resetPrestige, getUpgradeCost, ...dataFields } = state;
+  const { addCredits: _addCredits, incrementMinedBlocks: _incrementMinedBlocks, setTotalBlocks: _setTotalBlocks, buyUpgrade: _buyUpgrade, resetPrestige: _resetPrestige, getUpgradeCost: _getUpgradeCost, ...dataFields } = state;
 
   const saveData: SaveData = {
     version: CURRENT_SAVE_VERSION,

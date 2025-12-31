@@ -63,7 +63,7 @@ export function validateGameState(data: Partial<GameState>): ValidationResult {
   const warnings: string[] = [];
 
   // Check numeric fields are valid
-  const numericFields: Array<keyof GameState> = [
+  const numericFields: (keyof GameState)[] = [
     "credits",
     "prestigeLevel",
     "droneCount",
