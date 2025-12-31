@@ -1,5 +1,5 @@
-import { describe, expect, it, vi } from "vitest";
 import { BufferGeometry, Mesh } from "three";
+import { describe, expect, it, vi } from "vitest";
 
 import {
   applyLodGeometry,

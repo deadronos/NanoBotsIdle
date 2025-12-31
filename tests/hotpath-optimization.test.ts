@@ -116,10 +116,10 @@ describe("Hotpath Performance Optimizations", () => {
     if (result.t === "MESH_RESULT" && result.lods && result.lods.length > 0) {
       const lowLod = result.lods.find((lod) => lod.level === "low");
       expect(lowLod).toBeDefined();
-      
+
       // Low LOD should have geometry
       expect(lowLod?.geometry.positions.length).toBeGreaterThan(0);
-      
+
       // Low LOD should have bounding sphere
       expect(lowLod?.geometry.boundingSphere).toBeDefined();
       expect(lowLod?.geometry.boundingSphere?.radius).toBeGreaterThan(0);
@@ -162,7 +162,7 @@ describe("Hotpath Performance Optimizations", () => {
     };
 
     expect(geometryWithoutSphere.positions.length).toBeGreaterThan(0);
-    expect(geometryWithoutSphere.boundingSphere).toBeUndefined();
+    expect((geometryWithoutSphere as { boundingSphere?: unknown }).boundingSphere).toBeUndefined();
   });
 
   it("should have performance tuning recommendations in documentation", () => {

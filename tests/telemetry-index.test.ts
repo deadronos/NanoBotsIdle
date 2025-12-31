@@ -1,9 +1,9 @@
 import { describe, expect, it } from "vitest";
 
 import {
-  TelemetryCollector,
   getTelemetryCollector,
   resetTelemetryCollector,
+  TelemetryCollector,
   type TelemetrySnapshot,
 } from "../src/telemetry";
 
