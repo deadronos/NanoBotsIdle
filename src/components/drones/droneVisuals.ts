@@ -4,6 +4,18 @@ import type { Config } from "../../config/index";
 import { DRONE_STATE_ID } from "../../shared/droneState";
 import type { DroneVisualRefs } from "./types";
 
+// Cache role→color mapping to avoid repeated conversions
+const ROLE_COLORS = {
+  MINER: 0x00ffcc,
+  HAULER: 0xffaa00,
+} as const;
+
+// Cache target box state colors
+const TARGET_BOX_COLORS = {
+  MINING: 0xff3333,
+  MOVING: 0x00ffff,
+} as const;
+
 export const updateDroneVisuals = (options: {
   cfg: Config;
   droneCount: number;
@@ -50,12 +62,12 @@ export const updateDroneVisuals = (options: {
       const role = roles ? roles[i] : 0;
       const isHauler = role === 1;
       const mat = body.material as MeshBasicMaterial; // Or MeshStandardMaterial
-      // Check existing color to avoid setting every frame?
-      // Three.js .setHex() is fast.
-      if (isHauler) {
-        mat.color.setHex(0xffaa00);
-      } else {
-        mat.color.setHex(0x00ffcc);
+
+      // Only update color if it differs from current value
+      const targetColor = isHauler ? ROLE_COLORS.HAULER : ROLE_COLORS.MINER;
+      const currentColor = mat.color.getHex();
+      if (currentColor !== targetColor) {
+        mat.color.setHex(targetColor);
       }
     }
 
@@ -91,9 +103,14 @@ export const updateDroneVisuals = (options: {
           miningLaser.rotation.x += Math.PI / 2;
 
           const material = miningLaser.material as MeshBasicMaterial;
-          material.opacity =
+          const targetOpacity =
             cfg.drones.visual.miningLaser.opacityBase +
             Math.sin(elapsedTime * cfg.drones.visual.miningLaser.opacityFreq) * 0.3;
+
+          // Only update opacity if it differs significantly (tolerance for floating point)
+          if (Math.abs(material.opacity - targetOpacity) > 0.001) {
+            material.opacity = targetOpacity;
+          }
         }
       }
 
@@ -107,10 +124,15 @@ export const updateDroneVisuals = (options: {
           scanningLaser.rotation.x += Math.PI / 2;
 
           const material = scanningLaser.material as MeshBasicMaterial;
-          material.opacity =
+          const targetOpacity =
             cfg.drones.visual.scanningLaser.opacityBase +
             Math.sin(elapsedTime * cfg.drones.visual.scanningLaser.opacityFreq) *
               cfg.drones.visual.scanningLaser.opacityAmplitude;
+
+          // Only update opacity if it differs significantly
+          if (Math.abs(material.opacity - targetOpacity) > 0.001) {
+            material.opacity = targetOpacity;
+          }
         }
       }
 
@@ -127,7 +149,13 @@ export const updateDroneVisuals = (options: {
         targetBox.rotation.y += 0.02;
 
         const material = targetBox.material as MeshBasicMaterial;
-        material.color.setHex(isMining ? 0xff3333 : 0x00ffff);
+        const targetColor = isMining ? TARGET_BOX_COLORS.MINING : TARGET_BOX_COLORS.MOVING;
+        const currentColor = material.color.getHex();
+
+        // Only update color if it differs from current value
+        if (currentColor !== targetColor) {
+          material.color.setHex(targetColor);
+        }
       }
 
       const impactLight = refs.impactLightRefs[i];

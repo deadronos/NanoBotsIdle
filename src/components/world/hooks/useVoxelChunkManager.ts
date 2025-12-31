@@ -39,7 +39,7 @@ export function useVoxelChunkManager({
       ensureCapacity(solidCountRef.current + chunkSize * chunkSize * chunkSize);
       populateChunkVoxels({ cx, cy, cz, chunkSize, prestigeLevel, addVoxel });
     },
-    [addVoxel, chunkSize, ensureCapacity, prestigeLevel, solidCountRef]
+    [addVoxel, chunkSize, ensureCapacity, prestigeLevel, solidCountRef],
   );
 
   const ensureInitialChunk = useCallback(() => {
@@ -49,7 +49,7 @@ export function useVoxelChunkManager({
       spawnZ,
       seed,
       cfg.terrain.surfaceBias,
-      cfg.terrain.quantizeScale
+      cfg.terrain.quantizeScale,
     );
     const cy = Math.floor(surfaceY / chunkSize);
     const baseCx = Math.floor(spawnX / chunkSize);
@@ -68,13 +68,13 @@ export function useVoxelChunkManager({
   ]);
 
   const resetChunks = useCallback(() => {
-      activeChunks.current.clear();
-  }, [])
+    activeChunks.current.clear();
+  }, []);
 
   return {
     activeChunks,
     addChunk,
     ensureInitialChunk,
-    resetChunks
+    resetChunks,
   };
 }
