@@ -87,10 +87,11 @@ export const ensureInstanceColors = (mesh: InstancedMesh, capacity: number) => {
   
   // Reuse existing buffer if it's large enough
   if (currentBuffer && currentBufferCapacity >= capacity) {
-    // Buffer is large enough, just update the count
+    // Buffer is large enough; reuse it as the attribute (attribute count will reflect full capacity),
+    // and set the mesh instance count to reflect the number of active instances
     mesh.instanceColor = new InstancedBufferAttribute(currentBuffer, 3);
-    mesh.instanceColor.count = capacity;
     mesh.geometry.setAttribute("instanceColor", mesh.instanceColor);
+    mesh.count = capacity;
     mesh.instanceColor.needsUpdate = true;
     return true;
   }
@@ -111,8 +112,8 @@ export const ensureInstanceColors = (mesh: InstancedMesh, capacity: number) => {
   }
   
   mesh.instanceColor = new InstancedBufferAttribute(newColors, 3);
-  mesh.instanceColor.count = capacity;
   mesh.geometry.setAttribute("instanceColor", mesh.instanceColor);
+  mesh.count = capacity;
   mesh.instanceColor.needsUpdate = true;
   return true;
 };

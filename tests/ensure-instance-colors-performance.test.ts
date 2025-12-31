@@ -33,7 +33,7 @@ describe("ensureInstanceColors performance benchmarks", () => {
     } as unknown as InstancedMesh;
 
     if (mesh.instanceColor) {
-      mesh.instanceColor.count = initialCapacity;
+      mesh.count = initialCapacity;
     }
 
     return mesh;
@@ -42,7 +42,7 @@ describe("ensureInstanceColors performance benchmarks", () => {
   it("benchmark: realistic world growth pattern", () => {
     const mesh = createMockMesh();
     let allocationCount = 0;
-    let lastBuffer: Float32Array | undefined;
+    let lastBuffer: ArrayBufferView | undefined;
 
     // Simulate realistic world expansion:
     // Starting small and growing by 1.5x each time (as in useInstancedVoxels)
@@ -64,7 +64,7 @@ describe("ensureInstanceColors performance benchmarks", () => {
       `\n  📊 Realistic growth allocations: ${allocationCount} / ${capacities.length} capacity changes`,
     );
     console.log(
-      `  💾 Final buffer size: ${mesh.instanceColor!.array.length / 3} (capacity: ${mesh.instanceColor!.count})`,
+      `  💾 Final buffer size: ${mesh.instanceColor!.array.length / 3} (capacity: ${mesh.count})`,
     );
     console.log(
       `  ✨ Efficiency: ${((1 - allocationCount / capacities.length) * 100).toFixed(1)}% fewer allocations`,
@@ -77,7 +77,7 @@ describe("ensureInstanceColors performance benchmarks", () => {
   it("benchmark: frequent small increases", () => {
     const mesh = createMockMesh();
     let allocationCount = 0;
-    let lastBuffer: Float32Array | undefined;
+    let lastBuffer: ArrayBufferView | undefined;
 
     // Simulate frequent small increases (worst case for old implementation)
     let capacity = 100;
@@ -98,7 +98,7 @@ describe("ensureInstanceColors performance benchmarks", () => {
       `\n  📊 Small increments allocations: ${allocationCount} / ${steps} capacity changes`,
     );
     console.log(
-      `  💾 Final buffer size: ${mesh.instanceColor!.array.length / 3} (capacity: ${mesh.instanceColor!.count})`,
+      `  💾 Final buffer size: ${mesh.instanceColor!.array.length / 3} (capacity: ${mesh.count})`,
     );
     console.log(
       `  ✨ Efficiency: ${((1 - allocationCount / steps) * 100).toFixed(1)}% fewer allocations`,
@@ -190,7 +190,7 @@ describe("ensureInstanceColors performance benchmarks", () => {
     const optimizedAllocations = (capacities: number[]): number => {
       const mesh = createMockMesh();
       let count = 0;
-      let lastBuffer: Float32Array | undefined;
+      let lastBuffer: ArrayBufferView | undefined;
 
       for (const capacity of capacities) {
         ensureInstanceColors(mesh, capacity);

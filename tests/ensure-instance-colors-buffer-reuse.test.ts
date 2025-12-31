@@ -30,7 +30,7 @@ describe("ensureInstanceColors buffer reuse", () => {
     } as unknown as InstancedMesh;
 
     if (mesh.instanceColor) {
-      mesh.instanceColor.count = initialCapacity;
+      mesh.count = initialCapacity;
     }
 
     return mesh;
@@ -42,7 +42,7 @@ describe("ensureInstanceColors buffer reuse", () => {
 
     expect(changed).toBe(true);
     expect(mesh.instanceColor).toBeDefined();
-    expect(mesh.instanceColor!.count).toBe(100);
+    expect(mesh.count).toBe(100);
     expect(mesh.instanceColor!.array.length).toBeGreaterThanOrEqual(100 * 3);
   });
 
@@ -54,6 +54,7 @@ describe("ensureInstanceColors buffer reuse", () => {
 
     expect(changed).toBe(false);
     expect(mesh.instanceColor!.array).toBe(initialBuffer);
+    expect(mesh.count).toBe(100);
   });
 
   it("should reuse buffer when growing within power-of-two boundary", () => {
@@ -65,7 +66,7 @@ describe("ensureInstanceColors buffer reuse", () => {
     const changed = ensureInstanceColors(mesh, 110);
 
     expect(changed).toBe(true);
-    expect(mesh.instanceColor!.count).toBe(110);
+    expect(mesh.count).toBe(110);
     
     // Buffer should be reused if capacity is within power-of-two boundary
     if (initialBufferSize >= 110 * 3) {
@@ -131,7 +132,7 @@ describe("ensureInstanceColors buffer reuse", () => {
   it("should minimize reallocations during typical growth pattern", () => {
     const mesh = createMockMesh();
     let allocationCount = 0;
-    let lastBuffer: Float32Array | undefined;
+    let lastBuffer: ArrayBufferView | undefined;
 
     // Simulate typical growth: 100 -> 150 -> 225 -> 337 -> 505 -> 757
     const capacities = [100, 150, 225, 337, 505, 757];
@@ -160,7 +161,7 @@ describe("ensureInstanceColors buffer reuse", () => {
     const changed = ensureInstanceColors(mesh, 500);
 
     expect(changed).toBe(true);
-    expect(mesh.instanceColor!.count).toBe(500);
+    expect(mesh.count).toBe(500);
     // Should reuse the same buffer
     expect(mesh.instanceColor!.array).toBe(initialBuffer);
   });
@@ -180,7 +181,7 @@ describe("ensureInstanceColors buffer reuse", () => {
     } else {
       // If needsUpdate is not set, that's also acceptable as it's a Three.js internal
       // Just verify the buffer was updated correctly
-      expect(mesh.instanceColor!.count).toBe(200);
+      expect(mesh.count).toBe(200);
       expect(mesh.instanceColor!.array.length / 3).toBeGreaterThanOrEqual(200);
     }
   });
@@ -191,7 +192,7 @@ describe("ensureInstanceColors buffer reuse", () => {
     const changed = ensureInstanceColors(mesh, 0);
 
     expect(changed).toBe(true);
-    expect(mesh.instanceColor!.count).toBe(0);
+    expect(mesh.count).toBe(0);
   });
 
   it("should handle very large capacity growth", () => {
@@ -200,7 +201,7 @@ describe("ensureInstanceColors buffer reuse", () => {
     // Grow to a very large capacity
     ensureInstanceColors(mesh, 10000);
 
-    expect(mesh.instanceColor!.count).toBe(10000);
+    expect(mesh.count).toBe(10000);
     expect(mesh.instanceColor!.array.length).toBeGreaterThanOrEqual(10000 * 3);
     
     // Buffer size should still be power of two
