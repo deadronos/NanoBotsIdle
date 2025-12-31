@@ -2,6 +2,8 @@ import type { DronesConfig } from "./drones";
 import { defaultDronesConfig as _defaultDrones } from "./drones";
 import type { EconomyConfig } from "./economy";
 import { defaultEconomyConfig as _defaultEconomy } from "./economy";
+import type { MeshingConfig } from "./meshing";
+import { defaultMeshingConfig as _defaultMeshing } from "./meshing";
 import type { PlayerConfig } from "./player";
 import { defaultPlayerConfig as _defaultPlayer } from "./player";
 import type { RenderConfig } from "./render";
@@ -18,6 +20,7 @@ export type Config = {
   render: RenderConfig;
   economy: EconomyConfig;
   telemetry: TelemetryConfig;
+  meshing: MeshingConfig;
 };
 
 type ConfigListener = () => void;
@@ -65,6 +68,7 @@ let _config: Config = {
   render: _defaultRender,
   economy: _defaultEconomy,
   telemetry: _defaultTelemetry,
+  meshing: _defaultMeshing,
 };
 
 export const getConfig = (): Config => _config;
@@ -83,6 +87,7 @@ export const resetConfig = () => {
     render: _defaultRender,
     economy: _defaultEconomy,
     telemetry: _defaultTelemetry,
+    meshing: _defaultMeshing,
   };
   notifyConfigChanged();
   return _config;

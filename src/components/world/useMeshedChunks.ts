@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useRef } from "react";
 import type { Group } from "three";
 import { BufferAttribute, BufferGeometry, Color, Mesh, MeshStandardMaterial } from "three";
 
+import { getConfig } from "../../config";
 import { createApronField, fillApronField } from "../../meshing/apronField";
 import { getDirtyChunksForVoxelEdit } from "../../meshing/dirtyChunks";
 import { MeshingScheduler } from "../../meshing/meshingScheduler";
@@ -177,6 +178,7 @@ export const useMeshedChunks = (options: {
 
   useEffect(() => {
     const worker = defaultMeshingWorkerFactory();
+    const config = getConfig();
 
     const priorityFromFocus = (coord: { cx: number; cy: number; cz: number }) => {
       return chunkDistanceSq3(coord, focusChunkRef.current);
@@ -212,7 +214,8 @@ export const useMeshedChunks = (options: {
         };
       },
       onApply: (res) => applyMeshResult(res),
-      maxInFlight: 16,
+      maxInFlight: config.meshing.maxInFlight,
+      maxQueueSize: config.meshing.maxQueueSize,
       getPriority: priorityFromFocus,
     });
 
