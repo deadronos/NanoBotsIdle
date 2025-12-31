@@ -62,6 +62,15 @@ export type RenderConfig = {
     biomeOverlay: {
       enabled: boolean;
     };
+    lod: {
+      lowDistanceMultiplier: number;
+      hideDistanceMultiplier: number;
+    };
+    occlusion: {
+      enabled: boolean;
+      queryDelayFrames: number;
+      maxQueriesPerFrame: number;
+    };
   };
 };
 
@@ -105,6 +114,15 @@ export const defaultRenderConfig: RenderConfig = {
     },
     biomeOverlay: {
       enabled: false,
+    },
+    lod: {
+      lowDistanceMultiplier: 12,
+      hideDistanceMultiplier: 24,
+    },
+    occlusion: {
+      enabled: false,
+      queryDelayFrames: 2,
+      maxQueriesPerFrame: 16,
     },
   },
 };

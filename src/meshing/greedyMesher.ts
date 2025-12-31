@@ -1,4 +1,4 @@
-import { index3D } from "./apronField";
+import { createApronField, index3D } from "./apronField";
 import type { GreedyMeshInput, MeshGeometry } from "./meshTypes";
 
 const MATERIAL_AIR = 0;
@@ -8,8 +8,55 @@ const chooseIndexArray = (vertexCount: number, indices: number[]) => {
   return Uint16Array.from(indices);
 };
 
+export const downsampleMaterials = (
+  materials: Uint8Array,
+  size: number,
+  factor: number,
+): { size: number; voxelSize: number; materials: Uint8Array } => {
+  if (factor <= 1) return { size, voxelSize: 1, materials };
+
+  const targetSize = Math.max(1, Math.ceil(size / factor));
+  const targetDim = targetSize + 2;
+  const target = new Uint8Array(targetDim * targetDim * targetDim);
+
+  const sourceDim = size + 2;
+  const getMat = (x: number, y: number, z: number) =>
+    materials[index3D(x + 1, y + 1, z + 1, sourceDim)] ?? MATERIAL_AIR;
+
+  for (let tz = -1; tz <= targetSize; tz += 1) {
+    const sourceZStart = Math.max(-1, tz * factor);
+    const sourceZEnd = Math.min(size, sourceZStart + factor - 1);
+    for (let ty = -1; ty <= targetSize; ty += 1) {
+      const sourceYStart = Math.max(-1, ty * factor);
+      const sourceYEnd = Math.min(size, sourceYStart + factor - 1);
+      for (let tx = -1; tx <= targetSize; tx += 1) {
+        const sourceXStart = Math.max(-1, tx * factor);
+        const sourceXEnd = Math.min(size, sourceXStart + factor - 1);
+
+        let solid = MATERIAL_AIR;
+        search: for (let z = sourceZStart; z <= sourceZEnd; z += 1) {
+          for (let y = sourceYStart; y <= sourceYEnd; y += 1) {
+            for (let x = sourceXStart; x <= sourceXEnd; x += 1) {
+              const mat = getMat(x, y, z);
+              if (mat !== MATERIAL_AIR) {
+                solid = mat;
+                break search;
+              }
+            }
+          }
+        }
+
+        target[index3D(tx + 1, ty + 1, tz + 1, targetDim)] = solid;
+      }
+    }
+  }
+
+  return { size: targetSize, voxelSize: factor, materials: target };
+};
+
 export const greedyMeshChunk = (input: GreedyMeshInput): MeshGeometry => {
   const { size, origin, materials } = input;
+  const voxelSize = input.voxelSize ?? 1;
 
   const dim = size + 2;
   const expectedLen = dim * dim * dim;
@@ -30,7 +77,7 @@ export const greedyMeshChunk = (input: GreedyMeshInput): MeshGeometry => {
 
   const pushVertex = (x: number, y: number, z: number, nx: number, ny: number, nz: number) => {
     const index = positions.length / 3;
-    positions.push(origin.x + x, origin.y + y, origin.z + z);
+    positions.push(origin.x + x * voxelSize, origin.y + y * voxelSize, origin.z + z * voxelSize);
     normals.push(nx, ny, nz);
     return index;
   };
@@ -172,4 +219,6 @@ export const greedyMeshChunk = (input: GreedyMeshInput): MeshGeometry => {
 
 export const __testing = {
   chooseIndexArray,
+  createApron: createApronField,
+  downsampleMaterials,
 };
