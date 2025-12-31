@@ -1,5 +1,51 @@
 import type { FromMeshingWorker, ToMeshingWorker } from "../shared/meshingProtocol";
 import { downsampleMaterials, greedyMeshChunk } from "./greedyMesher";
+import type { MeshGeometry } from "./meshTypes";
+
+/**
+ * Compute bounding sphere for mesh geometry in worker thread.
+ * This offloads expensive iteration from the main thread.
+ */
+const computeBoundingSphere = (
+  positions: Float32Array,
+): { center: { x: number; y: number; z: number }; radius: number } => {
+  if (positions.length === 0) {
+    return { center: { x: 0, y: 0, z: 0 }, radius: 0 };
+  }
+
+  // First pass: compute center (average of all vertices)
+  let sumX = 0;
+  let sumY = 0;
+  let sumZ = 0;
+  const vertexCount = positions.length / 3;
+
+  for (let i = 0; i < positions.length; i += 3) {
+    sumX += positions[i];
+    sumY += positions[i + 1];
+    sumZ += positions[i + 2];
+  }
+
+  const centerX = sumX / vertexCount;
+  const centerY = sumY / vertexCount;
+  const centerZ = sumZ / vertexCount;
+
+  // Second pass: compute radius (max distance from center)
+  let maxRadiusSq = 0;
+  for (let i = 0; i < positions.length; i += 3) {
+    const dx = positions[i] - centerX;
+    const dy = positions[i + 1] - centerY;
+    const dz = positions[i + 2] - centerZ;
+    const distSq = dx * dx + dy * dy + dz * dz;
+    if (distSq > maxRadiusSq) {
+      maxRadiusSq = distSq;
+    }
+  }
+
+  return {
+    center: { x: centerX, y: centerY, z: centerZ },
+    radius: Math.sqrt(maxRadiusSq),
+  };
+};
 
 const colorFromHeight = (y: number, waterLevel: number): [number, number, number] => {
   if (y < waterLevel - 2) return [0x1a / 255, 0x4d / 255, 0x8c / 255];
@@ -48,7 +94,10 @@ export const handleMeshingJob = (job: ToMeshingWorker): FromMeshingWorker => {
     const waterLevel = job.waterLevel ?? -12;
     const colors = buildColors(geometry.positions, waterLevel);
 
-    const lods = [] as { level: "low"; geometry: typeof geometry }[];
+    // Compute bounding sphere in worker thread to offload from main thread
+    const boundingSphere = computeBoundingSphere(geometry.positions);
+
+    const lods = [] as { level: "low"; geometry: MeshGeometry }[];
     if (job.chunk.size >= 2) {
       const downsampled = downsampleMaterials(job.materials, job.chunk.size, 2);
       const low = greedyMeshChunk({
@@ -58,7 +107,11 @@ export const handleMeshingJob = (job: ToMeshingWorker): FromMeshingWorker => {
         materials: downsampled.materials,
       });
       const lowColors = buildColors(low.positions, waterLevel);
-      lods.push({ level: "low", geometry: { ...low, colors: lowColors } });
+      const lowBoundingSphere = computeBoundingSphere(low.positions);
+      lods.push({
+        level: "low",
+        geometry: { ...low, colors: lowColors, boundingSphere: lowBoundingSphere },
+      });
     }
 
     return {
@@ -66,7 +119,7 @@ export const handleMeshingJob = (job: ToMeshingWorker): FromMeshingWorker => {
       jobId: job.jobId,
       chunk: job.chunk,
       rev: job.rev,
-      geometry: { ...geometry, colors },
+      geometry: { ...geometry, colors, boundingSphere },
       lods: lods.length > 0 ? lods : undefined,
     };
   } catch (err) {

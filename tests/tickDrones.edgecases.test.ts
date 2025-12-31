@@ -13,10 +13,10 @@ vi.mock("../src/engine/targeting", () => {
   };
 });
 
+import type * as TerrainCoreType from "../src/sim/terrain-core";
+type TerrainCore = typeof TerrainCoreType;
 vi.mock("../src/sim/terrain-core", async () => {
-  const actual = await vi.importActual<typeof import("../src/sim/terrain-core")>(
-    "../src/sim/terrain-core",
-  );
+  const actual = await vi.importActual<TerrainCore>("../src/sim/terrain-core");
   return {
     ...actual,
     getVoxelValueFromHeight: getVoxelValueFromHeightMock,
