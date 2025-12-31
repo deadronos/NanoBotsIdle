@@ -111,7 +111,9 @@
 <a name='L46'></a><a href='#L46'>46</a>
 <a name='L47'></a><a href='#L47'>47</a>
 <a name='L48'></a><a href='#L48'>48</a>
-<a name='L49'></a><a href='#L49'>49</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
+<a name='L49'></a><a href='#L49'>49</a>
+<a name='L50'></a><a href='#L50'>50</a>
+<a name='L51'></a><a href='#L51'>51</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -123,31 +125,33 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">9x</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">9x</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">1852907x</span>
-<span class="cline-any cline-yes">1850798x</span>
-<span class="cline-any cline-yes">1844169x</span>
-<span class="cline-any cline-yes">1833990x</span>
-<span class="cline-any cline-yes">1797905x</span>
-<span class="cline-any cline-yes">1526911x</span>
-<span class="cline-any cline-yes">879137x</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">9x</span>
+<span class="cline-any cline-yes">14x</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">9x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">14x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1853025x</span>
+<span class="cline-any cline-yes">1850911x</span>
+<span class="cline-any cline-yes">1844278x</span>
+<span class="cline-any cline-yes">1834097x</span>
+<span class="cline-any cline-yes">1798012x</span>
+<span class="cline-any cline-yes">1527014x</span>
+<span class="cline-any cline-yes">879230x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">14x</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">14x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -156,12 +160,10 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">9x</span>
+<span class="cline-any cline-yes">14x</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js">import { Color } from "three";
-&nbsp;
-import { getVoxelValueFromHeight, noise2D } from "./sim/terrain-core";
+<span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js">import { getVoxelValueFromHeight, noise2D } from "./sim/terrain-core";
 &nbsp;
 export {
   chunkDistanceSq2,
@@ -178,15 +180,19 @@ export const random = <span class="fstat-no" title="function not covered" >(s</s
 <span class="cstat-no" title="statement not covered" >  return x - Math.floor(x);</span>
 };
 &nbsp;
-export const getVoxelColor = (y: number, waterLevel = -12): Color =&gt; {
+/**
+ * Returns height-based color as a hex number (no Color allocation).
+ * To be used with Color.setHex() or similar methods.
+ */
+export const getVoxelColor = (y: number, waterLevel = -12): number =&gt; {
   // Height-based coloring relative to water level
-  if (y &lt; waterLevel - 2) return new Color("#1a4d8c"); // Deep Water
-  if (y &lt; waterLevel + 0.5) return new Color("#2d73bf"); // Water
-  if (y &lt; waterLevel + 2.5) return new Color("#e3dba3"); // Sand
-  if (y &lt; waterLevel + 6) return new Color("#59a848"); // Grass
-  if (y &lt; waterLevel + 12) return new Color("#3b7032"); // Dark Grass/Forest
-  if (y &lt; waterLevel + 20) return new Color("#6e6e6e"); // Rock
-  return new Color("#ffffff"); // Snow
+  if (y &lt; waterLevel - 2) return 0x1a4d8c; // Deep Water
+  if (y &lt; waterLevel + 0.5) return 0x2d73bf; // Water
+  if (y &lt; waterLevel + 2.5) return 0xe3dba3; // Sand
+  if (y &lt; waterLevel + 6) return 0x59a848; // Grass
+  if (y &lt; waterLevel + 12) return 0x3b7032; // Dark Grass/Forest
+  if (y &lt; waterLevel + 20) return 0x6e6e6e; // Rock
+  return 0xffffff; // Snow
 };
 &nbsp;
 export const getVoxelType = <span class="fstat-no" title="function not covered" >(y</span>: number, waterLevel = <span class="branch-0 cbranch-no" title="branch not covered" >-12): "water" | "solid" =&gt; {</span>
@@ -214,7 +220,7 @@ export const getSmoothHeight = <span class="fstat-no" title="function not covere
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2025-12-31T16:52:20.089Z
+                at 2025-12-31T22:13:40.767Z
             </div>
         <script src="../prettify.js"></script>
         <script>
