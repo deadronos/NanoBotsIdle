@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
-import { getUpgradeCost, tryBuyUpgrade, computeNextUpgradeCosts } from "../src/economy/upgrades";
-import { Config, getConfig, resetConfig } from "../src/config";
+
+import { getConfig } from "../src/config";
+import { computeNextUpgradeCosts, getUpgradeCost, tryBuyUpgrade } from "../src/economy/upgrades";
 import type { UiSnapshot } from "../src/shared/protocol";
 
 // Helper to create a basic snapshot
@@ -14,7 +15,8 @@ const createSnapshot = (): UiSnapshot => ({
   laserPowerLevel: 1,
   minedBlocks: 0,
   totalBlocks: 0,
-  outposts: []
+  upgrades: {},
+  outposts: [],
 });
 
 describe("economy/upgrades", () => {
@@ -25,7 +27,7 @@ describe("economy/upgrades", () => {
     it("should calculate drone cost correctly", () => {
       // baseCosts.drone is 100
       // 3 drones: 100 * 1.5^(3-3) = 100
-      let snapshot = createSnapshot();
+      const snapshot = createSnapshot();
       expect(getUpgradeCost("drone", snapshot, config)).toBe(100);
 
       // 4 drones: 100 * 1.5^(4-3) = 150
@@ -36,7 +38,7 @@ describe("economy/upgrades", () => {
     it("should calculate hauler cost correctly", () => {
       // baseCosts.hauler is 500 (from defaultEconomyConfig)
       // 0 haulers: 500 * 1.5^0 = 500
-      let snapshot = createSnapshot();
+      const snapshot = createSnapshot();
       expect(getUpgradeCost("hauler", snapshot, config)).toBe(500);
 
       // 1 hauler: 500 * 1.5^1 = 750
@@ -47,7 +49,7 @@ describe("economy/upgrades", () => {
     it("should calculate speed cost correctly", () => {
       // baseCosts.speed is 50 (from defaultEconomyConfig)
       // level 1: 50 * 1.3^(1-1) = 50
-      let snapshot = createSnapshot();
+      const snapshot = createSnapshot();
       expect(getUpgradeCost("speed", snapshot, config)).toBe(50);
 
       // level 2: 50 * 1.3^1 = 65
@@ -58,7 +60,7 @@ describe("economy/upgrades", () => {
     it("should calculate move cost correctly", () => {
       // baseCosts.move is 50 (from defaultEconomyConfig)
       // level 1: 50 * 1.3^(1-1) = 50
-      let snapshot = createSnapshot();
+      const snapshot = createSnapshot();
       expect(getUpgradeCost("move", snapshot, config)).toBe(50);
 
       // level 2: 50 * 1.3^1 = 65
@@ -69,7 +71,7 @@ describe("economy/upgrades", () => {
     it("should calculate laser cost correctly", () => {
       // baseCosts.laser is 200 (from defaultEconomyConfig)
       // level 1: 200 * 1.4^(1-1) = 200
-      let snapshot = createSnapshot();
+      const snapshot = createSnapshot();
       expect(getUpgradeCost("laser", snapshot, config)).toBe(200);
 
       // level 2: 200 * 1.4^1 = 280

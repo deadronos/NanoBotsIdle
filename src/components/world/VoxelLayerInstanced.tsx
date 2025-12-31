@@ -1,15 +1,10 @@
 import React, { useCallback, useEffect, useRef } from "react";
-import type { Color } from "three";
 
 import type { VoxelRenderMode } from "../../config/render";
 import { useConfig } from "../../config/useConfig";
 import { playerChunk, playerPosition } from "../../engine/playerState";
 import { getBiomeAt, getBiomeColor } from "../../sim/biomes";
-import {
-  applyVoxelEdits,
-  MATERIAL_SOLID,
-  resetVoxelEdits,
-} from "../../sim/collision";
+import { applyVoxelEdits, MATERIAL_SOLID, resetVoxelEdits } from "../../sim/collision";
 import { getSurfaceHeightCore } from "../../sim/terrain-core";
 import { getSimBridge } from "../../simBridge/simBridge";
 import { forEachRadialChunk, getVoxelColor } from "../../utils";
@@ -33,7 +28,7 @@ export const VoxelLayerInstanced: React.FC<{
   const bridge = getSimBridge();
 
   const biomeOverlayEnabled = cfg.render.voxels.biomeOverlay.enabled;
-  const biomeColorCacheRef = useRef<Map<string, Color>>(new Map());
+  const biomeColorCacheRef = useRef<Map<string, number>>(new Map());
 
   // --- Hooks ---
   const {

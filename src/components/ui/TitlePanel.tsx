@@ -1,5 +1,7 @@
 import React from "react";
 
+import { PauseButton } from "./PauseButton";
+
 export const TitlePanel: React.FC<{
   percentMined: number;
   onOpenSettings: () => void;
@@ -13,12 +15,13 @@ export const TitlePanel: React.FC<{
         <h1 className="text-xl md:text-2xl font-bold drop-shadow-md tracking-tighter bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-green-400">
           VOXEL WALKER
         </h1>
-        <button
-          onClick={onOpenSettings}
-          className="text-white/50 hover:text-white hover:rotate-90 transition-all"
-          title="Settings"
-        >
-          <svg
+        <div className="flex items-center gap-2">
+          <button
+            onClick={onOpenSettings}
+            className="text-white/50 hover:text-white hover:rotate-90 transition-all"
+            title="Settings"
+          >
+                      <svg
             xmlns="http://www.w3.org/2000/svg"
             fill="none"
             viewBox="0 0 24 24"
@@ -38,6 +41,8 @@ export const TitlePanel: React.FC<{
             />
           </svg>
         </button>
+          <PauseButton />
+        </div>
       </div>
 
       <div className="hidden md:block text-xs text-white/60 bg-black/40 p-2 rounded">

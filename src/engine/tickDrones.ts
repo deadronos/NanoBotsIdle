@@ -134,6 +134,9 @@ export const tickDrones = (options: {
 
               const value = getVoxelValueFromHeight(drone.targetY, cfg.terrain.waterLevel);
               drone.payload += value * uiSnapshot.prestigeLevel;
+
+              // Track mined block count for prestige unlocking.
+              uiSnapshot.minedBlocks += 1;
             }
           }
 
