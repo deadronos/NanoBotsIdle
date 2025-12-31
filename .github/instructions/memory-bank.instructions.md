@@ -268,6 +268,13 @@ Each task file follows this format:
 - [Step 2]
 - [Step 3]
 
+For code-focused tasks, prefer structuring the plan explicitly around a TDD
+cycle:
+
+- **Red**: add one failing test for the next behavior.
+- **Green**: minimal implementation to pass.
+- **Refactor**: improve design/quality and keep tests green.
+
 ## Progress Tracking
 
 **Overall Status:** [Not Started/In Progress/Blocked/Completed] - [Completion Percentage]

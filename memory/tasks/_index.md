@@ -2,24 +2,26 @@
 
 ## In Progress
 
-- [TASK008] Performance optimization plan and reusable systems
-  - Goal: reduce frame time and GC by introducing reusable scheduler, pooling, and batching systems.
+- [TASK002] Centralize terrain & shared constants — Deterministic terrain API shared by World + Player (In Progress)
+- [TASK003] Config-driven constants extraction — Scan and extract magic values into `/src/config` (In Progress)
 
 ## Pending
 
-- [TASK002] Add a test runner (Vitest) for logic tests
-  - Goal: make the repo’s default “TDD when in doubt” workflow frictionless.
-  - Notes: keep tests focused on pure logic (`World` math/indexing, DDA picking, crafting rules).
+- (none)
 
 ## Completed
 
-- [TASK001] Backfill Memory Bank documentation
-- [TASK003] UI refresh + fixed-step simulation + ECS evaluation
-- [TASK004] Refine DESIGN004-006 for modular, DRY patterns
-- [TASK005] Implement DESIGN004 Ores + Cave Generation
-- [TASK006] Implement DESIGN005 mining tools + progress
-- [TASK007] Implement DESIGN006 torches lighting + mob spawning
-- [TASK009] Config centralization under /src/config
+- [TASK013] Logistics Phase 3: Hauler Drones & Polish — Haulers, Outposts, Persistence, and UI integration (Completed)
+- [TASK012] Meshing priority queue with back-pressure — Implemented chunk meshing scheduler with configurable queue depth and tests (Completed)
+- [TASK011] Save migration system — Versioned save schema (v1→v2) with migration framework, validation, and roundtrip tests (Completed)
+- [TASK010] Implement: OpenSimplex provider, Tests & Visuals — Implement noise provider, add sampling tests, and add PPM-based spawn-area baselines (Completed)
+- [TASK009] Design: Noise Replacement & Biome Mapping — Design doc and runbook for implementing OpenSimplex and biomes (Completed)
+- [TASK008] Greedy meshing worker v1 — Chunk surface meshing + worker pipeline (Completed)
+- [TASK001] Repo tooling and agent guidance — Tailwind v4 setup, tests moved to `tests/`, lint autofix script, importmap removal.
+- [TASK004] Sim/Render separation foundation — Protocol + Engine skeleton + Worker bridge (Completed)
+- [TASK005] Worker engine migration — Drones + economy moved into Worker; UI becomes read-only snapshot (Completed)
+- [TASK006] Voxel world model v1 — 3D digging + bedrock + frontier + prestige safety (Completed)
+- [TASK007] Visibility-driven render adapter v1 — Frontier instancing adapter + delta-driven updates (Completed)
 
 ## Abandoned
 

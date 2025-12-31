@@ -17,7 +17,7 @@ Receipt: "Follow a 6-phase spec-driven loop: Analyze → Design → Implement �
 
 - Analyze: gather facts, write 2–5 EARS-style requirements.
 - Design: write a short design (diagram + interfaces) and tasks list.
-- Implement: small commits, tests, and update tasks.md as you go.
+- Implement: iterate with TDD (Red → Green → Refactor), small commits, update tasks.md as you go.
 - Validate: run automated tests, manual checks, and performance verifications.
 - Reflect: refactor, update docs, and record technical debt.
 - Handoff: prepare PR with executive summary, changelog, tests, and artifacts.
@@ -99,12 +99,30 @@ End.
 
 **Checklist:**
 
-- [ ] Code in small, testable increments. - Document each increment with code changes, results, and test links.
+- [ ] Code in small, testable increments using TDD. - Document each increment with code changes, results, and test links.
 - [ ] Implement from dependencies upward. - Document resolution order, justification, and verification.
 - [ ] Follow conventions. - Document adherence and any deviations with a Decision Record.
 - [ ] Add meaningful comments. - Focus on intent ("why"), not mechanics ("what").
 - [ ] Create files as planned. - Document file creation log.
 - [ ] Update task status in real time.
+
+#### **TDD loop (required within Phase 3)**
+
+For most code changes in this repo, use a strict Red → Green → Refactor cycle.
+
+- **Red**: add one small failing test that describes the next behavior.
+  - Run the narrowest test command that proves it fails for the right reason.
+- **Green**: implement the minimum code to make that single test pass.
+  - Re-run the same narrow test command.
+- **Refactor**: improve naming/structure, remove duplication, and harden edge
+  cases while keeping tests green.
+  - Re-run the same test again.
+
+Rules:
+
+- Do not write production code without a failing test.
+- Do not write multiple tests at once; iterate one behavior at a time.
+- Prefer pure, testable helpers for performance-critical logic.
 
 **Critical Constraint (recommended):**
 

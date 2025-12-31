@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NanoBotsIdle Performance Dashboard</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #0d1117;
+            color: #c9d1d9;
+            padding: 2rem;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        h1 {
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+            color: #58a6ff;
+        }
+        
+        .subtitle {
+            color: #8b949e;
+            margin-bottom: 2rem;
+        }
+        
+        .upload-section {
+            background: #161b22;
+            border: 2px dashed #30363d;
+            border-radius: 6px;
+            padding: 2rem;
+            text-align: center;
+            margin-bottom: 2rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .upload-section:hover {
+            border-color: #58a6ff;
+            background: #1c2128;
+        }
+        
+        .upload-section.dragover {
+            border-color: #58a6ff;
+            background: #1c2128;
+        }
+        
+        #fileInput {
+            display: none;
+        }
+        
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+        
+        .metric-card {
+            background: #161b22;
+            border: 1px solid #30363d;
+            border-radius: 6px;
+            padding: 1.5rem;
+        }
+        
+        .metric-title {
+            font-size: 0.875rem;
+            color: #8b949e;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 0.5rem;
+        }
+        
+        .metric-value {
+            font-size: 2rem;
+            font-weight: 600;
+            color: #58a6ff;
+            margin-bottom: 0.5rem;
+        }
+        
+        .metric-stats {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 0.5rem;
+            font-size: 0.75rem;
+            color: #8b949e;
+        }
+        
+        .stat {
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .stat-label {
+            color: #6e7681;
+        }
+        
+        .stat-value {
+            color: #c9d1d9;
+            font-weight: 500;
+        }
+        
+        .chart-container {
+            background: #161b22;
+            border: 1px solid #30363d;
+            border-radius: 6px;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+        
+        .chart-title {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #c9d1d9;
+        }
+        
+        canvas {
+            width: 100% !important;
+            height: 300px !important;
+        }
+        
+        .meta-info {
+            background: #161b22;
+            border: 1px solid #30363d;
+            border-radius: 6px;
+            padding: 1rem;
+            font-size: 0.875rem;
+            color: #8b949e;
+        }
+        
+        .meta-info strong {
+            color: #c9d1d9;
+        }
+        
+        .error {
+            background: #f85149;
+            color: #fff;
+            padding: 1rem;
+            border-radius: 6px;
+            margin-bottom: 1rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎮 NanoBotsIdle Performance Dashboard</h1>
+        <p class="subtitle">Visualize profiling metrics from JSON artifacts</p>
+        
+        <div class="upload-section" id="uploadSection">
+            <p>📁 Drop your <code>profile-metrics.json</code> file here or click to browse</p>
+            <input type="file" id="fileInput" accept=".json">
+        </div>
+        
+        <div id="errorContainer"></div>
+        <div id="dashboardContainer" style="display: none;">
+            <div class="meta-info" id="metaInfo"></div>
+            
+            <div class="metrics-grid" id="metricsGrid"></div>
+            
+            <div class="chart-container">
+                <div class="chart-title">FPS Over Time</div>
+                <canvas id="fpsChart"></canvas>
+            </div>
+            
+            <div class="chart-container">
+                <div class="chart-title">Frame Time Over Time</div>
+                <canvas id="frameTimeChart"></canvas>
+            </div>
+            
+            <div class="chart-container">
+                <div class="chart-title">Worker & Meshing Performance</div>
+                <canvas id="workerChart"></canvas>
+            </div>
+        </div>
+    </div>
+    
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <script>
+        const uploadSection = document.getElementById('uploadSection');
+        const fileInput = document.getElementById('fileInput');
+        const dashboardContainer = document.getElementById('dashboardContainer');
+        const errorContainer = document.getElementById('errorContainer');
+        
+        // Upload section click handler
+        uploadSection.addEventListener('click', () => fileInput.click());
+        
+        // Drag and drop handlers
+        uploadSection.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadSection.classList.add('dragover');
+        });
+        
+        uploadSection.addEventListener('dragleave', () => {
+            uploadSection.classList.remove('dragover');
+        });
+        
+        uploadSection.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadSection.classList.remove('dragover');
+            const file = e.dataTransfer.files[0];
+            if (file) handleFile(file);
+        });
+        
+        // File input change handler
+        fileInput.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (file) handleFile(file);
+        });
+        
+        function handleFile(file) {
+            if (!file.name.endsWith('.json')) {
+                showError('Please upload a JSON file');
+                return;
+            }
+            
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                try {
+                    const data = JSON.parse(e.target.result);
+                    renderDashboard(data);
+                } catch (error) {
+                    showError('Invalid JSON file: ' + error.message);
+                }
+            };
+            reader.readAsText(file);
+        }
+        
+        function showError(message) {
+            errorContainer.innerHTML = `<div class="error">${message}</div>`;
+            dashboardContainer.style.display = 'none';
+        }
+        
+        function renderDashboard(data) {
+            errorContainer.innerHTML = '';
+            dashboardContainer.style.display = 'block';
+            
+            // Render meta info
+            const metaInfo = document.getElementById('metaInfo');
+            metaInfo.innerHTML = `
+                <strong>Profile Date:</strong> ${data.meta.timestamp} | 
+                <strong>Duration:</strong> ${data.meta.duration}s | 
+                <strong>Samples:</strong> ${data.meta.samplesCollected}
+            `;
+            
+            // Render metric cards
+            const metricsGrid = document.getElementById('metricsGrid');
+            metricsGrid.innerHTML = `
+                ${createMetricCard('FPS', data.aggregate.fps, '')}
+                ${createMetricCard('Frame Time', data.aggregate.frameTime, 'ms')}
+                ${createMetricCard('Meshing Time', data.aggregate.meshingTime, 'ms')}
+                ${createMetricCard('Worker SimMs', data.aggregate.workerSimMs, 'ms')}
+            `;
+            
+            // Render charts
+            renderFpsChart(data.history);
+            renderFrameTimeChart(data.history);
+            renderWorkerChart(data.history);
+        }
+        
+        function createMetricCard(title, stats, unit) {
+            return `
+                <div class="metric-card">
+                    <div class="metric-title">${title}</div>
+                    <div class="metric-value">${stats.avg.toFixed(2)}${unit}</div>
+                    <div class="metric-stats">
+                        <div class="stat">
+                            <span class="stat-label">Min</span>
+                            <span class="stat-value">${stats.min.toFixed(2)}${unit}</span>
+                        </div>
+                        <div class="stat">
+                            <span class="stat-label">P95</span>
+                            <span class="stat-value">${stats.p95.toFixed(2)}${unit}</span>
+                        </div>
+                        <div class="stat">
+                            <span class="stat-label">Max</span>
+                            <span class="stat-value">${stats.max.toFixed(2)}${unit}</span>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+        
+        function renderFpsChart(history) {
+            const ctx = document.getElementById('fpsChart').getContext('2d');
+            const fps = history.map(h => h.fps?.current || 0);
+            
+            new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: history.map((_, i) => i),
+                    datasets: [{
+                        label: 'FPS',
+                        data: fps,
+                        borderColor: '#58a6ff',
+                        backgroundColor: 'rgba(88, 166, 255, 0.1)',
+                        tension: 0.1
+                    }]
+                },
+                options: getChartOptions('FPS')
+            });
+        }
+        
+        function renderFrameTimeChart(history) {
+            const ctx = document.getElementById('frameTimeChart').getContext('2d');
+            const frameTime = history.map(h => h.frameTime?.current || 0);
+            
+            new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: history.map((_, i) => i),
+                    datasets: [{
+                        label: 'Frame Time (ms)',
+                        data: frameTime,
+                        borderColor: '#79c0ff',
+                        backgroundColor: 'rgba(121, 192, 255, 0.1)',
+                        tension: 0.1
+                    }]
+                },
+                options: getChartOptions('Frame Time (ms)')
+            });
+        }
+        
+        function renderWorkerChart(history) {
+            const ctx = document.getElementById('workerChart').getContext('2d');
+            const workerSimMs = history.map(h => h.worker?.simMs || 0);
+            const meshingTime = history.map(h => h.meshing?.avgTimePerChunk || 0);
+            
+            new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: history.map((_, i) => i),
+                    datasets: [
+                        {
+                            label: 'Worker SimMs',
+                            data: workerSimMs,
+                            borderColor: '#a371f7',
+                            backgroundColor: 'rgba(163, 113, 247, 0.1)',
+                            tension: 0.1
+                        },
+                        {
+                            label: 'Meshing Time (ms)',
+                            data: meshingTime,
+                            borderColor: '#f778ba',
+                            backgroundColor: 'rgba(247, 120, 186, 0.1)',
+                            tension: 0.1
+                        }
+                    ]
+                },
+                options: getChartOptions('')
+            });
+        }
+        
+        function getChartOptions(yAxisLabel) {
+            return {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        labels: { color: '#c9d1d9' }
+                    }
+                },
+                scales: {
+                    x: {
+                        grid: { color: '#30363d' },
+                        ticks: { color: '#8b949e' }
+                    },
+                    y: {
+                        grid: { color: '#30363d' },
+                        ticks: { color: '#8b949e' },
+                        title: {
+                            display: yAxisLabel !== '',
+                            text: yAxisLabel,
+                            color: '#c9d1d9'
+                        }
+                    }
+                }
+            };
+        }
+    </script>
+</body>
+</html>

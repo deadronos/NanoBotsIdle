@@ -2,19 +2,25 @@
 
 ## Current focus
 
-Implemented DESIGN006 lighting propagation, torch emission, and mob spawning with tests.
+- Project tooling and repo guidance are aligned for Vite bundling, Tailwind v4+, and a consistent tests layout.
+- Refactor toward a Worker-authoritative engine with clean sim/render separation (`docs/ARCHITECTURE.md`).
+- **Save system:** Versioned save schema with migration framework is complete (v1→v2).
+- **Performance:** Meshing priority queue with back-pressure prevents worker overload.
 
-## Recently added/updated
+## Recent changes
 
-- `src/voxel/lighting.ts`: bounded light queue + propagation helpers.
-- `src/voxel/World.ts`: light arrays, sunlight updates, torch emission hooks.
-- `src/voxel/meshing.ts`: vertex colors from per-block lighting.
-- `src/game/GameScene.tsx`: lighting updates per frame, vertex color material.
-- `src/game/ecs/gameEcs.ts`: mob spawning system + configs.
-- Added lighting + mob spawn tests under `src/voxel` and `src/game/ecs`.
+- **Logistics System (Phase 3):** Complete. Haulers intercept miners, outposts persist. See `docs/ARCHITECTURE/GAME002-logistics-and-economy.md`.
+- **Save Migration System:** Added versioned save schema (v1→v2) with registry, validation, sanitization, and comprehensive tests. See `MIGRATION_SUMMARY.md`.
+- **Meshing Priority Queue/Backpressure:** Implemented in `MeshingScheduler` with configurable queue depth.
+- **Worker Error Handling:** Enhanced `createSimBridge` and `MeshingScheduler` with retry logic (3 attempts), telemetry, and graceful degradation.
+- **Responsive UI:** Added responsive design and touch controls for mobile.
+- **Player Collision:** Fixed ground height calculation for accurate standing position.
+- Removed legacy `importmap` usage from `index.html`; runtime deps come from `node_modules` via Vite.
+- Installed Tailwind v4+ and configured the official Vite plugin (`@tailwindcss/vite`).
+- Standardized tests to `tests/` and configured Vitest to only include that folder.
 
-## Next steps
+## Next steps (suggested)
 
-- Tune light propagation limits/thresholds and spawn parameters for gameplay feel.
-- Add mob rendering/AI behaviors to visualize spawns.
-- Consider optimizing lighting rebuilds (partial vertex color updates).
+- Complete config extraction work (`TASK003`) so balance knobs live in `src/config/*`.
+- Execute the sim/render separation refactor in phases (see `memory/tasks/_index.md`): `TASK004` → `TASK005` → `TASK006`.
+- Keep an eye on bundle size warnings; revisit code-splitting later if it becomes annoying.

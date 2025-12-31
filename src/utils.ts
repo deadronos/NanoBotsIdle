@@ -1,0 +1,48 @@
+import { Color } from "three";
+
+import { getVoxelValueFromHeight, noise2D } from "./sim/terrain-core";
+
+export {
+  chunkDistanceSq2,
+  chunkDistanceSq3,
+  forEachRadialChunk,
+  generateRadialOffsets,
+} from "./utils/chunkPriority";
+
+export { getVoxelValueFromHeight as getVoxelValue, noise2D };
+
+// Pseudo-random number generator
+export const random = (seed: number) => {
+  const x = Math.sin(seed++) * 10000;
+  return x - Math.floor(x);
+};
+
+export const getVoxelColor = (y: number, waterLevel = -12): Color => {
+  // Height-based coloring relative to water level
+  if (y < waterLevel - 2) return new Color("#1a4d8c"); // Deep Water
+  if (y < waterLevel + 0.5) return new Color("#2d73bf"); // Water
+  if (y < waterLevel + 2.5) return new Color("#e3dba3"); // Sand
+  if (y < waterLevel + 6) return new Color("#59a848"); // Grass
+  if (y < waterLevel + 12) return new Color("#3b7032"); // Dark Grass/Forest
+  if (y < waterLevel + 20) return new Color("#6e6e6e"); // Rock
+  return new Color("#ffffff"); // Snow
+};
+
+export const getVoxelType = (y: number, waterLevel = -12): "water" | "solid" => {
+  if (y <= waterLevel) return "water";
+  return "solid";
+};
+
+// Helper to get terrain height at a specific x, z coordinate
+export const getTerrainHeight = (x: number, z: number): number => {
+  // Quantize coordinates to grid
+  const h = Math.floor(noise2D(x, z) * 2);
+  // Flatten water level
+  if (h < 0) return 0;
+  return h;
+};
+
+// Continuous height for smoother physics/camera walking
+export const getSmoothHeight = (x: number, z: number): number => {
+  return noise2D(x, z) * 2;
+};

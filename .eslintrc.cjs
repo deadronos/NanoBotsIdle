@@ -75,6 +75,19 @@ module.exports = {
         "@typescript-eslint/no-var-requires": "off",
       },
     },
+    {
+      // Allow console in tests, scripts, worker files, and the logger utility itself
+      files: [
+        "tests/**/*.{ts,tsx}",
+        "scripts/**/*.{js,ts,mjs}",
+        "src/worker/**/*.{ts,tsx}",
+        "src/utils/logger.ts",
+        "*.config.{ts,js,mjs,cjs}",
+      ],
+      rules: {
+        "no-console": "off",
+      },
+    },
   ],
   rules: {
     // React Three Fiber/Three.js patterns intentionally mutate scene/refs.
@@ -124,5 +137,12 @@ module.exports = {
 
     // Avoid Node-only builtins in browser code (still allow in config/scripts)
     "import/no-nodejs-modules": "off",
+
+    // R3F
+    "react/no-unknown-property": "off",
+
+    // Enforce using logger utility instead of direct console calls in src/
+    // Exceptions: logger.ts itself, worker files, tests, and config files (handled by overrides above)
+    "no-console": "error",
   },
 };

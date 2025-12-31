@@ -1,0 +1,226 @@
+import { useFrame, useThree } from "@react-three/fiber";
+import React, { useCallback, useEffect, useMemo, useRef } from "react";
+
+import { useConfig } from "../../config/useConfig";
+import { playerChunk, playerPosition } from "../../engine/playerState";
+import { applyLodGeometry } from "../../render/lodGeometry";
+import { applyChunkVisibility, createLodThresholds } from "../../render/lodUtils";
+import { applyVoxelEdits, resetVoxelEdits } from "../../sim/collision";
+import { getSurfaceHeightCore } from "../../sim/terrain-core";
+import { getSimBridge } from "../../simBridge/simBridge";
+import { forEachRadialChunk } from "../../utils";
+import { debug, groupCollapsed, groupEnd } from "../../utils/logger";
+import { chunkKey } from "./chunkHelpers";
+import { countDenseSolidsInChunk } from "./renderDebugCompare";
+import { useMeshedChunks } from "./useMeshedChunks";
+
+export const VoxelLayerMeshed: React.FC<{
+  chunkSize: number;
+  prestigeLevel: number;
+  spawnX: number;
+  spawnZ: number;
+  seed: number;
+}> = ({ chunkSize, prestigeLevel, seed, spawnX, spawnZ }) => {
+  const activeChunks = useRef<Set<string>>(new Set());
+  const initialSurfaceChunkRef = useRef<{ cx: number; cy: number; cz: number } | null>(null);
+  const lastRequestedPlayerChunkRef = useRef<{ cx: number; cy: number; cz: number } | null>(null);
+  const cfg = useConfig();
+  const bridge = getSimBridge();
+  const { camera } = useThree();
+
+  const lodThresholds = useMemo(() => createLodThresholds(chunkSize), [chunkSize]);
+
+  const handleSchedulerChange = useCallback(() => {
+    // Clear activeChunks when scheduler is recreated (e.g., when actualSeed arrives)
+    activeChunks.current.clear();
+    initialSurfaceChunkRef.current = null;
+    lastRequestedPlayerChunkRef.current = null;
+  }, []);
+
+  const { ensureChunk, getDebugState, groupRef, markDirtyForEdits, reset, setFocusChunk } =
+    useMeshedChunks({
+      chunkSize,
+      prestigeLevel,
+      waterLevel: cfg.terrain.waterLevel,
+      seed,
+      onSchedulerChange: handleSchedulerChange,
+    });
+
+  const debugCfg = cfg.render.voxels.debugCompare;
+  const debugEnabled = debugCfg.enabled;
+  const debugLastLogAtMsRef = useRef(0);
+
+  const addChunk = useCallback(
+    (cx: number, cy: number, cz: number) => {
+      const key = chunkKey(cx, cy, cz);
+      if (activeChunks.current.has(key)) return;
+      activeChunks.current.add(key);
+      ensureChunk(cx, cy, cz);
+    },
+    [ensureChunk],
+  );
+
+  const ensureInitialChunk = useCallback(() => {
+    if (activeChunks.current.size > 0) return;
+    const surfaceY = getSurfaceHeightCore(
+      spawnX,
+      spawnZ,
+      seed,
+      cfg.terrain.surfaceBias,
+      cfg.terrain.quantizeScale,
+    );
+    const cy = Math.floor(surfaceY / chunkSize);
+    const baseCx = Math.floor(spawnX / chunkSize);
+    const baseCz = Math.floor(spawnZ / chunkSize);
+    initialSurfaceChunkRef.current = { cx: baseCx, cy, cz: baseCz };
+    setFocusChunk(baseCx, cy, baseCz);
+    forEachRadialChunk({ cx: baseCx, cy, cz: baseCz }, 1, 2, (c) => {
+      addChunk(c.cx, cy, c.cz);
+    });
+  }, [
+    addChunk,
+    chunkSize,
+    cfg.terrain.quantizeScale,
+    cfg.terrain.surfaceBias,
+    seed,
+    setFocusChunk,
+    spawnX,
+    spawnZ,
+  ]);
+
+  useEffect(() => {
+    return bridge.onFrame((frame) => {
+      if (frame.delta.frontierReset) {
+        activeChunks.current.clear();
+        reset();
+        resetVoxelEdits();
+      }
+
+      if (frame.delta.edits && frame.delta.edits.length > 0) {
+        applyVoxelEdits(frame.delta.edits);
+        markDirtyForEdits(frame.delta.edits);
+      }
+
+      ensureInitialChunk();
+
+      // Poll player chunk
+      const px = playerPosition.x;
+      const py = playerPosition.y;
+      const pz = playerPosition.z;
+      const pcx = Math.floor(px / chunkSize);
+      const pcy = Math.floor(py / chunkSize);
+      const pcz = Math.floor(pz / chunkSize);
+
+      const lastReq = lastRequestedPlayerChunkRef.current;
+      const shouldRequest =
+        !lastReq || lastReq.cx !== pcx || lastReq.cy !== pcy || lastReq.cz !== pcz;
+      if (shouldRequest) {
+        lastRequestedPlayerChunkRef.current = { cx: pcx, cy: pcy, cz: pcz };
+        playerChunk.cx = pcx;
+        playerChunk.cy = pcy;
+        playerChunk.cz = pcz;
+        setFocusChunk(pcx, pcy, pcz);
+        // Ensure the same 3D neighborhood we debug/expect is actually requested.
+        forEachRadialChunk({ cx: pcx, cy: pcy, cz: pcz }, 1, 3, (c) => {
+          addChunk(c.cx, c.cy, c.cz);
+        });
+      }
+
+      if (debugEnabled) {
+        const now = performance.now();
+        if (now - debugLastLogAtMsRef.current >= debugCfg.logIntervalMs) {
+          debugLastLogAtMsRef.current = now;
+
+          const radius = debugCfg.radiusChunks;
+          const expectedChunkKeys: string[] = [];
+          forEachRadialChunk({ cx: pcx, cy: pcy, cz: pcz }, radius, 3, (c) => {
+            expectedChunkKeys.push(chunkKey(c.cx, c.cy, c.cz));
+          });
+
+          let denseSolids = 0;
+          forEachRadialChunk({ cx: pcx, cy: pcy, cz: pcz }, radius, 3, (c) => {
+            denseSolids += countDenseSolidsInChunk({
+              cx: c.cx,
+              cy: c.cy,
+              cz: c.cz,
+              chunkSize,
+              prestigeLevel,
+            });
+          });
+
+          const dbg = getDebugState();
+          const meshKeySet = new Set(dbg.meshChunkKeys);
+          const processedKeySet = new Set(dbg.processedChunkKeys);
+          const emptyKeySet = new Set(dbg.emptyChunkKeys);
+
+          const missingMeshes = expectedChunkKeys.filter((k) => !meshKeySet.has(k));
+          const missingNotRequested = missingMeshes.filter((k) => !activeChunks.current.has(k));
+          const missingRequestedPending = missingMeshes.filter(
+            (k) => activeChunks.current.has(k) && !processedKeySet.has(k),
+          );
+          const missingRequestedEmpty = missingMeshes.filter(
+            (k) => activeChunks.current.has(k) && emptyKeySet.has(k),
+          );
+
+          const requestedChunkCount = expectedChunkKeys.filter((k) =>
+            activeChunks.current.has(k),
+          ).length;
+
+          // Only emit verbose render-debug output in development to avoid noisy production logs
+          if (process.env.NODE_ENV === "development") {
+            groupCollapsed(
+              `[render-debug] meshed pc=(${pcx},${pcy},${pcz}) radius=${radius} chunksize=${chunkSize}`,
+            );
+            debug({
+              denseBaselineSolidCount: denseSolids,
+              expectedChunkCount: expectedChunkKeys.length,
+              requestedChunkCount,
+              meshedMeshChunkCount: dbg.meshChunkKeys.length,
+              meshedProcessedChunkCount: dbg.processedChunkKeys.length,
+              meshedEmptyChunkCount: dbg.emptyChunkKeys.length,
+              meshingDirtyCount: dbg.dirtyKeys.length,
+              meshingInFlight: dbg.inFlight,
+              surfaceChunk: initialSurfaceChunkRef.current,
+              missingNotRequested: missingNotRequested.slice(0, 20),
+              missingNotRequestedCount: missingNotRequested.length,
+              missingRequestedPending: missingRequestedPending.slice(0, 20),
+              missingRequestedPendingCount: missingRequestedPending.length,
+              missingRequestedEmpty: missingRequestedEmpty.slice(0, 20),
+              missingRequestedEmptyCount: missingRequestedEmpty.length,
+            });
+            groupEnd();
+          }
+        }
+      }
+    });
+  }, [
+    addChunk,
+    bridge,
+    chunkSize,
+    debugCfg.logIntervalMs,
+    debugCfg.radiusChunks,
+    debugEnabled,
+    ensureInitialChunk,
+    getDebugState,
+    markDirtyForEdits,
+    prestigeLevel,
+    reset,
+    setFocusChunk,
+  ]);
+
+  const lodVisibilityOptions = useMemo(
+    () => ({
+      onLodChange: applyLodGeometry,
+    }),
+    [],
+  );
+
+  useFrame(() => {
+    const group = groupRef.current;
+    if (!group) return;
+
+    applyChunkVisibility(group.children, camera, lodThresholds, lodVisibilityOptions);
+  });
+
+  return <group ref={groupRef} />;
+};

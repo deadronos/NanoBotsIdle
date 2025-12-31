@@ -1,27 +1,31 @@
-export const PLAYER_PHYSICS = {
-  gravity: -24,
-  walkSpeed: 6,
-  sprintMultiplier: 1.6,
-  jumpSpeed: 8.2,
-  friction: 10,
-  airControl: 0.15,
-  halfWidth: 0.3,
-  height: 1.78,
+export type PlayerConfig = {
+  playerHeight: number;
+  walkingSpeed: number;
+  runningSpeed: number;
+  jumpForce: number;
+  gravity: number;
+  swimSpeed: number;
+  swimForce: number;
+  buoyancy: number;
+  waterDrag: number;
+  spawnX?: number;
+  spawnZ?: number;
+  respawnY?: number;
+  killPlaneY?: number;
 };
 
-export const PLAYER_INPUT = {
-  mouseSensitivity: 0.0022,
-};
-
-export const PLAYER_CAMERA = {
-  eyeHeightFactor: 0.92,
-};
-
-export const PLAYER_SPAWN = {
-  x: 8,
-  z: 8,
-  scanStartY: 50,
-  minY: 2,
-  offsetY: 2.2,
-  fallResetY: -10,
+export const defaultPlayerConfig: PlayerConfig = {
+  playerHeight: 1.8,
+  walkingSpeed: 5.0,
+  runningSpeed: 8.0,
+  jumpForce: 8.0,
+  gravity: 20.0,
+  swimSpeed: 4.0,
+  swimForce: 15.0,
+  buoyancy: 15.0,
+  waterDrag: 2.0,
+  spawnX: 0,
+  spawnZ: 0,
+  respawnY: 10,
+  killPlaneY: -20,
 };

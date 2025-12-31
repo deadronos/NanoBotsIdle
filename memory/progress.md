@@ -1,36 +1,42 @@
 # Progress
 
-## What works (current)
+## Working
 
-- Vite dev/build/preview pipeline.
-- Chunk streaming and pruning with bounded per-frame rebuild/sync.
-- Procedural terrain generation (grass/dirt/stone, beaches, water, trees, bedrock).
-- Deterministic cave carving + ore vein generation with configurable ranges.
-- Face-culling meshing and incremental mesh syncing.
-- Pointer-lock FPS controller with collision.
-- DDA voxel picking for break/place interactions.
-- Inventory + hotbar + crafting recipes.
-- Runtime-generated atlas used by both voxel rendering and UI icons.
-- Ore tiles added to the atlas and inventory list.
-- HUD/inventory/start overlays migrated to shadcn components with Tailwind.
-- Hotbar/crosshair migrated to Tailwind styling; inventory uses shadcn Tabs + ScrollArea.
-- Fixed-step simulation accumulator with camera interpolation.
-- Miniplex ECS PoC tracks player/time-of-day snapshots.
-- ECS expanded with systems/registry for mobs/items/particles and centralized lighting state.
-- Block lighting (sun + torch) with bounded propagation and vertex-lit meshing.
-- Mob spawn system gated by light thresholds and spawn caps.
-- Feature roadmap drafted for Minecraft-like expansion.
-- Vitest tests in place (smoke + fixed-step accumulator).
-- Generation tests cover determinism, order independence, and ore depth ranges.
-- Lighting and mob spawn tests cover propagation, sunlight occlusion, and spawn rules.
+- Game loop: drones mine blocks, credits accrue, upgrades/presitge available.
+- Rendering: instanced voxels + basic environment.
+- Tooling: Tailwind v4+ via Vite plugin, ESLint/Prettier, Vitest.
 
-## What’s missing / open areas
+## In progress / next
 
-- Expanded automated tests for world math, chunk indexing, and picking edge cases.
-- Persistence (save/load).
-- Greedy meshing, occlusion optimizations, and more advanced lighting.
-- Mob rendering/AI beyond basic wander.
+- Expand test coverage (store + utility functions).
+- Tune performance as drone counts increase (avoid allocations in `useFrame()`).
+- Plan/execute worker-authoritative engine refactor (protocol + engine + deltas), per `docs/ARCHITECTURE.md`.
 
-## Known constraints
+## Known notes
 
-- Several invariants are intentionally strict (BlockId alignment, tilesPerRow, per-frame caps). Breaking them can cause subtle rendering bugs or major perf regressions.
+- Vite build warns about large chunks (>500kB) after minification; not currently blocking.
+
+## Recent updates
+
+### 2025-12-31
+
+- **Logistics System (Phase 3):** Implemented Hauler drones and Outpost persistence (`TASK013`, `DESIGN009`).
+  - **Hauler Drones:** New role dedicated to transport. Includes AI for intercepting miners and depositing cargo.
+  - **Outposts:** Persistent player-placed structures serving as drop-off points.
+  - **UI/Economy:** Shop integration and visual distinction (role-based coloring).
+  - **Architecture:** Documented in `docs/ARCHITECTURE/GAME002-logistics-and-economy.md`.
+
+- **UI Polish:** Adjusted `BuildingDrawer` positioning to avoid overlaps on desktop/mobile.
+
+### 2025-12-31 (Previous)
+
+- **Save Migration System (PRs #99-101):** Added versioned save schema (v1→v2) with migration framework. Includes registry, validation, sanitization, and 36 comprehensive roundtrip tests. See `MIGRATION_SUMMARY.md` and `src/utils/migrations/`.
+- **Meshing Priority Queue (#98):** Implemented chunk meshing priority queue with back-pressure to prevent worker overload. Adds configurable queue depth and tests for scheduler behavior.
+- **Worker Error Handling:** Enhanced `createSimBridge` and `MeshingScheduler` with retry logic (up to 3 attempts), telemetry integration, and graceful degradation. Documented in `docs/ARCHITECTURE.md`.
+- **Responsive UI & Touch Controls:** Enhanced UI with responsive design and added touch controls for mobile devices.
+- **Player Collision Fix:** Adjusted player ground height calculation for improved accuracy.
+- **CI Workflow Updates:** Commented out push/pull_request triggers in CI and profiling workflows for main branch.
+
+### 2025-12-30
+
+- Synchronized Memory Bank entries and design docs with `docs/ARCHITECTURE` changes: standardized `open-simplex` naming, replaced references to Playwright/screenshots with deterministic PPM-based visual baselining and visual-diff tests, and updated TASK009/TASK010/DESIGN008 to reflect the final implementation and baselines.
