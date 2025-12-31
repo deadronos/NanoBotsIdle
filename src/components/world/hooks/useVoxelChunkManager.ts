@@ -1,3 +1,4 @@
+import type { MutableRefObject } from "react";
 import { useCallback, useRef } from "react";
 
 import { useConfig } from "../../../config/useConfig";
@@ -12,7 +13,7 @@ interface UseVoxelChunkManagerProps {
   spawnZ: number;
   seed: number;
   ensureCapacity: (capacity: number) => void;
-  solidCountRef: React.MutableRefObject<number>;
+  solidCountRef: MutableRefObject<number>;
   addVoxel: (x: number, y: number, z: number) => void;
 }
 

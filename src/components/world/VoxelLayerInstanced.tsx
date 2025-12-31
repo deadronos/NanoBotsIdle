@@ -45,7 +45,7 @@ export const VoxelLayerInstanced: React.FC<{
     trackFrontierRemove,
     clearFrontierKeys,
     logDebugInfo,
-  } = useVoxelLayerDebug({ chunkSize, prestigeLevel, voxelRenderMode });
+  } = useVoxelLayerDebug({ chunkSize, prestigeLevel });
 
   const { sentFrontierChunkRef } = useFrontierLogic({ voxelRenderMode });
 
