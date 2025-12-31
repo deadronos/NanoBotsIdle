@@ -43,6 +43,11 @@ implementation without rediscovering decisions.
 - `DEC005-greedy-meshing-for-block-voxel-surfaces.md`: prefer greedy meshing as
   the first surface-meshing algorithm for block voxels; worker-friendly per-chunk jobs.
 - `DEC006-noise-and-init-generation.md`: noise providers (`terrain.noiseType`), tuned OpenSimplex defaults, and prestige-time init retry strategy.
+- `DEC007-lod-and-culling.md`: distance-based LOD, frustum culling, and optional
+  occlusion culling for chunk mesh visibility management.
+- `DEC008-multiplayer-strategy.md`: analysis of multiplayer sync strategies
+  (authoritative server, deterministic lockstep, client prediction), tradeoffs,
+  and recommended path for future implementation.
 
 ## Update rules
 
