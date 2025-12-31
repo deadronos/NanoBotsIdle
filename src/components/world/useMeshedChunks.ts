@@ -37,6 +37,7 @@ export const useMeshedChunks = (options: {
   const { chunkSize, prestigeLevel, waterLevel, seed, onSchedulerChange } = options;
 
   const focusChunkRef = useRef<{ cx: number; cy: number; cz: number }>({ cx: 0, cy: 0, cz: 0 });
+  const reprioritizeTimeoutRef = useRef<number | null>(null);
 
   // Color mapping kept local to avoid importing `three` types in worker code.
   // Reuse Color instances to avoid per-vertex allocations.
@@ -257,6 +258,11 @@ export const useMeshedChunks = (options: {
     // Notify parent that scheduler was (re)created so it can re-sync its chunk tracking
     onSchedulerChange?.();
     return () => {
+      // Clear any pending reprioritization timeout
+      if (reprioritizeTimeoutRef.current !== null) {
+        clearTimeout(reprioritizeTimeoutRef.current);
+        reprioritizeTimeoutRef.current = null;
+      }
       schedulerRef.current = null;
       scheduler.dispose();
       disposeAllMeshes();
@@ -303,7 +309,23 @@ export const useMeshedChunks = (options: {
     focusChunkRef.current = { cx, cy, cz };
     const scheduler = schedulerRef.current;
     if (!scheduler) return;
-    scheduler.reprioritizeDirty();
+
+    // Debounce reprioritization to avoid expensive heap rebuilds on every frame when player moves.
+    // Update focus immediately but defer the actual reprioritization for 150ms.
+    if (reprioritizeTimeoutRef.current !== null) {
+      clearTimeout(reprioritizeTimeoutRef.current);
+    }
+
+    reprioritizeTimeoutRef.current = window.setTimeout(() => {
+      reprioritizeTimeoutRef.current = null;
+      const currentScheduler = schedulerRef.current;
+      if (currentScheduler) {
+        currentScheduler.reprioritizeDirty();
+        currentScheduler.pump();
+      }
+    }, 150);
+
+    // Always pump immediately to process any pending chunks, even without reprioritization
     scheduler.pump();
   }, []);
 
