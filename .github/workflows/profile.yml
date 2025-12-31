@@ -2,9 +2,9 @@ name: Performance Profiling
 
 on:
   push:
-    branches: [ main ]
+    # branches: [ main ]
   pull_request:
-    branches: [ main ]
+    # branches: [ main ]
   workflow_dispatch: # Allow manual triggering
 
 jobs:
@@ -82,35 +82,35 @@ jobs:
         run: |
           echo "## Performance Profile Comparison" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          
+
           # Extract key metrics from both files
           BASELINE_FPS=$(jq -r '.aggregate.fps.avg' ./baseline/profile-metrics.json)
           CURRENT_FPS=$(jq -r '.aggregate.fps.avg' ./profile-metrics.json)
-          
+
           BASELINE_FRAME_TIME=$(jq -r '.aggregate.frameTime.avg' ./baseline/profile-metrics.json)
           CURRENT_FRAME_TIME=$(jq -r '.aggregate.frameTime.avg' ./profile-metrics.json)
-          
+
           BASELINE_MESHING=$(jq -r '.aggregate.meshingTime.avg' ./baseline/profile-metrics.json)
           CURRENT_MESHING=$(jq -r '.aggregate.meshingTime.avg' ./profile-metrics.json)
-          
+
           echo "| Metric | Baseline | Current | Change |" >> $GITHUB_STEP_SUMMARY
           echo "|--------|----------|---------|--------|" >> $GITHUB_STEP_SUMMARY
-          
+
           # FPS comparison
           FPS_CHANGE=$(echo "scale=2; $CURRENT_FPS - $BASELINE_FPS" | bc)
           FPS_PERCENT=$(echo "scale=2; ($FPS_CHANGE / $BASELINE_FPS) * 100" | bc)
           echo "| FPS | $BASELINE_FPS | $CURRENT_FPS | ${FPS_CHANGE} (${FPS_PERCENT}%) |" >> $GITHUB_STEP_SUMMARY
-          
+
           # Frame time comparison
           FT_CHANGE=$(echo "scale=2; $CURRENT_FRAME_TIME - $BASELINE_FRAME_TIME" | bc)
           FT_PERCENT=$(echo "scale=2; ($FT_CHANGE / $BASELINE_FRAME_TIME) * 100" | bc)
           echo "| Frame Time (ms) | $BASELINE_FRAME_TIME | $CURRENT_FRAME_TIME | ${FT_CHANGE} (${FT_PERCENT}%) |" >> $GITHUB_STEP_SUMMARY
-          
+
           # Meshing time comparison
           MESH_CHANGE=$(echo "scale=2; $CURRENT_MESHING - $BASELINE_MESHING" | bc)
           MESH_PERCENT=$(echo "scale=2; ($MESH_CHANGE / $BASELINE_MESHING) * 100" | bc)
           echo "| Meshing Time (ms) | $BASELINE_MESHING | $CURRENT_MESHING | ${MESH_CHANGE} (${MESH_PERCENT}%) |" >> $GITHUB_STEP_SUMMARY
-          
+
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "Full metrics available in artifacts." >> $GITHUB_STEP_SUMMARY
 
@@ -121,25 +121,25 @@ jobs:
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "| Metric | Average | Min | Max | P95 |" >> $GITHUB_STEP_SUMMARY
           echo "|--------|---------|-----|-----|-----|" >> $GITHUB_STEP_SUMMARY
-          
+
           FPS_AVG=$(jq -r '.aggregate.fps.avg' ./profile-metrics.json)
           FPS_MIN=$(jq -r '.aggregate.fps.min' ./profile-metrics.json)
           FPS_MAX=$(jq -r '.aggregate.fps.max' ./profile-metrics.json)
           FPS_P95=$(jq -r '.aggregate.fps.p95' ./profile-metrics.json)
           echo "| FPS | $FPS_AVG | $FPS_MIN | $FPS_MAX | $FPS_P95 |" >> $GITHUB_STEP_SUMMARY
-          
+
           FT_AVG=$(jq -r '.aggregate.frameTime.avg' ./profile-metrics.json)
           FT_MIN=$(jq -r '.aggregate.frameTime.min' ./profile-metrics.json)
           FT_MAX=$(jq -r '.aggregate.frameTime.max' ./profile-metrics.json)
           FT_P95=$(jq -r '.aggregate.frameTime.p95' ./profile-metrics.json)
           echo "| Frame Time (ms) | $FT_AVG | $FT_MIN | $FT_MAX | $FT_P95 |" >> $GITHUB_STEP_SUMMARY
-          
+
           MESH_AVG=$(jq -r '.aggregate.meshingTime.avg' ./profile-metrics.json)
           MESH_MIN=$(jq -r '.aggregate.meshingTime.min' ./profile-metrics.json)
           MESH_MAX=$(jq -r '.aggregate.meshingTime.max' ./profile-metrics.json)
           MESH_P95=$(jq -r '.aggregate.meshingTime.p95' ./profile-metrics.json)
           echo "| Meshing Time (ms) | $MESH_AVG | $MESH_MIN | $MESH_MAX | $MESH_P95 |" >> $GITHUB_STEP_SUMMARY
-          
+
           CHUNKS=$(jq -r '.aggregate.totalChunksMeshed' ./profile-metrics.json)
           echo "| Total Chunks Meshed | $CHUNKS | - | - | - |" >> $GITHUB_STEP_SUMMARY
 
