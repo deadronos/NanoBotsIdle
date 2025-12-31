@@ -1,5 +1,5 @@
-import { getTelemetryCollector } from "../telemetry";
 import type { Cmd, FromWorker, ToWorker } from "../shared/protocol";
+import { getTelemetryCollector } from "../telemetry";
 import { error, warn } from "../utils/logger";
 import type { FrameHandler, FrameMessage, SimBridge, SimBridgeOptions, WorkerLike } from "./types";
 import { defaultWorkerFactory } from "./workerFactory";

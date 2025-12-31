@@ -39,14 +39,12 @@ describe("SimBridge worker error handling with retry", () => {
 
   it("should retry worker on ERROR up to maxRetries", async () => {
     const workers: FakeWorker[] = [];
-    let workerIndex = 0;
     const errorCallback = vi.fn();
 
     const bridge = createSimBridge({
       workerFactory: () => {
         const worker = new FakeWorker();
         workers.push(worker);
-        workerIndex++;
         return worker;
       },
       onError: errorCallback,
