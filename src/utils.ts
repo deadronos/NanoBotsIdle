@@ -1,5 +1,3 @@
-import { Color } from "three";
-
 import { getVoxelValueFromHeight, noise2D } from "./sim/terrain-core";
 
 export {
@@ -17,15 +15,19 @@ export const random = (seed: number) => {
   return x - Math.floor(x);
 };
 
-export const getVoxelColor = (y: number, waterLevel = -12): Color => {
+/**
+ * Returns height-based color as a hex number (no Color allocation).
+ * To be used with Color.setHex() or similar methods.
+ */
+export const getVoxelColor = (y: number, waterLevel = -12): number => {
   // Height-based coloring relative to water level
-  if (y < waterLevel - 2) return new Color("#1a4d8c"); // Deep Water
-  if (y < waterLevel + 0.5) return new Color("#2d73bf"); // Water
-  if (y < waterLevel + 2.5) return new Color("#e3dba3"); // Sand
-  if (y < waterLevel + 6) return new Color("#59a848"); // Grass
-  if (y < waterLevel + 12) return new Color("#3b7032"); // Dark Grass/Forest
-  if (y < waterLevel + 20) return new Color("#6e6e6e"); // Rock
-  return new Color("#ffffff"); // Snow
+  if (y < waterLevel - 2) return 0x1a4d8c; // Deep Water
+  if (y < waterLevel + 0.5) return 0x2d73bf; // Water
+  if (y < waterLevel + 2.5) return 0xe3dba3; // Sand
+  if (y < waterLevel + 6) return 0x59a848; // Grass
+  if (y < waterLevel + 12) return 0x3b7032; // Dark Grass/Forest
+  if (y < waterLevel + 20) return 0x6e6e6e; // Rock
+  return 0xffffff; // Snow
 };
 
 export const getVoxelType = (y: number, waterLevel = -12): "water" | "solid" => {

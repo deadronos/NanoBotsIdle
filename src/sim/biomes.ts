@@ -1,5 +1,4 @@
 import { makeNoise2D } from "open-simplex-noise";
-import { Color } from "three";
 
 export type BiomeId =
   | "ocean"
@@ -64,23 +63,27 @@ export const getBiomeAt = (
   return { id, heat01, moisture01 };
 };
 
-export const getBiomeColor = (biome: BiomeSample): Color => {
+/**
+ * Returns biome color as a hex number (no Color allocation).
+ * To be used with Color.setHex() or similar methods.
+ */
+export const getBiomeColor = (biome: BiomeSample): number => {
   switch (biome.id) {
     case "ocean":
-      return new Color("#2d73bf");
+      return 0x2d73bf;
     case "beach":
-      return new Color("#e3dba3");
+      return 0xe3dba3;
     case "grassland":
-      return new Color("#59a848");
+      return 0x59a848;
     case "forest":
-      return new Color("#2e5f2a");
+      return 0x2e5f2a;
     case "desert":
-      return new Color("#d7c27a");
+      return 0xd7c27a;
     case "tundra":
-      return new Color("#a7c2b8");
+      return 0xa7c2b8;
     case "mountain":
-      return new Color("#6e6e6e");
+      return 0x6e6e6e;
     case "snow":
-      return new Color("#ffffff");
+      return 0xffffff;
   }
 };

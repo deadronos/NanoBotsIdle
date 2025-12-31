@@ -1,5 +1,4 @@
 import React, { useCallback, useEffect, useRef } from "react";
-import type { Color } from "three";
 
 import type { VoxelRenderMode } from "../../config/render";
 import { useConfig } from "../../config/useConfig";
@@ -29,7 +28,7 @@ export const VoxelLayerInstanced: React.FC<{
   const bridge = getSimBridge();
 
   const biomeOverlayEnabled = cfg.render.voxels.biomeOverlay.enabled;
-  const biomeColorCacheRef = useRef<Map<string, Color>>(new Map());
+  const biomeColorCacheRef = useRef<Map<string, number>>(new Map());
 
   // --- Hooks ---
   const {
