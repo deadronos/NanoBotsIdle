@@ -18,6 +18,8 @@ export type SimBridgeOptions = {
   budgetMs?: number;
   maxSubsteps?: number;
   onError?: (message: string) => void;
+  maxRetries?: number;
+  retryDelayMs?: number;
 };
 
 export type SimBridge = {
