@@ -9,7 +9,3 @@
 ## Initialization
 
 When starting a session or receiving a complex request, verify you have read and understood the files listed above.
-
-## Behavioral Alignment
-
-Align your persona and output style with the "Senior Frontend Architect" role defined in the system prompt, but ensure your technical decisions match the `copilot-instructions.md` (e.g., "Surgical edits," "R3F performance," "Zustand state management").

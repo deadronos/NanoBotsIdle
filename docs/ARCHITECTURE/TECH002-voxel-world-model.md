@@ -1,7 +1,7 @@
 ## TECH002: Voxel World Model (True 3D Digging)
 
 **Status:** Draft (intended target architecture)  
-**Last updated:** 2025-12-29
+**Last updated:** 2025-12-30
 
 ## Summary
 
@@ -17,6 +17,17 @@ read-only collision proxy that mirrors voxel edits.
 - Voxels live on an integer grid `(x, y, z)`.
 - Chunking is used for addressing and mesh rebuild scheduling.
   - Recommended `CHUNK_SIZE`: 16.
+
+For details on chunk representation tradeoffs (dense formats vs sparse/procedural)
+and how rendering should avoid expanding the world into full voxel volumes, see:
+
+- `TECH003-voxel-chunk-representation-and-render-adapters.md`
+
+Recommended evolution of the renderer:
+
+- v1: frontier-only visibility set (instanced cubes)
+- v2: chunk-local surface rendering using **greedy meshing** (preferred first
+  meshing algorithm for block voxels)
 
 ## Materials
 
@@ -86,11 +97,12 @@ World generation must guarantee a minimum number of above-water mineable voxels
 to avoid soft locks.
 
 - Target requirement: `prestige.minAboveWaterBlocks > 50` (exact number is a
-  config value).
-- On world init:
-  - compute initial frontier set (or a cheaper approximation)
-  - if count is below requirement, retry generation with a different seed and/or
-    adjusted bias for up to `terrain.genRetries`
+  config value; see `src/config/economy.ts`).
+- On world init (implementation):
+  - `initWorldForPrestige(prestigeLevel, cfg)` computes the initial frontier set using a candidate seed derived from `getSeed(prestigeLevel)`.
+  - If the computed above-water frontier count is below the configured minimum (`cfg.economy.prestigeMinMinedBlocks`), the function will iterate up to `cfg.terrain.genRetries` (default 5), deriving a new candidate seed for each attempt (current algo: `candidateSeed = baseSeed + attempt * 101`) and regenerating the world.
+  - If none of the candidate seeds meet the requirement, the base seed is used as a fallback and the init completes (see `src/engine/world/initWorld.ts`).
+  - This regeneration behavior ensures the system avoids trivial soft-locks at prestige-time while keeping initialization bounded.
 
 ## Starter drone constraint (above water)
 

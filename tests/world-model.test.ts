@@ -1,7 +1,12 @@
 import { describe, expect, it } from "vitest";
 
 import { getConfig, resetConfig, updateConfig } from "../src/config/index";
-import { MATERIAL_AIR, MATERIAL_BEDROCK, MATERIAL_SOLID, WorldModel } from "../src/engine/world/world";
+import {
+  MATERIAL_AIR,
+  MATERIAL_BEDROCK,
+  MATERIAL_SOLID,
+  WorldModel,
+} from "../src/engine/world/world";
 import { getSeed, getSurfaceHeight } from "../src/sim/terrain";
 
 describe("world model (v1)", () => {
@@ -46,5 +51,40 @@ describe("world model (v1)", () => {
     const interiorY = surfaceY - 2;
     const edit = world.mineVoxel(3, interiorY, 3);
     expect(edit).toBeNull();
+  });
+
+  it("emits bounded frontier deltas (edit affects <= 7 voxels)", () => {
+    resetConfig();
+    updateConfig({ terrain: { bedrockY: -50 } });
+    const seed = getSeed(1);
+    const world = new WorldModel({ seed });
+    const cfg = getConfig();
+    world.initializeFrontierFromSurface(cfg.terrain.worldRadius);
+
+    const x = 2;
+    const z = 2;
+    const y = getSurfaceHeight(x, z, seed);
+    const result = world.mineVoxel(x, y, z);
+
+    expect(result).not.toBeNull();
+    expect(result?.frontierAdded.length).toBeLessThanOrEqual(7);
+    expect(result?.frontierRemoved.length).toBeLessThanOrEqual(7);
+  });
+
+  it("removes the mined voxel from the frontier", () => {
+    resetConfig();
+    updateConfig({ terrain: { bedrockY: -50 } });
+    const seed = getSeed(1);
+    const world = new WorldModel({ seed });
+    const cfg = getConfig();
+    world.initializeFrontierFromSurface(cfg.terrain.worldRadius);
+
+    const x = 2;
+    const z = 2;
+    const y = getSurfaceHeight(x, z, seed);
+    const result = world.mineVoxel(x, y, z);
+
+    expect(result).not.toBeNull();
+    expect(result?.frontierRemoved).toContainEqual({ x, y, z });
   });
 });

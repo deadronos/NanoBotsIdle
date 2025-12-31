@@ -10,6 +10,7 @@ export interface GameState {
 
   // Upgrades
   droneCount: number;
+  haulerCount: number;
   miningSpeedLevel: number;
   moveSpeedLevel: number;
   laserPowerLevel: number;
@@ -17,14 +18,15 @@ export interface GameState {
   // World Stats
   minedBlocks: number;
   totalBlocks: number;
+  outposts: { id: string; x: number; y: number; z: number; level: number }[];
 
   // Actions
   addCredits: (amount: number) => void;
   incrementMinedBlocks: () => void;
   setTotalBlocks: (count: number) => void;
-  buyUpgrade: (type: "drone" | "speed" | "move" | "laser") => void;
+  buyUpgrade: (type: "drone" | "hauler" | "speed" | "move" | "laser") => void;
   resetPrestige: () => void;
-  getUpgradeCost: (type: "drone" | "speed" | "move" | "laser") => number;
+  getUpgradeCost: (type: "drone" | "hauler" | "speed" | "move" | "laser") => number;
 }
 
 // Legacy defaults remain in config (see src/config/economy.ts)
@@ -36,12 +38,14 @@ export const useGameStore = create<GameState>()(
       prestigeLevel: 1,
 
       droneCount: 3,
+      haulerCount: 0,
       miningSpeedLevel: 1,
       moveSpeedLevel: 1,
       laserPowerLevel: 1,
 
       minedBlocks: 0,
       totalBlocks: 0,
+      outposts: [],
 
       addCredits: (amount) => set((state) => ({ credits: state.credits + amount })),
 
@@ -72,6 +76,7 @@ export const useGameStore = create<GameState>()(
           set((prev) => {
             const updates: Partial<GameState> = { credits: prev.credits - cost };
             if (type === "drone") updates.droneCount = prev.droneCount + 1;
+            if (type === "hauler") updates.haulerCount = prev.haulerCount + 1;
             if (type === "speed") updates.miningSpeedLevel = prev.miningSpeedLevel + 1;
             if (type === "move") updates.moveSpeedLevel = prev.moveSpeedLevel + 1;
             if (type === "laser") updates.laserPowerLevel = prev.laserPowerLevel + 1;
@@ -82,7 +87,7 @@ export const useGameStore = create<GameState>()(
     }),
     {
       name: "voxel-walker-storage",
-      version: 1,
+      version: 2,
       // We can filter what to persist if needed, but for now persisting everything (except functions which persist doesn't save anyway) is fine.
     },
   ),

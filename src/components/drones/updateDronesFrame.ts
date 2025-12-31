@@ -12,6 +12,7 @@ export const updateDronesFrame = (options: {
   positions: Float32Array;
   targets: Float32Array;
   states: Uint8Array;
+  roles: Uint8Array | null;
   refs: DroneVisualRefs;
   effects: DroneEffectRefs;
   tempWorldTarget: Vector3;
@@ -25,6 +26,7 @@ export const updateDronesFrame = (options: {
     positions: options.positions,
     targets: options.targets,
     states: options.states,
+    roles: options.roles,
     refs: options.refs,
     tempWorldTarget: options.tempWorldTarget,
     tempLocalTarget: options.tempLocalTarget,

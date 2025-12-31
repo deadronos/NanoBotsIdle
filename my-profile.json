@@ -1,0 +1,1874 @@
+{
+  "meta": {
+    "url": "http://localhost:4173?telemetry=true",
+    "duration": 60,
+    "samplesCollected": 59,
+    "timestamp": "2025-12-31T11:28:06.250Z"
+  },
+  "aggregate": {
+    "fps": {
+      "avg": 60,
+      "min": 60,
+      "max": 60,
+      "p50": 60,
+      "p95": 60,
+      "p99": 60
+    },
+    "frameTime": {
+      "avg": 0,
+      "min": 0,
+      "max": 0,
+      "p50": 0,
+      "p95": 0,
+      "p99": 0
+    },
+    "meshingTime": {
+      "avg": 0,
+      "min": 0,
+      "max": 0,
+      "p50": 0,
+      "p95": 0,
+      "p99": 0
+    },
+    "workerSimMs": {
+      "avg": 0,
+      "min": 0,
+      "max": 0,
+      "p50": 0,
+      "p95": 0,
+      "p99": 0
+    },
+    "totalChunksMeshed": 0
+  },
+  "history": [
+    {
+      "timestamp": 2452.800000011921,
+      "fps": {
+        "current": 60,
+        "avg": 0,
+        "min": 0,
+        "max": 0
+      },
+      "frameTime": {
+        "current": 0,
+        "avg": 0,
+        "min": 0,
+        "max": 0
+      },
+      "meshing": {
+        "avgTimePerChunk": 0,
+        "totalChunks": 0,
+        "queueLength": 0,
+        "inFlight": 0,
+        "avgWaitTime": 0,
+        "droppedTasks": 0,
+        "errorCount": 0,
+        "retryCount": 0
+      },
+      "worker": {
+        "simMs": 0,
+        "backlog": 0,
+        "errorCount": 0,
+        "retryCount": 0
+      }
+    },
+    {
+      "timestamp": 3484.699999988079,
+      "fps": {
+        "current": 60,
+        "avg": 0,
+        "min": 0,
+        "max": 0
+      },
+      "frameTime": {
+        "current": 0,
+        "avg": 0,
+        "min": 0,
+        "max": 0
+      },
+      "meshing": {
+        "avgTimePerChunk": 0,
+        "totalChunks": 0,
+        "queueLength": 0,
+        "inFlight": 0,
+        "avgWaitTime": 0,
+        "droppedTasks": 0,
+        "errorCount": 0,
+        "retryCount": 0
+      },
+      "worker": {
+        "simMs": 0,
+        "backlog": 0,
+        "errorCount": 0,
+        "retryCount": 0
+      }
+    },
+    {
+      "timestamp": 4499.800000011921,
+      "fps": {
+        "current": 60,
+        "avg": 0,
+        "min": 0,
+        "max": 0
+      },
+      "frameTime": {
+        "current": 0,
+        "avg": 0,
+        "min": 0,
+        "max": 0
+      },
+      "meshing": {
+        "avgTimePerChunk": 0,
+        "totalChunks": 0,
+        "queueLength": 0,
+        "inFlight": 0,
+        "avgWaitTime": 0,
+        "droppedTasks": 0,
+        "errorCount": 0,
+        "retryCount": 0
+      },
+      "worker": {
+        "simMs": 0,
+        "backlog": 0,
+        "errorCount": 0,
+        "retryCount": 0
+      }
+    },
+    {
+      "timestamp": 5518.199999988079,
+      "fps": {
+        "current": 60,
+        "avg": 0,
+        "min": 0,
+        "max": 0
+      },
+      "frameTime": {
+        "current": 0,
+        "avg": 0,
+        "min": 0,
+        "max": 0
+      },
+      "meshing": {
+        "avgTimePerChunk": 0,
+        "totalChunks": 0,
+        "queueLength": 0,
+        "inFlight": 0,
+        "avgWaitTime": 0,
+        "droppedTasks": 0,
+        "errorCount": 0,
+        "retryCount": 0
+      },
+      "worker": {
+        "simMs": 0,
+        "backlog": 0,
+        "errorCount": 0,
+        "retryCount": 0
+      }
+    },
+    {
+      "timestamp": 6535.5999999940395,
+      "fps": {
+        "current": 60,
+        "avg": 0,
+        "min": 0,
+        "max": 0
+      },
+      "frameTime": {
+        "current": 0,
+        "avg": 0,
+        "min": 0,
+        "max": 0
+      },
+      "meshing": {
+        "avgTimePerChunk": 0,
+        "totalChunks": 0,
+        "queueLength": 0,
+        "inFlight": 0,
+        "avgWaitTime": 0,
+        "droppedTasks": 0,
+        "errorCount": 0,
+        "retryCount": 0
+      },
+      "worker": {
+        "simMs": 0,
+        "backlog": 0,
+        "errorCount": 0,
+        "retryCount": 0
+      }
+    },
+    {
+      "timestamp": 7575.699999988079,
+      "fps": {
+        "current": 60,
+        "avg": 0,
+        "min": 0,
+        "max": 0
+      },
+      "frameTime": {
+        "current": 0,
+        "avg": 0,
+        "min": 0,
+        "max": 0
+      },
+      "meshing": {
+        "avgTimePerChunk": 0,
+        "totalChunks": 0,
+        "queueLength": 0,
+        "inFlight": 0,
+        "avgWaitTime": 0,
+        "droppedTasks": 0,
+        "errorCount": 0,
+        "retryCount": 0
+      },
+      "worker": {
+        "simMs": 0,
+        "backlog": 0,
+        "errorCount": 0,
+        "retryCount": 0
+      }
+    },
+    {
+      "timestamp": 8594.09999999404,
+      "fps": {
+        "current": 60,
+        "avg": 0,
+        "min": 0,
+        "max": 0
+      },
+      "frameTime": {
+        "current": 0,
+        "avg": 0,
+        "min": 0,
+        "max": 0
+      },
+      "meshing": {
+        "avgTimePerChunk": 0,
+        "totalChunks": 0,
+        "queueLength": 0,
+        "inFlight": 0,
+        "avgWaitTime": 0,
+        "droppedTasks": 0,
+        "errorCount": 0,
+        "retryCount": 0
+      },
+      "worker": {
+        "simMs": 0,
+        "backlog": 0,
+        "errorCount": 0,
+        "retryCount": 0
+      }
+    },
+    {
+      "timestamp": 9633,
+      "fps": {
+        "current": 60,
+        "avg": 0,
+        "min": 0,
+        "max": 0
+      },
+      "frameTime": {
+        "current": 0,
+        "avg": 0,
+        "min": 0,
+        "max": 0
+      },
+      "meshing": {
+        "avgTimePerChunk": 0,
+        "totalChunks": 0,
+        "queueLength": 0,
+        "inFlight": 0,
+        "avgWaitTime": 0,
+        "droppedTasks": 0,
+        "errorCount": 0,
+        "retryCount": 0
+      },
+      "worker": {
+        "simMs": 0,
+        "backlog": 0,
+        "errorCount": 0,
+        "retryCount": 0
+      }
+    },
+    {
+      "timestamp": 10654.90000000596,
+      "fps": {
+        "current": 60,
+        "avg": 0,
+        "min": 0,
+        "max": 0
+      },
+      "frameTime": {
+        "current": 0,
+        "avg": 0,
+        "min": 0,
+        "max": 0
+      },
+      "meshing": {
+        "avgTimePerChunk": 0,
+        "totalChunks": 0,
+        "queueLength": 0,
+        "inFlight": 0,
+        "avgWaitTime": 0,
+        "droppedTasks": 0,
+        "errorCount": 0,
+        "retryCount": 0
+      },
+      "worker": {
+        "simMs": 0,
+        "backlog": 0,
+        "errorCount": 0,
+        "retryCount": 0
+      }
+    },
+    {
+      "timestamp": 11677.59999999404,
+      "fps": {
+        "current": 60,
+        "avg": 0,
+        "min": 0,
+        "max": 0
+      },
+      "frameTime": {
+        "current": 0,
+        "avg": 0,
+        "min": 0,
+        "max": 0
+      },
+      "meshing": {
+        "avgTimePerChunk": 0,
+        "totalChunks": 0,
+        "queueLength": 0,
+        "inFlight": 0,
+        "avgWaitTime": 0,
+        "droppedTasks": 0,
+        "errorCount": 0,
+        "retryCount": 0
+      },
+      "worker": {
+        "simMs": 0,
+        "backlog": 0,
+        "errorCount": 0,
+        "retryCount": 0
+      }
+    },
+    {
+      "timestamp": 12722.40000000596,
+      "fps": {
+        "current": 60,
+        "avg": 0,
+        "min": 0,
+        "max": 0
+      },
+      "frameTime": {
+        "current": 0,
+        "avg": 0,
+        "min": 0,
+        "max": 0
+      },
+      "meshing": {
+        "avgTimePerChunk": 0,
+        "totalChunks": 0,
+        "queueLength": 0,
+        "inFlight": 0,
+        "avgWaitTime": 0,
+        "droppedTasks": 0,
+        "errorCount": 0,
+        "retryCount": 0
+      },
+      "worker": {
+        "simMs": 0,
+        "backlog": 0,
+        "errorCount": 0,
+        "retryCount": 0
+      }
+    },
+    {
+      "timestamp": 13745.90000000596,
+      "fps": {
+        "current": 60,
+        "avg": 0,
+        "min": 0,
+        "max": 0
+      },
+      "frameTime": {
+        "current": 0,
+        "avg": 0,
+        "min": 0,
+        "max": 0
+      },
+      "meshing": {
+        "avgTimePerChunk": 0,
+        "totalChunks": 0,
+        "queueLength": 0,
+        "inFlight": 0,
+        "avgWaitTime": 0,
+        "droppedTasks": 0,
+        "errorCount": 0,
+        "retryCount": 0
+      },
+      "worker": {
+        "simMs": 0,
+        "backlog": 0,
+        "errorCount": 0,
+        "retryCount": 0
+      }
+    },
+    {
+      "timestamp": 14770.699999988079,
+      "fps": {
+        "current": 60,
+        "avg": 0,
+        "min": 0,
+        "max": 0
+      },
+      "frameTime": {
+        "current": 0,
+        "avg": 0,
+        "min": 0,
+        "max": 0
+      },
+      "meshing": {
+        "avgTimePerChunk": 0,
+        "totalChunks": 0,
+        "queueLength": 0,
+        "inFlight": 0,
+        "avgWaitTime": 0,
+        "droppedTasks": 0,
+        "errorCount": 0,
+        "retryCount": 0
+      },
+      "worker": {
+        "simMs": 0,
+        "backlog": 0,
+        "errorCount": 0,
+        "retryCount": 0
+      }
+    },
+    {
+      "timestamp": 15800.5,
+      "fps": {
+        "current": 60,
+        "avg": 0,
+        "min": 0,
+        "max": 0
+      },
+      "frameTime": {
+        "current": 0,
+        "avg": 0,
+        "min": 0,
+        "max": 0
+      },
+      "meshing": {
+        "avgTimePerChunk": 0,
+        "totalChunks": 0,
+        "queueLength": 0,
+        "inFlight": 0,
+        "avgWaitTime": 0,
+        "droppedTasks": 0,
+        "errorCount": 0,
+        "retryCount": 0
+      },
+      "worker": {
+        "simMs": 0,
+        "backlog": 0,
+        "errorCount": 0,
+        "retryCount": 0
+      }
+    },
+    {
+      "timestamp": 16808.80000001192,
+      "fps": {
+        "current": 60,
+        "avg": 0,
+        "min": 0,
+        "max": 0
+      },
+      "frameTime": {
+        "current": 0,
+        "avg": 0,
+        "min": 0,
+        "max": 0
+      },
+      "meshing": {
+        "avgTimePerChunk": 0,
+        "totalChunks": 0,
+        "queueLength": 0,
+        "inFlight": 0,
+        "avgWaitTime": 0,
+        "droppedTasks": 0,
+        "errorCount": 0,
+        "retryCount": 0
+      },
+      "worker": {
+        "simMs": 0,
+        "backlog": 0,
+        "errorCount": 0,
+        "retryCount": 0
+      }
+    },
+    {
+      "timestamp": 17821.90000000596,
+      "fps": {
+        "current": 60,
+        "avg": 0,
+        "min": 0,
+        "max": 0
+      },
+      "frameTime": {
+        "current": 0,
+        "avg": 0,
+        "min": 0,
+        "max": 0
+      },
+      "meshing": {
+        "avgTimePerChunk": 0,
+        "totalChunks": 0,
+        "queueLength": 0,
+        "inFlight": 0,
+        "avgWaitTime": 0,
+        "droppedTasks": 0,
+        "errorCount": 0,
+        "retryCount": 0
+      },
+      "worker": {
+        "simMs": 0,
+        "backlog": 0,
+        "errorCount": 0,
+        "retryCount": 0
+      }
+    },
+    {
+      "timestamp": 18836.5,
+      "fps": {
+        "current": 60,
+        "avg": 0,
+        "min": 0,
+        "max": 0
+      },
+      "frameTime": {
+        "current": 0,
+        "avg": 0,
+        "min": 0,
+        "max": 0
+      },
+      "meshing": {
+        "avgTimePerChunk": 0,
+        "totalChunks": 0,
+        "queueLength": 0,
+        "inFlight": 0,
+        "avgWaitTime": 0,
+        "droppedTasks": 0,
+        "errorCount": 0,
+        "retryCount": 0
+      },
+      "worker": {
+        "simMs": 0,
+        "backlog": 0,
+        "errorCount": 0,
+        "retryCount": 0
+      }
+    },
+    {
+      "timestamp": 19857.59999999404,
+      "fps": {
+        "current": 60,
+        "avg": 0,
+        "min": 0,
+        "max": 0
+      },
+      "frameTime": {
+        "current": 0,
+        "avg": 0,
+        "min": 0,
+        "max": 0
+      },
+      "meshing": {
+        "avgTimePerChunk": 0,
+        "totalChunks": 0,
+        "queueLength": 0,
+        "inFlight": 0,
+        "avgWaitTime": 0,
+        "droppedTasks": 0,
+        "errorCount": 0,
+        "retryCount": 0
+      },
+      "worker": {
+        "simMs": 0,
+        "backlog": 0,
+        "errorCount": 0,
+        "retryCount": 0
+      }
+    },
+    {
+      "timestamp": 20872.09999999404,
+      "fps": {
+        "current": 60,
+        "avg": 0,
+        "min": 0,
+        "max": 0
+      },
+      "frameTime": {
+        "current": 0,
+        "avg": 0,
+        "min": 0,
+        "max": 0
+      },
+      "meshing": {
+        "avgTimePerChunk": 0,
+        "totalChunks": 0,
+        "queueLength": 0,
+        "inFlight": 0,
+        "avgWaitTime": 0,
+        "droppedTasks": 0,
+        "errorCount": 0,
+        "retryCount": 0
+      },
+      "worker": {
+        "simMs": 0,
+        "backlog": 0,
+        "errorCount": 0,
+        "retryCount": 0
+      }
+    },
+    {
+      "timestamp": 21890,
+      "fps": {
+        "current": 60,
+        "avg": 0,
+        "min": 0,
+        "max": 0
+      },
+      "frameTime": {
+        "current": 0,
+        "avg": 0,
+        "min": 0,
+        "max": 0
+      },
+      "meshing": {
+        "avgTimePerChunk": 0,
+        "totalChunks": 0,
+        "queueLength": 0,
+        "inFlight": 0,
+        "avgWaitTime": 0,
+        "droppedTasks": 0,
+        "errorCount": 0,
+        "retryCount": 0
+      },
+      "worker": {
+        "simMs": 0,
+        "backlog": 0,
+        "errorCount": 0,
+        "retryCount": 0
+      }
+    },
+    {
+      "timestamp": 22910.40000000596,
+      "fps": {
+        "current": 60,
+        "avg": 0,
+        "min": 0,
+        "max": 0
+      },
+      "frameTime": {
+        "current": 0,
+        "avg": 0,
+        "min": 0,
+        "max": 0
+      },
+      "meshing": {
+        "avgTimePerChunk": 0,
+        "totalChunks": 0,
+        "queueLength": 0,
+        "inFlight": 0,
+        "avgWaitTime": 0,
+        "droppedTasks": 0,
+        "errorCount": 0,
+        "retryCount": 0
+      },
+      "worker": {
+        "simMs": 0,
+        "backlog": 0,
+        "errorCount": 0,
+        "retryCount": 0
+      }
+    },
+    {
+      "timestamp": 23927.09999999404,
+      "fps": {
+        "current": 60,
+        "avg": 0,
+        "min": 0,
+        "max": 0
+      },
+      "frameTime": {
+        "current": 0,
+        "avg": 0,
+        "min": 0,
+        "max": 0
+      },
+      "meshing": {
+        "avgTimePerChunk": 0,
+        "totalChunks": 0,
+        "queueLength": 0,
+        "inFlight": 0,
+        "avgWaitTime": 0,
+        "droppedTasks": 0,
+        "errorCount": 0,
+        "retryCount": 0
+      },
+      "worker": {
+        "simMs": 0,
+        "backlog": 0,
+        "errorCount": 0,
+        "retryCount": 0
+      }
+    },
+    {
+      "timestamp": 24940.19999998808,
+      "fps": {
+        "current": 60,
+        "avg": 0,
+        "min": 0,
+        "max": 0
+      },
+      "frameTime": {
+        "current": 0,
+        "avg": 0,
+        "min": 0,
+        "max": 0
+      },
+      "meshing": {
+        "avgTimePerChunk": 0,
+        "totalChunks": 0,
+        "queueLength": 0,
+        "inFlight": 0,
+        "avgWaitTime": 0,
+        "droppedTasks": 0,
+        "errorCount": 0,
+        "retryCount": 0
+      },
+      "worker": {
+        "simMs": 0,
+        "backlog": 0,
+        "errorCount": 0,
+        "retryCount": 0
+      }
+    },
+    {
+      "timestamp": 25958.59999999404,
+      "fps": {
+        "current": 60,
+        "avg": 0,
+        "min": 0,
+        "max": 0
+      },
+      "frameTime": {
+        "current": 0,
+        "avg": 0,
+        "min": 0,
+        "max": 0
+      },
+      "meshing": {
+        "avgTimePerChunk": 0,
+        "totalChunks": 0,
+        "queueLength": 0,
+        "inFlight": 0,
+        "avgWaitTime": 0,
+        "droppedTasks": 0,
+        "errorCount": 0,
+        "retryCount": 0
+      },
+      "worker": {
+        "simMs": 0,
+        "backlog": 0,
+        "errorCount": 0,
+        "retryCount": 0
+      }
+    },
+    {
+      "timestamp": 26970.09999999404,
+      "fps": {
+        "current": 60,
+        "avg": 0,
+        "min": 0,
+        "max": 0
+      },
+      "frameTime": {
+        "current": 0,
+        "avg": 0,
+        "min": 0,
+        "max": 0
+      },
+      "meshing": {
+        "avgTimePerChunk": 0,
+        "totalChunks": 0,
+        "queueLength": 0,
+        "inFlight": 0,
+        "avgWaitTime": 0,
+        "droppedTasks": 0,
+        "errorCount": 0,
+        "retryCount": 0
+      },
+      "worker": {
+        "simMs": 0,
+        "backlog": 0,
+        "errorCount": 0,
+        "retryCount": 0
+      }
+    },
+    {
+      "timestamp": 27988.19999998808,
+      "fps": {
+        "current": 60,
+        "avg": 0,
+        "min": 0,
+        "max": 0
+      },
+      "frameTime": {
+        "current": 0,
+        "avg": 0,
+        "min": 0,
+        "max": 0
+      },
+      "meshing": {
+        "avgTimePerChunk": 0,
+        "totalChunks": 0,
+        "queueLength": 0,
+        "inFlight": 0,
+        "avgWaitTime": 0,
+        "droppedTasks": 0,
+        "errorCount": 0,
+        "retryCount": 0
+      },
+      "worker": {
+        "simMs": 0,
+        "backlog": 0,
+        "errorCount": 0,
+        "retryCount": 0
+      }
+    },
+    {
+      "timestamp": 29006,
+      "fps": {
+        "current": 60,
+        "avg": 0,
+        "min": 0,
+        "max": 0
+      },
+      "frameTime": {
+        "current": 0,
+        "avg": 0,
+        "min": 0,
+        "max": 0
+      },
+      "meshing": {
+        "avgTimePerChunk": 0,
+        "totalChunks": 0,
+        "queueLength": 0,
+        "inFlight": 0,
+        "avgWaitTime": 0,
+        "droppedTasks": 0,
+        "errorCount": 0,
+        "retryCount": 0
+      },
+      "worker": {
+        "simMs": 0,
+        "backlog": 0,
+        "errorCount": 0,
+        "retryCount": 0
+      }
+    },
+    {
+      "timestamp": 30021.59999999404,
+      "fps": {
+        "current": 60,
+        "avg": 0,
+        "min": 0,
+        "max": 0
+      },
+      "frameTime": {
+        "current": 0,
+        "avg": 0,
+        "min": 0,
+        "max": 0
+      },
+      "meshing": {
+        "avgTimePerChunk": 0,
+        "totalChunks": 0,
+        "queueLength": 0,
+        "inFlight": 0,
+        "avgWaitTime": 0,
+        "droppedTasks": 0,
+        "errorCount": 0,
+        "retryCount": 0
+      },
+      "worker": {
+        "simMs": 0,
+        "backlog": 0,
+        "errorCount": 0,
+        "retryCount": 0
+      }
+    },
+    {
+      "timestamp": 31057.80000001192,
+      "fps": {
+        "current": 60,
+        "avg": 0,
+        "min": 0,
+        "max": 0
+      },
+      "frameTime": {
+        "current": 0,
+        "avg": 0,
+        "min": 0,
+        "max": 0
+      },
+      "meshing": {
+        "avgTimePerChunk": 0,
+        "totalChunks": 0,
+        "queueLength": 0,
+        "inFlight": 0,
+        "avgWaitTime": 0,
+        "droppedTasks": 0,
+        "errorCount": 0,
+        "retryCount": 0
+      },
+      "worker": {
+        "simMs": 0,
+        "backlog": 0,
+        "errorCount": 0,
+        "retryCount": 0
+      }
+    },
+    {
+      "timestamp": 32066.59999999404,
+      "fps": {
+        "current": 60,
+        "avg": 0,
+        "min": 0,
+        "max": 0
+      },
+      "frameTime": {
+        "current": 0,
+        "avg": 0,
+        "min": 0,
+        "max": 0
+      },
+      "meshing": {
+        "avgTimePerChunk": 0,
+        "totalChunks": 0,
+        "queueLength": 0,
+        "inFlight": 0,
+        "avgWaitTime": 0,
+        "droppedTasks": 0,
+        "errorCount": 0,
+        "retryCount": 0
+      },
+      "worker": {
+        "simMs": 0,
+        "backlog": 0,
+        "errorCount": 0,
+        "retryCount": 0
+      }
+    },
+    {
+      "timestamp": 33077.40000000596,
+      "fps": {
+        "current": 60,
+        "avg": 0,
+        "min": 0,
+        "max": 0
+      },
+      "frameTime": {
+        "current": 0,
+        "avg": 0,
+        "min": 0,
+        "max": 0
+      },
+      "meshing": {
+        "avgTimePerChunk": 0,
+        "totalChunks": 0,
+        "queueLength": 0,
+        "inFlight": 0,
+        "avgWaitTime": 0,
+        "droppedTasks": 0,
+        "errorCount": 0,
+        "retryCount": 0
+      },
+      "worker": {
+        "simMs": 0,
+        "backlog": 0,
+        "errorCount": 0,
+        "retryCount": 0
+      }
+    },
+    {
+      "timestamp": 34086,
+      "fps": {
+        "current": 60,
+        "avg": 0,
+        "min": 0,
+        "max": 0
+      },
+      "frameTime": {
+        "current": 0,
+        "avg": 0,
+        "min": 0,
+        "max": 0
+      },
+      "meshing": {
+        "avgTimePerChunk": 0,
+        "totalChunks": 0,
+        "queueLength": 0,
+        "inFlight": 0,
+        "avgWaitTime": 0,
+        "droppedTasks": 0,
+        "errorCount": 0,
+        "retryCount": 0
+      },
+      "worker": {
+        "simMs": 0,
+        "backlog": 0,
+        "errorCount": 0,
+        "retryCount": 0
+      }
+    },
+    {
+      "timestamp": 35091.30000001192,
+      "fps": {
+        "current": 60,
+        "avg": 0,
+        "min": 0,
+        "max": 0
+      },
+      "frameTime": {
+        "current": 0,
+        "avg": 0,
+        "min": 0,
+        "max": 0
+      },
+      "meshing": {
+        "avgTimePerChunk": 0,
+        "totalChunks": 0,
+        "queueLength": 0,
+        "inFlight": 0,
+        "avgWaitTime": 0,
+        "droppedTasks": 0,
+        "errorCount": 0,
+        "retryCount": 0
+      },
+      "worker": {
+        "simMs": 0,
+        "backlog": 0,
+        "errorCount": 0,
+        "retryCount": 0
+      }
+    },
+    {
+      "timestamp": 36105.19999998808,
+      "fps": {
+        "current": 60,
+        "avg": 0,
+        "min": 0,
+        "max": 0
+      },
+      "frameTime": {
+        "current": 0,
+        "avg": 0,
+        "min": 0,
+        "max": 0
+      },
+      "meshing": {
+        "avgTimePerChunk": 0,
+        "totalChunks": 0,
+        "queueLength": 0,
+        "inFlight": 0,
+        "avgWaitTime": 0,
+        "droppedTasks": 0,
+        "errorCount": 0,
+        "retryCount": 0
+      },
+      "worker": {
+        "simMs": 0,
+        "backlog": 0,
+        "errorCount": 0,
+        "retryCount": 0
+      }
+    },
+    {
+      "timestamp": 37119.80000001192,
+      "fps": {
+        "current": 60,
+        "avg": 0,
+        "min": 0,
+        "max": 0
+      },
+      "frameTime": {
+        "current": 0,
+        "avg": 0,
+        "min": 0,
+        "max": 0
+      },
+      "meshing": {
+        "avgTimePerChunk": 0,
+        "totalChunks": 0,
+        "queueLength": 0,
+        "inFlight": 0,
+        "avgWaitTime": 0,
+        "droppedTasks": 0,
+        "errorCount": 0,
+        "retryCount": 0
+      },
+      "worker": {
+        "simMs": 0,
+        "backlog": 0,
+        "errorCount": 0,
+        "retryCount": 0
+      }
+    },
+    {
+      "timestamp": 38130,
+      "fps": {
+        "current": 60,
+        "avg": 0,
+        "min": 0,
+        "max": 0
+      },
+      "frameTime": {
+        "current": 0,
+        "avg": 0,
+        "min": 0,
+        "max": 0
+      },
+      "meshing": {
+        "avgTimePerChunk": 0,
+        "totalChunks": 0,
+        "queueLength": 0,
+        "inFlight": 0,
+        "avgWaitTime": 0,
+        "droppedTasks": 0,
+        "errorCount": 0,
+        "retryCount": 0
+      },
+      "worker": {
+        "simMs": 0,
+        "backlog": 0,
+        "errorCount": 0,
+        "retryCount": 0
+      }
+    },
+    {
+      "timestamp": 39140.69999998808,
+      "fps": {
+        "current": 60,
+        "avg": 0,
+        "min": 0,
+        "max": 0
+      },
+      "frameTime": {
+        "current": 0,
+        "avg": 0,
+        "min": 0,
+        "max": 0
+      },
+      "meshing": {
+        "avgTimePerChunk": 0,
+        "totalChunks": 0,
+        "queueLength": 0,
+        "inFlight": 0,
+        "avgWaitTime": 0,
+        "droppedTasks": 0,
+        "errorCount": 0,
+        "retryCount": 0
+      },
+      "worker": {
+        "simMs": 0,
+        "backlog": 0,
+        "errorCount": 0,
+        "retryCount": 0
+      }
+    },
+    {
+      "timestamp": 40153,
+      "fps": {
+        "current": 60,
+        "avg": 0,
+        "min": 0,
+        "max": 0
+      },
+      "frameTime": {
+        "current": 0,
+        "avg": 0,
+        "min": 0,
+        "max": 0
+      },
+      "meshing": {
+        "avgTimePerChunk": 0,
+        "totalChunks": 0,
+        "queueLength": 0,
+        "inFlight": 0,
+        "avgWaitTime": 0,
+        "droppedTasks": 0,
+        "errorCount": 0,
+        "retryCount": 0
+      },
+      "worker": {
+        "simMs": 0,
+        "backlog": 0,
+        "errorCount": 0,
+        "retryCount": 0
+      }
+    },
+    {
+      "timestamp": 41171.19999998808,
+      "fps": {
+        "current": 60,
+        "avg": 0,
+        "min": 0,
+        "max": 0
+      },
+      "frameTime": {
+        "current": 0,
+        "avg": 0,
+        "min": 0,
+        "max": 0
+      },
+      "meshing": {
+        "avgTimePerChunk": 0,
+        "totalChunks": 0,
+        "queueLength": 0,
+        "inFlight": 0,
+        "avgWaitTime": 0,
+        "droppedTasks": 0,
+        "errorCount": 0,
+        "retryCount": 0
+      },
+      "worker": {
+        "simMs": 0,
+        "backlog": 0,
+        "errorCount": 0,
+        "retryCount": 0
+      }
+    },
+    {
+      "timestamp": 42185.40000000596,
+      "fps": {
+        "current": 60,
+        "avg": 0,
+        "min": 0,
+        "max": 0
+      },
+      "frameTime": {
+        "current": 0,
+        "avg": 0,
+        "min": 0,
+        "max": 0
+      },
+      "meshing": {
+        "avgTimePerChunk": 0,
+        "totalChunks": 0,
+        "queueLength": 0,
+        "inFlight": 0,
+        "avgWaitTime": 0,
+        "droppedTasks": 0,
+        "errorCount": 0,
+        "retryCount": 0
+      },
+      "worker": {
+        "simMs": 0,
+        "backlog": 0,
+        "errorCount": 0,
+        "retryCount": 0
+      }
+    },
+    {
+      "timestamp": 43202.40000000596,
+      "fps": {
+        "current": 60,
+        "avg": 0,
+        "min": 0,
+        "max": 0
+      },
+      "frameTime": {
+        "current": 0,
+        "avg": 0,
+        "min": 0,
+        "max": 0
+      },
+      "meshing": {
+        "avgTimePerChunk": 0,
+        "totalChunks": 0,
+        "queueLength": 0,
+        "inFlight": 0,
+        "avgWaitTime": 0,
+        "droppedTasks": 0,
+        "errorCount": 0,
+        "retryCount": 0
+      },
+      "worker": {
+        "simMs": 0,
+        "backlog": 0,
+        "errorCount": 0,
+        "retryCount": 0
+      }
+    },
+    {
+      "timestamp": 44211.90000000596,
+      "fps": {
+        "current": 60,
+        "avg": 0,
+        "min": 0,
+        "max": 0
+      },
+      "frameTime": {
+        "current": 0,
+        "avg": 0,
+        "min": 0,
+        "max": 0
+      },
+      "meshing": {
+        "avgTimePerChunk": 0,
+        "totalChunks": 0,
+        "queueLength": 0,
+        "inFlight": 0,
+        "avgWaitTime": 0,
+        "droppedTasks": 0,
+        "errorCount": 0,
+        "retryCount": 0
+      },
+      "worker": {
+        "simMs": 0,
+        "backlog": 0,
+        "errorCount": 0,
+        "retryCount": 0
+      }
+    },
+    {
+      "timestamp": 45217.80000001192,
+      "fps": {
+        "current": 60,
+        "avg": 0,
+        "min": 0,
+        "max": 0
+      },
+      "frameTime": {
+        "current": 0,
+        "avg": 0,
+        "min": 0,
+        "max": 0
+      },
+      "meshing": {
+        "avgTimePerChunk": 0,
+        "totalChunks": 0,
+        "queueLength": 0,
+        "inFlight": 0,
+        "avgWaitTime": 0,
+        "droppedTasks": 0,
+        "errorCount": 0,
+        "retryCount": 0
+      },
+      "worker": {
+        "simMs": 0,
+        "backlog": 0,
+        "errorCount": 0,
+        "retryCount": 0
+      }
+    },
+    {
+      "timestamp": 46242.59999999404,
+      "fps": {
+        "current": 60,
+        "avg": 0,
+        "min": 0,
+        "max": 0
+      },
+      "frameTime": {
+        "current": 0,
+        "avg": 0,
+        "min": 0,
+        "max": 0
+      },
+      "meshing": {
+        "avgTimePerChunk": 0,
+        "totalChunks": 0,
+        "queueLength": 0,
+        "inFlight": 0,
+        "avgWaitTime": 0,
+        "droppedTasks": 0,
+        "errorCount": 0,
+        "retryCount": 0
+      },
+      "worker": {
+        "simMs": 0,
+        "backlog": 0,
+        "errorCount": 0,
+        "retryCount": 0
+      }
+    },
+    {
+      "timestamp": 47250.30000001192,
+      "fps": {
+        "current": 60,
+        "avg": 0,
+        "min": 0,
+        "max": 0
+      },
+      "frameTime": {
+        "current": 0,
+        "avg": 0,
+        "min": 0,
+        "max": 0
+      },
+      "meshing": {
+        "avgTimePerChunk": 0,
+        "totalChunks": 0,
+        "queueLength": 0,
+        "inFlight": 0,
+        "avgWaitTime": 0,
+        "droppedTasks": 0,
+        "errorCount": 0,
+        "retryCount": 0
+      },
+      "worker": {
+        "simMs": 0,
+        "backlog": 0,
+        "errorCount": 0,
+        "retryCount": 0
+      }
+    },
+    {
+      "timestamp": 48268,
+      "fps": {
+        "current": 60,
+        "avg": 0,
+        "min": 0,
+        "max": 0
+      },
+      "frameTime": {
+        "current": 0,
+        "avg": 0,
+        "min": 0,
+        "max": 0
+      },
+      "meshing": {
+        "avgTimePerChunk": 0,
+        "totalChunks": 0,
+        "queueLength": 0,
+        "inFlight": 0,
+        "avgWaitTime": 0,
+        "droppedTasks": 0,
+        "errorCount": 0,
+        "retryCount": 0
+      },
+      "worker": {
+        "simMs": 0,
+        "backlog": 0,
+        "errorCount": 0,
+        "retryCount": 0
+      }
+    },
+    {
+      "timestamp": 49284.90000000596,
+      "fps": {
+        "current": 60,
+        "avg": 0,
+        "min": 0,
+        "max": 0
+      },
+      "frameTime": {
+        "current": 0,
+        "avg": 0,
+        "min": 0,
+        "max": 0
+      },
+      "meshing": {
+        "avgTimePerChunk": 0,
+        "totalChunks": 0,
+        "queueLength": 0,
+        "inFlight": 0,
+        "avgWaitTime": 0,
+        "droppedTasks": 0,
+        "errorCount": 0,
+        "retryCount": 0
+      },
+      "worker": {
+        "simMs": 0,
+        "backlog": 0,
+        "errorCount": 0,
+        "retryCount": 0
+      }
+    },
+    {
+      "timestamp": 50321,
+      "fps": {
+        "current": 60,
+        "avg": 0,
+        "min": 0,
+        "max": 0
+      },
+      "frameTime": {
+        "current": 0,
+        "avg": 0,
+        "min": 0,
+        "max": 0
+      },
+      "meshing": {
+        "avgTimePerChunk": 0,
+        "totalChunks": 0,
+        "queueLength": 0,
+        "inFlight": 0,
+        "avgWaitTime": 0,
+        "droppedTasks": 0,
+        "errorCount": 0,
+        "retryCount": 0
+      },
+      "worker": {
+        "simMs": 0,
+        "backlog": 0,
+        "errorCount": 0,
+        "retryCount": 0
+      }
+    },
+    {
+      "timestamp": 51339.5,
+      "fps": {
+        "current": 60,
+        "avg": 0,
+        "min": 0,
+        "max": 0
+      },
+      "frameTime": {
+        "current": 0,
+        "avg": 0,
+        "min": 0,
+        "max": 0
+      },
+      "meshing": {
+        "avgTimePerChunk": 0,
+        "totalChunks": 0,
+        "queueLength": 0,
+        "inFlight": 0,
+        "avgWaitTime": 0,
+        "droppedTasks": 0,
+        "errorCount": 0,
+        "retryCount": 0
+      },
+      "worker": {
+        "simMs": 0,
+        "backlog": 0,
+        "errorCount": 0,
+        "retryCount": 0
+      }
+    },
+    {
+      "timestamp": 52359.90000000596,
+      "fps": {
+        "current": 60,
+        "avg": 0,
+        "min": 0,
+        "max": 0
+      },
+      "frameTime": {
+        "current": 0,
+        "avg": 0,
+        "min": 0,
+        "max": 0
+      },
+      "meshing": {
+        "avgTimePerChunk": 0,
+        "totalChunks": 0,
+        "queueLength": 0,
+        "inFlight": 0,
+        "avgWaitTime": 0,
+        "droppedTasks": 0,
+        "errorCount": 0,
+        "retryCount": 0
+      },
+      "worker": {
+        "simMs": 0,
+        "backlog": 0,
+        "errorCount": 0,
+        "retryCount": 0
+      }
+    },
+    {
+      "timestamp": 53367.59999999404,
+      "fps": {
+        "current": 60,
+        "avg": 0,
+        "min": 0,
+        "max": 0
+      },
+      "frameTime": {
+        "current": 0,
+        "avg": 0,
+        "min": 0,
+        "max": 0
+      },
+      "meshing": {
+        "avgTimePerChunk": 0,
+        "totalChunks": 0,
+        "queueLength": 0,
+        "inFlight": 0,
+        "avgWaitTime": 0,
+        "droppedTasks": 0,
+        "errorCount": 0,
+        "retryCount": 0
+      },
+      "worker": {
+        "simMs": 0,
+        "backlog": 0,
+        "errorCount": 0,
+        "retryCount": 0
+      }
+    },
+    {
+      "timestamp": 54391.30000001192,
+      "fps": {
+        "current": 60,
+        "avg": 0,
+        "min": 0,
+        "max": 0
+      },
+      "frameTime": {
+        "current": 0,
+        "avg": 0,
+        "min": 0,
+        "max": 0
+      },
+      "meshing": {
+        "avgTimePerChunk": 0,
+        "totalChunks": 0,
+        "queueLength": 0,
+        "inFlight": 0,
+        "avgWaitTime": 0,
+        "droppedTasks": 0,
+        "errorCount": 0,
+        "retryCount": 0
+      },
+      "worker": {
+        "simMs": 0,
+        "backlog": 0,
+        "errorCount": 0,
+        "retryCount": 0
+      }
+    },
+    {
+      "timestamp": 55401.19999998808,
+      "fps": {
+        "current": 60,
+        "avg": 0,
+        "min": 0,
+        "max": 0
+      },
+      "frameTime": {
+        "current": 0,
+        "avg": 0,
+        "min": 0,
+        "max": 0
+      },
+      "meshing": {
+        "avgTimePerChunk": 0,
+        "totalChunks": 0,
+        "queueLength": 0,
+        "inFlight": 0,
+        "avgWaitTime": 0,
+        "droppedTasks": 0,
+        "errorCount": 0,
+        "retryCount": 0
+      },
+      "worker": {
+        "simMs": 0,
+        "backlog": 0,
+        "errorCount": 0,
+        "retryCount": 0
+      }
+    },
+    {
+      "timestamp": 56416.30000001192,
+      "fps": {
+        "current": 60,
+        "avg": 0,
+        "min": 0,
+        "max": 0
+      },
+      "frameTime": {
+        "current": 0,
+        "avg": 0,
+        "min": 0,
+        "max": 0
+      },
+      "meshing": {
+        "avgTimePerChunk": 0,
+        "totalChunks": 0,
+        "queueLength": 0,
+        "inFlight": 0,
+        "avgWaitTime": 0,
+        "droppedTasks": 0,
+        "errorCount": 0,
+        "retryCount": 0
+      },
+      "worker": {
+        "simMs": 0,
+        "backlog": 0,
+        "errorCount": 0,
+        "retryCount": 0
+      }
+    },
+    {
+      "timestamp": 57434.5,
+      "fps": {
+        "current": 60,
+        "avg": 0,
+        "min": 0,
+        "max": 0
+      },
+      "frameTime": {
+        "current": 0,
+        "avg": 0,
+        "min": 0,
+        "max": 0
+      },
+      "meshing": {
+        "avgTimePerChunk": 0,
+        "totalChunks": 0,
+        "queueLength": 0,
+        "inFlight": 0,
+        "avgWaitTime": 0,
+        "droppedTasks": 0,
+        "errorCount": 0,
+        "retryCount": 0
+      },
+      "worker": {
+        "simMs": 0,
+        "backlog": 0,
+        "errorCount": 0,
+        "retryCount": 0
+      }
+    },
+    {
+      "timestamp": 58452.69999998808,
+      "fps": {
+        "current": 60,
+        "avg": 0,
+        "min": 0,
+        "max": 0
+      },
+      "frameTime": {
+        "current": 0,
+        "avg": 0,
+        "min": 0,
+        "max": 0
+      },
+      "meshing": {
+        "avgTimePerChunk": 0,
+        "totalChunks": 0,
+        "queueLength": 0,
+        "inFlight": 0,
+        "avgWaitTime": 0,
+        "droppedTasks": 0,
+        "errorCount": 0,
+        "retryCount": 0
+      },
+      "worker": {
+        "simMs": 0,
+        "backlog": 0,
+        "errorCount": 0,
+        "retryCount": 0
+      }
+    },
+    {
+      "timestamp": 59468.59999999404,
+      "fps": {
+        "current": 60,
+        "avg": 0,
+        "min": 0,
+        "max": 0
+      },
+      "frameTime": {
+        "current": 0,
+        "avg": 0,
+        "min": 0,
+        "max": 0
+      },
+      "meshing": {
+        "avgTimePerChunk": 0,
+        "totalChunks": 0,
+        "queueLength": 0,
+        "inFlight": 0,
+        "avgWaitTime": 0,
+        "droppedTasks": 0,
+        "errorCount": 0,
+        "retryCount": 0
+      },
+      "worker": {
+        "simMs": 0,
+        "backlog": 0,
+        "errorCount": 0,
+        "retryCount": 0
+      }
+    },
+    {
+      "timestamp": 60487,
+      "fps": {
+        "current": 60,
+        "avg": 0,
+        "min": 0,
+        "max": 0
+      },
+      "frameTime": {
+        "current": 0,
+        "avg": 0,
+        "min": 0,
+        "max": 0
+      },
+      "meshing": {
+        "avgTimePerChunk": 0,
+        "totalChunks": 0,
+        "queueLength": 0,
+        "inFlight": 0,
+        "avgWaitTime": 0,
+        "droppedTasks": 0,
+        "errorCount": 0,
+        "retryCount": 0
+      },
+      "worker": {
+        "simMs": 0,
+        "backlog": 0,
+        "errorCount": 0,
+        "retryCount": 0
+      }
+    },
+    {
+      "timestamp": 61496.59999999404,
+      "fps": {
+        "current": 60,
+        "avg": 0,
+        "min": 0,
+        "max": 0
+      },
+      "frameTime": {
+        "current": 0,
+        "avg": 0,
+        "min": 0,
+        "max": 0
+      },
+      "meshing": {
+        "avgTimePerChunk": 0,
+        "totalChunks": 0,
+        "queueLength": 0,
+        "inFlight": 0,
+        "avgWaitTime": 0,
+        "droppedTasks": 0,
+        "errorCount": 0,
+        "retryCount": 0
+      },
+      "worker": {
+        "simMs": 0,
+        "backlog": 0,
+        "errorCount": 0,
+        "retryCount": 0
+      }
+    }
+  ]
+}

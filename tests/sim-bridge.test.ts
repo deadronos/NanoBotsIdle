@@ -69,7 +69,11 @@ describe("sim bridge gating", () => {
 
   it("stops stepping after worker error", () => {
     const worker = new FakeWorker();
-    const bridge = createSimBridge({ workerFactory: () => worker, onError: () => undefined });
+    const bridge = createSimBridge({
+      workerFactory: () => worker,
+      onError: () => undefined,
+      maxRetries: 1,
+    });
 
     bridge.step(1000);
     worker.emit({ t: "ERROR", message: "boom" });

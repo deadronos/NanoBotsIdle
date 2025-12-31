@@ -29,4 +29,3 @@ export const removeKey = (store: KeyIndex, key: string) => {
   store.keys.pop();
   store.index.delete(key);
 };
-

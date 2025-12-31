@@ -34,7 +34,7 @@ of truth is `docs/ARCHITECTURE.md`.
 ## 3. Core Systems
 
 ### 3.1 Voxel World Engine (`World.tsx`)
-The world is a fixed-radius island generated via 2D Simplex Noise.
+The world is a fixed-radius island generated via 2D Simplex Noise (legacy note: current terrain uses OpenSimplex via `terrain.noiseType`; see `docs/ARCHITECTURE/DEC006-noise-and-init-generation.md`).
 -   **Rendering Strategy**: Uses `InstancedMesh` for high performance.
     -   *Optimization*: Only ~4000-5000 instances are rendered.
     -   *Logic*: A single `boxGeometry` is instanced at (x, y, z) coordinates determined by the noise map.

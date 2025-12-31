@@ -10,6 +10,7 @@ export const updateDroneVisuals = (options: {
   positions: Float32Array;
   targets: Float32Array;
   states: Uint8Array;
+  roles: Uint8Array | null;
   refs: DroneVisualRefs;
   tempWorldTarget: Vector3;
   tempLocalTarget: Vector3;
@@ -21,6 +22,7 @@ export const updateDroneVisuals = (options: {
     positions,
     targets,
     states,
+    roles,
     refs,
     tempWorldTarget,
     tempLocalTarget,
@@ -39,8 +41,23 @@ export const updateDroneVisuals = (options: {
     const z = positions[base + 2];
 
     const bob =
-      Math.sin(elapsedTime * cfg.drones.visual.bobbing.speed + i) * cfg.drones.visual.bobbing.amplitude;
+      Math.sin(elapsedTime * cfg.drones.visual.bobbing.speed + i) *
+      cfg.drones.visual.bobbing.amplitude;
     group.position.set(x, y + bob, z);
+
+    const body = refs.bodyRefs[i];
+    if (body) {
+      const role = roles ? roles[i] : 0;
+      const isHauler = role === 1;
+      const mat = body.material as MeshBasicMaterial; // Or MeshStandardMaterial
+      // Check existing color to avoid setting every frame?
+      // Three.js .setHex() is fast.
+      if (isHauler) {
+        mat.color.setHex(0xffaa00);
+      } else {
+        mat.color.setHex(0x00ffcc);
+      }
+    }
 
     const targetX = targets[base];
     const targetY = targets[base + 1];

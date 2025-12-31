@@ -6,8 +6,10 @@ import { applyInstanceUpdates } from "../../render/instanced";
 import {
   ensureInstanceColors,
   getInitialCapacity,
+  makeHeightColorFn,
   rebuildVoxelInstances,
   setVoxelInstance,
+  type VoxelColorFn,
 } from "./instancedVoxels/voxelInstanceMesh";
 import {
   addVoxelToStore,
@@ -16,26 +18,35 @@ import {
   removeVoxelFromStore,
 } from "./instancedVoxels/voxelInstanceStore";
 
-export const useInstancedVoxels = (chunkSize: number) => {
+export const useInstancedVoxels = (
+  chunkSize: number,
+  waterLevel: number,
+  getColor?: VoxelColorFn,
+) => {
   const meshRef = useRef<InstancedMesh>(null);
   const storeRef = useRef(createVoxelInstanceStore());
   const solidCountRef = useRef(0);
   const needsRebuild = useRef(false);
   const tmp = useMemo(() => new Object3D(), []);
+  const getColorFn = useMemo(
+    () => getColor ?? makeHeightColorFn(waterLevel),
+    [getColor, waterLevel],
+  );
 
   const UPDATE_BOTH = useMemo(() => ({ matrix: true, color: true }) as const, []);
 
   const [capacity, setCapacity] = useState(() => getInitialCapacity(chunkSize));
+  const capacityRef = useRef(capacity);
 
-  const ensureCapacity = useCallback(
-    (count: number) => {
-      if (count <= capacity) return;
-      const nextCapacity = Math.max(count, Math.ceil(capacity * 1.5));
-      needsRebuild.current = true;
-      setCapacity(nextCapacity);
-    },
-    [capacity],
-  );
+  const ensureCapacity = useCallback((count: number) => {
+    const currentCapacity = capacityRef.current;
+    if (count <= currentCapacity) return;
+
+    const nextCapacity = Math.max(count, Math.ceil(currentCapacity * 1.5));
+    capacityRef.current = nextCapacity;
+    needsRebuild.current = true;
+    setCapacity(nextCapacity);
+  }, []);
 
   const addVoxel = useCallback(
     (x: number, y: number, z: number) => {
@@ -46,12 +57,12 @@ export const useInstancedVoxels = (chunkSize: number) => {
 
       const mesh = meshRef.current;
       if (mesh && !needsRebuild.current) {
-        setVoxelInstance(mesh, tmp, result.index, x, y, z);
+        setVoxelInstance(mesh, tmp, result.index, x, y, z, getColorFn);
         mesh.count = result.count;
         applyInstanceUpdates(mesh, UPDATE_BOTH);
       }
     },
-    [UPDATE_BOTH, ensureCapacity, tmp],
+    [UPDATE_BOTH, ensureCapacity, getColorFn, tmp],
   );
 
   const removeVoxel = useCallback(
@@ -63,13 +74,21 @@ export const useInstancedVoxels = (chunkSize: number) => {
       const mesh = meshRef.current;
       if (mesh && !needsRebuild.current) {
         if (result.moved) {
-          setVoxelInstance(mesh, tmp, result.index, result.moved.x, result.moved.y, result.moved.z);
+          setVoxelInstance(
+            mesh,
+            tmp,
+            result.index,
+            result.moved.x,
+            result.moved.y,
+            result.moved.z,
+            getColorFn,
+          );
         }
         mesh.count = result.count;
         applyInstanceUpdates(mesh, UPDATE_BOTH);
       }
     },
-    [UPDATE_BOTH, tmp],
+    [UPDATE_BOTH, getColorFn, tmp],
   );
 
   const clear = useCallback(() => {
@@ -86,15 +105,16 @@ export const useInstancedVoxels = (chunkSize: number) => {
   const flushRebuild = useCallback(() => {
     if (!needsRebuild.current) return;
     if (!meshRef.current) return;
-    if (storeRef.current.count > capacity) return;
-    rebuildVoxelInstances(meshRef.current, tmp, storeRef.current.positions);
+    if (storeRef.current.count > capacityRef.current) return;
+    rebuildVoxelInstances(meshRef.current, tmp, storeRef.current.positions, getColorFn);
     needsRebuild.current = false;
-  }, [capacity, tmp]);
+  }, [getColorFn, tmp]);
 
   useLayoutEffect(() => {
     const mesh = meshRef.current;
     if (!mesh) return;
 
+    capacityRef.current = capacity;
     if (ensureInstanceColors(mesh, capacity)) {
       needsRebuild.current = true;
     }

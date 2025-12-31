@@ -5,5 +5,5 @@ export const getPlayerGroundHeight = (x: number, z: number, prestigeLevel = 1): 
   // Player logic historically quantized positions to the nearest voxel grid
   const surface = getGroundHeightWithEdits(x, z, prestigeLevel);
   const cfg = getConfig();
-  return surface + 0.5 + cfg.player.playerHeight;
+  return surface + 1.0 + cfg.player.playerHeight;
 };

@@ -1,8 +1,15 @@
 import { getConfig } from "../../config/index";
 import type { VoxelEdit } from "../../shared/protocol";
-import { coordsFromVoxelKey, MATERIAL_AIR, MATERIAL_BEDROCK, MATERIAL_SOLID, voxelKey } from "../../shared/voxel";
+import {
+  coordsFromVoxelKey,
+  MATERIAL_AIR,
+  MATERIAL_BEDROCK,
+  MATERIAL_SOLID,
+  voxelKey,
+} from "../../shared/voxel";
 import { getSurfaceHeightCore } from "../../sim/terrain-core";
 import { getBaseMaterialAt } from "../../sim/voxelBaseMaterial";
+import { debug } from "../../utils/logger";
 
 export { MATERIAL_AIR, MATERIAL_BEDROCK, MATERIAL_SOLID };
 
@@ -21,6 +28,14 @@ type WorldOptions = {
   seed: number;
 };
 
+export type Outpost = {
+  id: string;
+  x: number;
+  y: number;
+  z: number;
+  level: number;
+};
+
 export class WorldModel {
   private readonly seed: number;
   private readonly edits = new Map<string, number>();
@@ -28,12 +43,47 @@ export class WorldModel {
   private readonly waterlineVoxelY: number;
   private readonly frontierSolid = new Set<string>();
   private readonly frontierAboveWater = new Set<string>();
+  private readonly visitedChunks = new Set<string>();
+  private readonly outposts: Outpost[] = [];
 
   constructor(options: WorldOptions) {
     this.seed = options.seed;
     const cfg = getConfig();
     this.bedrockY = cfg.terrain.bedrockY ?? -50;
     this.waterlineVoxelY = Math.floor(cfg.terrain.waterLevel);
+    // V1: Start with a default outpost at 0, 0, 0? Or let loop handle it?
+    // Let's add a default base at 0,0,0 if none exists, or rely on game init.
+    // Ideally, "Base" is just an outpost.
+    this.addOutpost(0, 10, 0); // Arbitrary start height?
+  }
+
+  addOutpost(x: number, y: number, z: number) {
+    this.outposts.push({
+      id: `outpost-${Date.now()}-${Math.random()}`,
+      x,
+      y,
+      z,
+      level: 1,
+    });
+  }
+
+  getOutposts() {
+    return this.outposts;
+  }
+
+  getNearestOutpost(x: number, y: number, z: number): Outpost | null {
+    if (this.outposts.length === 0) return null;
+    let best = this.outposts[0];
+    let minD = Number.MAX_VALUE;
+
+    for (const op of this.outposts) {
+      const d = (op.x - x) ** 2 + (op.y - y) ** 2 + (op.z - z) ** 2;
+      if (d < minD) {
+        minD = d;
+        best = op;
+      }
+    }
+    return best;
   }
 
   key(x: number, y: number, z: number) {
@@ -81,29 +131,190 @@ export class WorldModel {
   initializeFrontierFromSurface(worldRadius: number) {
     this.frontierSolid.clear();
     this.frontierAboveWater.clear();
+    this.visitedChunks.clear();
     let aboveWaterCount = 0;
     const cfg = getConfig();
+    const chunkSize = cfg.terrain.chunkSize ?? 16;
+
+    // We only track added during incremental updates, not full init
+    const added: { x: number; y: number; z: number }[] = [];
+
+    const addColumn = (x: number, z: number, track: boolean) => {
+      // Get local height
+      const y = getSurfaceHeightCore(
+        x,
+        z,
+        this.seed,
+        cfg.terrain.surfaceBias,
+        cfg.terrain.quantizeScale,
+      );
+      if (y <= this.bedrockY) return;
+
+      // Always add the surface voxel (it is exposed from above)
+      const topKey = this.key(x, y, z);
+      if (!this.frontierSolid.has(topKey)) {
+        this.frontierSolid.add(topKey);
+        if (y >= this.waterlineVoxelY) {
+          this.frontierAboveWater.add(topKey);
+        }
+        if (track) added.push({ x, y, z });
+        if (!track) aboveWaterCount += y >= this.waterlineVoxelY ? 1 : 0;
+      }
+
+      // Check neighbors to determine how deep the exposed wall goes
+      let minNeighborY = y;
+
+      const check = (nx: number, nz: number) => {
+        const ny = getSurfaceHeightCore(
+          nx,
+          nz,
+          this.seed,
+          cfg.terrain.surfaceBias,
+          cfg.terrain.quantizeScale,
+        );
+        if (ny < minNeighborY) minNeighborY = ny;
+      };
+
+      check(x + 1, z);
+      check(x - 1, z);
+      check(x, z + 1);
+      check(x, z - 1);
+
+      // If neighbors are lower, we have exposed sides.
+      // Range: [minNeighborY + 1, y - 1]
+      // (y is already added)
+
+      const bottomY = Math.max(this.bedrockY + 1, minNeighborY + 1);
+
+      for (let vy = y - 1; vy >= bottomY; vy--) {
+        const key = this.key(x, vy, z);
+        if (this.frontierSolid.has(key)) continue;
+
+        this.frontierSolid.add(key);
+        if (vy >= this.waterlineVoxelY) {
+          this.frontierAboveWater.add(key);
+        }
+
+        if (track) added.push({ x, y: vy, z });
+        // For 'count', strictly speaking we only counted top-surface before.
+        // But the return value 'aboveWaterCount' is mostly for UI stats.
+        // Let's count all frontier blocks for now or stick to purely surface?
+        // Original `initializeFrontierFromSurface` only counted surface tops.
+        // Let's count all to be consistent with "frontier size".
+        if (!track) aboveWaterCount += vy >= this.waterlineVoxelY ? 1 : 0;
+      }
+    };
 
     for (let x = -worldRadius; x <= worldRadius; x += 1) {
       for (let z = -worldRadius; z <= worldRadius; z += 1) {
-        const surfaceY = getSurfaceHeightCore(
+        addColumn(x, z, false);
+      }
+    }
+
+    // Populate visitedChunks based on the generated radius.
+    // Any chunk that is fully covered by worldRadius can be marked visited.
+    // However, to be safe and simple (since this only happens on prestige),
+    // we can just iterate the chunks we expect to be covered.
+    // Actually, simpler: we don't mark anything visited here.
+    // When ensureFrontierInChunk is called later for these chunks, it will check the voxels.
+    // But ensureFrontierInChunk is expensive.
+    // Let's iterate the chunks and if they are within radius-chunkSize, mark visited.
+    const czr = Math.floor((worldRadius - chunkSize) / chunkSize);
+    if (czr > 0) {
+      for (let cx = -czr; cx <= czr; cx++) {
+        for (let cz = -czr; cz <= czr; cz++) {
+          this.visitedChunks.add(`${cx},${cz}`);
+        }
+      }
+    }
+
+    return aboveWaterCount;
+  }
+
+  ensureFrontierInChunk(cx: number, cz: number) {
+    const key = `${cx},${cz}`;
+    if (this.visitedChunks.has(key)) return null;
+    this.visitedChunks.add(key);
+
+    const cfg = getConfig();
+    const chunkSize = cfg.terrain.chunkSize ?? 16;
+    const startX = cx * chunkSize;
+    const startZ = cz * chunkSize;
+    const endX = startX + chunkSize;
+    const endZ = startZ + chunkSize;
+
+    // Emit debugging info only in development to avoid noisy logs in CI/production
+    if (process.env.NODE_ENV === "development") {
+      debug(
+        `[sim-world] ensureFrontierInChunk ${cx},${cz} range x=${startX}..${endX} z=${startZ}..${endZ}`,
+      );
+    }
+
+    const added: { x: number; y: number; z: number }[] = [];
+
+    // Inline helper to share logic? Or copy-paste for performance/scope?
+    // Let's just inline the loop logic properly.
+
+    for (let x = startX; x < endX; x++) {
+      for (let z = startZ; z < endZ; z++) {
+        const y = getSurfaceHeightCore(
           x,
           z,
           this.seed,
           cfg.terrain.surfaceBias,
           cfg.terrain.quantizeScale,
         );
-        if (surfaceY <= this.bedrockY) continue;
-        const key = this.key(x, surfaceY, z);
-        this.frontierSolid.add(key);
-        if (surfaceY >= this.waterlineVoxelY) {
-          this.frontierAboveWater.add(key);
-          aboveWaterCount += 1;
+        if (y <= this.bedrockY) continue;
+
+        // Always add the surface voxel
+        const topKey = this.key(x, y, z);
+        if (!this.frontierSolid.has(topKey)) {
+          this.frontierSolid.add(topKey);
+          added.push({ x, y, z });
+          if (y >= this.waterlineVoxelY) {
+            this.frontierAboveWater.add(topKey);
+          }
+        }
+
+        let minNeighborY = y;
+        // Check 4 neighbors
+        const check = (nx: number, nz: number) => {
+          const ny = getSurfaceHeightCore(
+            nx,
+            nz,
+            this.seed,
+            cfg.terrain.surfaceBias,
+            cfg.terrain.quantizeScale,
+          );
+          if (ny < minNeighborY) minNeighborY = ny;
+        };
+        check(x + 1, z);
+        check(x - 1, z);
+        check(x, z + 1);
+        check(x, z - 1);
+
+        const bottomY = Math.max(this.bedrockY + 1, minNeighborY + 1);
+
+        for (let vy = y - 1; vy >= bottomY; vy--) {
+          const vKey = this.key(x, vy, z);
+          if (this.frontierSolid.has(vKey)) continue;
+
+          this.frontierSolid.add(vKey);
+          added.push({ x, y: vy, z });
+          if (vy >= this.waterlineVoxelY) {
+            this.frontierAboveWater.add(vKey);
+          }
         }
       }
     }
 
-    return aboveWaterCount;
+    if (added.length > 0) {
+      if (process.env.NODE_ENV === "development") {
+        debug(`[sim-world] ensureFrontierInChunk ${cx},${cz} added ${added.length} voxels`);
+      }
+    }
+
+    return added;
   }
 
   getFrontierKeys() {

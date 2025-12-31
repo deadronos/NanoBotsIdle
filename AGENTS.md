@@ -12,6 +12,8 @@ Use this file as the starting point for any agentic work (Copilot, automation, o
   - `.github/prompts/` (prompt templates)
   - `.github/workflows/` (CI expectations)
 
+  Consider updating this file if the architecture or coding style changes significantly.
+
 ## When to use subagents
 
 If a task is broad or uncertain, prefer delegating to a purpose-built subagent rather than guessing.
@@ -56,9 +58,19 @@ Use the Memory Bank instructions at `.github/instructions/memory-bank.instructio
 ## Workflow expectations
 
 - Prefer small, surgical changes that match existing patterns.
+- Prefer a TDD loop for implementation work:
+  - Red: add one failing test for the next behavior
+  - Green: minimal code to pass
+  - Refactor: improve design/quality and keep tests green
 - Keep `useFrame()` work allocation-free when possible (R3F performance).
 - Validate changes with the repo scripts:
   - `npm run lint` / `npm run lint:fix`
   - `npm run typecheck`
   - `npm test`
   - `npm run build`
+
+Tip: the repo includes TDD-focused agents in `.github/agents/`:
+
+- `tdd-red.agent.md`
+- `tdd-green.agent.md`
+- `tdd-refactor.agent.md`

@@ -4,6 +4,7 @@ import type { Group } from "three";
 import { Vector3 } from "three";
 
 import { getConfig } from "../config/index";
+import { playerPosition } from "../engine/playerState";
 import type { ViewMode } from "../types";
 import { useUiStore } from "../ui/store";
 import { PlayerVisuals } from "./player/PlayerVisuals";
@@ -54,6 +55,7 @@ export const Player: React.FC<PlayerProps> = ({ viewMode }) => {
       camera,
       temps: frameTemps.current,
     });
+    playerPosition.copy(position);
   });
 
   return (

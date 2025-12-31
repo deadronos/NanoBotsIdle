@@ -5,18 +5,33 @@ import type { Group, Mesh, PointLight } from "three";
 export const DroneInstance: React.FC<{
   index: number;
   groupRefs: MutableRefObject<(Group | null)[]>;
+  bodyRefs: MutableRefObject<(Mesh | null)[]>;
   miningLaserRefs: MutableRefObject<(Mesh | null)[]>;
   scanningLaserRefs: MutableRefObject<(Mesh | null)[]>;
   targetBoxRefs: MutableRefObject<(Mesh | null)[]>;
   impactLightRefs: MutableRefObject<(PointLight | null)[]>;
-}> = ({ groupRefs, impactLightRefs, index, miningLaserRefs, scanningLaserRefs, targetBoxRefs }) => {
+}> = ({
+  bodyRefs,
+  groupRefs,
+  impactLightRefs,
+  index,
+  miningLaserRefs,
+  scanningLaserRefs,
+  targetBoxRefs,
+}) => {
   return (
     <group
       ref={(el) => {
         groupRefs.current[index] = el;
       }}
     >
-      <mesh castShadow rotation={[Math.PI / 2, 0, 0]}>
+      <mesh
+        ref={(el) => {
+          bodyRefs.current[index] = el;
+        }}
+        castShadow
+        rotation={[Math.PI / 2, 0, 0]}
+      >
         <coneGeometry args={[0.3, 0.8, 4]} />
         <meshStandardMaterial color="#00ffcc" emissive="#004444" roughness={0.2} />
       </mesh>
@@ -29,7 +44,13 @@ export const DroneInstance: React.FC<{
         visible={false}
       >
         <cylinderGeometry args={[0.05, 0.05, 1, 8, 1, true]} />
-        <meshBasicMaterial color="#ff3333" transparent opacity={0.7} blending={2} depthWrite={false} />
+        <meshBasicMaterial
+          color="#ff3333"
+          transparent
+          opacity={0.7}
+          blending={2}
+          depthWrite={false}
+        />
       </mesh>
 
       <mesh
@@ -39,7 +60,13 @@ export const DroneInstance: React.FC<{
         visible={false}
       >
         <cylinderGeometry args={[0.015, 0.015, 1, 4, 1, true]} />
-        <meshBasicMaterial color="#00ffff" transparent opacity={0.3} blending={2} depthWrite={false} />
+        <meshBasicMaterial
+          color="#00ffff"
+          transparent
+          opacity={0.3}
+          blending={2}
+          depthWrite={false}
+        />
       </mesh>
 
       <mesh

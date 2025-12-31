@@ -42,12 +42,36 @@ export type SunConfig = {
   cameraBounds: { left: number; right: number; top: number; bottom: number };
 };
 
+export const voxelRenderModes = ["frontier", "frontier-fill", "dense", "meshed"] as const;
+
+export type VoxelRenderMode = (typeof voxelRenderModes)[number];
+
 export type RenderConfig = {
   sky: SkyConfig;
   stars: StarsConfig;
   clouds: CloudConfig;
   ambientLightIntensity: number;
   sun: SunConfig;
+  voxels: {
+    mode: VoxelRenderMode;
+    debugCompare: {
+      enabled: boolean;
+      radiusChunks: number;
+      logIntervalMs: number;
+    };
+    biomeOverlay: {
+      enabled: boolean;
+    };
+    lod: {
+      lowDistanceMultiplier: number;
+      hideDistanceMultiplier: number;
+    };
+    occlusion: {
+      enabled: boolean;
+      queryDelayFrames: number;
+      maxQueriesPerFrame: number;
+    };
+  };
 };
 
 export const defaultRenderConfig: RenderConfig = {
@@ -80,6 +104,26 @@ export const defaultRenderConfig: RenderConfig = {
     intensity: 1.5,
     shadowMapSize: [2048, 2048],
     cameraBounds: { left: -50, right: 50, top: 50, bottom: -50 },
+  },
+  voxels: {
+    mode: "meshed",
+    debugCompare: {
+      enabled: false,
+      radiusChunks: 1,
+      logIntervalMs: 1000,
+    },
+    biomeOverlay: {
+      enabled: false,
+    },
+    lod: {
+      lowDistanceMultiplier: 12,
+      hideDistanceMultiplier: 24,
+    },
+    occlusion: {
+      enabled: false,
+      queryDelayFrames: 2,
+      maxQueriesPerFrame: 16,
+    },
   },
 };
 
