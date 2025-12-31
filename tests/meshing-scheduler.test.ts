@@ -1,7 +1,8 @@
-import { describe, expect, it } from "vitest";
+import { beforeEach, describe, expect, it } from "vitest";
 
 import { MeshingScheduler, type MeshingWorkerLike } from "../src/meshing/meshingScheduler";
 import type { FromMeshingWorker, MeshResult, ToMeshingWorker } from "../src/shared/meshingProtocol";
+import { resetTelemetryCollector } from "../src/telemetry";
 
 class FakeMeshingWorker implements MeshingWorkerLike {
   public posted: { msg: ToMeshingWorker; transfer?: Transferable[] }[] = [];
@@ -28,6 +29,10 @@ class FakeMeshingWorker implements MeshingWorkerLike {
 }
 
 describe("MeshingScheduler (TDD)", () => {
+  beforeEach(() => {
+    resetTelemetryCollector();
+  });
+
   it("should drop stale results using per-chunk revision", () => {
     const worker = new FakeMeshingWorker();
     const applied: MeshResult[] = [];
