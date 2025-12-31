@@ -121,7 +121,26 @@ export const importSave = (file: File) => {
   });
 };
 
+import { getSimBridge } from "../simBridge/simBridge";
+import { setAllowPersist } from "../store";
+
 export const resetGame = () => {
+  // Stop the simulation to avoid in-flight frames writing state back to storage
+  try {
+    const bridge = getSimBridge();
+    bridge.stop();
+  } catch (err) {
+    // Best-effort; if stop fails, continue to attempt reset
+    warn(`Failed to stop sim bridge during reset: ${err}`);
+  }
+
+  // Temporarily disable persistence so any subsequent setState doesn't write to storage
+  try {
+    setAllowPersist(false);
+  } catch (err) {
+    // ignore
+  }
+
   localStorage.removeItem("voxel-walker-storage");
   window.location.reload();
 };

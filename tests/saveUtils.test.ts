@@ -2,6 +2,7 @@
 
 import { beforeEach, afterEach, describe, expect, it, vi } from "vitest";
 import { resetGame } from "../src/utils/saveUtils";
+import { getSimBridge } from "../src/simBridge/simBridge";
 
 describe("resetGame", () => {
   beforeEach(() => {
@@ -17,9 +18,14 @@ describe("resetGame", () => {
     // Sanity check the key exists
     expect(localStorage.getItem("voxel-walker-storage")).not.toBeNull();
 
+    // Spy on simBridge stop to ensure we attempt to pause simulation before reset
+    const stopSpy = vi.spyOn(getSimBridge(), "stop");
+
     // Call resetGame and ensure it clears the persisted key. We don't assert reload
     // because JSDOM's location.reload is not reliably mockable in this environment.
     expect(() => resetGame()).not.toThrow();
     expect(localStorage.getItem("voxel-walker-storage")).toBeNull();
+    expect(stopSpy).toHaveBeenCalled();
+    stopSpy.mockRestore();
   });
 });
