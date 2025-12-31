@@ -19,6 +19,7 @@ export type MeshResult = {
   chunk: ChunkCoord;
   rev: number;
   geometry: MeshGeometry;
+  meshingTimeMs?: number; // Overall time spent meshing for this result (worker attaches this)
   lods?: MeshLodGeometry[];
 };
 
