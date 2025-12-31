@@ -1,12 +1,14 @@
 /**
  * TelemetryCollector - Collects runtime performance metrics
- * 
+ *
  * Tracks:
  * - FPS (frames per second)
  * - Frame time (ms per frame)
  * - Meshing time per chunk
  * - Worker queue lengths
  * - Meshing queue wait times
+ * - Worker error counts and retry attempts
+ * - Meshing error counts and retry attempts
  */
 
 export type TelemetrySnapshot = {
@@ -30,10 +32,14 @@ export type TelemetrySnapshot = {
     inFlight: number;
     avgWaitTime: number;
     droppedTasks: number;
+    errorCount: number;
+    retryCount: number;
   };
   worker: {
     simMs: number;
     backlog: number;
+    errorCount: number;
+    retryCount: number;
   };
 };
 
@@ -65,6 +71,12 @@ export class TelemetryCollector {
   // Worker tracking
   private workerSimMs = 0;
   private workerBacklog = 0;
+  private workerErrorCount = 0;
+  private workerRetryCount = 0;
+
+  // Meshing error tracking
+  private meshingErrorCount = 0;
+  private meshingRetryCount = 0;
 
   // Config
   private readonly maxHistorySize = 120; // ~2 seconds at 60fps
@@ -96,6 +108,10 @@ export class TelemetryCollector {
     this.meshingDroppedTasks = 0;
     this.workerSimMs = 0;
     this.workerBacklog = 0;
+    this.workerErrorCount = 0;
+    this.workerRetryCount = 0;
+    this.meshingErrorCount = 0;
+    this.meshingRetryCount = 0;
   }
 
   recordFps(fps: number) {
@@ -147,6 +163,26 @@ export class TelemetryCollector {
     this.workerBacklog = backlog;
   }
 
+  recordWorkerError() {
+    if (!this.enabled) return;
+    this.workerErrorCount++;
+  }
+
+  recordWorkerRetry() {
+    if (!this.enabled) return;
+    this.workerRetryCount++;
+  }
+
+  recordMeshingError() {
+    if (!this.enabled) return;
+    this.meshingErrorCount++;
+  }
+
+  recordMeshingRetry() {
+    if (!this.enabled) return;
+    this.meshingRetryCount++;
+  }
+
   private trimHistory(history: Sample[]) {
     while (history.length > this.maxHistorySize) {
       history.shift();
@@ -189,10 +225,14 @@ export class TelemetryCollector {
         inFlight: this.meshingInFlight,
         avgWaitTime: waitTimeStats.avg,
         droppedTasks: this.meshingDroppedTasks,
+        errorCount: this.meshingErrorCount,
+        retryCount: this.meshingRetryCount,
       },
       worker: {
         simMs: this.workerSimMs,
         backlog: this.workerBacklog,
+        errorCount: this.workerErrorCount,
+        retryCount: this.workerRetryCount,
       },
     };
   }
