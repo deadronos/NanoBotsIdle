@@ -73,23 +73,24 @@ This project uses a centralized logger utility (`src/utils/logger.ts`) for consi
 ### Logger Usage
 
 The logger provides environment-aware logging methods that:
+
 - **Development:** Display debug logs in the browser console
 - **Production:** Strip all debug logs from the build (only errors remain)
 
 ```typescript
-import { debug, info, warn, error } from '@/utils/logger';
+import { debug, info, warn, error } from "@/utils/logger";
 
 // Debug logs (development only)
-debug('Player position:', { x, y, z });
+debug("Player position:", { x, y, z });
 
 // Info logs (development only)
-info('Drone started mining block');
+info("Drone started mining block");
 
 // Warning logs (development only)
-warn('Low credit balance');
+warn("Low credit balance");
 
 // Error logs (always visible)
-error('Failed to load configuration:', err);
+error("Failed to load configuration:", err);
 ```
 
 ### Runtime Debug Toggle
@@ -98,15 +99,15 @@ In development, you can toggle debug logging at runtime via the browser console:
 
 ```javascript
 // Enable debug logging
-import { enableDebug } from './src/utils/logger';
+import { enableDebug } from "./src/utils/logger";
 enableDebug();
 
 // Disable debug logging
-import { disableDebug } from './src/utils/logger';
+import { disableDebug } from "./src/utils/logger";
 disableDebug();
 
 // Check debug status
-import { isDebugEnabled } from './src/utils/logger';
+import { isDebugEnabled } from "./src/utils/logger";
 console.log(isDebugEnabled());
 ```
 
@@ -142,6 +143,7 @@ npm run profile:baseline
 For detailed profiling guidance and leak detection, see [dev/profiling/README.md](dev/profiling/README.md).
 
 **What's tested:**
+
 - Chunk load/unload cycles don't accumulate unbounded state
 - Worker termination properly cleans up event handlers
 - InstancedMesh updates don't leak Three.js object references
@@ -163,7 +165,6 @@ npm run typecheck
 npm run format
 ```
 
-
 ## 🔬 Performance Profiling
 
 ### Local Profiling
@@ -171,12 +172,14 @@ npm run format
 To profile the application locally and collect performance metrics:
 
 1. **Start the preview server:**
+
    ```bash
    npm run build
    npm run preview
    ```
 
 2. **Run the profiling script:**
+
    ```bash
    npm run profile
    ```
@@ -197,6 +200,7 @@ To profile the application locally and collect performance metrics:
 You can enable telemetry in your browser and access metrics via the console:
 
 1. **Start the dev server with telemetry enabled:**
+
    ```bash
    npm run dev
    ```

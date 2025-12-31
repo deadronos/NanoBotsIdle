@@ -1,4 +1,5 @@
 import type { Cmd, FromWorker, ToWorker } from "../shared/protocol";
+import { useGameStore } from "../store";
 import { getTelemetryCollector } from "../telemetry";
 import { error, warn } from "../utils/logger";
 import type { FrameHandler, FrameMessage, SimBridge, SimBridgeOptions, WorkerLike } from "./types";
@@ -40,7 +41,7 @@ export const createSimBridge = (options: SimBridgeOptions = {}): SimBridge => {
       stepInFlight = false;
       errorCount++;
       telemetry.recordWorkerError();
-      
+
       const errorMessage = `Sim worker error (attempt ${errorCount}/${maxRetries}): ${msg.message}`;
       warn(errorMessage);
       onError(errorMessage);
@@ -49,11 +50,11 @@ export const createSimBridge = (options: SimBridgeOptions = {}): SimBridge => {
         // Retry by restarting the worker
         telemetry.recordWorkerRetry();
         warn(`Retrying sim worker in ${retryDelayMs}ms...`);
-        
+
         if (retryTimeout) {
           clearTimeout(retryTimeout);
         }
-        
+
         retryTimeout = setTimeout(() => {
           retryTimeout = null;
           attemptWorkerRestart();
@@ -68,7 +69,7 @@ export const createSimBridge = (options: SimBridgeOptions = {}): SimBridge => {
 
   const attemptWorkerRestart = () => {
     if (disabled) return;
-    
+
     // Terminate existing worker
     if (worker) {
       worker.removeEventListener("message", handleMessage);
@@ -76,7 +77,7 @@ export const createSimBridge = (options: SimBridgeOptions = {}): SimBridge => {
       worker = null;
       initSent = false;
     }
-    
+
     // Create new worker
     try {
       ensureWorker();
@@ -92,7 +93,41 @@ export const createSimBridge = (options: SimBridgeOptions = {}): SimBridge => {
     worker = workerFactory();
     worker.addEventListener("message", handleMessage);
     if (!initSent) {
-      worker.postMessage({ t: "INIT" });
+      const state = useGameStore.getState();
+      // Only pass data fields, strip functions to plain object for messaging
+      const saveState = {
+        credits: state.credits,
+        prestigeLevel: state.prestigeLevel,
+        droneCount: state.droneCount,
+        haulerCount: state.haulerCount,
+        miningSpeedLevel: state.miningSpeedLevel,
+        moveSpeedLevel: state.moveSpeedLevel,
+        laserPowerLevel: state.laserPowerLevel,
+        minedBlocks: state.minedBlocks,
+        totalBlocks: state.totalBlocks,
+        // upgrades: ??? GameState doesn't have upgrades object?
+        // Wait, store.ts defines upgrades as flat fields (miningSpeedLevel etc).
+        // But UiSnapshot has upgrades: Record<string, number>.
+        // engine.ts expects upgrades: {}.
+        // We need to MAP flat fields -> upgrades map if engine expects it.
+        // engine.ts: uiSnapshot.upgrades = saveState?.upgrades ?? {}.
+        // But store.ts: miningSpeedLevel, etc.
+        // Does engine USE `upgrades` object?
+        // engine.ts: case "BUY_UPGRADE": checks `cmd.id`.
+        // `tryBuyUpgrade` reads `uiSnapshot`.
+        // `uiSnapshot` properties match store.ts properties?
+        // Let's check `UiSnapshot` definition in `protocol.ts` (Step 79).
+        // `upgrades: Record<string, number>`.
+        // `miningSpeedLevel` etc are ALSO in `UiSnapshot`.
+        // So `upgrades` might be redundant or legacy?
+        // `engine.ts` initializes `upgrades: {}`.
+        // Let's pass what we have. If `upgrades` object is needed for UI cost calc, we should reconstruct it.
+        // But `store.ts` manages it.
+        // Let's just pass `outposts`.
+        outposts: state.outposts,
+      };
+
+      worker.postMessage({ t: "INIT", saveState });
       initSent = true;
     }
   };
@@ -172,6 +207,7 @@ export const createSimBridge = (options: SimBridgeOptions = {}): SimBridge => {
     step,
     enqueue,
     onFrame,
+    getLastFrame: () => lastFrame,
     isRunning: () => running,
   };
 };

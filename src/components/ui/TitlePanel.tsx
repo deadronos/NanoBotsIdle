@@ -54,4 +54,3 @@ export const TitlePanel: React.FC<{
     </div>
   );
 };
-

@@ -1,10 +1,10 @@
 /**
  * Migration from save version 1 to version 2.
- * 
+ *
  * Changes in v2:
  * - Added explicit totalBlocks field initialization (was implicit/missing in v1)
  * - Ensures all GameState fields have default values
- * 
+ *
  * This is a minimal example migration. Real migrations would handle
  * more substantial schema changes like renaming fields or restructuring data.
  */

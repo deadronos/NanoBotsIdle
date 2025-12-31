@@ -6,6 +6,14 @@ export type DronesConfig = {
   baseMineDuration: number;
   mineDurationReductionPerLevel: number;
   minMineDuration: number;
+  baseCargo: number;
+  cargoPerLevel: number;
+  haulers: {
+    baseSpeed: number;
+    speedPerLevel: number;
+    baseCargo: number;
+    cargoPerLevel: number;
+  };
   particle: {
     maxParticles: number;
     spread: number;
@@ -54,6 +62,14 @@ export const defaultDronesConfig: DronesConfig = {
   baseMineDuration: 2.0,
   mineDurationReductionPerLevel: 0.2,
   minMineDuration: 0.2,
+  baseCargo: 10,
+  cargoPerLevel: 2,
+  haulers: {
+    baseSpeed: 10,
+    speedPerLevel: 2,
+    baseCargo: 50,
+    cargoPerLevel: 10,
+  },
   particle: {
     maxParticles: 400,
     spread: 0.8,
@@ -107,6 +123,11 @@ export const getMineDuration = (level: number, cfg?: Config) => {
     cfg.drones.minMineDuration,
     cfg.drones.baseMineDuration - level * cfg.drones.mineDurationReductionPerLevel,
   );
+};
+
+export const getDroneCargo = (level: number, cfg?: Config) => {
+  if (!cfg) throw new Error("getDroneCargo: cfg is required");
+  return Math.floor(cfg.drones.baseCargo + level * cfg.drones.cargoPerLevel);
 };
 
 export default defaultDronesConfig;

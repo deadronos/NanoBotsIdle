@@ -37,6 +37,14 @@ export const ShopModal: React.FC<ShopModalProps> = ({ onClose }) => {
           desc="Add another autonomous mining unit."
         />
         <UpgradeCard
+          title="Logistics Hauler"
+          level={snapshot.haulerCount}
+          cost={nextCosts.hauler ?? 0}
+          onClick={() => bridge.enqueue({ t: "BUY_UPGRADE", id: "hauler", n: 1 })}
+          canAfford={snapshot.credits >= (nextCosts.hauler ?? Number.POSITIVE_INFINITY)}
+          desc="Transports resources from miners to base, improving efficiency."
+        />
+        <UpgradeCard
           title="Mining Drill"
           level={snapshot.miningSpeedLevel}
           cost={nextCosts.speed ?? 0}

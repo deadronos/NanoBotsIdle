@@ -5,11 +5,14 @@ import { Canvas } from "@react-three/fiber";
 import { Drones } from "./components/Drones";
 import { DynamicResScaler } from "./components/DynamicResScaler";
 import { Environment } from "./components/Environment";
+import { Outposts } from "./components/Outposts";
 import { Player } from "./components/Player";
 import { UI } from "./components/UI";
 import { World } from "./components/World";
+import { PlacementManager } from "./components/world/PlacementManager";
 import { useConfig } from "./config/useConfig";
 import { getSimBridge } from "./simBridge/simBridge";
+import { useGameStore } from "./store";
 import { getTelemetryCollector } from "./telemetry";
 import type { ViewMode } from "./types";
 import { useUiStore } from "./ui/store";
@@ -30,13 +33,29 @@ function App() {
     let lastLog = 0;
     const unsubscribe = bridge.onFrame((frame) => {
       setSnapshot(frame.ui);
+
+      // Sync to persistent store
+      // Note: frame.delta.outposts always contains full list from world
+      useGameStore.setState({
+        credits: frame.ui.credits,
+        prestigeLevel: frame.ui.prestigeLevel,
+        minedBlocks: frame.ui.minedBlocks,
+        droneCount: frame.ui.droneCount,
+        haulerCount: frame.ui.haulerCount,
+        miningSpeedLevel: frame.ui.miningSpeedLevel,
+        moveSpeedLevel: frame.ui.moveSpeedLevel,
+        laserPowerLevel: frame.ui.laserPowerLevel,
+        totalBlocks: frame.ui.totalBlocks,
+        outposts: frame.delta.outposts || [],
+      });
+
       if (!frame.stats) return;
-      
+
       // Record worker stats in telemetry
       if (config.telemetry.enabled) {
         telemetry.recordWorkerStats(frame.stats.simMs, frame.stats.backlog);
       }
-      
+
       const now = performance.now();
       if (now - lastLog < 1000) return;
       lastLog = now;
@@ -75,6 +94,8 @@ function App() {
           <World />
           <Player viewMode={viewMode} />
           <Drones />
+          <Outposts />
+          <PlacementManager />
         </Suspense>
       </Canvas>
     </>

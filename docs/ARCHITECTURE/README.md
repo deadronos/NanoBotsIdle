@@ -30,6 +30,8 @@ implementation without rediscovering decisions.
 
 - `GAME001-progression-loop.md`: core loop (mine → upgrades → prestige), drone
   constraints, and soft-lock prevention rules.
+- `GAME002-logistics-and-economy.md`: logistics system (haulers, outposts) and
+  economy scaling rules.
 
 ### Decisions
 

@@ -7,24 +7,28 @@ This PR successfully implements a complete versioned save system with migration 
 ## ✅ Acceptance Criteria Met
 
 ### 1. Versioned Save Format ✅
+
 - **Current Version:** 2
 - **Location:** `src/utils/migrations/types.ts`
 - **Structure:** All saves include `version`, `date`, and `data` fields
 - **Backward Compatibility:** Automatic migration from v1 to v2
 
 ### 2. Migration Framework ✅
+
 - **Registry:** `src/utils/migrations/registry.ts`
 - **Type System:** `src/utils/migrations/types.ts`
 - **Migration Functions:** `src/utils/migrations/v1-to-v2.ts`
 - **Sequential Execution:** Migrations are applied in order from source to target version
 
 ### 3. Validation System ✅
+
 - **Structure Validation:** Checks version, date, and data fields
 - **Data Validation:** Validates all numeric fields and types
 - **Sanitization:** Clamps values to safe ranges with sensible defaults
 - **Error Messages:** Clear, actionable error messages for users
 
 ### 4. Roundtrip Tests ✅
+
 - **36 passing tests** across 3 test files
 - **Test Fixtures:** 6 save file fixtures (valid v1/v2, minimal, invalid, future version)
 - **Coverage:**
@@ -62,11 +66,13 @@ tests/
 ### Migration Example (v1 → v2)
 
 **Changes in v2:**
+
 - Added `totalBlocks` field (was implicit/missing in v1)
 - Ensured all fields have explicit defaults
 - Improved type safety
 
 **Migration Logic:**
+
 ```typescript
 // v1 data (missing totalBlocks)
 {
@@ -91,21 +97,25 @@ tests/
 The system provides clear error messages for common issues:
 
 1. **Missing Version:**
+
    ```
    Error: Save file missing required 'version' field
    ```
 
 2. **Missing Data:**
+
    ```
    Error: Save file missing required 'data' field
    ```
 
 3. **Migration Failure:**
+
    ```
    Error: Migration failed (v1→v2): Add totalBlocks field and ensure all fields have defaults. Invalid v1 save data: expected object
    ```
 
 4. **Invalid Field Types:**
+
    ```
    Error: Field 'credits' must be a finite number, got: string
    ```
@@ -200,11 +210,13 @@ The framework is designed for easy extension:
 ### Adding a New Migration (v2→v3)
 
 1. **Update version:**
+
    ```typescript
    export const CURRENT_SAVE_VERSION = 3;
    ```
 
 2. **Create migration file:**
+
    ```typescript
    // src/utils/migrations/v2-to-v3.ts
    export const migrateV2ToV3: Migration = {
@@ -219,6 +231,7 @@ The framework is designed for easy extension:
    ```
 
 3. **Register migration:**
+
    ```typescript
    const migrations: Migration[] = [
      migrateV1ToV2,

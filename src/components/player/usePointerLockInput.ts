@@ -5,8 +5,6 @@ export type PointerLockInput = {
   cameraAngle: MutableRefObject<{ yaw: number; pitch: number }>;
 };
 
-import { debug, warn } from "../../utils/logger";
-
 export const usePointerLockInput = (): PointerLockInput => {
   const keys = useRef<Record<string, boolean>>({});
   const cameraAngle = useRef({ yaw: 0, pitch: 0 });
@@ -99,7 +97,7 @@ export const usePointerLockInput = (): PointerLockInput => {
 
     window.addEventListener("keydown", handleKeyDown);
     window.addEventListener("keyup", handleKeyUp);
-    
+
     // Mouse
     window.addEventListener("mousedown", handleMouseDown);
     window.addEventListener("mousemove", handleMouseMove);
@@ -115,7 +113,7 @@ export const usePointerLockInput = (): PointerLockInput => {
     return () => {
       window.removeEventListener("keydown", handleKeyDown);
       window.removeEventListener("keyup", handleKeyUp);
-      
+
       window.removeEventListener("mousedown", handleMouseDown);
       window.removeEventListener("mousemove", handleMouseMove);
       window.removeEventListener("mouseup", handleMouseUp);

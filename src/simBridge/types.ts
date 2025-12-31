@@ -28,5 +28,6 @@ export type SimBridge = {
   step: (nowMs: number) => void;
   enqueue: (cmd: Cmd) => void;
   onFrame: (handler: FrameHandler) => () => void;
+  getLastFrame: () => FrameMessage | null;
   isRunning: () => boolean;
 };

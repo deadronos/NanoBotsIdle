@@ -43,7 +43,11 @@ Also look at `memory/` folder and `memory/designs` for spec/design docs and `mem
 ## Repo layout
 
 - `src/App.tsx`: scene composition (Canvas + Environment + World + Player + Drones + UI)
-- `src/components/World.tsx`: terrain instances + `WorldApi` (imperative ref)
+- `src/components/World.tsx`: main world component, selects render mode (meshed or instanced)
+  - `src/components/world/VoxelLayerInstanced.tsx`: instanced voxel rendering (frontier/dense modes)
+  - `src/components/world/VoxelLayerMeshed.tsx`: meshed chunk rendering with LOD
+  - `src/components/world/FrontierFillRenderer.tsx`: frontier fill visualization
+  - `src/components/world/chunkHelpers.ts`: chunk key/population utilities
 - `src/components/Drones.tsx`: drone agents, per-frame logic, effects (particles/flash)
 - `src/components/Player.tsx`: WASD movement + pointer lock camera
 - `src/components/UI.tsx`: HUD + upgrade shop modal

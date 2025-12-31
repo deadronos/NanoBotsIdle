@@ -21,12 +21,14 @@ export const Drones: React.FC = () => {
   const positionsRef = useRef<Float32Array | null>(null);
   const targetsRef = useRef<Float32Array | null>(null);
   const statesRef = useRef<Uint8Array | null>(null);
+  const rolesRef = useRef<Uint8Array | null>(null);
   const minedPositionsRef = useRef<Float32Array | null>(null);
 
   const particlesRef = useRef<ParticleHandle>(null);
   const flashRef = useRef<FlashHandle>(null);
 
   const groupRefs = useRef<(Group | null)[]>([]);
+  const bodyRefs = useRef<(Mesh | null)[]>([]);
   const miningLaserRefs = useRef<(Mesh | null)[]>([]);
   const scanningLaserRefs = useRef<(Mesh | null)[]>([]);
   const targetBoxRefs = useRef<(Mesh | null)[]>([]);
@@ -40,6 +42,7 @@ export const Drones: React.FC = () => {
       positionsRef.current = frame.delta.entities ?? null;
       targetsRef.current = frame.delta.entityTargets ?? null;
       statesRef.current = frame.delta.entityStates ?? null;
+      rolesRef.current = frame.delta.entityRoles ?? null;
       minedPositionsRef.current = frame.delta.minedPositions ?? null;
     });
   }, [bridge]);
@@ -52,12 +55,14 @@ export const Drones: React.FC = () => {
 
     const didConsumeMined = updateDronesFrame({
       cfg,
-      droneCount: snapshot.droneCount,
+      droneCount: snapshot.droneCount + snapshot.haulerCount,
       positions,
       targets,
       states,
+      roles: rolesRef.current,
       refs: {
         groupRefs: groupRefs.current,
+        bodyRefs: bodyRefs.current,
         miningLaserRefs: miningLaserRefs.current,
         scanningLaserRefs: scanningLaserRefs.current,
         targetBoxRefs: targetBoxRefs.current,
@@ -82,11 +87,12 @@ export const Drones: React.FC = () => {
     <group>
       <Particles ref={particlesRef} />
       <FlashEffect ref={flashRef} />
-      {Array.from({ length: snapshot.droneCount }).map((_, i) => (
+      {Array.from({ length: snapshot.droneCount + snapshot.haulerCount }).map((_, i) => (
         <DroneInstance
           key={i}
           index={i}
           groupRefs={groupRefs}
+          bodyRefs={bodyRefs}
           miningLaserRefs={miningLaserRefs}
           scanningLaserRefs={scanningLaserRefs}
           targetBoxRefs={targetBoxRefs}

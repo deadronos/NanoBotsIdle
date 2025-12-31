@@ -111,9 +111,9 @@ If new fields require validation, update `validation.ts`:
 ```typescript
 export function validateGameState(data: Partial<GameState>): ValidationResult {
   // ... existing validation
-  
+
   // Add validation for new field
-  if (data.newField !== undefined && typeof data.newField !== 'string') {
+  if (data.newField !== undefined && typeof data.newField !== "string") {
     errors.push(`Field 'newField' must be a string`);
   }
 }
@@ -129,10 +129,10 @@ it("should migrate v2 to v3 successfully", () => {
     credits: 1000,
     // ... v2 fields
   };
-  
+
   const migrations = getMigrationsPath(2, 3);
   const result = applyMigrations(v2Data, migrations);
-  
+
   expect(result.newField).toBe("default_value");
 });
 ```
@@ -205,11 +205,13 @@ If adding a new field to `GameState`:
 ## Version History
 
 ### Version 2 (Current)
+
 - Added `totalBlocks` field to track total mineable blocks
 - Ensured all GameState fields have explicit defaults
 - Migration: v1 → v2
 
 ### Version 1 (Legacy)
+
 - Initial save format
 - Missing `totalBlocks` field (was computed)
 - Optional field defaults could cause inconsistencies

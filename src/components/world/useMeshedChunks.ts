@@ -7,14 +7,17 @@ import { createApronField, fillApronField } from "../../meshing/apronField";
 import { getDirtyChunksForVoxelEdit } from "../../meshing/dirtyChunks";
 import { MeshingScheduler } from "../../meshing/meshingScheduler";
 import { defaultMeshingWorkerFactory } from "../../meshing/meshingWorkerFactory";
-import { applyLodGeometry, disposeLodGeometries, type LodGeometries } from "../../render/lodGeometry";
+import {
+  applyLodGeometry,
+  disposeLodGeometries,
+  type LodGeometries,
+} from "../../render/lodGeometry";
 import type { LodLevel } from "../../render/lodUtils";
 import type { MeshResult } from "../../shared/meshingProtocol";
 import type { VoxelEdit } from "../../shared/protocol";
 import { getVoxelMaterialAt } from "../../sim/collision";
 import { chunkDistanceSq3 } from "../../utils";
-
-const chunkKey = (cx: number, cy: number, cz: number) => `${cx},${cy},${cz}`;
+import { chunkKey } from "./chunkHelpers";
 
 export const useMeshedChunks = (options: {
   chunkSize: number;

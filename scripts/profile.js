@@ -2,13 +2,13 @@
 
 /**
  * Headless profiling script for NanoBotsIdle
- * 
+ *
  * Runs the game in a headless browser and collects telemetry metrics
  * for performance profiling and regression detection.
- * 
+ *
  * Usage:
  *   node scripts/profile.js [options]
- * 
+ *
  * Options:
  *   --duration <seconds>  How long to run the profile (default: 30)
  *   --output <path>       Where to save the metrics JSON (default: ./profile-metrics.json)
@@ -62,7 +62,7 @@ async function runProfile() {
   });
 
   console.log(`[profile] Running for ${DURATION_SECONDS}s...`);
-  
+
   // Collect metrics periodically
   const metricsHistory = [];
   const startTime = Date.now();
@@ -147,7 +147,7 @@ function computeAggregateStats(history) {
     meshingTime: computeStats(meshingTime),
     workerSimMs: computeStats(workerSimMs),
     totalChunksMeshed:
-      history.length > 0 ? history[history.length - 1].meshing?.totalChunks ?? 0 : 0,
+      history.length > 0 ? (history[history.length - 1].meshing?.totalChunks ?? 0) : 0,
   };
 }
 

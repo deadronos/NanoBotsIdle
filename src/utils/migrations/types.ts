@@ -1,6 +1,6 @@
 /**
  * Save data versioning and migration types.
- * 
+ *
  * The save format evolves over time; migrations ensure backward compatibility.
  */
 
