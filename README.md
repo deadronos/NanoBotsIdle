@@ -114,3 +114,52 @@ console.log(isDebugEnabled());
 
 Direct `console.*` usage is prohibited in `src/` to ensure consistent logging. Use the logger utility instead.
 Exceptions: tests, scripts, workers, and the logger utility itself.
+
+## 🧪 Testing & Quality
+
+### Running Tests
+
+```bash
+# Run all tests
+npm test
+
+# Run tests in watch mode
+npm run test:watch
+
+# Run lifecycle/memory leak tests specifically
+npm run test:lifecycle
+```
+
+### Memory Profiling
+
+NanoBotsIdle includes comprehensive memory leak detection and profiling tools to ensure long-running sessions remain stable:
+
+```bash
+# Generate baseline memory profile
+npm run profile:baseline
+```
+
+For detailed profiling guidance and leak detection, see [dev/profiling/README.md](dev/profiling/README.md).
+
+**What's tested:**
+- Chunk load/unload cycles don't accumulate unbounded state
+- Worker termination properly cleans up event handlers
+- InstancedMesh updates don't leak Three.js object references
+- Repeated meshing operations maintain stable memory usage
+
+### Code Quality
+
+```bash
+# Lint code
+npm run lint
+
+# Fix linting issues
+npm run lint:fix
+
+# Type check
+npm run typecheck
+
+# Format code
+npm run format
+```
+

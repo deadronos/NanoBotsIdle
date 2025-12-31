@@ -9,11 +9,13 @@
     "preview": "vite preview",
     "test": "vitest run",
     "test:watch": "vitest",
+    "test:lifecycle": "vitest run lifecycle",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "typecheck": "tsc --noEmit",
     "format": "prettier --write .",
-    "update:baselines": "node ./scripts/update-baselines.js"
+    "update:baselines": "node ./scripts/update-baselines.js",
+    "profile:baseline": "node --expose-gc --loader ts-node/esm dev/profiling/baseline-generator.ts"
   },
   "dependencies": {
     "@react-three/drei": "10.7.7",
