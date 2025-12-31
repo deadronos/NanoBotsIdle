@@ -13,12 +13,14 @@ const defaultSnapshot: UiSnapshot = {
   credits: 0,
   prestigeLevel: 1,
   droneCount: 3,
+  haulerCount: 0,
   miningSpeedLevel: 1,
   moveSpeedLevel: 1,
   laserPowerLevel: 1,
   minedBlocks: 0,
   totalBlocks: 0,
   upgrades: {},
+  outposts: [],
 };
 
 export const useUiStore = create<UiState>((set) => ({

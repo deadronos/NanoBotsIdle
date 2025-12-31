@@ -1,7 +1,7 @@
 import type { Config } from "../config/index";
 import type { UiSnapshot, VoxelEdit } from "../shared/protocol";
 import { getVoxelValueFromHeight } from "../sim/terrain-core";
-import type { Drone, DroneState } from "./drones";
+import type { Drone } from "./drones";
 import { addKey, type KeyIndex, removeKey } from "./keyIndex";
 import { pickTargetKey } from "./targeting";
 import type { WorldModel } from "./world/world";

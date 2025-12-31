@@ -1,5 +1,5 @@
-import { useGameStore } from "../store";
 import type { Cmd, FromWorker, ToWorker } from "../shared/protocol";
+import { useGameStore } from "../store";
 import { getTelemetryCollector } from "../telemetry";
 import { error, warn } from "../utils/logger";
 import type { FrameHandler, FrameMessage, SimBridge, SimBridgeOptions, WorkerLike } from "./types";
