@@ -31,7 +31,7 @@ export const ModalShell: React.FC<ModalShellProps> = ({
       <button
         type="button"
         aria-label="Close modal"
-        className="absolute inset-0 cursor-default"
+        className="absolute inset-0 cursor-default z-0"
         onClick={onClose}
       />
       <div
