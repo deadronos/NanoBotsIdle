@@ -7,6 +7,8 @@
  * - Meshing time per chunk
  * - Worker queue lengths
  * - Meshing queue wait times
+ * - Worker error counts and retry attempts
+ * - Meshing error counts and retry attempts
  */
 
 export type TelemetrySnapshot = {
