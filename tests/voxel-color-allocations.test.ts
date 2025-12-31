@@ -1,5 +1,6 @@
+import type { InstancedMesh} from "three";
+import { Color, Object3D } from "three";
 import { describe, expect, it } from "vitest";
-import { Color, InstancedMesh, Object3D } from "three";
 
 import {
   makeHeightColorFn,
@@ -26,7 +27,7 @@ describe("voxel color allocations", () => {
 
   it("setVoxelInstance works with numeric colors and reusable Color object", () => {
     const mesh = {
-      setMatrixAt: () => {},
+      setMatrixAt: () => undefined,
       setColorAt: (index: number, color: Color) => {
         expect(index).toBe(0);
         expect(color).toBeInstanceOf(Color);
@@ -41,7 +42,7 @@ describe("voxel color allocations", () => {
   it("rebuildVoxelInstances processes multiple voxels efficiently", () => {
     let colorSetCount = 0;
     const mesh = {
-      setMatrixAt: () => {},
+      setMatrixAt: () => undefined,
       setColorAt: (_index: number, color: Color) => {
         expect(color).toBeInstanceOf(Color);
         colorSetCount++;

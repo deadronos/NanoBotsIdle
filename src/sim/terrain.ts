@@ -1,4 +1,3 @@
-import type { Color } from "three";
 
 import { getConfig } from "../config/index";
 import { getVoxelColor } from "../utils";
@@ -12,7 +11,7 @@ export type Voxel = {
   x: number;
   y: number;
   z: number;
-  color: Color;
+  color: number;
   value: number;
   type: "water" | "solid";
 };
