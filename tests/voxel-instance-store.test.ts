@@ -16,7 +16,7 @@ describe("voxel instance store (swap-with-last)", () => {
     expect(first).not.toBeNull();
     expect(dup).toBeNull();
     expect(store.count).toBe(1);
-    expect(store.positions).toEqual([1, 2, 3]);
+    expect(Array.from(store.positions.subarray(0, store.count * 3))).toEqual([1, 2, 3]);
   });
 
   it("removes using swap-with-last and keeps indices consistent", () => {
@@ -30,7 +30,7 @@ describe("voxel instance store (swap-with-last)", () => {
 
     expect(removed).not.toBeNull();
     expect(store.count).toBe(2);
-    expect(store.positions.length).toBe(6);
+    expect(store.positions.subarray(0, store.count * 3)).toHaveLength(6);
 
     // The last item should have been moved into the removed slot.
     expect(removed?.moved).toEqual({ x: 20, y: 0, z: 0 });
@@ -39,6 +39,6 @@ describe("voxel instance store (swap-with-last)", () => {
     expect(removeVoxelFromStore(store, 0, 0, 0)).not.toBeNull();
     expect(removeVoxelFromStore(store, 20, 0, 0)).not.toBeNull();
     expect(store.count).toBe(0);
-    expect(store.positions).toEqual([]);
+    expect(store.positions.subarray(0, store.count * 3)).toHaveLength(0);
   });
 });

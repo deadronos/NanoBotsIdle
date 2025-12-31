@@ -43,6 +43,7 @@ describe("ensureInstanceColors performance benchmarks", () => {
     const mesh = createMockMesh();
     let allocationCount = 0;
     let lastBuffer: ArrayBufferView | undefined;
+    let lastCapacity = 0;
 
     // Simulate realistic world expansion:
     // Starting small and growing by 1.5x each time (as in useInstancedVoxels)
@@ -50,6 +51,7 @@ describe("ensureInstanceColors performance benchmarks", () => {
 
     for (const capacity of capacities) {
       ensureInstanceColors(mesh, capacity);
+      lastCapacity = capacity;
       const currentBuffer = mesh.instanceColor!.array;
 
       if (currentBuffer !== lastBuffer) {
@@ -64,7 +66,7 @@ describe("ensureInstanceColors performance benchmarks", () => {
       `\n  📊 Realistic growth allocations: ${allocationCount} / ${capacities.length} capacity changes`,
     );
     console.log(
-      `  💾 Final buffer size: ${mesh.instanceColor!.array.length / 3} (capacity: ${mesh.count})`,
+      `  💾 Final buffer size: ${mesh.instanceColor!.array.length / 3} (capacity: ${lastCapacity})`,
     );
     console.log(
       `  ✨ Efficiency: ${((1 - allocationCount / capacities.length) * 100).toFixed(1)}% fewer allocations`,
@@ -78,6 +80,7 @@ describe("ensureInstanceColors performance benchmarks", () => {
     const mesh = createMockMesh();
     let allocationCount = 0;
     let lastBuffer: ArrayBufferView | undefined;
+    let lastCapacity = 0;
 
     // Simulate frequent small increases (worst case for old implementation)
     let capacity = 100;
@@ -86,6 +89,7 @@ describe("ensureInstanceColors performance benchmarks", () => {
     for (let i = 0; i < steps; i++) {
       capacity += 10; // Small increments
       ensureInstanceColors(mesh, capacity);
+      lastCapacity = capacity;
       const currentBuffer = mesh.instanceColor!.array;
 
       if (currentBuffer !== lastBuffer) {
@@ -98,7 +102,7 @@ describe("ensureInstanceColors performance benchmarks", () => {
       `\n  📊 Small increments allocations: ${allocationCount} / ${steps} capacity changes`,
     );
     console.log(
-      `  💾 Final buffer size: ${mesh.instanceColor!.array.length / 3} (capacity: ${mesh.count})`,
+      `  💾 Final buffer size: ${mesh.instanceColor!.array.length / 3} (capacity: ${lastCapacity})`,
     );
     console.log(
       `  ✨ Efficiency: ${((1 - allocationCount / steps) * 100).toFixed(1)}% fewer allocations`,

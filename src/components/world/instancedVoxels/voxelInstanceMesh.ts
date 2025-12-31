@@ -38,7 +38,7 @@ export const setVoxelInstance = (
 export const rebuildVoxelInstances = (
   mesh: InstancedMesh,
   tmp: Object3D,
-  positions: number[],
+  positions: ArrayLike<number>,
   getColor: VoxelColorFn,
 ) => {
   const count = Math.floor(positions.length / 3);
@@ -91,7 +91,6 @@ export const ensureInstanceColors = (mesh: InstancedMesh, capacity: number) => {
     // and set the mesh instance count to reflect the number of active instances
     mesh.instanceColor = new InstancedBufferAttribute(currentBuffer, 3);
     mesh.geometry.setAttribute("instanceColor", mesh.instanceColor);
-    mesh.count = capacity;
     mesh.instanceColor.needsUpdate = true;
     return true;
   }
@@ -113,7 +112,6 @@ export const ensureInstanceColors = (mesh: InstancedMesh, capacity: number) => {
   
   mesh.instanceColor = new InstancedBufferAttribute(newColors, 3);
   mesh.geometry.setAttribute("instanceColor", mesh.instanceColor);
-  mesh.count = capacity;
   mesh.instanceColor.needsUpdate = true;
   return true;
 };
