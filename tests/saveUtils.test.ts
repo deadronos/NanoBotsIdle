@@ -1,8 +1,9 @@
 // @vitest-environment jsdom
 
-import { beforeEach, afterEach, describe, expect, it, vi } from "vitest";
-import { resetGame } from "../src/utils/saveUtils";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+
 import { getSimBridge } from "../src/simBridge/simBridge";
+import { resetGame } from "../src/utils/saveUtils";
 
 describe("resetGame", () => {
   beforeEach(() => {
