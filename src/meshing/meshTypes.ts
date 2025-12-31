@@ -5,6 +5,7 @@ export type MeshGeometry = {
   normals: Float32Array;
   indices: Uint16Array | Uint32Array;
   colors?: Float32Array;
+  boundingSphere?: { center: { x: number; y: number; z: number }; radius: number };
 };
 
 export type GreedyMeshInput = {

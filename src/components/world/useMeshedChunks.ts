@@ -1,6 +1,14 @@
 import { useCallback, useEffect, useMemo, useRef } from "react";
 import type { Group } from "three";
-import { BufferAttribute, BufferGeometry, Color, Mesh, MeshStandardMaterial } from "three";
+import {
+  BufferAttribute,
+  BufferGeometry,
+  Color,
+  Mesh,
+  MeshStandardMaterial,
+  Sphere,
+  Vector3,
+} from "three";
 
 import { getConfig } from "../../config";
 import { createApronField, fillApronField } from "../../meshing/apronField";
@@ -106,7 +114,19 @@ export const useMeshedChunks = (options: {
       }
 
       buffer.setIndex(new BufferAttribute(geometry.indices, 1));
-      buffer.computeBoundingSphere();
+
+      // Use pre-computed bounding sphere from worker if available (performance optimization)
+      if (geometry.boundingSphere) {
+        const { center, radius } = geometry.boundingSphere;
+        buffer.boundingSphere = new Sphere(
+          new Vector3(center.x, center.y, center.z),
+          radius,
+        );
+      } else {
+        // Fallback to computing on main thread if not provided
+        buffer.computeBoundingSphere();
+      }
+
       return buffer;
     },
     [writeVertexColor],
@@ -170,12 +190,18 @@ export const useMeshedChunks = (options: {
 
   useEffect(() => {
     let raf = 0;
+    const config = getConfig();
     const tick = () => {
       const group = groupRef.current;
       if (group && pendingResultsRef.current.size > 0) {
-        const pending = Array.from(pendingResultsRef.current.values());
-        pendingResultsRef.current.clear();
-        pending.forEach((res) => applyMeshResult(res));
+        // Apply a limited number of mesh results per frame to bound main-thread work
+        const maxPerFrame = config.meshing.maxMeshesPerFrame;
+        const pending = Array.from(pendingResultsRef.current.entries()).slice(0, maxPerFrame);
+
+        pending.forEach(([key, res]) => {
+          pendingResultsRef.current.delete(key);
+          applyMeshResult(res);
+        });
       }
       raf = requestAnimationFrame(tick);
     };
