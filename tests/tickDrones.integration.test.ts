@@ -6,7 +6,6 @@ import type { KeyIndex } from "../src/engine/keyIndex";
 import { tickDrones } from "../src/engine/tickDrones";
 import type { WorldModel } from "../src/engine/world/world";
 import type { UiSnapshot, VoxelEdit } from "../src/shared/protocol";
-import { tickDrones } from "../src/engine/tickDrones";
 
 describe("tickDrones integration: hauler pickup and deposit", () => {
   test("minedBlocks increments at mine-time and remains unchanged on deposit; hauler picks up and deposits payload", () => {

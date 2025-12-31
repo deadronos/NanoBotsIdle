@@ -6,7 +6,6 @@ import type { KeyIndex } from "../src/engine/keyIndex";
 import { tickDrones } from "../src/engine/tickDrones";
 import type { WorldModel } from "../src/engine/world/world";
 import type { UiSnapshot, VoxelEdit } from "../src/shared/protocol";
-import { tickDrones } from "../src/engine/tickDrones";
 
 describe("tickDrones minedBlocks tracking", () => {
   test("increments uiSnapshot.minedBlocks when a miner successfully mines a voxel", () => {
