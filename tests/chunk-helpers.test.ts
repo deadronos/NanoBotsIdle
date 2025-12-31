@@ -1,7 +1,6 @@
-import { beforeEach,describe, expect, it, vi } from "vitest";
-
-import { ensureNeighborChunksForMinedVoxel,populateChunkVoxels } from "../src/components/world/chunkHelpers";
-import { getVoxelMaterialAt,MATERIAL_AIR,MATERIAL_SOLID  } from "../src/sim/collision";
+import { describe, expect, it, vi, beforeEach } from "vitest";
+import { populateChunkVoxels, ensureNeighborChunksForMinedVoxel } from "../src/components/world/chunkHelpers";
+import { MATERIAL_SOLID, MATERIAL_AIR } from "../src/sim/collision";
 
 // Mock the collision module
 vi.mock("../src/sim/collision", () => {
@@ -12,6 +11,7 @@ vi.mock("../src/sim/collision", () => {
   };
 });
 
+import { getVoxelMaterialAt } from "../src/sim/collision";
 
 describe("components/world/chunkHelpers", () => {
 
