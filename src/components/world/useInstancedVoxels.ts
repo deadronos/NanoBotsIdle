@@ -71,10 +71,13 @@ export const useInstancedVoxels = (
       if (mesh && !needsRebuild.current) {
         setVoxelInstance(mesh, tmp, result.index, x, y, z, getColorFn);
         mesh.count = result.count;
-        applyInstanceUpdates(mesh, UPDATE_BOTH);
+        applyInstanceUpdates(mesh, {
+          matrixRange: { start: result.index, end: result.index },
+          colorRange: { start: result.index, end: result.index },
+        });
       }
     },
-    [UPDATE_BOTH, ensureCapacity, getColorFn, tmp],
+    [ensureCapacity, getColorFn, tmp],
   );
 
   const removeVoxel = useCallback(
@@ -97,10 +100,13 @@ export const useInstancedVoxels = (
           );
         }
         mesh.count = result.count;
-        applyInstanceUpdates(mesh, UPDATE_BOTH);
+        applyInstanceUpdates(mesh, {
+          matrixRange: { start: result.index, end: result.index },
+          colorRange: { start: result.index, end: result.index },
+        });
       }
     },
-    [UPDATE_BOTH, getColorFn, tmp],
+    [getColorFn, tmp],
   );
 
   const clear = useCallback(() => {

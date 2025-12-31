@@ -2,6 +2,7 @@ import type { InstancedMesh } from "three";
 import { Color, Object3D, Quaternion, Vector3 } from "three";
 
 import type { Config } from "../../config/index";
+import { applyInstanceUpdates } from "../../render/instanced";
 import { DRONE_STATE_ID } from "../../shared/droneState";
 
 // Cache role→color mapping to avoid repeated conversions
@@ -100,6 +101,10 @@ export const updateDroneInstancedVisuals = (
   const hasTargetBoxColors = targetBoxMesh.instanceColor !== null;
   let bodyColorsDirty = false;
   let targetBoxColorsDirty = false;
+  let bodyColorMin = Number.POSITIVE_INFINITY;
+  let bodyColorMax = Number.NEGATIVE_INFINITY;
+  let targetColorMin = Number.POSITIVE_INFINITY;
+  let targetColorMax = Number.NEGATIVE_INFINITY;
 
   for (let i = 0; i < count; i += 1) {
     const base = i * 3;
@@ -150,6 +155,8 @@ export const updateDroneInstancedVisuals = (
           _tmpColor.setHex(isHauler ? ROLE_COLORS.HAULER : ROLE_COLORS.MINER);
           bodyMesh.setColorAt(i, _tmpColor);
           bodyColorsDirty = true;
+          if (i < bodyColorMin) bodyColorMin = i;
+          if (i > bodyColorMax) bodyColorMax = i;
         }
       }
 
@@ -175,6 +182,8 @@ export const updateDroneInstancedVisuals = (
             _tmpColor.setHex(targetColor);
             targetBoxMesh.setColorAt(i, _tmpColor);
             targetBoxColorsDirty = true;
+            if (i < targetColorMin) targetColorMin = i;
+            if (i > targetColorMax) targetColorMax = i;
           }
         }
       }
@@ -221,6 +230,8 @@ export const updateDroneInstancedVisuals = (
         _tmpColor.setHex(isHauler ? ROLE_COLORS.HAULER : ROLE_COLORS.MINER);
         bodyMesh.setColorAt(i, _tmpColor);
         bodyColorsDirty = true;
+        if (i < bodyColorMin) bodyColorMin = i;
+        if (i > bodyColorMax) bodyColorMax = i;
       }
     }
 
@@ -233,15 +244,32 @@ export const updateDroneInstancedVisuals = (
     hideInstanceAt(targetBoxMesh, i);
   }
 
-  bodyMesh.instanceMatrix.needsUpdate = true;
-  miningLaserMesh.instanceMatrix.needsUpdate = true;
-  scanningLaserMesh.instanceMatrix.needsUpdate = true;
-  targetBoxMesh.instanceMatrix.needsUpdate = true;
-
-  if (hasBodyColors && bodyColorsDirty && bodyMesh.instanceColor) {
-    bodyMesh.instanceColor.needsUpdate = true;
+  if (count > 0) {
+    applyInstanceUpdates(bodyMesh, { matrixRange: { start: 0, end: count - 1 } });
+    applyInstanceUpdates(miningLaserMesh, { matrixRange: { start: 0, end: count - 1 } });
+    applyInstanceUpdates(scanningLaserMesh, { matrixRange: { start: 0, end: count - 1 } });
+    applyInstanceUpdates(targetBoxMesh, { matrixRange: { start: 0, end: count - 1 } });
+  } else {
+    applyInstanceUpdates(bodyMesh, { matrix: true });
+    applyInstanceUpdates(miningLaserMesh, { matrix: true });
+    applyInstanceUpdates(scanningLaserMesh, { matrix: true });
+    applyInstanceUpdates(targetBoxMesh, { matrix: true });
   }
-  if (hasTargetBoxColors && targetBoxColorsDirty && targetBoxMesh.instanceColor) {
-    targetBoxMesh.instanceColor.needsUpdate = true;
+
+  if (hasBodyColors && bodyColorsDirty) {
+    if (bodyColorMin <= bodyColorMax) {
+      applyInstanceUpdates(bodyMesh, { colorRange: { start: bodyColorMin, end: bodyColorMax } });
+    } else {
+      applyInstanceUpdates(bodyMesh, { color: true });
+    }
+  }
+  if (hasTargetBoxColors && targetBoxColorsDirty) {
+    if (targetColorMin <= targetColorMax) {
+      applyInstanceUpdates(targetBoxMesh, {
+        colorRange: { start: targetColorMin, end: targetColorMax },
+      });
+    } else {
+      applyInstanceUpdates(targetBoxMesh, { color: true });
+    }
   }
 };
