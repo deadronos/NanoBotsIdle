@@ -23,30 +23,30 @@
         <div class='clearfix'>
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">10% </span>
+                <span class="strong">100% </span>
                 <span class="quiet">Statements</span>
-                <span class='fraction'>1/10</span>
+                <span class='fraction'>10/10</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">0% </span>
+                <span class="strong">100% </span>
                 <span class="quiet">Branches</span>
-                <span class='fraction'>0/2</span>
+                <span class='fraction'>2/2</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">0% </span>
+                <span class="strong">100% </span>
                 <span class="quiet">Functions</span>
-                <span class='fraction'>0/5</span>
+                <span class='fraction'>5/5</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">10% </span>
+                <span class="strong">100% </span>
                 <span class="quiet">Lines</span>
-                <span class='fraction'>1/10</span>
+                <span class='fraction'>10/10</span>
             </div>
         
             
@@ -61,7 +61,7 @@
             </div>
         </template>
     </div>
-    <div class='status-line low'></div>
+    <div class='status-line high'></div>
     <pre><table class="coverage">
 <tr><td class="line-count quiet"><a name='L1'></a><a href='#L1'>1</a>
 <a name='L2'></a><a href='#L2'>2</a>
@@ -119,24 +119,24 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">2x</span>
 <span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">2x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js">import type {
@@ -157,24 +157,24 @@ export type InstanceRebuildWorkerLike = {
   terminate: () =&gt; void;
 };
 &nbsp;
-export const createInstanceRebuildWorker = <span class="fstat-no" title="function not covered" >(): InstanceRebuildWorkerLike =&gt; {</span>
-  const worker = <span class="cstat-no" title="statement not covered" >new Worker(new URL("../../../worker/instanceRebuild.worker.ts", import.meta.url), {</span>
+export const createInstanceRebuildWorker = (): InstanceRebuildWorkerLike =&gt; {
+  const worker = new Worker(new URL("../../../worker/instanceRebuild.worker.ts", import.meta.url), {
     type: "module",
   });
 &nbsp;
-<span class="cstat-no" title="statement not covered" >  return {</span>
-    postMessage: <span class="fstat-no" title="function not covered" >(m</span>essage, transfer) =&gt; {
-<span class="cstat-no" title="statement not covered" >      if (transfer) {</span>
-<span class="cstat-no" title="statement not covered" >        worker.postMessage(message, transfer);</span>
-<span class="cstat-no" title="statement not covered" >        return;</span>
+  return {
+    postMessage: (message, transfer) =&gt; {
+      if (transfer) {
+        worker.postMessage(message, transfer);
+        return;
       }
-<span class="cstat-no" title="statement not covered" >      worker.postMessage(message);</span>
+      worker.postMessage(message);
     },
-    addEventListener: <span class="fstat-no" title="function not covered" >(t</span>ype, handler) =&gt;
-<span class="cstat-no" title="statement not covered" >      worker.addEventListener(type, handler as unknown as EventListener),</span>
-    removeEventListener: <span class="fstat-no" title="function not covered" >(t</span>ype, handler) =&gt;
-<span class="cstat-no" title="statement not covered" >      worker.removeEventListener(type, handler as unknown as EventListener),</span>
-    terminate: <span class="fstat-no" title="function not covered" >() =&gt; <span class="cstat-no" title="statement not covered" >w</span>orker.terminate(),</span>
+    addEventListener: (type, handler) =&gt;
+      worker.addEventListener(type, handler as unknown as EventListener),
+    removeEventListener: (type, handler) =&gt;
+      worker.removeEventListener(type, handler as unknown as EventListener),
+    terminate: () =&gt; worker.terminate(),
   };
 };
 &nbsp;</pre></td></tr></table></pre>
@@ -184,7 +184,7 @@ export const createInstanceRebuildWorker = <span class="fstat-no" title="functio
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2025-12-31T22:13:40.767Z
+                at 2025-12-31T22:23:23.346Z
             </div>
         <script src="../../../../prettify.js"></script>
         <script>

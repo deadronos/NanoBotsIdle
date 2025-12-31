@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { BufferGeometry, InstancedMesh } from "three";
 
 import { InstanceRebuildManager } from "../src/components/world/instancedVoxels/rebuildManager";
 import type { InstanceRebuildWorkerLike } from "../src/components/world/instancedVoxels/rebuildWorkerFactory";
@@ -20,6 +21,44 @@ class MockInstanceRebuildWorker implements InstanceRebuildWorkerLike {
       const result = handleInstanceRebuildJob(message);
       if (this.handler) {
         this.handler(new MessageEvent("message", { data: result }));
+      }
+    }, 10);
+  }
+
+  addEventListener(
+    _type: "message",
+    handler: (event: MessageEvent<FromInstanceRebuildWorker>) => void,
+  ): void {
+    this.handler = handler;
+  }
+
+  removeEventListener(
+    _type: "message",
+    _handler: (event: MessageEvent<FromInstanceRebuildWorker>) => void,
+  ): void {
+    this.handler = undefined;
+  }
+
+  terminate(): void {
+    this.handler = undefined;
+  }
+}
+
+class MockErrorInstanceRebuildWorker implements InstanceRebuildWorkerLike {
+  private handler?: (event: MessageEvent<FromInstanceRebuildWorker>) => void;
+
+  postMessage(message: ToInstanceRebuildWorker, _transfer?: Transferable[]): void {
+    setTimeout(() => {
+      if (this.handler) {
+        this.handler(
+          new MessageEvent("message", {
+            data: {
+              t: "REBUILD_ERROR",
+              jobId: message.jobId,
+              message: "boom",
+            },
+          }),
+        );
       }
     }, 10);
   }
@@ -121,6 +160,44 @@ describe("InstanceRebuildManager integration", () => {
     // Verify the buffers have the expected sizes
     expect(result.matrices.buffer.byteLength).toBe(2 * 16 * 4); // 2 instances * 16 floats * 4 bytes
     expect(result.colors.buffer.byteLength).toBe(2 * 3 * 4); // 2 instances * 3 floats * 4 bytes
+
+    manager.terminate();
+  });
+
+  it("should reject rebuild promise on worker error", async () => {
+    const mockWorker = new MockErrorInstanceRebuildWorker();
+    const manager = new InstanceRebuildManager(mockWorker);
+
+    await expect(manager.requestRebuild([0, 0, 0], 0)).rejects.toThrow("boom");
+
+    manager.terminate();
+  });
+
+  it("should apply rebuilt buffers to InstancedMesh atomically", () => {
+    const mockWorker = new MockInstanceRebuildWorker();
+    const manager = new InstanceRebuildManager(mockWorker);
+
+    const geometry = new BufferGeometry();
+    const mesh = new InstancedMesh(geometry, undefined as never, 0);
+
+    const matrices = new Float32Array(2 * 16);
+    const colors = new Float32Array(2 * 3);
+    manager.applyRebuildToMesh(mesh, matrices, colors, 2);
+
+    expect(mesh.count).toBe(2);
+    expect(mesh.instanceMatrix).toBeDefined();
+    expect(mesh.instanceMatrix.array).toBe(matrices);
+    expect(mesh.instanceMatrix.itemSize).toBe(16);
+    expect(mesh.instanceMatrix.version).toBeGreaterThan(0);
+
+    expect(mesh.instanceColor).toBeDefined();
+    expect(mesh.instanceColor.array).toBe(colors);
+    expect(mesh.instanceColor.itemSize).toBe(3);
+    expect(mesh.instanceColor.version).toBeGreaterThan(0);
+
+    // Geometry attributes should be present (R3F/three patterns rely on these)
+    expect(mesh.geometry.getAttribute("instanceMatrix")).toBe(mesh.instanceMatrix);
+    expect(mesh.geometry.getAttribute("instanceColor")).toBe(mesh.instanceColor);
 
     manager.terminate();
   });

@@ -23,16 +23,16 @@
         <div class='clearfix'>
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">25% </span>
+                <span class="strong">100% </span>
                 <span class="quiet">Statements</span>
-                <span class='fraction'>5/20</span>
+                <span class='fraction'>20/20</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">20% </span>
+                <span class="strong">100% </span>
                 <span class="quiet">Branches</span>
-                <span class='fraction'>2/10</span>
+                <span class='fraction'>10/10</span>
             </div>
         
             
@@ -44,9 +44,9 @@
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">22.22% </span>
+                <span class="strong">100% </span>
                 <span class="quiet">Lines</span>
-                <span class='fraction'>4/18</span>
+                <span class='fraction'>18/18</span>
             </div>
         
             
@@ -61,7 +61,7 @@
             </div>
         </template>
     </div>
-    <div class='status-line low'></div>
+    <div class='status-line high'></div>
     <pre><table class="coverage">
 <tr><td class="line-count quiet"><a name='L1'></a><a href='#L1'>1</a>
 <a name='L2'></a><a href='#L2'>2</a>
@@ -100,38 +100,38 @@
 <a name='L35'></a><a href='#L35'>35</a>
 <a name='L36'></a><a href='#L36'>36</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">3x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">7x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">7x</span>
+<span class="cline-any cline-yes">6x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">3x</span>
+<span class="cline-any cline-yes">3x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">3x</span>
+<span class="cline-any cline-yes">6x</span>
+<span class="cline-any cline-yes">6x</span>
+<span class="cline-any cline-yes">6x</span>
+<span class="cline-any cline-yes">6x</span>
+<span class="cline-any cline-yes">3x</span>
+<span class="cline-any cline-yes">3x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">3x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">2x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">2x</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">2x</span>
-<span class="cline-any cline-yes">2x</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js">import type { WorldModel } from "./world/world";
 &nbsp;
@@ -145,28 +145,28 @@ export const pickTargetKey = (options: {
 }) =&gt; {
   const { world, frontierKeys, minedKeys, reservedKeys, waterLevel, maxAttempts } = options;
 &nbsp;
-  <span class="missing-if-branch" title="if path not taken" >I</span>if (!world) <span class="cstat-no" title="statement not covered" >return null;</span>
-  <span class="missing-if-branch" title="else path not taken" >E</span>if (frontierKeys.length === 0) return null;
+  if (!world) return null;
+  if (frontierKeys.length === 0) return null;
 &nbsp;
-  const waterline = <span class="cstat-no" title="statement not covered" >Math.floor(waterLevel);</span>
-  let attempts = <span class="cstat-no" title="statement not covered" >0;</span>
+  const waterline = Math.floor(waterLevel);
+  let attempts = 0;
 &nbsp;
-<span class="cstat-no" title="statement not covered" >  while (attempts &lt; maxAttempts) {</span>
-    const idx = <span class="cstat-no" title="statement not covered" >Math.floor(Math.random() * frontierKeys.length);</span>
-    const key = <span class="cstat-no" title="statement not covered" >frontierKeys[idx];</span>
-    const { y } = <span class="cstat-no" title="statement not covered" >world.coordsFromKey(key);</span>
-<span class="cstat-no" title="statement not covered" >    if (y &lt; waterline) {</span>
-<span class="cstat-no" title="statement not covered" >      attempts += 1;</span>
-<span class="cstat-no" title="statement not covered" >      continue;</span>
+  while (attempts &lt; maxAttempts) {
+    const idx = Math.floor(Math.random() * frontierKeys.length);
+    const key = frontierKeys[idx];
+    const { y } = world.coordsFromKey(key);
+    if (y &lt; waterline) {
+      attempts += 1;
+      continue;
     }
-<span class="cstat-no" title="statement not covered" >    if (!minedKeys.has(key) &amp;&amp; !reservedKeys.has(key)) {</span>
-<span class="cstat-no" title="statement not covered" >      reservedKeys.add(key);</span>
-<span class="cstat-no" title="statement not covered" >      return key;</span>
+    if (!minedKeys.has(key) &amp;&amp; !reservedKeys.has(key)) {
+      reservedKeys.add(key);
+      return key;
     }
-<span class="cstat-no" title="statement not covered" >    attempts += 1;</span>
+    attempts += 1;
   }
 &nbsp;
-<span class="cstat-no" title="statement not covered" >  return null;</span>
+  return null;
 };
 &nbsp;</pre></td></tr></table></pre>
 
@@ -175,7 +175,7 @@ export const pickTargetKey = (options: {
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2025-12-31T22:13:40.767Z
+                at 2025-12-31T22:23:23.346Z
             </div>
         <script src="../../prettify.js"></script>
         <script>
