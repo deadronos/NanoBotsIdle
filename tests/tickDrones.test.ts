@@ -1,7 +1,8 @@
-import { describe, test, expect } from 'vitest';
-import { tickDrones } from "../src/engine/tickDrones";
+import { describe, expect,test } from 'vitest';
+
 import { getConfig } from "../src/config/index";
 import type { Drone } from "../src/engine/drones";
+import { tickDrones } from "../src/engine/tickDrones";
 
 describe("tickDrones minedBlocks tracking", () => {
   test("increments uiSnapshot.minedBlocks when a miner successfully mines a voxel", () => {
