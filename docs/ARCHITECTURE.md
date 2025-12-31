@@ -168,6 +168,51 @@ Zustand is a read model for UI, not the simulation:
 
 See `docs/ARCHITECTURE/GAME001-progression-loop.md`.
 
+## Worker failure handling and reliability
+
+To ensure the engine degrades gracefully when workers error or are terminated:
+
+### Simulation Worker (`createSimBridge`)
+
+- **Retry logic**: When a worker emits an ERROR, the bridge attempts to restart it up to `maxRetries` times (default: 3).
+- **Retry delay**: Configurable delay between retry attempts (default: 1000ms).
+- **Graceful degradation**: After max retries are exhausted, the worker is disabled and no further steps are attempted.
+- **Telemetry**: All worker errors and retry attempts are tracked via `TelemetryCollector`.
+- **Developer diagnostics**: Errors are logged to console with attempt counts and error details.
+
+### Meshing Worker (`MeshingScheduler`)
+
+- **Retry logic**: When a meshing job fails with MESH_ERROR, it is automatically retried up to `maxRetries` times (default: 3).
+- **Per-chunk retry tracking**: Each chunk has independent retry counts, so failures don't affect other chunks.
+- **Stale handling**: If a chunk is dirtied again during retry, the old retry count is reset and a fresh attempt is made with the new revision.
+- **Telemetry**: Meshing errors and retries are tracked separately from sim worker errors.
+- **Developer diagnostics**: Failed chunks are logged with coordinates, attempt counts, and error messages.
+
+### Configuration options
+
+Both systems support configurable retry behavior via options:
+
+```typescript
+// SimBridge
+createSimBridge({
+  maxRetries: 3,        // Number of retry attempts before giving up
+  retryDelayMs: 1000,   // Delay between retry attempts
+  onError: (msg) => {}, // Custom error handler
+});
+
+// MeshingScheduler
+new MeshingScheduler({
+  maxRetries: 3,        // Number of retry attempts per chunk
+  // ... other options
+});
+```
+
+### Testing
+
+Worker error handling is validated via:
+- `tests/sim-bridge-error-handling.test.ts`: Tests sim worker retry logic, recovery, and telemetry.
+- `tests/meshing-error-handling.test.ts`: Tests meshing worker retry logic, per-chunk independence, and recovery.
+
 ## Updating this architecture (workflow)
 
 - If a change affects architecture, update:

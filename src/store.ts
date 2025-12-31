@@ -82,7 +82,7 @@ export const useGameStore = create<GameState>()(
     }),
     {
       name: "voxel-walker-storage",
-      version: 1,
+      version: 2,
       // We can filter what to persist if needed, but for now persisting everything (except functions which persist doesn't save anyway) is fine.
     },
   ),
