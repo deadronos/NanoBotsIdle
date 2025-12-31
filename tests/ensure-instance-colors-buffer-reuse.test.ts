@@ -168,9 +168,6 @@ describe("ensureInstanceColors buffer reuse", () => {
   it("should set needsUpdate flag when buffer changes", () => {
     const mesh = createMockMesh(100);
     
-    // Initial buffer should be 128 elements (power of 2 for capacity 100)
-    const initialBufferSize = mesh.instanceColor!.array.length / 3;
-    
     ensureInstanceColors(mesh, 200);
 
     expect(mesh.instanceColor).toBeDefined();
