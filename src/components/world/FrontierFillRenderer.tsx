@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useRef } from "react";
-import { type InstancedMesh, Object3D } from "three";
+import { Color,type InstancedMesh, Object3D } from "three";
 
 import { getGroundHeightWithEdits } from "../../sim/collision";
 import { forEachRadialChunk, getVoxelColor } from "../../utils";
@@ -16,6 +16,7 @@ export const FrontierFillRenderer: React.FC<{
 }> = ({ bedrockY, center, chunkSize, prestigeLevel, radius, waterLevel, debugVisuals = false }) => {
   const meshRef = useRef<InstancedMesh>(null);
   const dummy = useMemo(() => new Object3D(), []);
+  const tmpColor = useRef(new Color());
   // Use a reasonably high limit for fill (3x3 chunks * 20 depth ~ 45k voxels)
   const MAX_INSTANCES = 150000;
 
@@ -60,7 +61,9 @@ export const FrontierFillRenderer: React.FC<{
             mesh.setMatrixAt(index, dummy.matrix);
 
             if (!debugVisuals && mesh.instanceColor) {
-              mesh.setColorAt(index, getVoxelColor(y, waterLevel));
+              const c = getVoxelColor(y, waterLevel);
+              tmpColor.current.setHex(c);
+              mesh.setColorAt(index, tmpColor.current);
             }
 
             index++;

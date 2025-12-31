@@ -38,27 +38,27 @@ noiseTypes.forEach((noiseType) => {
       minY = Math.min(minY, y);
       maxY = Math.max(maxY, y);
 
-      const hex = getVoxelColor(y, cfg.terrain.waterLevel).getHexString();
-      switch (hex) {
-        case "1a4d8c":
+      const hexColor = getVoxelColor(y, cfg.terrain.waterLevel);
+      switch (hexColor) {
+        case 0x1a4d8c:
           counts.deepWater++;
           break;
-        case "2d73bf":
+        case 0x2d73bf:
           counts.water++;
           break;
-        case "e3dba3":
+        case 0xe3dba3:
           counts.sand++;
           break;
-        case "59a848":
+        case 0x59a848:
           counts.grass++;
           break;
-        case "3b7032":
+        case 0x3b7032:
           counts.darkGrass++;
           break;
-        case "6e6e6e":
+        case 0x6e6e6e:
           counts.rock++;
           break;
-        case "ffffff":
+        case 0xffffff:
           counts.snow++;
           break;
         default:
@@ -99,10 +99,10 @@ noiseTypes.forEach((noiseType) => {
         if (v) y = v.y;
         else y = getSurfaceHeight(x, z, seed);
 
-        const color = getVoxelColor(y, cfg.terrain.waterLevel).getHexString();
-        const r = parseInt(color.slice(0, 2), 16);
-        const g = parseInt(color.slice(2, 4), 16);
-        const b = parseInt(color.slice(4, 6), 16);
+        const hexColor = getVoxelColor(y, cfg.terrain.waterLevel);
+        const r = (hexColor >> 16) & 0xff;
+        const g = (hexColor >> 8) & 0xff;
+        const b = hexColor & 0xff;
         pixels.push(`${r} ${g} ${b}`);
       }
     }

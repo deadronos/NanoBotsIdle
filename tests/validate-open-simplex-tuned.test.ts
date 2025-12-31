@@ -25,8 +25,8 @@ test("validate open-simplex tuned params (bias=2, scale=3)", () => {
     for (const v of voxels) {
       if (v.y < minY) minY = v.y;
       if (v.y > maxY) maxY = v.y;
-      const hex = getVoxelColor(v.y, cfg.terrain.waterLevel).getHexString();
-      if (hex === "59a848" || hex === "3b7032") above += 1;
+      const hexColor = getVoxelColor(v.y, cfg.terrain.waterLevel);
+      if (hexColor === 0x59a848 || hexColor === 0x3b7032) above += 1;
     }
 
     // write one visual map for seed 1 only
@@ -47,10 +47,10 @@ test("validate open-simplex tuned params (bias=2, scale=3)", () => {
           let y: number;
           if (v) y = v.y;
           else y = Math.floor((cfg.terrain.surfaceBias + 0) * cfg.terrain.quantizeScale); // fallback
-          const color = getVoxelColor(y, cfg.terrain.waterLevel).getHexString();
-          const r = parseInt(color.slice(0, 2), 16);
-          const g = parseInt(color.slice(2, 4), 16);
-          const b = parseInt(color.slice(4, 6), 16);
+          const hexColor = getVoxelColor(y, cfg.terrain.waterLevel);
+          const r = (hexColor >> 16) & 0xff;
+          const g = (hexColor >> 8) & 0xff;
+          const b = hexColor & 0xff;
           pixels.push(`${r} ${g} ${b}`);
         }
       }

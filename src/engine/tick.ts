@@ -15,7 +15,12 @@ export const tickEngine = (
   _maxSubsteps: number,
 ): { delta: RenderDelta; ui: UiSnapshot; backlog: number } => {
   ctx.tick += 1;
-  ctx.drones = syncDroneCount(ctx.drones, ctx.uiSnapshot.droneCount, ctx.uiSnapshot.haulerCount, ctx.cfg);
+  ctx.drones = syncDroneCount(
+    ctx.drones,
+    ctx.uiSnapshot.droneCount,
+    ctx.uiSnapshot.haulerCount,
+    ctx.cfg,
+  );
 
   const moveSpeed = getDroneMoveSpeed(ctx.uiSnapshot.moveSpeedLevel, ctx.cfg);
   const mineDuration = getMineDuration(ctx.uiSnapshot.miningSpeedLevel, ctx.cfg);
