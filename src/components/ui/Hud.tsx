@@ -1,11 +1,12 @@
 import React from "react";
 
-export const Hud: React.FC<{ credits: number; prestigeLevel: number }> = ({
-  credits,
-  prestigeLevel,
-}) => {
+export const Hud: React.FC<{
+  credits: number;
+  prestigeLevel: number;
+  className?: string;
+}> = ({ credits, prestigeLevel, className = "" }) => {
   return (
-    <div className="absolute top-4 left-1/2 -translate-x-1/2 flex gap-4 pointer-events-auto">
+    <div className={`flex gap-4 pointer-events-auto ${className}`}>
       <div className="bg-black/60 backdrop-blur-md px-6 py-2 rounded-full border border-yellow-500/30 flex flex-col items-center">
         <span className="text-yellow-400 font-bold text-xl tracking-wider">
           ${credits.toLocaleString()}
