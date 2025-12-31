@@ -23,6 +23,8 @@ implementation without rediscovering decisions.
   mineability/frontier, chunking).
 - `TECH003-voxel-chunk-representation-and-render-adapters.md`: clarifies chunking
   vs storage vs rendering, and outlines modular performance optimizations.
+- `TECH004-save-migration-framework.md`: versioned save schema with migration
+  framework, validation, and sanitization.
 
 ### Gameplay
 

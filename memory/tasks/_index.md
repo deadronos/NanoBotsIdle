@@ -11,6 +11,8 @@
 
 ## Completed
 
+- [TASK012] Meshing priority queue with back-pressure — Implemented chunk meshing scheduler with configurable queue depth and tests (Completed)
+- [TASK011] Save migration system — Versioned save schema (v1→v2) with migration framework, validation, and roundtrip tests (Completed)
 - [TASK010] Implement: OpenSimplex provider, Tests & Visuals — Implement noise provider, add sampling tests, and add PPM-based spawn-area baselines (Completed)
 - [TASK009] Design: Noise Replacement & Biome Mapping — Design doc and runbook for implementing OpenSimplex and biomes (Completed)
 - [TASK008] Greedy meshing worker v1 — Chunk surface meshing + worker pipeline (Completed)
