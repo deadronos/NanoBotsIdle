@@ -1,4 +1,4 @@
-import { useGameStore } from "../store";
+import { setAllowPersist,useGameStore  } from "../store";
 import { error, warn } from "./logger";
 import { applyMigrations, getMigrationsPath } from "./migrations/registry";
 import type { SaveData } from "./migrations/types";
@@ -121,7 +121,25 @@ export const importSave = (file: File) => {
   });
 };
 
+import { getSimBridge } from "../simBridge/simBridge";
+
 export const resetGame = () => {
+  // Stop the simulation to avoid in-flight frames writing state back to storage
+  try {
+    const bridge = getSimBridge();
+    bridge.stop();
+  } catch (e) {
+    // Best-effort; if stop fails, continue to attempt reset
+    warn(`Failed to stop sim bridge during reset: ${e}`);
+  }
+
+  // Temporarily disable persistence so any subsequent setState doesn't write to storage
+  try {
+    setAllowPersist(false);
+  } catch {
+    // ignore
+  }
+
   localStorage.removeItem("voxel-walker-storage");
   window.location.reload();
 };
