@@ -29,6 +29,7 @@ export type TelemetrySnapshot = {
     queueLength: number;
     inFlight: number;
     avgWaitTime: number;
+    droppedTasks: number;
   };
   worker: {
     simMs: number;
@@ -59,6 +60,7 @@ export class TelemetryCollector {
   private meshingQueueLength = 0;
   private meshingInFlight = 0;
   private meshingWaitTimes: Sample[] = [];
+  private meshingDroppedTasks = 0;
 
   // Worker tracking
   private workerSimMs = 0;
@@ -91,6 +93,7 @@ export class TelemetryCollector {
     this.totalChunksMeshed = 0;
     this.meshingQueueLength = 0;
     this.meshingInFlight = 0;
+    this.meshingDroppedTasks = 0;
     this.workerSimMs = 0;
     this.workerBacklog = 0;
   }
@@ -122,10 +125,11 @@ export class TelemetryCollector {
     }
   }
 
-  recordMeshingQueue(queueLength: number, inFlight: number) {
+  recordMeshingQueue(queueLength: number, inFlight: number, droppedTasks = 0) {
     if (!this.enabled) return;
     this.meshingQueueLength = queueLength;
     this.meshingInFlight = inFlight;
+    this.meshingDroppedTasks = droppedTasks;
   }
 
   recordMeshingWaitTime(waitTimeMs: number) {
@@ -184,6 +188,7 @@ export class TelemetryCollector {
         queueLength: this.meshingQueueLength,
         inFlight: this.meshingInFlight,
         avgWaitTime: waitTimeStats.avg,
+        droppedTasks: this.meshingDroppedTasks,
       },
       worker: {
         simMs: this.workerSimMs,
