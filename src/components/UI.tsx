@@ -4,6 +4,7 @@ import type { ViewMode } from "../types";
 import { useUiStore } from "../ui/store";
 import { SettingsModal } from "./SettingsModal";
 import { Hud } from "./ui/Hud";
+import { BuildingDrawer } from "./ui/BuildingDrawer";
 import { Reticle } from "./ui/Reticle";
 import { ShopModal } from "./ui/ShopModal";
 import { TitlePanel } from "./ui/TitlePanel";
@@ -45,6 +46,11 @@ export const UI: React.FC<UIProps> = ({ viewMode, onToggleView }) => {
         />
       </div>
 
+      {/* Mobile: Drawer (below title?) */}
+      <div className="md:hidden absolute top-20 left-4 pointer-events-auto">
+        <BuildingDrawer className="" />
+      </div>
+
       <div className="flex justify-center w-full md:hidden pointer-events-none">
         <Hud
           credits={credits}
@@ -58,6 +64,7 @@ export const UI: React.FC<UIProps> = ({ viewMode, onToggleView }) => {
 
       {/* Desktop Layout (>= md) */}
       <div className="hidden md:contents">
+        <BuildingDrawer />
         <Hud
           credits={credits}
           prestigeLevel={prestigeLevel}

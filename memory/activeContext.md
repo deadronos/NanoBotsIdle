@@ -9,6 +9,7 @@
 
 ## Recent changes
 
+- **Logistics System (Phase 3):** Complete. Haulers intercept miners, outposts persist. See `docs/ARCHITECTURE/GAME002-logistics-and-economy.md`.
 - **Save Migration System:** Added versioned save schema (v1→v2) with registry, validation, sanitization, and comprehensive tests. See `MIGRATION_SUMMARY.md`.
 - **Meshing Priority Queue/Backpressure:** Implemented in `MeshingScheduler` with configurable queue depth.
 - **Worker Error Handling:** Enhanced `createSimBridge` and `MeshingScheduler` with retry logic (3 attempts), telemetry, and graceful degradation.

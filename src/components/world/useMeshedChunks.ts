@@ -7,7 +7,11 @@ import { createApronField, fillApronField } from "../../meshing/apronField";
 import { getDirtyChunksForVoxelEdit } from "../../meshing/dirtyChunks";
 import { MeshingScheduler } from "../../meshing/meshingScheduler";
 import { defaultMeshingWorkerFactory } from "../../meshing/meshingWorkerFactory";
-import { applyLodGeometry, disposeLodGeometries, type LodGeometries } from "../../render/lodGeometry";
+import {
+  applyLodGeometry,
+  disposeLodGeometries,
+  type LodGeometries,
+} from "../../render/lodGeometry";
 import type { LodLevel } from "../../render/lodUtils";
 import type { MeshResult } from "../../shared/meshingProtocol";
 import type { VoxelEdit } from "../../shared/protocol";

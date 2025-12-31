@@ -17,7 +17,15 @@ export const exportSave = () => {
   const state = useGameStore.getState();
 
   // Extract only the data fields (exclude actions)
-  const { addCredits: _addCredits, incrementMinedBlocks: _incrementMinedBlocks, setTotalBlocks: _setTotalBlocks, buyUpgrade: _buyUpgrade, resetPrestige: _resetPrestige, getUpgradeCost: _getUpgradeCost, ...dataFields } = state;
+  const {
+    addCredits: _addCredits,
+    incrementMinedBlocks: _incrementMinedBlocks,
+    setTotalBlocks: _setTotalBlocks,
+    buyUpgrade: _buyUpgrade,
+    resetPrestige: _resetPrestige,
+    getUpgradeCost: _getUpgradeCost,
+    ...dataFields
+  } = state;
 
   const saveData: SaveData = {
     version: CURRENT_SAVE_VERSION,
@@ -68,7 +76,9 @@ export const importSave = (file: File) => {
         if (saveData.version < CURRENT_SAVE_VERSION) {
           try {
             const migrations = getMigrationsPath(saveData.version, CURRENT_SAVE_VERSION);
-            migratedData = applyMigrations(saveData.data, migrations) as Partial<typeof migratedData>;
+            migratedData = applyMigrations(saveData.data, migrations) as Partial<
+              typeof migratedData
+            >;
           } catch (err) {
             const errorMsg = `Failed to migrate save from v${saveData.version} to v${CURRENT_SAVE_VERSION}: ${err}`;
             error(errorMsg);

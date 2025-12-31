@@ -11,6 +11,7 @@
 
 ## Completed
 
+- [TASK013] Logistics Phase 3: Hauler Drones & Polish — Haulers, Outposts, Persistence, and UI integration (Completed)
 - [TASK012] Meshing priority queue with back-pressure — Implemented chunk meshing scheduler with configurable queue depth and tests (Completed)
 - [TASK011] Save migration system — Versioned save schema (v1→v2) with migration framework, validation, and roundtrip tests (Completed)
 - [TASK010] Implement: OpenSimplex provider, Tests & Visuals — Implement noise provider, add sampling tests, and add PPM-based spawn-area baselines (Completed)

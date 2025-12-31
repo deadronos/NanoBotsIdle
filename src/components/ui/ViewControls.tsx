@@ -9,9 +9,7 @@ export const ViewControls: React.FC<{
   className?: string;
 }> = ({ viewMode, onToggleView, onOpenShop, className = "" }) => {
   return (
-    <div
-      className={`pointer-events-auto flex flex-col gap-2 items-end ${className}`}
-    >
+    <div className={`pointer-events-auto flex flex-col gap-2 items-end ${className}`}>
       <button
         onClick={onToggleView}
         className="bg-white/10 hover:bg-white/20 backdrop-blur-md text-white px-4 py-2 rounded-full font-bold transition-all border border-white/20 text-sm shadow-lg active:scale-95 flex items-center gap-2"
@@ -28,4 +26,3 @@ export const ViewControls: React.FC<{
     </div>
   );
 };
-

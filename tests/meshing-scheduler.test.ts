@@ -93,7 +93,7 @@ describe("MeshingScheduler (TDD)", () => {
   it("should enforce bounded queue size and drop low priority tasks", () => {
     const worker = new FakeMeshingWorker();
     const results: { coord: { cx: number; cy: number; cz: number }; rev: number }[] = [];
-    
+
     const scheduler = new MeshingScheduler({
       worker,
       chunkSize: 16,
@@ -123,21 +123,21 @@ describe("MeshingScheduler (TDD)", () => {
     for (let i = 0; i < 10; i++) {
       scheduler.markDirty({ cx: i, cy: 0, cz: 0 });
     }
-    
+
     scheduler.pump();
 
     // Should have 1 in flight and 5 in queue (max), so 4 should be dropped
     expect(scheduler.getInFlightCount()).toBe(1);
     expect(scheduler.getDirtyKeys().length).toBeLessThanOrEqual(5);
     expect(scheduler.getDroppedTasksCount()).toBeGreaterThan(0);
-    
+
     scheduler.dispose();
   });
 
   it("should prioritize chunks closer to focus point", () => {
     const worker = new FakeMeshingWorker();
     const focusChunk = { cx: 10, cy: 0, cz: 10 };
-    
+
     const scheduler = new MeshingScheduler({
       worker,
       chunkSize: 16,
@@ -170,24 +170,24 @@ describe("MeshingScheduler (TDD)", () => {
     scheduler.markDirty({ cx: 11, cy: 0, cz: 10 }); // distance 1
     scheduler.markDirty({ cx: 15, cy: 0, cz: 15 }); // distance 50 - farthest
     scheduler.markDirty({ cx: 12, cy: 0, cz: 10 }); // distance 4
-    
+
     scheduler.pump();
 
     // First 3 jobs should be processed (maxInFlight = 3)
     expect(worker.posted.length).toBe(3);
-    
+
     // First job should be the closest chunk
     const firstJob = worker.posted[0]!.msg;
     if (firstJob.t !== "MESH_CHUNK") throw new Error("expected MESH_CHUNK");
     expect(firstJob.chunk.cx).toBe(10);
     expect(firstJob.chunk.cz).toBe(10);
-    
+
     scheduler.dispose();
   });
 
   it("should prefer visible chunks over distant ones", () => {
     const worker = new FakeMeshingWorker();
-    
+
     const scheduler = new MeshingScheduler({
       worker,
       chunkSize: 16,
@@ -221,24 +221,24 @@ describe("MeshingScheduler (TDD)", () => {
     scheduler.markDirty({ cx: 10, cy: 0, cz: 0 }); // distance = 100
     // Add visible chunk (farther but visible, should be prioritized)
     scheduler.markDirty({ cx: 5, cy: 0, cz: 5 }); // distance = 50, but with visibility boost = 25
-    
+
     scheduler.pump();
 
     expect(worker.posted.length).toBe(2);
-    
+
     // First job should be the visible chunk due to visibility boost (25 < 100)
     const firstJob = worker.posted[0]!.msg;
     if (firstJob.t !== "MESH_CHUNK") throw new Error("expected MESH_CHUNK");
     expect(firstJob.chunk.cx).toBe(5);
     expect(firstJob.chunk.cz).toBe(5);
-    
+
     scheduler.dispose();
   });
 
   it("should handle heavy chunk request load without exceeding maxInFlight", () => {
     const worker = new FakeMeshingWorker();
     let jobsCompleted = 0;
-    
+
     const scheduler = new MeshingScheduler({
       worker,
       chunkSize: 16,
@@ -265,15 +265,15 @@ describe("MeshingScheduler (TDD)", () => {
     for (let i = 0; i < 100; i++) {
       scheduler.markDirty({ cx: i, cy: 0, cz: 0 });
     }
-    
+
     scheduler.pump();
-    
+
     // Should respect maxInFlight
     expect(scheduler.getInFlightCount()).toBeLessThanOrEqual(4);
-    
+
     // Should have dropped some tasks due to queue limit
     expect(scheduler.getDroppedTasksCount()).toBeGreaterThan(0);
-    
+
     // Simulate completing some jobs
     for (let i = 0; i < 4; i++) {
       const job = worker.posted[i]!.msg;
@@ -290,18 +290,18 @@ describe("MeshingScheduler (TDD)", () => {
         },
       });
     }
-    
+
     // Jobs completed count should match
     expect(jobsCompleted).toBe(4);
     // After completing jobs and pumping, in-flight count should be stable or processing more
     expect(scheduler.getInFlightCount()).toBeLessThanOrEqual(4);
-    
+
     scheduler.dispose();
   });
 
   it("should track queue metrics correctly", () => {
     const worker = new FakeMeshingWorker();
-    
+
     const scheduler = new MeshingScheduler({
       worker,
       chunkSize: 16,
@@ -328,25 +328,25 @@ describe("MeshingScheduler (TDD)", () => {
     expect(scheduler.getInFlightCount()).toBe(0);
     expect(scheduler.getDirtyKeys().length).toBe(0);
     expect(scheduler.getDroppedTasksCount()).toBe(0);
-    
+
     // Add some chunks
     for (let i = 0; i < 5; i++) {
       scheduler.markDirty({ cx: i, cy: 0, cz: 0 });
     }
-    
+
     scheduler.pump();
-    
+
     // Should have 2 in flight and 3 in queue
     expect(scheduler.getInFlightCount()).toBe(2);
     expect(scheduler.getDirtyKeys().length).toBe(3);
-    
+
     scheduler.dispose();
   });
 
   it("should reprioritize dirty chunks when focus changes", () => {
     const worker = new FakeMeshingWorker();
     let focusPoint = { cx: 0, cy: 0, cz: 0 };
-    
+
     const scheduler = new MeshingScheduler({
       worker,
       chunkSize: 16,
@@ -377,23 +377,23 @@ describe("MeshingScheduler (TDD)", () => {
     // Add chunks
     scheduler.markDirty({ cx: 0, cy: 0, cz: 0 });
     scheduler.markDirty({ cx: 10, cy: 0, cz: 10 });
-    
+
     scheduler.pump();
-    
+
     // First chunk processed should be (0,0,0) as it's closest
     let firstJob = worker.posted[0]!.msg;
     if (firstJob.t !== "MESH_CHUNK") throw new Error("expected MESH_CHUNK");
     expect(firstJob.chunk.cx).toBe(0);
-    
+
     // Change focus point
     focusPoint = { cx: 10, cy: 0, cz: 10 };
     scheduler.reprioritizeDirty();
-    
+
     // Clear posted jobs and add a new chunk
     worker.posted = [];
     scheduler.markDirty({ cx: 9, cy: 0, cz: 10 });
     scheduler.pump();
-    
+
     // Now (9,0,10) should be processed first as it's closest to new focus
     if (worker.posted.length > 0) {
       firstJob = worker.posted[0]!.msg;
@@ -406,13 +406,13 @@ describe("MeshingScheduler (TDD)", () => {
       };
       expect(distToFocus(firstJob.chunk.cx, firstJob.chunk.cz)).toBeLessThan(distToFocus(0, 0));
     }
-    
+
     scheduler.dispose();
   });
 
   it("should clear all state including dropped tasks count", () => {
     const worker = new FakeMeshingWorker();
-    
+
     const scheduler = new MeshingScheduler({
       worker,
       chunkSize: 16,
@@ -440,17 +440,17 @@ describe("MeshingScheduler (TDD)", () => {
       scheduler.markDirty({ cx: i, cy: 0, cz: 0 });
     }
     scheduler.pump();
-    
+
     expect(scheduler.getDroppedTasksCount()).toBeGreaterThan(0);
     expect(scheduler.getDirtyKeys().length).toBeGreaterThan(0);
-    
+
     // Clear all
     scheduler.clearAll();
-    
+
     expect(scheduler.getDroppedTasksCount()).toBe(0);
     expect(scheduler.getDirtyKeys().length).toBe(0);
     expect(scheduler.getInFlightCount()).toBe(0);
-    
+
     scheduler.dispose();
   });
 });

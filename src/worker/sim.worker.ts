@@ -17,7 +17,7 @@ scope.addEventListener("message", (event: MessageEvent<ToWorker>) => {
     const msg = event.data;
     switch (msg.t) {
       case "INIT": {
-        engine = createEngine(msg.seed);
+        engine = createEngine(msg.seed, msg.saveState);
         lastNowMs = 0;
         send({ t: "READY" });
         return;

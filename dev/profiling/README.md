@@ -5,12 +5,14 @@ This directory contains utilities for detecting memory leaks and tracking resour
 ## Overview
 
 Memory leaks in a voxel game can manifest as:
+
 - Detached DOM nodes from destroyed UI components
 - Retained Three.js `Object3D` or `InstancedMesh` references
 - Unclean worker termination leaving event handlers attached
 - Unbounded growth in internal maps/sets for chunks or voxels
 
 This profiling toolkit provides:
+
 1. **Memory Tracker** - Lightweight memory snapshots and comparison
 2. **Heap Snapshot Tool** - Chrome DevTools-compatible V8 heap dumps
 3. **Baseline Generator** - Automated baseline memory profile generation
@@ -24,6 +26,7 @@ npm test -- lifecycle
 ```
 
 These tests verify that:
+
 - Chunk operations don't accumulate unbounded state
 - Worker termination cleans up event handlers
 - InstancedMesh updates don't leak references
@@ -41,6 +44,7 @@ This simulates common operations and captures heap snapshots for regression dete
 Snapshots are saved in `dev/profiling/snapshots/` as `.heapsnapshot` files.
 
 To analyze:
+
 1. Open Chrome DevTools (F12)
 2. Go to the **Memory** tab
 3. Click **Load** and select a `.heapsnapshot` file
@@ -55,17 +59,17 @@ Lightweight utility for tracking memory usage across operations.
 **Usage:**
 
 ```typescript
-import { MemoryTracker } from './dev/profiling/memory-tracker';
+import { MemoryTracker } from "./dev/profiling/memory-tracker";
 
 const tracker = new MemoryTracker();
 
-tracker.snapshot('before-operation');
+tracker.snapshot("before-operation");
 
 // ... perform operations ...
 
-tracker.snapshot('after-operation');
+tracker.snapshot("after-operation");
 
-const delta = tracker.compare('before-operation', 'after-operation');
+const delta = tracker.compare("before-operation", "after-operation");
 console.log(`Heap growth: ${(delta.heapUsedDelta / 1024 / 1024).toFixed(2)} MB`);
 
 console.log(tracker.report());
@@ -74,7 +78,7 @@ console.log(tracker.report());
 **Leak Detection Helper:**
 
 ```typescript
-import { detectLeak } from './dev/profiling/memory-tracker';
+import { detectLeak } from "./dev/profiling/memory-tracker";
 
 const result = await detectLeak({
   fn: () => {
@@ -89,7 +93,7 @@ const result = await detectLeak({
 });
 
 if (result.leaked) {
-  console.log('LEAK DETECTED!');
+  console.log("LEAK DETECTED!");
   console.log(`Growth rate: ${result.growthRate} bytes/iteration`);
 }
 console.log(result.report);
@@ -102,15 +106,15 @@ Captures V8 heap snapshots for detailed analysis in Chrome DevTools.
 **Usage:**
 
 ```typescript
-import { takeHeapSnapshot, compareSnapshots } from './dev/profiling/heap-snapshot';
+import { takeHeapSnapshot, compareSnapshots } from "./dev/profiling/heap-snapshot";
 
 // Take a snapshot
-await takeHeapSnapshot('./dev/profiling/snapshots', 'my-snapshot');
+await takeHeapSnapshot("./dev/profiling/snapshots", "my-snapshot");
 
 // Compare two snapshots
 const report = compareSnapshots(
-  './dev/profiling/snapshots/baseline.heapsnapshot',
-  './dev/profiling/snapshots/current.heapsnapshot'
+  "./dev/profiling/snapshots/baseline.heapsnapshot",
+  "./dev/profiling/snapshots/current.heapsnapshot",
 );
 console.log(report);
 ```
@@ -130,6 +134,7 @@ node --expose-gc -r ts-node/register dev/profiling/baseline-generator.ts
 ```
 
 **What it does:**
+
 1. Takes initial heap snapshot
 2. Simulates 10 cycles of chunk load/unload (100 chunks each)
 3. Simulates repeated memory allocations
@@ -137,6 +142,7 @@ node --expose-gc -r ts-node/register dev/profiling/baseline-generator.ts
 5. Generates a memory growth report
 
 **Output:**
+
 - Console report showing memory deltas between phases
 - `.heapsnapshot` files in `dev/profiling/snapshots/`
 - `.meta.json` metadata files for each snapshot
@@ -146,11 +152,13 @@ node --expose-gc -r ts-node/register dev/profiling/baseline-generator.ts
 ### Memory Growth Indicators
 
 **Healthy patterns:**
+
 - Memory increases during operations but returns to baseline after cleanup
 - Small, bounded growth in long-running sessions (< 1KB per iteration)
 - Stable heap size after garbage collection
 
 **Leak indicators:**
+
 - Unbounded linear growth over iterations
 - Memory not returning to baseline after cleanup
 - Large growth rate (> 1KB per iteration)
@@ -159,11 +167,13 @@ node --expose-gc -r ts-node/register dev/profiling/baseline-generator.ts
 ### Chrome DevTools Analysis
 
 **Allocation Timeline:**
+
 1. Load a snapshot in Chrome DevTools Memory tab
 2. Switch to **Allocation instrumentation on timeline**
 3. Look for patterns of retained objects
 
 **Comparison View:**
+
 1. Load two snapshots (baseline and current)
 2. Switch to **Comparison** view
 3. Look for:
@@ -173,6 +183,7 @@ node --expose-gc -r ts-node/register dev/profiling/baseline-generator.ts
    - Retained closures
 
 **Dominators:**
+
 - Shows which objects are retaining the most memory
 - Helps identify root causes of leaks
 
@@ -183,12 +194,14 @@ node --expose-gc -r ts-node/register dev/profiling/baseline-generator.ts
 **Problem:** Handlers not removed when objects are disposed.
 
 **Detection:**
+
 ```typescript
 // Check handler attachment in tests
 expect(worker.hasHandlerAttached()).toBe(false);
 ```
 
 **Fix:**
+
 ```typescript
 scheduler.dispose(); // Should call removeEventListener
 ```
@@ -206,6 +219,7 @@ scheduler.dispose(); // Should call removeEventListener
 **Problem:** Maps/Sets growing indefinitely.
 
 **Detection:**
+
 ```typescript
 // In tests, verify collection size after operations
 expect(scheduler.getDirtyKeys().length).toBe(0);
@@ -271,6 +285,7 @@ This is expected. The profiling tools themselves allocate memory for snapshots a
 ### Garbage collection not running
 
 Run with `--expose-gc` flag to enable manual GC triggering:
+
 ```bash
 node --expose-gc your-script.js
 ```
@@ -292,6 +307,7 @@ node --expose-gc your-script.js
 ## Contributing
 
 When adding new systems that allocate resources:
+
 1. Add lifecycle tests to verify cleanup
 2. Update baseline generator to include new operations
 3. Document disposal patterns in code comments

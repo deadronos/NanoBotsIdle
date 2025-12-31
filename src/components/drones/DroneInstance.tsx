@@ -5,18 +5,33 @@ import type { Group, Mesh, PointLight } from "three";
 export const DroneInstance: React.FC<{
   index: number;
   groupRefs: MutableRefObject<(Group | null)[]>;
+  bodyRefs: MutableRefObject<(Mesh | null)[]>;
   miningLaserRefs: MutableRefObject<(Mesh | null)[]>;
   scanningLaserRefs: MutableRefObject<(Mesh | null)[]>;
   targetBoxRefs: MutableRefObject<(Mesh | null)[]>;
   impactLightRefs: MutableRefObject<(PointLight | null)[]>;
-}> = ({ groupRefs, impactLightRefs, index, miningLaserRefs, scanningLaserRefs, targetBoxRefs }) => {
+}> = ({
+  bodyRefs,
+  groupRefs,
+  impactLightRefs,
+  index,
+  miningLaserRefs,
+  scanningLaserRefs,
+  targetBoxRefs,
+}) => {
   return (
     <group
       ref={(el) => {
         groupRefs.current[index] = el;
       }}
     >
-      <mesh castShadow rotation={[Math.PI / 2, 0, 0]}>
+      <mesh
+        ref={(el) => {
+          bodyRefs.current[index] = el;
+        }}
+        castShadow
+        rotation={[Math.PI / 2, 0, 0]}
+      >
         <coneGeometry args={[0.3, 0.8, 4]} />
         <meshStandardMaterial color="#00ffcc" emissive="#004444" roughness={0.2} />
       </mesh>

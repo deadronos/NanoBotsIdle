@@ -21,7 +21,7 @@ export const DynamicResScaler: FC = () => {
     // initialize timing reference and DPR once on mount
     lastTime.current = performance.now();
     initDpr(setDpr, dprRef.current);
-    
+
     // Update telemetry enabled state based on config
     telemetry.setEnabled(config.telemetry.enabled);
   }, [setDpr, config.telemetry.enabled, telemetry]);
@@ -34,7 +34,7 @@ export const DynamicResScaler: FC = () => {
     if (elapsed >= CHECK_INTERVAL) {
       const fps = Math.round((frameCount.current * 1000) / elapsed);
       const frameTime = elapsed / frameCount.current;
-      
+
       frameCount.current = 0;
       lastTime.current = time;
 
