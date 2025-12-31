@@ -3,6 +3,7 @@ import type { InstancedMesh } from "three";
 import { Object3D } from "three";
 
 import { applyInstanceUpdates } from "../../render/instanced";
+import { InstanceRebuildManager } from "./instancedVoxels/rebuildManager";
 import {
   ensureInstanceColors,
   getInitialCapacity,
@@ -11,7 +12,6 @@ import {
   setVoxelInstance,
   type VoxelColorFn,
 } from "./instancedVoxels/voxelInstanceMesh";
-import { InstanceRebuildManager } from "./instancedVoxels/rebuildManager";
 import {
   addVoxelToStore,
   clearVoxelStore,
@@ -137,8 +137,9 @@ export const useInstancedVoxels = (
         rebuildManager.applyRebuildToMesh(mesh, result.matrices, result.colors, result.count);
         needsRebuild.current = false;
       } catch (error) {
-        console.error("Instance rebuild worker failed:", error);
         // Fallback to main-thread rebuild on error
+        // eslint-disable-next-line no-console
+        console.error("Instance rebuild worker failed:", error);
         rebuildVoxelInstances(mesh, tmp, positions, getColorFn);
         needsRebuild.current = false;
       } finally {

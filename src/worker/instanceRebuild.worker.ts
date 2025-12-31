@@ -1,18 +1,18 @@
 /// <reference lib="webworker" />
 
+import { handleInstanceRebuildJob } from "../components/world/instancedVoxels/rebuildWorkerHandler";
 import type {
   FromInstanceRebuildWorker,
   ToInstanceRebuildWorker,
 } from "../shared/instanceRebuildProtocol";
-import { handleInstanceRebuildJob } from "../components/world/instancedVoxels/rebuildWorkerHandler";
 
 const ctx: DedicatedWorkerGlobalScope = self as unknown as DedicatedWorkerGlobalScope;
 
 ctx.addEventListener("message", (event: MessageEvent<ToInstanceRebuildWorker>) => {
   const msg = event.data;
-  const startTime = performance.now();
+  const _startTime = performance.now();
   const out = handleInstanceRebuildJob(msg);
-  const rebuildTimeMs = performance.now() - startTime;
+  const _rebuildTimeMs = performance.now() - _startTime;
 
   if (out.t === "REBUILD_RESULT") {
     // Transfer the typed arrays back to the main thread

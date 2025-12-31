@@ -1,7 +1,8 @@
-import { describe, test, expect } from "vitest";
-import { tickDrones } from "../src/engine/tickDrones";
+import { describe, expect,test } from "vitest";
+
 import { getConfig } from "../src/config/index";
 import type { Drone } from "../src/engine/drones";
+import { tickDrones } from "../src/engine/tickDrones";
 
 describe("tickDrones integration: hauler pickup and deposit", () => {
   test("minedBlocks increments at mine-time and remains unchanged on deposit; hauler picks up and deposits payload", () => {

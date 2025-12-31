@@ -1,8 +1,8 @@
-import { getVoxelColor } from "../../../utils";
 import type {
   FromInstanceRebuildWorker,
   InstanceRebuildJob,
 } from "../../../shared/instanceRebuildProtocol";
+import { getVoxelColor } from "../../../utils";
 
 /**
  * Process an instance rebuild job in the worker.

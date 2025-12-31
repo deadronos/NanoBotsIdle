@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 
-import type { InstanceRebuildJob } from "../src/shared/instanceRebuildProtocol";
 import { handleInstanceRebuildJob } from "../src/components/world/instancedVoxels/rebuildWorkerHandler";
+import type { InstanceRebuildJob } from "../src/shared/instanceRebuildProtocol";
 
 describe("instance rebuild worker handler", () => {
   it("should compute matrices and colors for voxel positions", () => {
@@ -42,9 +42,9 @@ describe("instance rebuild worker handler", () => {
     expect(result.matrices[16 + 14]).toBe(20);
 
     // Verify colors are valid RGB values (0-1 range)
-    for (let i = 0; i < result.colors.length; i++) {
-      expect(result.colors[i]).toBeGreaterThanOrEqual(0);
-      expect(result.colors[i]).toBeLessThanOrEqual(1);
+    for (const colorValue of result.colors) {
+      expect(colorValue).toBeGreaterThanOrEqual(0);
+      expect(colorValue).toBeLessThanOrEqual(1);
     }
   });
 
