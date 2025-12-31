@@ -30,14 +30,31 @@ export const Particles = forwardRef<ParticleHandle, ParticlesProps>((props, ref)
     }));
   }, [MAX_PARTICLES]);
 
+  // Free-list for O(1) particle allocation
+  const freeList = useRef<number[]>([]);
+
+  // Initialize free-list with all indices
+  useEffect(() => {
+    freeList.current = [];
+    for (let i = MAX_PARTICLES - 1; i >= 0; i -= 1) {
+      freeList.current.push(i);
+    }
+  }, [MAX_PARTICLES]);
+
   const tmp = useMemo(() => new Object3D(), []);
 
   useEffect(() => {
     const handle = ref as React.MutableRefObject<ParticleHandle | null>;
     handle.current = {
       spawn: (pos: Vector3, color: Color) => {
-        let idx = particles.findIndex((p) => p.life <= 0);
-        if (idx === -1) idx = Math.floor(Math.random() * MAX_PARTICLES);
+        // O(1) allocation from free-list
+        let idx: number;
+        if (freeList.current.length > 0) {
+          idx = freeList.current.pop()!;
+        } else {
+          // Fallback to random if all particles are active
+          idx = Math.floor(Math.random() * MAX_PARTICLES);
+        }
 
         const p = particles[idx];
         p.position.copy(pos);
@@ -109,6 +126,8 @@ export const Particles = forwardRef<ParticleHandle, ParticlesProps>((props, ref)
         tmp.updateMatrix();
         mesh.setMatrixAt(i, tmp.matrix);
         needsUpdate = true;
+        // Return particle to free-list for O(1) reallocation
+        freeList.current.push(i);
       }
     }
 
