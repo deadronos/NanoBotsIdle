@@ -15,6 +15,7 @@ const createSnapshot = (): UiSnapshot => ({
   laserPowerLevel: 1,
   minedBlocks: 0,
   totalBlocks: 0,
+  upgrades: {},
   outposts: []
 });
 
