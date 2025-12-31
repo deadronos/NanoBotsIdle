@@ -1,13 +1,16 @@
 import React from "react";
 
-export const TitlePanel: React.FC<{ percentMined: number; onOpenSettings: () => void }> = ({
-  percentMined,
-  onOpenSettings,
-}) => {
+export const TitlePanel: React.FC<{
+  percentMined: number;
+  onOpenSettings: () => void;
+  className?: string;
+}> = ({ percentMined, onOpenSettings, className = "" }) => {
   return (
-    <div className="absolute top-4 left-4 text-white opacity-80 hover:opacity-100 transition-opacity pointer-events-auto">
+    <div
+      className={`text-white opacity-80 hover:opacity-100 transition-opacity pointer-events-auto ${className}`}
+    >
       <div className="flex items-center gap-3 mb-2">
-        <h1 className="text-2xl font-bold drop-shadow-md tracking-tighter bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-green-400">
+        <h1 className="text-xl md:text-2xl font-bold drop-shadow-md tracking-tighter bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-green-400">
           VOXEL WALKER
         </h1>
         <button
@@ -37,11 +40,11 @@ export const TitlePanel: React.FC<{ percentMined: number; onOpenSettings: () => 
         </button>
       </div>
 
-      <div className="text-xs text-white/60 bg-black/40 p-2 rounded">
-        WASD to Move | Shift to Run | Click to Lock
+      <div className="hidden md:block text-xs text-white/60 bg-black/40 p-2 rounded">
+        WASD to Move | Shift to Run | Drag to Look
       </div>
 
-      <div className="mt-4 w-48 bg-gray-800 rounded-full h-2.5 dark:bg-gray-700 border border-white/10">
+      <div className="mt-2 md:mt-4 w-32 md:w-48 bg-gray-800 rounded-full h-2.5 dark:bg-gray-700 border border-white/10">
         <div
           className="bg-green-500 h-2.5 rounded-full transition-all duration-1000"
           style={{ width: `${percentMined}%` }}
@@ -51,3 +54,4 @@ export const TitlePanel: React.FC<{ percentMined: number; onOpenSettings: () => 
     </div>
   );
 };
+

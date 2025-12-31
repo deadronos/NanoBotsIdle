@@ -10,9 +10,13 @@ import { debug, warn } from "../../utils/logger";
 export const usePointerLockInput = (): PointerLockInput => {
   const keys = useRef<Record<string, boolean>>({});
   const cameraAngle = useRef({ yaw: 0, pitch: 0 });
+  const isDragging = useRef(false);
+  const lastPos = useRef<{ x: number; y: number } | null>(null);
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
+      // Ignore key events if typing in an input
+      if (e.target instanceof Element && e.target.closest("input, textarea")) return;
       keys.current[e.code] = true;
     };
 
@@ -20,53 +24,107 @@ export const usePointerLockInput = (): PointerLockInput => {
       keys.current[e.code] = false;
     };
 
-    const handleMouseMove = (e: MouseEvent) => {
-      if (document.pointerLockElement !== document.body) return;
+    // Unified move handler
+    const handleMove = (clientX: number, clientY: number) => {
+      if (!isDragging.current || !lastPos.current) return;
 
-      cameraAngle.current.yaw -= e.movementX * 0.002;
-      cameraAngle.current.pitch -= e.movementY * 0.002;
+      const dx = clientX - lastPos.current.x;
+      const dy = clientY - lastPos.current.y;
+
+      cameraAngle.current.yaw -= dx * 0.005;
+      cameraAngle.current.pitch -= dy * 0.005;
 
       cameraAngle.current.pitch = Math.max(
         -Math.PI / 2 + 0.1,
         Math.min(Math.PI / 2 - 0.1, cameraAngle.current.pitch),
       );
+
+      lastPos.current = { x: clientX, y: clientY };
     };
 
-    const handleClick = (event: MouseEvent) => {
-      if (document.pointerLockElement === document.body) return;
-      const target = event.target;
-      if (target instanceof Element) {
-        if (target.closest("[data-ui-overlay]")) return;
-        if (target.closest("[role='dialog']")) return;
-        if (target.closest("button, a, input, textarea, select, [role='button']")) return;
+    // MOUSE EVENTS
+    const handleMouseDown = (e: MouseEvent) => {
+      // Don't drag if clicking UI
+      if (
+        e.target instanceof Element &&
+        (e.target.closest("button") ||
+          e.target.closest("[data-no-orbit]") ||
+          e.target.closest("a, input, textarea, select"))
+      ) {
+        return;
       }
+      isDragging.current = true;
+      lastPos.current = { x: e.clientX, y: e.clientY };
+    };
 
-      try {
-        const result = document.body.requestPointerLock() as unknown as Promise<void> | undefined;
-        if (result && typeof result.catch === "function") {
-          result.catch((err: unknown) => {
-            if (err instanceof Error) {
-              if (err.name === "NotSupportedError" || err.message?.includes("exited the lock"))
-                return;
-              debug("Pointer lock interrupted:", err);
-            }
-          });
-        }
-      } catch (e) {
-        warn("Pointer lock error:", e);
+    const handleMouseMove = (e: MouseEvent) => {
+      if (isDragging.current) {
+        handleMove(e.clientX, e.clientY);
       }
+    };
+
+    const handleMouseUp = () => {
+      isDragging.current = false;
+      lastPos.current = null;
+    };
+
+    // TOUCH EVENTS
+    const handleTouchStart = (e: TouchEvent) => {
+      if (e.touches.length > 0) {
+        const touch = e.touches[0];
+        if (
+          touch.target instanceof Element &&
+          (touch.target.closest("button") ||
+            touch.target.closest("[data-no-orbit]") ||
+            touch.target.closest("a, input, textarea, select"))
+        ) {
+          return;
+        }
+        isDragging.current = true;
+        lastPos.current = { x: touch.clientX, y: touch.clientY };
+      }
+    };
+
+    const handleTouchMove = (e: TouchEvent) => {
+      if (isDragging.current && e.touches.length > 0) {
+        const touch = e.touches[0];
+        handleMove(touch.clientX, touch.clientY);
+      }
+    };
+
+    const handleTouchEnd = () => {
+      isDragging.current = false;
+      lastPos.current = null;
     };
 
     window.addEventListener("keydown", handleKeyDown);
     window.addEventListener("keyup", handleKeyUp);
+    
+    // Mouse
+    window.addEventListener("mousedown", handleMouseDown);
     window.addEventListener("mousemove", handleMouseMove);
-    document.body.addEventListener("click", handleClick);
+    window.addEventListener("mouseup", handleMouseUp);
+    window.addEventListener("mouseleave", handleMouseUp); // Stop drag if leaving window
+
+    // Touch
+    window.addEventListener("touchstart", handleTouchStart);
+    window.addEventListener("touchmove", handleTouchMove);
+    window.addEventListener("touchend", handleTouchEnd);
+    window.addEventListener("touchcancel", handleTouchEnd);
 
     return () => {
       window.removeEventListener("keydown", handleKeyDown);
       window.removeEventListener("keyup", handleKeyUp);
+      
+      window.removeEventListener("mousedown", handleMouseDown);
       window.removeEventListener("mousemove", handleMouseMove);
-      document.body.removeEventListener("click", handleClick);
+      window.removeEventListener("mouseup", handleMouseUp);
+      window.removeEventListener("mouseleave", handleMouseUp);
+
+      window.removeEventListener("touchstart", handleTouchStart);
+      window.removeEventListener("touchmove", handleTouchMove);
+      window.removeEventListener("touchend", handleTouchEnd);
+      window.removeEventListener("touchcancel", handleTouchEnd);
     };
   }, []);
 
