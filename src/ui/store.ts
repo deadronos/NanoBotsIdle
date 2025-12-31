@@ -5,6 +5,8 @@ import type { UiSnapshot } from "../shared/protocol";
 type UiState = {
   snapshot: UiSnapshot;
   setSnapshot: (snapshot: UiSnapshot) => void;
+  buildingMode: "NONE" | "OUTPOST";
+  setBuildingMode: (mode: "NONE" | "OUTPOST") => void;
 };
 
 const defaultSnapshot: UiSnapshot = {
@@ -21,5 +23,7 @@ const defaultSnapshot: UiSnapshot = {
 
 export const useUiStore = create<UiState>((set) => ({
   snapshot: defaultSnapshot,
+  buildingMode: "NONE",
   setSnapshot: (snapshot) => set({ snapshot }),
+  setBuildingMode: (mode) => set({ buildingMode: mode }),
 }));

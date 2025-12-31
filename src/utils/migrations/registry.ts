@@ -1,6 +1,6 @@
 /**
  * Migration registry and execution logic.
- * 
+ *
  * Register migrations here to ensure saves can be upgraded across versions.
  * Migrations run sequentially from the save's version to the current version.
  */

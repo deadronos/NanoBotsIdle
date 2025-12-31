@@ -5,6 +5,7 @@ import type { ParticleHandle } from "./Particles";
 
 export type DroneVisualRefs = {
   groupRefs: (Group | null)[];
+  bodyRefs: (Mesh | null)[];
   miningLaserRefs: (Mesh | null)[];
   scanningLaserRefs: (Mesh | null)[];
   targetBoxRefs: (Mesh | null)[];

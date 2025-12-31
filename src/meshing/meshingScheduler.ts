@@ -55,7 +55,10 @@ export class MeshingScheduler {
   private readonly dirtyTokenByKey = new Map<string, number>();
   private dirtyOrder = 1;
   private readonly revByChunk = new Map<string, number>();
-  private readonly inFlightByJob = new Map<number, { key: string; rev: number; queuedAt: number; retryCount: number }>();
+  private readonly inFlightByJob = new Map<
+    number,
+    { key: string; rev: number; queuedAt: number; retryCount: number }
+  >();
   private readonly retryByKey = new Map<string, number>();
   private nextJobId = 1;
   private droppedTasksCount = 0;
@@ -107,7 +110,7 @@ export class MeshingScheduler {
         // Log the error with details
         warn(
           `Meshing error for chunk ${msg.chunk.cx},${msg.chunk.cy},${msg.chunk.cz} ` +
-          `(attempt ${retryCount + 1}/${this.maxRetries}): ${msg.message}`
+            `(attempt ${retryCount + 1}/${this.maxRetries}): ${msg.message}`,
         );
 
         if (retryCount < this.maxRetries - 1) {
@@ -122,7 +125,7 @@ export class MeshingScheduler {
           // Max retries exceeded
           error(
             `Meshing failed after ${this.maxRetries} attempts for chunk ` +
-            `${msg.chunk.cx},${msg.chunk.cy},${msg.chunk.cz}: ${msg.message}`
+              `${msg.chunk.cx},${msg.chunk.cy},${msg.chunk.cz}: ${msg.message}`,
           );
           // Clear retry count as we're giving up
           this.retryByKey.delete(key);
@@ -339,7 +342,11 @@ export class MeshingScheduler {
     // Update telemetry with current queue state
     const telemetry = getTelemetryCollector();
     if (telemetry.isEnabled()) {
-      telemetry.recordMeshingQueue(this.dirty.size, this.inFlightByJob.size, this.droppedTasksCount);
+      telemetry.recordMeshingQueue(
+        this.dirty.size,
+        this.inFlightByJob.size,
+        this.droppedTasksCount,
+      );
     }
 
     while (this.inFlightByJob.size < this.maxInFlight && this.dirty.size > 0) {

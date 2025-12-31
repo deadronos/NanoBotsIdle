@@ -1,6 +1,6 @@
 /**
  * Save data validation utilities.
- * 
+ *
  * Validates the structure and content of imported save data,
  * providing clear error messages for debugging and user feedback.
  */
@@ -87,9 +87,7 @@ export function validateGameState(data: Partial<GameState>): ValidationResult {
   }
 
   if (typeof data.prestigeLevel === "number" && data.prestigeLevel < 1) {
-    warnings.push(
-      `Prestige level is less than 1 (${data.prestigeLevel}), will be clamped to 1`,
-    );
+    warnings.push(`Prestige level is less than 1 (${data.prestigeLevel}), will be clamped to 1`);
   }
 
   if (typeof data.droneCount === "number" && data.droneCount < 1) {

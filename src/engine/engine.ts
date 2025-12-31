@@ -23,7 +23,7 @@ export type Engine = {
   ) => { delta: RenderDelta; ui: UiSnapshot; backlog: number };
 };
 
-export const createEngine = (_seed?: number): Engine => {
+export const createEngine = (_seed?: number, saveState?: Partial<UiSnapshot>): Engine => {
   let tick = 0;
   const cfg = getConfig();
   const maxTargetAttempts = 20;
@@ -39,15 +39,17 @@ export const createEngine = (_seed?: number): Engine => {
   const playerChunksToScan: { cx: number; cy: number; cz: number }[] = [];
 
   const uiSnapshot: UiSnapshot = {
-    credits: 0,
-    prestigeLevel: 1,
-    droneCount: 3,
-    miningSpeedLevel: 1,
-    moveSpeedLevel: 1,
-    laserPowerLevel: 1,
-    minedBlocks: 0,
+    credits: saveState?.credits ?? 0,
+    prestigeLevel: saveState?.prestigeLevel ?? 1,
+    droneCount: saveState?.droneCount ?? 3,
+    haulerCount: saveState?.haulerCount ?? 0,
+    miningSpeedLevel: saveState?.miningSpeedLevel ?? 1,
+    moveSpeedLevel: saveState?.moveSpeedLevel ?? 1,
+    laserPowerLevel: saveState?.laserPowerLevel ?? 1,
+    minedBlocks: saveState?.minedBlocks ?? 0,
     totalBlocks: 0,
-    upgrades: {},
+    upgrades: saveState?.upgrades ?? {},
+    outposts: [],
   };
 
   const updateNextCosts = () => {
@@ -73,8 +75,29 @@ export const createEngine = (_seed?: number): Engine => {
 
   ensureSeedWithMinAboveWater(uiSnapshot.prestigeLevel);
 
+  // Hydrate outposts
+  if (saveState?.outposts) {
+    saveState.outposts.forEach((op) => {
+      // Avoid adding the default one if it's already in the list?
+      // Default one is added by World constructor?
+      // Check duplicate?
+      // Actually World constructor adds (0,10,0).
+      // If save has it, we might duplicate.
+      // Let's rely on validation in addOutpost or just add.
+      // But wait, addOutpost pushes to array.
+      // If we respect saveState, maybe we should CLEAR defaults?
+      // But world is inside initWorldForPrestige...
+      // Let's assume saveState has EVERYTHING.
+      // So duplicated default is risk.
+      // Better: filter duplicates by ID or distance?
+      if (world && !world.getOutposts().find((e) => e.x === op.x && e.y === op.y && e.z === op.z)) {
+        world.addOutpost(op.x, op.y, op.z);
+      }
+    });
+  }
+
   const isUpgradeType = (id: string): id is UpgradeType =>
-    id === "drone" || id === "speed" || id === "move" || id === "laser";
+    id === "drone" || id === "hauler" || id === "speed" || id === "move" || id === "laser";
 
   const dispatch = (cmd: Cmd) => {
     switch (cmd.t) {
@@ -115,12 +138,23 @@ export const createEngine = (_seed?: number): Engine => {
         pendingFrontierReset = true;
         return;
       }
+      case "BUILD_OUTPOST": {
+        const w = world;
+        if (!w) return;
+        // Cost check?
+        const cost = 1000; // Config later
+        if (uiSnapshot.credits >= cost) {
+          uiSnapshot.credits -= cost;
+          w.addOutpost(cmd.x, cmd.y, cmd.z);
+        }
+        return;
+      }
     }
   };
 
   const tickEngine = (_dtSeconds: number, _budgetMs: number, _maxSubsteps: number) => {
     tick += 1;
-    drones = syncDroneCount(drones, uiSnapshot.droneCount, cfg);
+    drones = syncDroneCount(drones, uiSnapshot.droneCount, uiSnapshot.haulerCount, cfg);
 
     const dtSeconds = _dtSeconds;
     const moveSpeed = getDroneMoveSpeed(uiSnapshot.moveSpeedLevel, cfg);
@@ -184,6 +218,7 @@ export const createEngine = (_seed?: number): Engine => {
       frontierRemove: toFloat32ArrayOrUndefined(frontierRemoved),
       debugChunksProcessed: debugChunksProcessed.length > 0 ? debugChunksProcessed : undefined,
       debugQueueLengthAtTickStart,
+      outposts: w?.getOutposts(),
     };
 
     if (pendingFrontierSnapshot) {

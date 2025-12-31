@@ -28,6 +28,14 @@ type WorldOptions = {
   seed: number;
 };
 
+export type Outpost = {
+  id: string;
+  x: number;
+  y: number;
+  z: number;
+  level: number;
+};
+
 export class WorldModel {
   private readonly seed: number;
   private readonly edits = new Map<string, number>();
@@ -36,12 +44,46 @@ export class WorldModel {
   private readonly frontierSolid = new Set<string>();
   private readonly frontierAboveWater = new Set<string>();
   private readonly visitedChunks = new Set<string>();
+  private readonly outposts: Outpost[] = [];
 
   constructor(options: WorldOptions) {
     this.seed = options.seed;
     const cfg = getConfig();
     this.bedrockY = cfg.terrain.bedrockY ?? -50;
     this.waterlineVoxelY = Math.floor(cfg.terrain.waterLevel);
+    // V1: Start with a default outpost at 0, 0, 0? Or let loop handle it?
+    // Let's add a default base at 0,0,0 if none exists, or rely on game init.
+    // Ideally, "Base" is just an outpost.
+    this.addOutpost(0, 10, 0); // Arbitrary start height?
+  }
+
+  addOutpost(x: number, y: number, z: number) {
+    this.outposts.push({
+      id: `outpost-${Date.now()}-${Math.random()}`,
+      x,
+      y,
+      z,
+      level: 1,
+    });
+  }
+
+  getOutposts() {
+    return this.outposts;
+  }
+
+  getNearestOutpost(x: number, y: number, z: number): Outpost | null {
+    if (this.outposts.length === 0) return null;
+    let best = this.outposts[0];
+    let minD = Number.MAX_VALUE;
+
+    for (const op of this.outposts) {
+      const d = (op.x - x) ** 2 + (op.y - y) ** 2 + (op.z - z) ** 2;
+      if (d < minD) {
+        minD = d;
+        best = op;
+      }
+    }
+    return best;
   }
 
   key(x: number, y: number, z: number) {

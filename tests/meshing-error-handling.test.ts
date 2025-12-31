@@ -220,8 +220,7 @@ describe("MeshingScheduler error handling with retry", () => {
 
     const job1 = worker.posted[0]!.msg;
     const job2 = worker.posted[1]!.msg;
-    if (job1.t !== "MESH_CHUNK" || job2.t !== "MESH_CHUNK")
-      throw new Error("expected MESH_CHUNK");
+    if (job1.t !== "MESH_CHUNK" || job2.t !== "MESH_CHUNK") throw new Error("expected MESH_CHUNK");
 
     // First chunk fails
     worker.emit({

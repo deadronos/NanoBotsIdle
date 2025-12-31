@@ -1,11 +1,11 @@
 /**
  * Logger utility for consistent, environment-aware logging.
- * 
+ *
  * Debug logs are:
  * - Enabled in development (NODE_ENV === 'development')
  * - Can be toggled at runtime via enableDebug()/disableDebug()
  * - Automatically stripped from production builds via Vite's dead-code elimination
- * 
+ *
  * Production builds only include error logs; all debug/info/warn are removed at build time.
  */
 

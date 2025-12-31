@@ -1,6 +1,6 @@
 /**
  * Memory tracking utility for detecting leaks and unbounded growth.
- * 
+ *
  * Usage:
  * 1. Create a tracker: `const tracker = new MemoryTracker()`
  * 2. Record snapshots: `tracker.snapshot('label')`
