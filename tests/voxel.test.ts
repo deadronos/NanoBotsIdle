@@ -15,12 +15,12 @@ describe("voxel utils", () => {
 
   it("getVoxelColor boundaries (relative to waterLevel via config)", () => {
     const water = getConfig().terrain.waterLevel;
-    expect(getVoxelColor(water - 3).getHexString()).toBe("1a4d8c"); // Deep Water
-    expect(getVoxelColor(water).getHexString()).toBe("2d73bf"); // Water
-    expect(getVoxelColor(water + 2).getHexString()).toBe("e3dba3"); // Sand
-    expect(getVoxelColor(water + 5).getHexString()).toBe("59a848"); // Grass
-    expect(getVoxelColor(water + 11).getHexString()).toBe("3b7032"); // Dark Grass/Forest
-    expect(getVoxelColor(water + 19).getHexString()).toBe("6e6e6e"); // Rock
-    expect(getVoxelColor(water + 21).getHexString()).toBe("ffffff"); // Snow
+    expect(getVoxelColor(water - 3)).toBe(0x1a4d8c); // Deep Water
+    expect(getVoxelColor(water)).toBe(0x2d73bf); // Water
+    expect(getVoxelColor(water + 2)).toBe(0xe3dba3); // Sand
+    expect(getVoxelColor(water + 5)).toBe(0x59a848); // Grass
+    expect(getVoxelColor(water + 11)).toBe(0x3b7032); // Dark Grass/Forest
+    expect(getVoxelColor(water + 19)).toBe(0x6e6e6e); // Rock
+    expect(getVoxelColor(water + 21)).toBe(0xffffff); // Snow
   });
 });

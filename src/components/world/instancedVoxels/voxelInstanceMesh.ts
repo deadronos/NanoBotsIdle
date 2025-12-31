@@ -1,10 +1,10 @@
-import type { Color, InstancedMesh, Object3D } from "three";
-import { InstancedBufferAttribute } from "three";
+import type { InstancedMesh, Object3D } from "three";
+import { Color, InstancedBufferAttribute } from "three";
 
 import { ensureGeometryHasVertexColors } from "../../../render/instanced";
 import { getVoxelColor } from "../../../utils";
 
-export type VoxelColorFn = (x: number, y: number, z: number) => Color;
+export type VoxelColorFn = (x: number, y: number, z: number) => number;
 
 export const makeHeightColorFn = (waterLevel: number): VoxelColorFn => {
   return (_x: number, y: number, _z: number) => getVoxelColor(y, waterLevel);
@@ -13,6 +13,9 @@ export const makeHeightColorFn = (waterLevel: number): VoxelColorFn => {
 export const getInitialCapacity = (chunkSize: number) => {
   return Math.max(512, chunkSize * chunkSize * chunkSize);
 };
+
+// Reusable Color object to avoid allocations during instance updates
+const _colorTemp = new Color();
 
 export const setVoxelInstance = (
   mesh: InstancedMesh,
@@ -28,7 +31,8 @@ export const setVoxelInstance = (
   tmp.scale.set(1, 1, 1);
   tmp.updateMatrix();
   mesh.setMatrixAt(index, tmp.matrix);
-  mesh.setColorAt(index, getColor(x, y, z));
+  _colorTemp.setHex(getColor(x, y, z));
+  mesh.setColorAt(index, _colorTemp);
 };
 
 export const rebuildVoxelInstances = (

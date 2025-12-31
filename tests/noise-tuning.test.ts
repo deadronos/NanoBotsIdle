@@ -24,8 +24,8 @@ const computeAboveWaterFraction = (
     const voxels = generateInstances(seed, cfg.terrain.worldRadius);
     totalVoxels += voxels.length;
     for (const v of voxels) {
-      const hex = getVoxelColor(v.y, cfg.terrain.waterLevel).getHexString();
-      if (hex === "59a848" || hex === "3b7032") totalAbove += 1;
+      const hexColor = getVoxelColor(v.y, cfg.terrain.waterLevel);
+      if (hexColor === 0x59a848 || hexColor === 0x3b7032) totalAbove += 1;
     }
   }
 
