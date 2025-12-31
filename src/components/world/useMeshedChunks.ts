@@ -17,8 +17,7 @@ import type { MeshResult } from "../../shared/meshingProtocol";
 import type { VoxelEdit } from "../../shared/protocol";
 import { getVoxelMaterialAt } from "../../sim/collision";
 import { chunkDistanceSq3 } from "../../utils";
-
-const chunkKey = (cx: number, cy: number, cz: number) => `${cx},${cy},${cz}`;
+import { chunkKey } from "./chunkHelpers";
 
 export const useMeshedChunks = (options: {
   chunkSize: number;

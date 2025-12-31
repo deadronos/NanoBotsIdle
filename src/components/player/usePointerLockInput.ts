@@ -5,8 +5,6 @@ export type PointerLockInput = {
   cameraAngle: MutableRefObject<{ yaw: number; pitch: number }>;
 };
 
-import { debug, warn } from "../../utils/logger";
-
 export const usePointerLockInput = (): PointerLockInput => {
   const keys = useRef<Record<string, boolean>>({});
   const cameraAngle = useRef({ yaw: 0, pitch: 0 });

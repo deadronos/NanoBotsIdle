@@ -1,5 +1,5 @@
-import { type Config, getConfig } from "../config/index";
 import { getDroneCargo } from "../config/drones";
+import { type Config } from "../config/index";
 
 export type DroneRole = "MINER" | "HAULER";
 
@@ -66,8 +66,8 @@ export const syncDroneCount = (
 
   // Sync Haulers
   if (haulers.length < haulerCount) {
-    const needed = haulerCount - haulers.length;
-    let nextId = drones.length > 0 ? Math.max(...drones.map((d) => d.id)) + 1 : 0;
+    const _needed = haulerCount - haulers.length;
+    const _nextId = drones.length > 0 ? Math.max(...drones.map((d) => d.id)) + 1 : 0;
     // Ensure we don't collide with new miners logic (re-calculating nextId risk? No, I separated logic.)
     // Actually nextId logic checks 'drones', which is the OLD list.
     // If I added miners above, they are not in 'drones' yet.

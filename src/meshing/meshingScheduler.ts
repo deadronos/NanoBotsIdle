@@ -1,3 +1,4 @@
+import { chunkKey } from "../components/world/chunkHelpers";
 import type { FromMeshingWorker, MeshResult, ToMeshingWorker } from "../shared/meshingProtocol";
 import { getTelemetryCollector } from "../telemetry";
 import { error, warn } from "../utils/logger";
@@ -25,7 +26,6 @@ export type MeshingWorkerLike = {
   terminate?: () => void;
 };
 
-const chunkKey = (cx: number, cy: number, cz: number) => `${cx},${cy},${cz}`;
 const parseChunkKey = (key: string): ChunkCoord3 => {
   const [cx, cy, cz] = key.split(",").map((v) => Number(v));
   return { cx, cy, cz };
