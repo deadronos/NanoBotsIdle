@@ -1,6 +1,7 @@
-import { describe, expect, it, beforeEach, afterEach } from "vitest";
-import { useGameStore } from "../src/store";
+import { afterEach,beforeEach, describe, expect, it } from "vitest";
+
 import { resetConfig, updateConfig } from "../src/config";
+import { useGameStore } from "../src/store";
 
 // Mock localStorage if not available (Vitest might be running in node environment)
 if (typeof localStorage === 'undefined') {
