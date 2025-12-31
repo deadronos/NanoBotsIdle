@@ -44,9 +44,11 @@ export class MeshingScheduler {
   };
   private readonly onApply: (result: MeshResult) => void;
   private readonly maxInFlight: number;
+  private readonly maxQueueSize: number;
   private readonly maxRetries: number;
 
   private getPriority: ((coord: ChunkCoord3) => number) | null;
+  private isVisible: ((coord: ChunkCoord3) => boolean) | null;
 
   private readonly dirty = new Set<string>();
   private readonly dirtyHeap: DirtyEntry[] = [];
@@ -56,6 +58,7 @@ export class MeshingScheduler {
   private readonly inFlightByJob = new Map<number, { key: string; rev: number; queuedAt: number; retryCount: number }>();
   private readonly retryByKey = new Map<string, number>();
   private nextJobId = 1;
+  private droppedTasksCount = 0;
 
   private readonly onMessage = (event: MessageEvent<FromMeshingWorker>) => {
     const msg = event.data;
@@ -100,7 +103,7 @@ export class MeshingScheduler {
       if (inFlightData) {
         const key = inFlightData.key;
         const retryCount = inFlightData.retryCount;
-        
+
         // Log the error with details
         warn(
           `Meshing error for chunk ${msg.chunk.cx},${msg.chunk.cy},${msg.chunk.cz} ` +
@@ -112,7 +115,7 @@ export class MeshingScheduler {
           telemetry.recordMeshingRetry();
           const coord = parseChunkKey(key);
           this.markDirty(coord);
-          
+
           // Update retry count for this chunk
           this.retryByKey.set(key, retryCount + 1);
         } else {
@@ -125,7 +128,7 @@ export class MeshingScheduler {
           this.retryByKey.delete(key);
         }
       }
-      
+
       this.pump();
     }
   };
@@ -143,22 +146,30 @@ export class MeshingScheduler {
     };
     onApply: (result: MeshResult) => void;
     maxInFlight?: number;
+    maxQueueSize?: number;
     maxRetries?: number;
     getPriority?: (coord: ChunkCoord3) => number;
+    isVisible?: (coord: ChunkCoord3) => boolean;
   }) {
     this.worker = options.worker;
     this.chunkSize = options.chunkSize;
     this.buildJob = options.buildJob;
     this.onApply = options.onApply;
     this.maxInFlight = options.maxInFlight ?? 1;
+    this.maxQueueSize = options.maxQueueSize ?? 256;
     this.maxRetries = options.maxRetries ?? 3;
     this.getPriority = options.getPriority ?? null;
+    this.isVisible = options.isVisible ?? null;
 
     this.worker.addEventListener("message", this.onMessage);
   }
 
   setPriorityProvider(getPriority?: (coord: ChunkCoord3) => number) {
     this.getPriority = getPriority ?? null;
+  }
+
+  setVisibilityProvider(isVisible?: (coord: ChunkCoord3) => boolean) {
+    this.isVisible = isVisible ?? null;
   }
 
   /**
@@ -171,7 +182,7 @@ export class MeshingScheduler {
       const coord = parseChunkKey(key);
       const token = this.dirtyTokenByKey.get(key) ?? 0;
       const order = this.dirtyOrder++;
-      const priority = this.getPriority ? this.getPriority(coord) : 0;
+      const priority = this.computePriority(coord);
       this.heapPush({ key, coord, token, order, priority });
     }
   }
@@ -185,14 +196,62 @@ export class MeshingScheduler {
     const key = chunkKey(coord.cx, coord.cy, coord.cz);
     const nextRev = (this.revByChunk.get(key) ?? 0) + 1;
     this.revByChunk.set(key, nextRev);
-    this.dirty.add(key);
 
-    const token = (this.dirtyTokenByKey.get(key) ?? 0) + 1;
-    this.dirtyTokenByKey.set(key, token);
+    // Check if adding this chunk would exceed queue size
+    if (!this.dirty.has(key) && this.dirty.size >= this.maxQueueSize) {
+      // Queue is full - drop the lowest priority task or reject this one
+      const worstEntry = this.findWorstPriorityEntry();
+      const newPriority = this.computePriority(coord);
 
-    const order = this.dirtyOrder++;
-    const priority = this.getPriority ? this.getPriority(coord) : 0;
-    this.heapPush({ key, coord, token, order, priority });
+      if (worstEntry && this.heapLess({ priority: newPriority } as DirtyEntry, worstEntry)) {
+        // New task has higher priority - drop the worst one
+        this.dirty.delete(worstEntry.key);
+        this.dirtyTokenByKey.delete(worstEntry.key);
+        this.droppedTasksCount++;
+
+        // Add the new task
+        this.dirty.add(key);
+        const token = (this.dirtyTokenByKey.get(key) ?? 0) + 1;
+        this.dirtyTokenByKey.set(key, token);
+        const order = this.dirtyOrder++;
+        this.heapPush({ key, coord, token, order, priority: newPriority });
+      } else {
+        // New task has lower priority - drop it
+        this.droppedTasksCount++;
+        return;
+      }
+    } else {
+      // Queue has space or chunk already in queue - add/update normally
+      this.dirty.add(key);
+      const token = (this.dirtyTokenByKey.get(key) ?? 0) + 1;
+      this.dirtyTokenByKey.set(key, token);
+      const order = this.dirtyOrder++;
+      const priority = this.computePriority(coord);
+      this.heapPush({ key, coord, token, order, priority });
+    }
+  }
+
+  private computePriority(coord: ChunkCoord3): number {
+    let priority = this.getPriority ? this.getPriority(coord) : 0;
+    // Visible chunks get boosted priority (lower number = higher priority)
+    if (this.isVisible && this.isVisible(coord)) {
+      priority = priority * 0.5; // Visible chunks are twice as important
+    }
+    return priority;
+  }
+
+  private findWorstPriorityEntry(): DirtyEntry | null {
+    if (this.dirtyHeap.length === 0) return null;
+
+    // Find the entry with the lowest priority (highest priority value)
+    let worst = this.dirtyHeap[0]!;
+    for (let i = 1; i < this.dirtyHeap.length; i++) {
+      const entry = this.dirtyHeap[i]!;
+      if (!this.heapLess(entry, worst)) {
+        worst = entry;
+      }
+    }
+    return worst;
   }
 
   markDirtyMany(coords: ChunkCoord3[]) {
@@ -205,6 +264,7 @@ export class MeshingScheduler {
     this.dirtyTokenByKey.clear();
     this.revByChunk.clear();
     this.inFlightByJob.clear();
+    this.droppedTasksCount = 0;
     this.retryByKey.clear();
   }
 
@@ -279,7 +339,7 @@ export class MeshingScheduler {
     // Update telemetry with current queue state
     const telemetry = getTelemetryCollector();
     if (telemetry.isEnabled()) {
-      telemetry.recordMeshingQueue(this.dirty.size, this.inFlightByJob.size);
+      telemetry.recordMeshingQueue(this.dirty.size, this.inFlightByJob.size, this.droppedTasksCount);
     }
 
     while (this.inFlightByJob.size < this.maxInFlight && this.dirty.size > 0) {
@@ -315,5 +375,13 @@ export class MeshingScheduler {
 
   getChunkSize() {
     return this.chunkSize;
+  }
+
+  getDroppedTasksCount() {
+    return this.droppedTasksCount;
+  }
+
+  getMaxQueueSize() {
+    return this.maxQueueSize;
   }
 }
