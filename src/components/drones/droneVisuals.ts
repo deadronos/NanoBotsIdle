@@ -62,7 +62,7 @@ export const updateDroneVisuals = (options: {
       const role = roles ? roles[i] : 0;
       const isHauler = role === 1;
       const mat = body.material as MeshBasicMaterial; // Or MeshStandardMaterial
-      
+
       // Only update color if it differs from current value
       const targetColor = isHauler ? ROLE_COLORS.HAULER : ROLE_COLORS.MINER;
       const currentColor = mat.color.getHex();
@@ -106,7 +106,7 @@ export const updateDroneVisuals = (options: {
           const targetOpacity =
             cfg.drones.visual.miningLaser.opacityBase +
             Math.sin(elapsedTime * cfg.drones.visual.miningLaser.opacityFreq) * 0.3;
-          
+
           // Only update opacity if it differs significantly (tolerance for floating point)
           if (Math.abs(material.opacity - targetOpacity) > 0.001) {
             material.opacity = targetOpacity;
@@ -128,7 +128,7 @@ export const updateDroneVisuals = (options: {
             cfg.drones.visual.scanningLaser.opacityBase +
             Math.sin(elapsedTime * cfg.drones.visual.scanningLaser.opacityFreq) *
               cfg.drones.visual.scanningLaser.opacityAmplitude;
-          
+
           // Only update opacity if it differs significantly
           if (Math.abs(material.opacity - targetOpacity) > 0.001) {
             material.opacity = targetOpacity;
@@ -151,7 +151,7 @@ export const updateDroneVisuals = (options: {
         const material = targetBox.material as MeshBasicMaterial;
         const targetColor = isMining ? TARGET_BOX_COLORS.MINING : TARGET_BOX_COLORS.MOVING;
         const currentColor = material.color.getHex();
-        
+
         // Only update color if it differs from current value
         if (currentColor !== targetColor) {
           material.color.setHex(targetColor);

@@ -1,18 +1,26 @@
-import { afterEach,beforeEach, describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
 import { resetConfig, updateConfig } from "../src/config";
 import { useGameStore } from "../src/store";
 
 // Mock localStorage if not available (Vitest might be running in node environment)
-if (typeof localStorage === 'undefined') {
+if (typeof localStorage === "undefined") {
   const makeMockStorage = () => {
     const map = new Map<string, string>();
     return {
-      getItem: (k: string) => (map.has(k) ? map.get(k) ?? null : null),
-      setItem: (k: string, v: string) => { map.set(String(k), String(v)); },
-      removeItem: (k: string) => { map.delete(String(k)); },
-      clear: () => { map.clear(); },
-      get length() { return map.size; },
+      getItem: (k: string) => (map.has(k) ? (map.get(k) ?? null) : null),
+      setItem: (k: string, v: string) => {
+        map.set(String(k), String(v));
+      },
+      removeItem: (k: string) => {
+        map.delete(String(k));
+      },
+      clear: () => {
+        map.clear();
+      },
+      get length() {
+        return map.size;
+      },
       key: (i: number) => Array.from(map.keys())[i] ?? null,
     } as unknown as Storage;
   };
@@ -53,7 +61,7 @@ describe("useGameStore", () => {
     expect(state.droneCount).toBe(3);
     expect(state.haulerCount).toBe(0);
     expect(state.minedBlocks).toBe(0);
-    expect(typeof state.addCredits).toBe('function');
+    expect(typeof state.addCredits).toBe("function");
   });
 
   it("should add credits", () => {

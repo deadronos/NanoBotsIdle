@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import { getConfig } from "../src/config";
-import { computeNextUpgradeCosts,getUpgradeCost, tryBuyUpgrade } from "../src/economy/upgrades";
+import { computeNextUpgradeCosts, getUpgradeCost, tryBuyUpgrade } from "../src/economy/upgrades";
 import type { UiSnapshot } from "../src/shared/protocol";
 
 // Helper to create a basic snapshot
@@ -16,7 +16,7 @@ const createSnapshot = (): UiSnapshot => ({
   minedBlocks: 0,
   totalBlocks: 0,
   upgrades: {},
-  outposts: []
+  outposts: [],
 });
 
 describe("economy/upgrades", () => {

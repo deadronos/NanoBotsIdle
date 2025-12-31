@@ -43,7 +43,7 @@ export const createEngine = (_seed?: number, saveState?: Partial<UiSnapshot>): E
       upgrades: saveState?.upgrades ?? {},
       outposts: [],
       nextCosts: undefined,
-    }
+    },
   };
 
   // Initialize costs
@@ -57,7 +57,10 @@ export const createEngine = (_seed?: number, saveState?: Partial<UiSnapshot>): E
     saveState.outposts.forEach((op) => {
       // Check for duplicates if needed, or just add.
       // We check if an outpost with same coords exists.
-      if (ctx.world && !ctx.world.getOutposts().find((e) => e.x === op.x && e.y === op.y && e.z === op.z)) {
+      if (
+        ctx.world &&
+        !ctx.world.getOutposts().find((e) => e.x === op.x && e.y === op.y && e.z === op.z)
+      ) {
         ctx.world.addOutpost(op.x, op.y, op.z);
       }
     });

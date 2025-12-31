@@ -1,4 +1,4 @@
-import { type Config,getConfig } from "../../config/index";
+import { type Config, getConfig } from "../../config/index";
 import type { VoxelEdit } from "../../shared/protocol";
 import {
   coordsFromVoxelKey,

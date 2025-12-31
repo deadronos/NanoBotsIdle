@@ -5,11 +5,7 @@ import type { VoxelRenderMode } from "../../config/render";
 import { useConfig } from "../../config/useConfig";
 import { playerChunk, playerPosition } from "../../engine/playerState";
 import { getBiomeAt, getBiomeColor } from "../../sim/biomes";
-import {
-  applyVoxelEdits,
-  MATERIAL_SOLID,
-  resetVoxelEdits,
-} from "../../sim/collision";
+import { applyVoxelEdits, MATERIAL_SOLID, resetVoxelEdits } from "../../sim/collision";
 import { getSurfaceHeightCore } from "../../sim/terrain-core";
 import { getSimBridge } from "../../simBridge/simBridge";
 import { forEachRadialChunk, getVoxelColor } from "../../utils";
