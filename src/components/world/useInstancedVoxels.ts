@@ -1,8 +1,9 @@
-import { useCallback, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import type { InstancedMesh } from "three";
 import { Object3D } from "three";
 
 import { applyInstanceUpdates } from "../../render/instanced";
+import { InstanceRebuildManager } from "./instancedVoxels/rebuildManager";
 import {
   ensureInstanceColors,
   getInitialCapacity,
@@ -27,11 +28,22 @@ export const useInstancedVoxels = (
   const storeRef = useRef(createVoxelInstanceStore());
   const solidCountRef = useRef(0);
   const needsRebuild = useRef(false);
+  const pendingRebuild = useRef(false);
   const tmp = useMemo(() => new Object3D(), []);
   const getColorFn = useMemo(
     () => getColor ?? makeHeightColorFn(waterLevel),
     [getColor, waterLevel],
   );
+
+  // Create rebuild manager once
+  const rebuildManager = useMemo(() => new InstanceRebuildManager(), []);
+
+  // Clean up worker on unmount
+  useEffect(() => {
+    return () => {
+      rebuildManager.terminate();
+    };
+  }, [rebuildManager]);
 
   const UPDATE_BOTH = useMemo(() => ({ matrix: true, color: true }) as const, []);
 
@@ -102,13 +114,43 @@ export const useInstancedVoxels = (
     }
   }, [UPDATE_BOTH]);
 
-  const flushRebuild = useCallback(() => {
+  const flushRebuild = useCallback(async () => {
     if (!needsRebuild.current) return;
     if (!meshRef.current) return;
     if (storeRef.current.count > capacityRef.current) return;
-    rebuildVoxelInstances(meshRef.current, tmp, storeRef.current.positions, getColorFn);
-    needsRebuild.current = false;
-  }, [getColorFn, tmp]);
+    if (pendingRebuild.current) return; // Don't start a new rebuild if one is in progress
+
+    const mesh = meshRef.current;
+    const positions = storeRef.current.positions;
+    const count = storeRef.current.count;
+
+    // Threshold for using worker: use worker for larger rebuilds (e.g., > 100 instances)
+    const WORKER_THRESHOLD = 100;
+
+    if (count > WORKER_THRESHOLD) {
+      // Use worker for large rebuilds to avoid main-thread hitches
+      pendingRebuild.current = true;
+
+      try {
+        const result = await rebuildManager.requestRebuild(positions, waterLevel);
+        // Apply the result atomically in one frame (double-buffering)
+        rebuildManager.applyRebuildToMesh(mesh, result.matrices, result.colors, result.count);
+        needsRebuild.current = false;
+      } catch (error) {
+        // Fallback to main-thread rebuild on error
+        // eslint-disable-next-line no-console
+        console.error("Instance rebuild worker failed:", error);
+        rebuildVoxelInstances(mesh, tmp, positions, getColorFn);
+        needsRebuild.current = false;
+      } finally {
+        pendingRebuild.current = false;
+      }
+    } else {
+      // For small rebuilds, use main-thread to avoid worker overhead
+      rebuildVoxelInstances(mesh, tmp, positions, getColorFn);
+      needsRebuild.current = false;
+    }
+  }, [getColorFn, tmp, waterLevel, rebuildManager]);
 
   useLayoutEffect(() => {
     const mesh = meshRef.current;
@@ -119,7 +161,8 @@ export const useInstancedVoxels = (
       needsRebuild.current = true;
     }
 
-    flushRebuild();
+    // Call async flushRebuild without awaiting in useLayoutEffect
+    void flushRebuild();
   }, [capacity, flushRebuild]);
 
   return {
