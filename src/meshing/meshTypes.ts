@@ -9,6 +9,8 @@ export type MeshGeometry = {
 export type GreedyMeshInput = {
   size: number;
   origin: ChunkOrigin;
+  // Optional scaling factor for each voxel (used for coarse LODs).
+  voxelSize?: number;
   // (size+2)^3 samples (1-voxel apron)
   materials: Uint8Array;
 };

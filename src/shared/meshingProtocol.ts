@@ -1,4 +1,5 @@
 import type { ChunkOrigin } from "../meshing/apronField";
+import type { MeshGeometry } from "../meshing/meshTypes";
 
 export type ChunkCoord = { cx: number; cy: number; cz: number; size: number };
 
@@ -9,6 +10,7 @@ export type MeshingJob = {
   origin: ChunkOrigin;
   rev: number;
   materials: Uint8Array;
+  queuedAt?: number; // Timestamp when job was queued
 };
 
 export type MeshResult = {
@@ -16,11 +18,15 @@ export type MeshResult = {
   jobId: number;
   chunk: ChunkCoord;
   rev: number;
-  geometry: {
-    positions: Float32Array;
-    normals: Float32Array;
-    indices: Uint16Array | Uint32Array;
-  };
+  geometry: MeshGeometry;
+  meshingTimeMs?: number; // Overall time spent meshing for this result (worker attaches this)
+  lods?: MeshLodGeometry[];
+};
+
+export type MeshLodGeometry = {
+  level: "low";
+  geometry: MeshGeometry;
+  meshingTimeMs?: number; // Time spent meshing
 };
 
 export type MeshError = {

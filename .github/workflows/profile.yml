@@ -1,0 +1,152 @@
+name: Performance Profiling
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch: # Allow manual triggering
+
+jobs:
+  profile:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0 # Fetch all history for comparison
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: 18
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install Playwright browsers
+        run: npx playwright install chromium
+
+      - name: Build application
+        run: npm run build
+
+      - name: Start preview server
+        run: npm run preview &
+        env:
+          CI: true
+
+      - name: Wait for server to be ready
+        run: |
+          echo "Waiting for server to start..."
+          for i in {1..30}; do
+            if curl -s http://localhost:4173 > /dev/null; then
+              echo "Server is ready!"
+              exit 0
+            fi
+            echo "Attempt $i: Server not ready, waiting..."
+            sleep 2
+          done
+          echo "Server failed to start"
+          exit 1
+
+      - name: Run performance profile
+        run: |
+          node scripts/profile.js \
+            --duration 30 \
+            --output ./profile-metrics.json \
+            --url http://localhost:4173
+
+      - name: Upload metrics artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: profile-metrics-${{ github.sha }}
+          path: profile-metrics.json
+          retention-days: 30
+
+      - name: Download baseline metrics (if available)
+        if: github.event_name == 'pull_request'
+        continue-on-error: true
+        uses: dawidd6/action-download-artifact@v6
+        with:
+          workflow: profile.yml
+          branch: main
+          name: profile-metrics-latest
+          path: ./baseline
+          if_no_artifact_found: warn
+
+      - name: Compare with baseline
+        if: github.event_name == 'pull_request' && hashFiles('./baseline/profile-metrics.json') != ''
+        run: |
+          echo "## Performance Profile Comparison" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          # Extract key metrics from both files
+          BASELINE_FPS=$(jq -r '.aggregate.fps.avg' ./baseline/profile-metrics.json)
+          CURRENT_FPS=$(jq -r '.aggregate.fps.avg' ./profile-metrics.json)
+          
+          BASELINE_FRAME_TIME=$(jq -r '.aggregate.frameTime.avg' ./baseline/profile-metrics.json)
+          CURRENT_FRAME_TIME=$(jq -r '.aggregate.frameTime.avg' ./profile-metrics.json)
+          
+          BASELINE_MESHING=$(jq -r '.aggregate.meshingTime.avg' ./baseline/profile-metrics.json)
+          CURRENT_MESHING=$(jq -r '.aggregate.meshingTime.avg' ./profile-metrics.json)
+          
+          echo "| Metric | Baseline | Current | Change |" >> $GITHUB_STEP_SUMMARY
+          echo "|--------|----------|---------|--------|" >> $GITHUB_STEP_SUMMARY
+          
+          # FPS comparison
+          FPS_CHANGE=$(echo "scale=2; $CURRENT_FPS - $BASELINE_FPS" | bc)
+          FPS_PERCENT=$(echo "scale=2; ($FPS_CHANGE / $BASELINE_FPS) * 100" | bc)
+          echo "| FPS | $BASELINE_FPS | $CURRENT_FPS | ${FPS_CHANGE} (${FPS_PERCENT}%) |" >> $GITHUB_STEP_SUMMARY
+          
+          # Frame time comparison
+          FT_CHANGE=$(echo "scale=2; $CURRENT_FRAME_TIME - $BASELINE_FRAME_TIME" | bc)
+          FT_PERCENT=$(echo "scale=2; ($FT_CHANGE / $BASELINE_FRAME_TIME) * 100" | bc)
+          echo "| Frame Time (ms) | $BASELINE_FRAME_TIME | $CURRENT_FRAME_TIME | ${FT_CHANGE} (${FT_PERCENT}%) |" >> $GITHUB_STEP_SUMMARY
+          
+          # Meshing time comparison
+          MESH_CHANGE=$(echo "scale=2; $CURRENT_MESHING - $BASELINE_MESHING" | bc)
+          MESH_PERCENT=$(echo "scale=2; ($MESH_CHANGE / $BASELINE_MESHING) * 100" | bc)
+          echo "| Meshing Time (ms) | $BASELINE_MESHING | $CURRENT_MESHING | ${MESH_CHANGE} (${MESH_PERCENT}%) |" >> $GITHUB_STEP_SUMMARY
+          
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "Full metrics available in artifacts." >> $GITHUB_STEP_SUMMARY
+
+      - name: Display current metrics summary
+        if: github.event_name != 'pull_request' || hashFiles('./baseline/profile-metrics.json') == ''
+        run: |
+          echo "## Performance Profile Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Metric | Average | Min | Max | P95 |" >> $GITHUB_STEP_SUMMARY
+          echo "|--------|---------|-----|-----|-----|" >> $GITHUB_STEP_SUMMARY
+          
+          FPS_AVG=$(jq -r '.aggregate.fps.avg' ./profile-metrics.json)
+          FPS_MIN=$(jq -r '.aggregate.fps.min' ./profile-metrics.json)
+          FPS_MAX=$(jq -r '.aggregate.fps.max' ./profile-metrics.json)
+          FPS_P95=$(jq -r '.aggregate.fps.p95' ./profile-metrics.json)
+          echo "| FPS | $FPS_AVG | $FPS_MIN | $FPS_MAX | $FPS_P95 |" >> $GITHUB_STEP_SUMMARY
+          
+          FT_AVG=$(jq -r '.aggregate.frameTime.avg' ./profile-metrics.json)
+          FT_MIN=$(jq -r '.aggregate.frameTime.min' ./profile-metrics.json)
+          FT_MAX=$(jq -r '.aggregate.frameTime.max' ./profile-metrics.json)
+          FT_P95=$(jq -r '.aggregate.frameTime.p95' ./profile-metrics.json)
+          echo "| Frame Time (ms) | $FT_AVG | $FT_MIN | $FT_MAX | $FT_P95 |" >> $GITHUB_STEP_SUMMARY
+          
+          MESH_AVG=$(jq -r '.aggregate.meshingTime.avg' ./profile-metrics.json)
+          MESH_MIN=$(jq -r '.aggregate.meshingTime.min' ./profile-metrics.json)
+          MESH_MAX=$(jq -r '.aggregate.meshingTime.max' ./profile-metrics.json)
+          MESH_P95=$(jq -r '.aggregate.meshingTime.p95' ./profile-metrics.json)
+          echo "| Meshing Time (ms) | $MESH_AVG | $MESH_MIN | $MESH_MAX | $MESH_P95 |" >> $GITHUB_STEP_SUMMARY
+          
+          CHUNKS=$(jq -r '.aggregate.totalChunksMeshed' ./profile-metrics.json)
+          echo "| Total Chunks Meshed | $CHUNKS | - | - | - |" >> $GITHUB_STEP_SUMMARY
+
+      - name: Upload latest metrics (for main branch)
+        if: github.ref == 'refs/heads/main'
+        uses: actions/upload-artifact@v4
+        with:
+          name: profile-metrics-latest
+          path: profile-metrics.json
+          retention-days: 90
