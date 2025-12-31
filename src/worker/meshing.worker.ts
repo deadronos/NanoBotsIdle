@@ -7,9 +7,12 @@ const ctx: DedicatedWorkerGlobalScope = self as unknown as DedicatedWorkerGlobal
 
 ctx.addEventListener("message", (event: MessageEvent<ToMeshingWorker>) => {
   const msg = event.data;
+  const startTime = performance.now();
   const out = handleMeshingJob(msg);
+  const meshingTimeMs = performance.now() - startTime;
 
   if (out.t === "MESH_RESULT") {
+    const resultWithTiming = { ...out, meshingTimeMs };
     const { positions, normals, indices } = out.geometry;
     const transfer: Transferable[] = [positions.buffer, normals.buffer, indices.buffer];
 
@@ -22,7 +25,7 @@ ctx.addEventListener("message", (event: MessageEvent<ToMeshingWorker>) => {
         );
       }
     }
-    ctx.postMessage(out satisfies FromMeshingWorker, transfer);
+    ctx.postMessage(resultWithTiming satisfies FromMeshingWorker, transfer);
     return;
   }
 

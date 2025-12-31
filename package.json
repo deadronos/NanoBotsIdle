@@ -15,6 +15,7 @@
     "typecheck": "tsc --noEmit",
     "format": "prettier --write .",
     "update:baselines": "node ./scripts/update-baselines.js",
+    "profile": "node ./scripts/profile.js",
     "profile:baseline": "node --expose-gc --loader ts-node/esm dev/profiling/baseline-generator.ts"
   },
   "dependencies": {
@@ -48,6 +49,7 @@
     "eslint-plugin-testing-library": "^7.15.3",
     "eslint-plugin-unused-imports": "^4.3.0",
     "jsdom": "^27.4.0",
+    "playwright": "^1.57.0",
     "prettier": "^3.7.4",
     "tailwindcss": "^4.1.18",
     "typescript": "^5.9.3",

@@ -163,3 +163,62 @@ npm run typecheck
 npm run format
 ```
 
+
+## 🔬 Performance Profiling
+
+### Local Profiling
+
+To profile the application locally and collect performance metrics:
+
+1. **Start the preview server:**
+   ```bash
+   npm run build
+   npm run preview
+   ```
+
+2. **Run the profiling script:**
+   ```bash
+   npm run profile
+   ```
+
+   This will:
+   - Launch a headless browser
+   - Run the game for 30 seconds (configurable)
+   - Collect telemetry metrics (FPS, frame time, meshing time, worker stats)
+   - Save results to `profile-metrics.json`
+
+3. **Custom profiling options:**
+   ```bash
+   node scripts/profile.js --duration 60 --output ./my-metrics.json --url http://localhost:4173
+   ```
+
+### Manual Telemetry Access
+
+You can enable telemetry in your browser and access metrics via the console:
+
+1. **Start the dev server with telemetry enabled:**
+   ```bash
+   npm run dev
+   ```
+
+2. **Open the app with telemetry enabled:**
+   Navigate to `http://localhost:5173?telemetry=true`
+
+3. **Access metrics in the console:**
+   ```javascript
+   // Get current telemetry snapshot
+   const metrics = JSON.parse(window.getTelemetrySnapshot());
+   console.log(metrics);
+   ```
+
+### CI Profiling
+
+Performance profiling runs automatically on every push to `main` and on pull requests via GitHub Actions. The workflow:
+
+- Builds the application
+- Runs a 30-second headless profile
+- Compares metrics against the baseline from `main`
+- Reports any significant performance regressions in PR comments
+- Stores metrics as artifacts for historical analysis
+
+View profiling results in the **Actions** tab of the repository.
