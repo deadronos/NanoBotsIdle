@@ -71,10 +71,13 @@ export const useInstancedVoxels = (
       if (mesh && !needsRebuild.current) {
         setVoxelInstance(mesh, tmp, result.index, x, y, z, getColorFn);
         mesh.count = result.count;
-        applyInstanceUpdates(mesh, UPDATE_BOTH);
+        applyInstanceUpdates(mesh, {
+          matrixRange: { start: result.index, end: result.index },
+          colorRange: { start: result.index, end: result.index },
+        });
       }
     },
-    [UPDATE_BOTH, ensureCapacity, getColorFn, tmp],
+    [ensureCapacity, getColorFn, tmp],
   );
 
   const removeVoxel = useCallback(
@@ -97,10 +100,13 @@ export const useInstancedVoxels = (
           );
         }
         mesh.count = result.count;
-        applyInstanceUpdates(mesh, UPDATE_BOTH);
+        applyInstanceUpdates(mesh, {
+          matrixRange: { start: result.index, end: result.index },
+          colorRange: { start: result.index, end: result.index },
+        });
       }
     },
-    [UPDATE_BOTH, getColorFn, tmp],
+    [getColorFn, tmp],
   );
 
   const clear = useCallback(() => {
@@ -121,8 +127,9 @@ export const useInstancedVoxels = (
     if (pendingRebuild.current) return; // Don't start a new rebuild if one is in progress
 
     const mesh = meshRef.current;
-    const positions = storeRef.current.positions;
-    const count = storeRef.current.count;
+    const store = storeRef.current;
+    const count = store.count;
+    const positions = store.positions.subarray(0, count * 3);
 
     // Threshold for using worker: use worker for larger rebuilds (e.g., > 100 instances)
     const WORKER_THRESHOLD = 100;

@@ -33,13 +33,13 @@ export class InstanceRebuildManager {
    * Returns a promise that resolves with the computed matrices and colors.
    */
   async requestRebuild(
-    positions: number[],
+    positions: ArrayLike<number>,
     waterLevel: number,
   ): Promise<{ matrices: Float32Array; colors: Float32Array; count: number }> {
     const jobId = this.nextJobId++;
 
     // Copy positions to a transferable Float32Array
-    const positionsArray = new Float32Array(positions);
+    const positionsArray = new Float32Array(positions as ArrayLike<number>);
 
     return new Promise((resolve, reject) => {
       this.pendingJobs.set(jobId, { jobId, resolve, reject });

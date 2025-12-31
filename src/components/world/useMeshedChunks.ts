@@ -94,12 +94,16 @@ export const useMeshedChunks = (options: {
       buffer.setAttribute("position", new BufferAttribute(geometry.positions, 3));
       buffer.setAttribute("normal", new BufferAttribute(geometry.normals, 3));
 
-      const colors = new Float32Array(geometry.positions.length);
-      for (let i = 0; i < geometry.positions.length; i += 3) {
-        // positions are already in world coordinates
-        writeVertexColor(colors, i, geometry.positions[i + 1]);
+      if (geometry.colors && geometry.colors.length === geometry.positions.length) {
+        buffer.setAttribute("color", new BufferAttribute(geometry.colors, 3));
+      } else {
+        const colors = new Float32Array(geometry.positions.length);
+        for (let i = 0; i < geometry.positions.length; i += 3) {
+          // positions are already in world coordinates
+          writeVertexColor(colors, i, geometry.positions[i + 1]);
+        }
+        buffer.setAttribute("color", new BufferAttribute(colors, 3));
       }
-      buffer.setAttribute("color", new BufferAttribute(colors, 3));
 
       buffer.setIndex(new BufferAttribute(geometry.indices, 1));
       buffer.computeBoundingSphere();
@@ -212,6 +216,7 @@ export const useMeshedChunks = (options: {
             chunk: { ...coord, size: chunkSize },
             origin,
             materials,
+            waterLevel,
           },
           transfer: [materials.buffer],
         };
@@ -230,7 +235,7 @@ export const useMeshedChunks = (options: {
       scheduler.dispose();
       disposeAllMeshes();
     };
-  }, [applyMeshResult, chunkSize, disposeAllMeshes, onSchedulerChange, prestigeLevel, seed]);
+  }, [applyMeshResult, chunkSize, disposeAllMeshes, onSchedulerChange, prestigeLevel, seed, waterLevel]);
 
   useEffect(() => {
     return () => {
