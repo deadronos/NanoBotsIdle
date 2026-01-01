@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
 
 const { noise2DMock } = vi.hoisted(() => {
-  return { noise2DMock: vi.fn<[number, number], number>() };
+  return { noise2DMock: vi.fn<(x: number, z: number) => number>() };
 });
 
 vi.mock("../src/sim/terrain-core", () => {

@@ -20,6 +20,7 @@ export type SimBridgeOptions = {
   onError?: (message: string) => void;
   maxRetries?: number;
   retryDelayMs?: number;
+  enableHandlerTiming?: boolean; // Enable performance timing for frame handlers (dev/debug)
 };
 
 export type SimBridge = {

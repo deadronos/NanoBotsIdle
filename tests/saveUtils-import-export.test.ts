@@ -128,11 +128,11 @@ describe("saveUtils: exportSave/importSave", () => {
       credits: 123,
       prestigeLevel: 2,
       upgrades: { drones: 1 },
-      addCredits: () => {},
-      incrementMinedBlocks: () => {},
-      setTotalBlocks: () => {},
-      buyUpgrade: () => {},
-      resetPrestige: () => {},
+      addCredits: vi.fn(),
+      incrementMinedBlocks: vi.fn(),
+      setTotalBlocks: vi.fn(),
+      buyUpgrade: vi.fn(),
+      resetPrestige: vi.fn(),
       getUpgradeCost: () => 0,
     });
 

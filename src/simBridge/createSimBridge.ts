@@ -1,7 +1,7 @@
 import type { Cmd, FromWorker, ToWorker } from "../shared/protocol";
 import { useGameStore } from "../store";
 import { getTelemetryCollector } from "../telemetry";
-import { error, warn } from "../utils/logger";
+import { debug, error, warn } from "../utils/logger";
 import type { FrameHandler, FrameMessage, SimBridge, SimBridgeOptions, WorkerLike } from "./types";
 import { defaultWorkerFactory } from "./workerFactory";
 
@@ -12,6 +12,7 @@ export const createSimBridge = (options: SimBridgeOptions = {}): SimBridge => {
   const onError = options.onError ?? ((message) => error(message));
   const maxRetries = options.maxRetries ?? 3;
   const retryDelayMs = options.retryDelayMs ?? 1000;
+  const enableHandlerTiming = options.enableHandlerTiming ?? false;
 
   let worker: WorkerLike | null = null;
   let running = false;
@@ -22,6 +23,7 @@ export const createSimBridge = (options: SimBridgeOptions = {}): SimBridge => {
   let frameId = 0;
   let cmdQueue: Cmd[] = [];
   const frameHandlers = new Set<FrameHandler>();
+  const handlerTimings = new Map<FrameHandler, { total: number; count: number }>();
   let lastFrame: FrameMessage | null = null;
   let errorCount = 0;
   let retryTimeout: ReturnType<typeof setTimeout> | null = null;
@@ -33,7 +35,31 @@ export const createSimBridge = (options: SimBridgeOptions = {}): SimBridge => {
     if (msg.t === "FRAME") {
       stepInFlight = false;
       lastFrame = msg;
-      frameHandlers.forEach((handler) => handler(msg));
+
+      // Optional performance instrumentation for frame handlers
+      if (enableHandlerTiming) {
+        frameHandlers.forEach((handler) => {
+          const start = performance.now();
+          handler(msg);
+          const duration = performance.now() - start;
+
+          const timing = handlerTimings.get(handler) ?? { total: 0, count: 0 };
+          timing.total += duration;
+          timing.count += 1;
+          handlerTimings.set(handler, timing);
+
+          // Log timing every 300 frames (approximately every 5 seconds at 60fps)
+          if (timing.count % 300 === 0) {
+            const avg = timing.total / timing.count;
+            debug(
+              `[SimBridge] Frame handler avg: ${avg.toFixed(3)}ms (${timing.count} calls, ${timing.total.toFixed(1)}ms total)`,
+            );
+          }
+        });
+      } else {
+        // Fast path: no timing overhead
+        frameHandlers.forEach((handler) => handler(msg));
+      }
       return;
     }
 

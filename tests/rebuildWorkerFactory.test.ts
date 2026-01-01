@@ -67,7 +67,7 @@ describe("createInstanceRebuildWorker", () => {
     );
     expect(MockWorker.lastPostMessage?.transfer).toBe(transfer);
 
-    const handler = () => {};
+    const handler = vi.fn();
     w.addEventListener("message", handler as never);
     expect(MockWorker.lastAddListener?.type).toBe("message");
 

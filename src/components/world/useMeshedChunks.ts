@@ -1,6 +1,14 @@
 import { useCallback, useEffect, useMemo, useRef } from "react";
 import type { Group } from "three";
-import { BufferAttribute, BufferGeometry, Color, Mesh, MeshStandardMaterial } from "three";
+import {
+  BufferAttribute,
+  BufferGeometry,
+  Color,
+  Mesh,
+  MeshStandardMaterial,
+  Sphere,
+  Vector3,
+} from "three";
 
 import { getConfig } from "../../config";
 import { createApronField, fillApronField } from "../../meshing/apronField";
@@ -29,6 +37,7 @@ export const useMeshedChunks = (options: {
   const { chunkSize, prestigeLevel, waterLevel, seed, onSchedulerChange } = options;
 
   const focusChunkRef = useRef<{ cx: number; cy: number; cz: number }>({ cx: 0, cy: 0, cz: 0 });
+  const reprioritizeTimeoutRef = useRef<number | null>(null);
 
   // Color mapping kept local to avoid importing `three` types in worker code.
   // Reuse Color instances to avoid per-vertex allocations.
@@ -106,7 +115,19 @@ export const useMeshedChunks = (options: {
       }
 
       buffer.setIndex(new BufferAttribute(geometry.indices, 1));
-      buffer.computeBoundingSphere();
+
+      // Use pre-computed bounding sphere from worker if available (performance optimization)
+      if (geometry.boundingSphere) {
+        const { center, radius } = geometry.boundingSphere;
+        buffer.boundingSphere = new Sphere(
+          new Vector3(center.x, center.y, center.z),
+          radius,
+        );
+      } else {
+        // Fallback to computing on main thread if not provided
+        buffer.computeBoundingSphere();
+      }
+
       return buffer;
     },
     [writeVertexColor],
@@ -170,12 +191,18 @@ export const useMeshedChunks = (options: {
 
   useEffect(() => {
     let raf = 0;
+    const config = getConfig();
     const tick = () => {
       const group = groupRef.current;
       if (group && pendingResultsRef.current.size > 0) {
-        const pending = Array.from(pendingResultsRef.current.values());
-        pendingResultsRef.current.clear();
-        pending.forEach((res) => applyMeshResult(res));
+        // Apply a limited number of mesh results per frame to bound main-thread work
+        const maxPerFrame = config.meshing.maxMeshesPerFrame;
+        const pending = Array.from(pendingResultsRef.current.entries()).slice(0, maxPerFrame);
+
+        pending.forEach(([key, res]) => {
+          pendingResultsRef.current.delete(key);
+          applyMeshResult(res);
+        });
       }
       raf = requestAnimationFrame(tick);
     };
@@ -231,6 +258,11 @@ export const useMeshedChunks = (options: {
     // Notify parent that scheduler was (re)created so it can re-sync its chunk tracking
     onSchedulerChange?.();
     return () => {
+      // Clear any pending reprioritization timeout
+      if (reprioritizeTimeoutRef.current !== null) {
+        clearTimeout(reprioritizeTimeoutRef.current);
+        reprioritizeTimeoutRef.current = null;
+      }
       schedulerRef.current = null;
       scheduler.dispose();
       disposeAllMeshes();
@@ -277,7 +309,23 @@ export const useMeshedChunks = (options: {
     focusChunkRef.current = { cx, cy, cz };
     const scheduler = schedulerRef.current;
     if (!scheduler) return;
-    scheduler.reprioritizeDirty();
+
+    // Debounce reprioritization to avoid expensive heap rebuilds on every frame when player moves.
+    // Update focus immediately but defer the actual reprioritization for 150ms.
+    if (reprioritizeTimeoutRef.current !== null) {
+      clearTimeout(reprioritizeTimeoutRef.current);
+    }
+
+    reprioritizeTimeoutRef.current = window.setTimeout(() => {
+      reprioritizeTimeoutRef.current = null;
+      const currentScheduler = schedulerRef.current;
+      if (currentScheduler) {
+        currentScheduler.reprioritizeDirty();
+        currentScheduler.pump();
+      }
+    }, 150);
+
+    // Always pump immediately to process any pending chunks, even without reprioritization
     scheduler.pump();
   }, []);
 

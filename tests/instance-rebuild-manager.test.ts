@@ -1,5 +1,5 @@
-import { describe, expect, it } from "vitest";
 import { BufferGeometry, InstancedMesh } from "three";
+import { describe, expect, it } from "vitest";
 
 import { InstanceRebuildManager } from "../src/components/world/instancedVoxels/rebuildManager";
 import type { InstanceRebuildWorkerLike } from "../src/components/world/instancedVoxels/rebuildWorkerFactory";
@@ -191,13 +191,16 @@ describe("InstanceRebuildManager integration", () => {
     expect(mesh.instanceMatrix.version).toBeGreaterThan(0);
 
     expect(mesh.instanceColor).toBeDefined();
-    expect(mesh.instanceColor.array).toBe(colors);
-    expect(mesh.instanceColor.itemSize).toBe(3);
-    expect(mesh.instanceColor.version).toBeGreaterThan(0);
+    const instanceColor = mesh.instanceColor!;
+    expect(instanceColor.array).toBe(colors);
+    expect(instanceColor.itemSize).toBe(3);
+    expect(instanceColor.version).toBeGreaterThan(0);
 
     // Geometry attributes should be present (R3F/three patterns rely on these)
+    // eslint-disable-next-line jest-dom/prefer-to-have-attribute
     expect(mesh.geometry.getAttribute("instanceMatrix")).toBe(mesh.instanceMatrix);
-    expect(mesh.geometry.getAttribute("instanceColor")).toBe(mesh.instanceColor);
+    // eslint-disable-next-line jest-dom/prefer-to-have-attribute
+    expect(mesh.geometry.getAttribute("instanceColor")).toBe(instanceColor);
 
     manager.terminate();
   });
