@@ -119,10 +119,7 @@ export const useMeshedChunks = (options: {
       // Use pre-computed bounding sphere from worker if available (performance optimization)
       if (geometry.boundingSphere) {
         const { center, radius } = geometry.boundingSphere;
-        buffer.boundingSphere = new Sphere(
-          new Vector3(center.x, center.y, center.z),
-          radius,
-        );
+        buffer.boundingSphere = new Sphere(new Vector3(center.x, center.y, center.z), radius);
       } else {
         // Fallback to computing on main thread if not provided
         buffer.computeBoundingSphere();
@@ -267,7 +264,15 @@ export const useMeshedChunks = (options: {
       scheduler.dispose();
       disposeAllMeshes();
     };
-  }, [applyMeshResult, chunkSize, disposeAllMeshes, onSchedulerChange, prestigeLevel, seed, waterLevel]);
+  }, [
+    applyMeshResult,
+    chunkSize,
+    disposeAllMeshes,
+    onSchedulerChange,
+    prestigeLevel,
+    seed,
+    waterLevel,
+  ]);
 
   useEffect(() => {
     return () => {

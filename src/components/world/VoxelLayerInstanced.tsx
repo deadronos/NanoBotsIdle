@@ -8,13 +8,13 @@ import { applyVoxelEdits, MATERIAL_SOLID, resetVoxelEdits } from "../../sim/coll
 import { getSurfaceHeightCore } from "../../sim/terrain-core";
 import { getSimBridge } from "../../simBridge/simBridge";
 import { forEachRadialChunk, getVoxelColor } from "../../utils";
-import { ensureNeighborChunksForMinedVoxel, chunkKey } from "./chunkHelpers";
+import { chunkKey, ensureNeighborChunksForMinedVoxel } from "./chunkHelpers";
 import { FrontierFillRenderer } from "./FrontierFillRenderer";
 import { useFrontierLogic } from "./hooks/useFrontierLogic";
 import { useVoxelChunkManager } from "./hooks/useVoxelChunkManager";
-import { SimplifiedChunk } from "./SimplifiedChunk";
 // Hooks
 import { useVoxelLayerDebug } from "./hooks/useVoxelLayerDebug";
+import { SimplifiedChunk } from "./SimplifiedChunk";
 import { useInstancedVoxels } from "./useInstancedVoxels";
 
 export const VoxelLayerInstanced: React.FC<{
@@ -47,8 +47,6 @@ export const VoxelLayerInstanced: React.FC<{
   const [simplifiedChunks, setSimplifiedChunks] = React.useState<
     Record<string, { cx: number; cy: number; cz: number; lod: number }>
   >({});
-  const lastLodUpdatePos = useRef<{ x: number; y: number; z: number } | null>(null);
-
 
   useEffect(() => {
     biomeColorCacheRef.current.clear();
@@ -102,18 +100,18 @@ export const VoxelLayerInstanced: React.FC<{
     solidCountRef,
   } = useInstancedVoxels(chunkSize, cfg.terrain.waterLevel, getInstanceColor);
 
-
-  const { activeChunks, addChunk, removeChunk, ensureInitialChunk, resetChunks } = useVoxelChunkManager({
-    chunkSize,
-    prestigeLevel,
-    spawnX,
-    spawnZ,
-    seed,
-    ensureCapacity,
-    solidCountRef,
-    addVoxel,
-    removeVoxel,
-  });
+  const { activeChunks, addChunk, removeChunk, ensureInitialChunk, resetChunks } =
+    useVoxelChunkManager({
+      chunkSize,
+      prestigeLevel,
+      spawnX,
+      spawnZ,
+      seed,
+      ensureCapacity,
+      solidCountRef,
+      addVoxel,
+      removeVoxel,
+    });
 
   useEffect(() => {
     return bridge.onFrame((frame) => {
@@ -161,8 +159,9 @@ export const VoxelLayerInstanced: React.FC<{
           // Actually, forEachRadialChunk is efficient enough up to r=10. r=24 is 110k chunks. Too slow.
           // Let's limit current implementation to r=12.
           const MAX_RADIUS = 12;
-          
-          const newSimplified: Record<string, { cx: number; cy: number; cz: number; lod: number }> = {};
+
+          const newSimplified: Record<string, { cx: number; cy: number; cz: number; lod: number }> =
+            {};
           const visitedKeys = new Set<string>();
 
           forEachRadialChunk({ cx: pcx, cy: pcy, cz: pcz }, MAX_RADIUS, 3, (c) => {
@@ -170,8 +169,8 @@ export const VoxelLayerInstanced: React.FC<{
             const dx = c.cx - pcx;
             const dy = c.cy - pcy;
             const dz = c.cz - pcz;
-            const distSq = dx*dx + dy*dy + dz*dz;
-            
+            const distSq = dx * dx + dy * dy + dz * dz;
+
             if (distSq <= LOD0_DIST_SQ) {
               addChunk(c.cx, c.cy, c.cz);
               // Not simplified
@@ -182,11 +181,11 @@ export const VoxelLayerInstanced: React.FC<{
               removeChunk(c.cx, c.cy, c.cz);
               newSimplified[chunkKey(c.cx, c.cy, c.cz)] = { cx: c.cx, cy: c.cy, cz: c.cz, lod: 2 };
             } else {
-               removeChunk(c.cx, c.cy, c.cz);
+              removeChunk(c.cx, c.cy, c.cz);
             }
           });
-          
-          // Also need to clean up chunks that are NO LONGER in radius? 
+
+          // Also need to clean up chunks that are NO LONGER in radius?
           // removeChunk handles instanced.
           // setSimplifiedChunks replaces the whole object, so old simplifieds are gone.
           // But we need to make sure we removeChunk for things that were LOD0 and are now Out of Range.
@@ -195,7 +194,7 @@ export const VoxelLayerInstanced: React.FC<{
           // useVoxelChunkManager tracks activeChunks. We can't iterate them efficiently there.
           // But strict radius cleanup: maybe just rely on LRU or "remove if dist > MAX"?
           // For now, chunks just persist?
-          // NO, the loop covers 0..MAX_RADIUS. If a chunk was at dist 5 (LOD0) and now is dist 15 (Out), 
+          // NO, the loop covers 0..MAX_RADIUS. If a chunk was at dist 5 (LOD0) and now is dist 15 (Out),
           // it won't be visited by the loop (if loop is max 12).
           // So it will stay in InstancedMesh!
           // We must iterate "all currently active instanced chunks" and check distance?
@@ -204,7 +203,7 @@ export const VoxelLayerInstanced: React.FC<{
           // If we restrict MAX_RADIUS to what we check, we should remove anything outside it.
           // But iterating all keys in `activeChunks` (Set) is fine if count is not huge.
           // Let's defer "Unload completely" to a cleanup-tick or similar.
-          
+
           // Cleanup chunks that are out of processing radius
           if (activeChunks.current) {
             for (const key of activeChunks.current) {
@@ -220,7 +219,7 @@ export const VoxelLayerInstanced: React.FC<{
               }
             }
           }
-          
+
           setSimplifiedChunks(newSimplified);
         }
       }
@@ -307,6 +306,7 @@ export const VoxelLayerInstanced: React.FC<{
     trackFrontierRemove,
     clearFrontierKeys,
     logDebugInfo,
+    activeChunks,
   ]);
 
   return (
@@ -350,7 +350,7 @@ export const VoxelLayerInstanced: React.FC<{
           debugVisuals={true}
         />
       : null}
-      
+
       {Object.values(simplifiedChunks).map((c) => (
         <SimplifiedChunk
           key={chunkKey(c.cx, c.cy, c.cz)}

@@ -1,4 +1,4 @@
-import { describe, expect,test } from 'vitest';
+import { describe, expect, test } from "vitest";
 
 import { getConfig } from "../src/config/index";
 import type { Drone } from "../src/engine/drones";
@@ -25,7 +25,8 @@ describe("tickDrones minedBlocks tracking", () => {
       outposts: [],
     };
 
-    const miner: Drone = {      id: 0,
+    const miner: Drone = {
+      id: 0,
       x: 0,
       y: 0,
       z: 0,
@@ -45,15 +46,17 @@ describe("tickDrones minedBlocks tracking", () => {
         x: number,
         y: number,
         z: number,
-      ) =>
-        | {
-            edit: VoxelEdit;
-            frontierAdded: { x: number; y: number; z: number }[];
-            frontierRemoved: { x: number; y: number; z: number }[];
-          }
-        | null;
+      ) => {
+        edit: VoxelEdit;
+        frontierAdded: { x: number; y: number; z: number }[];
+        frontierRemoved: { x: number; y: number; z: number }[];
+      } | null;
       countFrontierAboveWater: () => number;
-      getNearestOutpost?: (x: number, y: number, z: number) => { id: string; x: number; y: number; z: number; level: number } | null;
+      getNearestOutpost?: (
+        x: number,
+        y: number,
+        z: number,
+      ) => { id: string; x: number; y: number; z: number; level: number } | null;
       key: (x: number, y: number, z: number) => string;
     };
 
@@ -97,6 +100,7 @@ describe("tickDrones minedBlocks tracking", () => {
       editsThisTick,
       frontierAdded,
       frontierRemoved,
+      depositEvents: [],
     });
 
     expect(uiSnapshot.minedBlocks).toBe(1);

@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useRef } from "react";
-import { Color,type InstancedMesh, Object3D } from "three";
+import { Color, type InstancedMesh, Object3D } from "three";
 
 import { applyInstanceUpdates } from "../../render/instanced";
 import { getGroundHeightWithEdits } from "../../sim/collision";

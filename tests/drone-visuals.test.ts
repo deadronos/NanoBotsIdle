@@ -25,7 +25,14 @@ describe("droneVisuals performance optimization (TDD)", () => {
     const cfg = getConfig();
     const droneCount = 2;
     const positions = new Float32Array([0, 10, 0, 5, 10, 5]);
-    const targets = new Float32Array([Number.NaN, Number.NaN, Number.NaN, Number.NaN, Number.NaN, Number.NaN]);
+    const targets = new Float32Array([
+      Number.NaN,
+      Number.NaN,
+      Number.NaN,
+      Number.NaN,
+      Number.NaN,
+      Number.NaN,
+    ]);
     const states = new Uint8Array([DRONE_STATE_ID.SEEKING, DRONE_STATE_ID.SEEKING]);
     const roles = new Uint8Array([0, 1]); // miner, hauler
 

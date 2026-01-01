@@ -1,4 +1,4 @@
-import type { InstancedMesh} from "three";
+import type { InstancedMesh } from "three";
 import { Color, Object3D } from "three";
 import { describe, expect, it } from "vitest";
 
