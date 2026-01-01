@@ -40,6 +40,8 @@ export type SunConfig = {
   intensity: number;
   shadowMapSize: [number, number];
   cameraBounds: { left: number; right: number; top: number; bottom: number };
+  bias: number;
+  normalBias: number;
 };
 
 export const voxelRenderModes = ["frontier", "frontier-fill", "dense", "meshed"] as const;
@@ -104,6 +106,8 @@ export const defaultRenderConfig: RenderConfig = {
     intensity: 1.5,
     shadowMapSize: [2048, 2048],
     cameraBounds: { left: -50, right: 50, top: 50, bottom: -50 },
+    bias: -0.0005,
+    normalBias: 0.05,
   },
   voxels: {
     mode: "meshed",

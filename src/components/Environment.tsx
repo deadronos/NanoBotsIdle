@@ -54,6 +54,8 @@ export const Environment: React.FC = () => {
         shadow-camera-right={cfg.render.sun.cameraBounds.right}
         shadow-camera-top={cfg.render.sun.cameraBounds.top}
         shadow-camera-bottom={cfg.render.sun.cameraBounds.bottom}
+        shadow-bias={cfg.render.sun.bias}
+        shadow-normalBias={cfg.render.sun.normalBias}
       />
     </group>
   );
