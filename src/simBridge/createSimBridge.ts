@@ -1,3 +1,4 @@
+import { FromWorkerSchema } from "../shared/schemas";
 import type { Cmd, FromWorker, ToWorker } from "../shared/protocol";
 import { useGameStore } from "../store";
 import { getTelemetryCollector } from "../telemetry";
@@ -31,7 +32,12 @@ export const createSimBridge = (options: SimBridgeOptions = {}): SimBridge => {
   const telemetry = getTelemetryCollector();
 
   const handleMessage = (event: MessageEvent<FromWorker>) => {
-    const msg = event.data;
+    const parse = FromWorkerSchema.safeParse(event.data);
+    if (!parse.success) {
+      error("SimBridge received invalid message from worker:", parse.error);
+      return;
+    }
+    const msg = parse.data;
     if (msg.t === "FRAME") {
       stepInFlight = false;
       lastFrame = msg;
