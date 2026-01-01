@@ -1,6 +1,7 @@
 /// <reference lib="webworker" />
 
 import { createEngine } from "../engine/engine";
+import { ToWorkerSchema } from "../shared/schemas";
 import type { FromWorker, ToWorker } from "../shared/protocol";
 
 const scope = self as DedicatedWorkerGlobalScope;
@@ -48,7 +49,11 @@ const send = (message: FromWorker) => {
 
 scope.addEventListener("message", (event: MessageEvent<ToWorker>) => {
   try {
-    const msg = event.data;
+    const parse = ToWorkerSchema.safeParse(event.data);
+    if (!parse.success) {
+      throw new Error(`Worker received invalid message: ${parse.error.message}`);
+    }
+    const msg = parse.data;
     switch (msg.t) {
       case "INIT": {
         engine = createEngine(msg.seed, msg.saveState);

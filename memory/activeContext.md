@@ -5,10 +5,15 @@
 - Project tooling and repo guidance are aligned for Vite bundling, Tailwind v4+, and a consistent tests layout.
 - Refactor toward a Worker-authoritative engine with clean sim/render separation (`docs/ARCHITECTURE.md`).
 - **Save system:** Versioned save schema with migration framework is complete (v1→v2).
-- **Performance:** Meshing priority queue with back-pressure prevents worker overload.
+- **Performance:** Implemented Distance-Based Chunk LOD (Level of Detail) to optimize rendering of large worlds.
+- **Reliability:** Integrated Zod-typed bridge for robust Worker <-> Main thread communication.
+- **Logistics:** Smart Queuing for Outposts to manage drone traffic with visual feedback.
 
 ## Recent changes
 
+- **Smart Queuing:** Outposts now have limited docking slots (4) and queue management. Drones visually "orbit" when waiting.
+- **Chunk LOD System:** Implemented "proxy" chunks for distant rendering, significantly improving FPS by unloading instanced voxel data far from the player.
+- **Typed Worker Bridge:** Replaced manual casting with Zod schema validation for all `simBridge` <-> `sim.worker` messages.
 - **Logistics System (Phase 3):** Complete. Haulers intercept miners, outposts persist. See `docs/ARCHITECTURE/GAME002-logistics-and-economy.md`.
 - **Save Migration System:** Added versioned save schema (v1→v2) with registry, validation, sanitization, and comprehensive tests. See `MIGRATION_SUMMARY.md`.
 - **Meshing Priority Queue/Backpressure:** Implemented in `MeshingScheduler` with configurable queue depth.

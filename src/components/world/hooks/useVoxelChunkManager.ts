@@ -15,6 +15,7 @@ interface UseVoxelChunkManagerProps {
   ensureCapacity: (capacity: number) => void;
   solidCountRef: MutableRefObject<number>;
   addVoxel: (x: number, y: number, z: number) => void;
+  removeVoxel: (x: number, y: number, z: number) => void;
 }
 
 export function useVoxelChunkManager({
@@ -26,6 +27,7 @@ export function useVoxelChunkManager({
   ensureCapacity,
   solidCountRef,
   addVoxel,
+  removeVoxel,
 }: UseVoxelChunkManagerProps) {
   const activeChunks = useRef<Set<string>>(new Set());
   const cfg = useConfig();
@@ -40,6 +42,30 @@ export function useVoxelChunkManager({
       populateChunkVoxels({ cx, cy, cz, chunkSize, prestigeLevel, addVoxel });
     },
     [addVoxel, chunkSize, ensureCapacity, prestigeLevel, solidCountRef],
+  );
+
+  const removeChunk = useCallback(
+    (cx: number, cy: number, cz: number) => {
+      const key = chunkKey(cx, cy, cz);
+      if (!activeChunks.current.has(key)) return;
+      activeChunks.current.delete(key);
+
+      const size = chunkSize;
+      const baseX = cx * size;
+      const baseY = cy * size;
+      const baseZ = cz * size;
+
+      // Iterate all positions in chunk and remove from store
+      // This relies on removeVoxel checks (fast map lookup) associated with the store
+      for (let x = 0; x < size; x++) {
+        for (let y = 0; y < size; y++) {
+          for (let z = 0; z < size; z++) {
+            removeVoxel(baseX + x, baseY + y, baseZ + z);
+          }
+        }
+      }
+    },
+    [chunkSize, removeVoxel]
   );
 
   const ensureInitialChunk = useCallback(() => {
@@ -74,6 +100,7 @@ export function useVoxelChunkManager({
   return {
     activeChunks,
     addChunk,
+    removeChunk,
     ensureInitialChunk,
     resetChunks,
   };

@@ -31,7 +31,7 @@ export const encodeDrones = (drones: Drone[]) => {
     let stateValue: DroneStateId = DRONE_STATE_ID.SEEKING;
     if (drone.state === "MOVING") stateValue = DRONE_STATE_ID.MOVING;
     if (drone.state === "MINING") stateValue = DRONE_STATE_ID.MINING;
-    if (drone.state === "MINING") stateValue = DRONE_STATE_ID.MINING;
+    if (drone.state === "QUEUING") stateValue = DRONE_STATE_ID.QUEUING;
     entityStates[i] = stateValue;
 
     entityRoles[i] = drone.role === "HAULER" ? 1 : 0;
