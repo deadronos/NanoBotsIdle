@@ -1,11 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import {
-  addKey,
-  createKeyIndex,
-  removeKey,
-  resetKeyIndex,
-} from "../src/engine/keyIndex";
+import { addKey, createKeyIndex, removeKey, resetKeyIndex } from "../src/engine/keyIndex";
 
 describe("keyIndex", () => {
   it("creates an empty index", () => {
@@ -51,4 +46,3 @@ describe("keyIndex", () => {
     expect(idx.index.get("a")).toBe(0);
   });
 });
-

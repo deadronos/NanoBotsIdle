@@ -49,4 +49,3 @@ describe("lodGeometry", () => {
     expect(sharedDispose).toHaveBeenCalledTimes(1);
   });
 });
-

@@ -18,4 +18,3 @@ describe("telemetry index exports", () => {
     expect(_snapshot).toBeNull();
   });
 });
-

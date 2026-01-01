@@ -54,9 +54,7 @@ describe("voxel instance store (swap-with-last)", () => {
 
     expect(store.capacity).toBeGreaterThanOrEqual(2);
     expect(store.count).toBe(2);
-    expect(Array.from(store.positions.subarray(0, store.count * 3))).toEqual([
-      1, 1, 1, 2, 2, 2,
-    ]);
+    expect(Array.from(store.positions.subarray(0, store.count * 3))).toEqual([1, 1, 1, 2, 2, 2]);
   });
 
   it("removing the last voxel returns null moved", () => {

@@ -1,4 +1,3 @@
-
 import { getConfig } from "../config/index";
 import { getVoxelColor } from "../utils";
 import { getSeed } from "./seed";

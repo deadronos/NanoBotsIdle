@@ -101,6 +101,7 @@ describe("tickDrones edge cases", () => {
       editsThisTick: [],
       frontierAdded: [],
       frontierRemoved: [],
+      depositEvents: [],
     });
 
     expect(miner.state).toBe("MOVING");
@@ -153,6 +154,7 @@ describe("tickDrones edge cases", () => {
       editsThisTick: [],
       frontierAdded: [],
       frontierRemoved: [],
+      depositEvents: [],
     });
 
     expect(miner.state).toBe("MINING");
@@ -202,6 +204,7 @@ describe("tickDrones edge cases", () => {
       editsThisTick: [],
       frontierAdded: [],
       frontierRemoved: [],
+      depositEvents: [],
     });
 
     expect(mineSpy).not.toHaveBeenCalled();
@@ -254,6 +257,7 @@ describe("tickDrones edge cases", () => {
       editsThisTick: [],
       frontierAdded: [],
       frontierRemoved: [],
+      depositEvents: [],
     });
 
     expect(mineSpy).not.toHaveBeenCalled();
@@ -319,6 +323,7 @@ describe("tickDrones edge cases", () => {
       editsThisTick,
       frontierAdded,
       frontierRemoved,
+      depositEvents: [],
     });
 
     expect(minedKeys.has("k1")).toBe(true);
@@ -375,6 +380,7 @@ describe("tickDrones edge cases", () => {
       editsThisTick: [],
       frontierAdded: [],
       frontierRemoved: [],
+      depositEvents: [],
     });
 
     expect(miner.state).toBe("SEEKING");
@@ -402,6 +408,7 @@ describe("tickDrones edge cases", () => {
     const world = {
       countFrontierAboveWater: () => 0,
       getNearestOutpost: () => ({ id: "o1", x: 0, y: 0, z: 0, level: 1 }),
+      undock: () => undefined,
     } as unknown as WorldModel;
 
     tickDrones({
@@ -420,6 +427,7 @@ describe("tickDrones edge cases", () => {
       editsThisTick: [],
       frontierAdded: [],
       frontierRemoved: [],
+      depositEvents: [],
     });
 
     expect(uiSnapshot.credits).toBe(11);
@@ -483,6 +491,7 @@ describe("tickDrones edge cases", () => {
     const world = {
       countFrontierAboveWater: () => 0,
       getNearestOutpost: () => ({ id: "o1", x: 0, y: 0, z: 0, level: 1 }),
+      undock: () => undefined,
     } as unknown as WorldModel;
 
     const drones = [minerA, minerB, hauler];
@@ -504,6 +513,7 @@ describe("tickDrones edge cases", () => {
       editsThisTick: [],
       frontierAdded: [],
       frontierRemoved: [],
+      depositEvents: [],
     });
 
     expect(hauler.state).toBe("FETCHING");
@@ -527,6 +537,7 @@ describe("tickDrones edge cases", () => {
       editsThisTick: [],
       frontierAdded: [],
       frontierRemoved: [],
+      depositEvents: [],
     });
 
     expect(hauler.payload).toBe(5);

@@ -59,4 +59,3 @@ describe("Frame handler timing concept validation", () => {
     expect(handler).toHaveBeenCalledTimes(1);
   });
 });
-

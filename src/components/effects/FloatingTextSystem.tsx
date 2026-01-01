@@ -1,9 +1,7 @@
 import { Html } from "@react-three/drei";
 import { useFrame } from "@react-three/fiber";
 import React, { forwardRef, useImperativeHandle, useState } from "react";
-import { Vector3 } from "three";
-
-import { getConfig } from "../../config/index";
+import type { Vector3 } from "three";
 
 export interface FloatingTextHandle {
   spawn: (pos: Vector3, text: string, color?: string) => void;
@@ -48,24 +46,24 @@ export const FloatingTextSystem = forwardRef<FloatingTextHandle>((_, ref) => {
       const next: TextInstance[] = [];
       let changed = false;
       for (const t of prev) {
-         t.life -= delta;
-         t.y += delta * 1.5; // Float up speed
-         if(t.life > 0) {
-            next.push(t);
-         } else {
-            changed = true;
-         }
+        t.life -= delta;
+        t.y += delta * 1.5; // Float up speed
+        if (t.life > 0) {
+          next.push(t);
+        } else {
+          changed = true;
+        }
       }
-      
+
       // If we only updated positions (mutation), we usually need to force re-render or let React handle state update.
       // Since we are mutating 't.y' inside the loop on the previous state objects (which is bad practice in React strict mode but fast here),
       // we should be careful. Better to return new objects if we rely on React re-render.
-      // However, for high frequency updates, we might want to avoid React state for position and use Refs, 
+      // However, for high frequency updates, we might want to avoid React state for position and use Refs,
       // but Html component needs React state or props to move unless we target its div ref.
-      
+
       // For simplicity/correctness, let's map to new objects if we want smooth updates via React state, but this might be lagging.
       // Actually, standard HTML overlay component from Drei tracks the 3D position automatically if we wrap it in a group or mesh.
-      // So we just need to update the list of active texts. 
+      // So we just need to update the list of active texts.
       return changed ? next : prev;
     });
   });

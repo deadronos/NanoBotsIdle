@@ -8,9 +8,7 @@ import { getVoxelColor } from "../../../utils";
  * Process an instance rebuild job in the worker.
  * Computes matrices and colors for all voxel instances.
  */
-export const handleInstanceRebuildJob = (
-  job: InstanceRebuildJob,
-): FromInstanceRebuildWorker => {
+export const handleInstanceRebuildJob = (job: InstanceRebuildJob): FromInstanceRebuildWorker => {
   try {
     const { positions, waterLevel } = job;
     const count = Math.floor(positions.length / 3);

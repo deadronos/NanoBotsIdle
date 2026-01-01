@@ -1,5 +1,5 @@
-import { FromWorkerSchema } from "../shared/schemas";
 import type { Cmd, FromWorker, ToWorker } from "../shared/protocol";
+import { FromWorkerSchema } from "../shared/schemas";
 import { useGameStore } from "../store";
 import { getTelemetryCollector } from "../telemetry";
 import { debug, error, warn } from "../utils/logger";

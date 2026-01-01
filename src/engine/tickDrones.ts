@@ -193,7 +193,7 @@ export const tickDrones = (options: {
             drone.state = "RETURNING";
             break;
           }
-          
+
           // Retry dock
           const result = world.requestDock(outpost, drone.id);
           if (result === "GRANTED") {
@@ -206,8 +206,8 @@ export const tickDrones = (options: {
           // Only checks every few seconds ideally, but per frame is fine for < 1000 drones if cheap.
           // Let's just check length.
           if (world.getQueueLength(outpost) > 5) {
-             // Find alternate outpost?
-             // For now, naive orbit.
+            // Find alternate outpost?
+            // For now, naive orbit.
           }
 
           // Orbit behavior: Circle around center at y + 5
@@ -337,29 +337,36 @@ export const tickDrones = (options: {
           break;
         }
         case "QUEUING": {
-            // Hauler Queue logic (copy/paste similar to Miner for now)
-            // Haulers might have VIP priority in future?
-            const outpost = world.getNearestOutpost(drone.x, drone.y, drone.z);
-            if (!outpost) {
-               drone.state = "RETURNING";
-               break;
-            }
-            const result = world.requestDock(outpost, drone.id);
-            if (result === "GRANTED") {
-               drone.state = "DEPOSITING";
-               drone.miningTimer = 0;
-            } else {
-               // Orbit
-               const angle = Date.now() / 1000 + drone.id;
-               moveTowards(drone, outpost.x + Math.sin(angle)*8, outpost.y + 8, outpost.z + Math.cos(angle)*8, hSpeed, dtSeconds);
-            }
+          // Hauler Queue logic (copy/paste similar to Miner for now)
+          // Haulers might have VIP priority in future?
+          const outpost = world.getNearestOutpost(drone.x, drone.y, drone.z);
+          if (!outpost) {
+            drone.state = "RETURNING";
             break;
+          }
+          const result = world.requestDock(outpost, drone.id);
+          if (result === "GRANTED") {
+            drone.state = "DEPOSITING";
+            drone.miningTimer = 0;
+          } else {
+            // Orbit
+            const angle = Date.now() / 1000 + drone.id;
+            moveTowards(
+              drone,
+              outpost.x + Math.sin(angle) * 8,
+              outpost.y + 8,
+              outpost.z + Math.cos(angle) * 8,
+              hSpeed,
+              dtSeconds,
+            );
+          }
+          break;
         }
         case "DEPOSITING": {
           drone.miningTimer += dtSeconds;
           if (drone.miningTimer >= 0.5) {
             uiSnapshot.credits += drone.payload;
-            
+
             const outpost = world.getNearestOutpost(drone.x, drone.y, drone.z);
             if (outpost) {
               depositEvents.push({

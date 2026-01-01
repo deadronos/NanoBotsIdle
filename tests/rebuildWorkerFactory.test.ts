@@ -57,7 +57,12 @@ describe("createInstanceRebuildWorker", () => {
     expect(String(url)).toContain("instanceRebuild.worker.ts");
     expect(options).toEqual({ type: "module" });
 
-    w.postMessage({ t: "REBUILD_INSTANCES", jobId: 1, positions: new Float32Array(), waterLevel: 0 });
+    w.postMessage({
+      t: "REBUILD_INSTANCES",
+      jobId: 1,
+      positions: new Float32Array(),
+      waterLevel: 0,
+    });
     expect(MockWorker.lastPostMessage?.transfer).toBeUndefined();
 
     const transfer = [new ArrayBuffer(8)];
@@ -78,4 +83,3 @@ describe("createInstanceRebuildWorker", () => {
     expect(MockWorker.terminated).toBe(true);
   });
 });
-

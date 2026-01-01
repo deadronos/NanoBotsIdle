@@ -50,7 +50,7 @@ const computeBoundingSphere = (
 const colorFromHeight = (y: number, waterLevel: number): [number, number, number] => {
   // Water
   if (y < waterLevel + 0.5) return [0x2d / 255, 0x73 / 255, 0xbf / 255];
-  
+
   // Sand/Beach
   if (y < waterLevel + 2.5) return [0xe3 / 255, 0xdb / 255, 0xa3 / 255];
 
@@ -65,15 +65,15 @@ const colorFromHeight = (y: number, waterLevel: number): [number, number, number
 
   // Below Water (but handled by top check usually if fluid, but this is for solid blocks)
   // Currently solid blocks under water are valid.
-  
+
   // Strata 2: Stone/Iron (approx 0 to -20 relative to water if we dug down?)
   // Wait, in this game "waterLevel" is usually -12 or 0. Let's assume standard coords.
   // Deep layers
   if (y < waterLevel - 20) {
-     return [0x2a / 255, 0x1a / 255, 0x3d / 255]; // Deep Crystal/Obsidian (Dark Purple)
+    return [0x2a / 255, 0x1a / 255, 0x3d / 255]; // Deep Crystal/Obsidian (Dark Purple)
   }
   if (y < waterLevel - 5) {
-     return [0x4a / 255, 0x4a / 255, 0x5a / 255]; // Stone/Iron (Blue-Grey)
+    return [0x4a / 255, 0x4a / 255, 0x5a / 255]; // Stone/Iron (Blue-Grey)
   }
 
   // Fallback

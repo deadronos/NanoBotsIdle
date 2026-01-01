@@ -15,7 +15,6 @@ export type DroneState =
   | "TRANSFER" // Hauler only
   | "QUEUING";
 
-
 export type Drone = {
   id: number;
   x: number;
