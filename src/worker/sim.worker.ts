@@ -13,14 +13,18 @@ const send = (message: FromWorker) => {
   // their underlying ArrayBuffers to avoid a costly structured-clone on the main thread.
   if (message.t === "FRAME") {
     const transfer: ArrayBuffer[] = [];
-    const delta = message.delta as any;
+    const delta = message.delta;
 
     // Look for common typed-array fields and transfer their buffers when present
     const tryAdd = (v: unknown) => {
       if (v && typeof v === "object") {
         // Float32Array / Uint8Array / etc.
         if (v instanceof Float32Array || v instanceof Uint8Array || v instanceof Int32Array || v instanceof Uint32Array || v instanceof Uint8ClampedArray) {
-          transfer.push((v as ArrayBufferView).buffer);
+          const buffer = (v as ArrayBufferView).buffer;
+          // Only transfer ArrayBuffer (not SharedArrayBuffer)
+          if (buffer instanceof ArrayBuffer) {
+            transfer.push(buffer);
+          }
         }
       }
     };
