@@ -3,6 +3,7 @@ import React from "react";
 import { useConfig } from "../config/useConfig";
 import { getSeed } from "../sim/seed";
 import { useUiStore } from "../ui/store";
+import { BlockHighlight } from "./world/BlockHighlight";
 import { VoxelLayerInstanced } from "./world/VoxelLayerInstanced";
 import { VoxelLayerMeshed } from "./world/VoxelLayerMeshed";
 
@@ -18,6 +19,7 @@ export const World: React.FC = () => {
 
   return (
     <group>
+      <BlockHighlight />
       {voxelRenderMode === "meshed" ?
         <VoxelLayerMeshed
           chunkSize={chunkSize}

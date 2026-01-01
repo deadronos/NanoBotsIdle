@@ -7,6 +7,7 @@ import { getConfig } from "../config/index";
 import { playerPosition } from "../engine/playerState";
 import type { ViewMode } from "../types";
 import { useUiStore } from "../ui/store";
+import { playSound } from "../utils/audio";
 import { PlayerVisuals } from "./player/PlayerVisuals";
 import { updatePlayerFrame } from "./player/updatePlayerFrame";
 import { usePointerLockInput } from "./player/usePointerLockInput";
@@ -40,6 +41,7 @@ export const Player: React.FC<PlayerProps> = ({ viewMode }) => {
   });
 
   useFrame((_, delta) => {
+    const wasJumping = isJumping.current;
     updatePlayerFrame({
       cfg: getConfig(),
       deltaSeconds: delta,
@@ -55,6 +57,9 @@ export const Player: React.FC<PlayerProps> = ({ viewMode }) => {
       camera,
       temps: frameTemps.current,
     });
+    if (isJumping.current && !wasJumping) {
+        playSound("jump");
+    }
     playerPosition.copy(position);
   });
 
