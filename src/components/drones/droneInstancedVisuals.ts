@@ -9,6 +9,7 @@ import { DRONE_STATE_ID } from "../../shared/droneState";
 const ROLE_COLORS = {
   MINER: 0x00ffcc,
   HAULER: 0xffaa00,
+  QUEUING: 0xffff00,
 } as const;
 
 // Cache target box state colors
@@ -149,15 +150,21 @@ export const updateDroneInstancedVisuals = (
 
       if (hasBodyColors) {
         const role = roles ? roles[i] : 0;
-        if (roleCache[i] !== role) {
-          roleCache[i] = role;
-          const isHauler = role === 1;
-          _tmpColor.setHex(isHauler ? ROLE_COLORS.HAULER : ROLE_COLORS.MINER);
-          bodyMesh.setColorAt(i, _tmpColor);
-          bodyColorsDirty = true;
-          if (i < bodyColorMin) bodyColorMin = i;
-          if (i > bodyColorMax) bodyColorMax = i;
-        }
+          if (roleCache[i] !== role || droneState === DRONE_STATE_ID.QUEUING) {
+            roleCache[i] = role; // Note: Cache might be flaky if state changes but role doesn't
+            // Actually, we need to cache state too if we use it for color.
+            // Simplified: Just always update color if state is queuing?
+            // Better: use a combined cache key or just force update.
+            const isHauler = role === 1;
+            let color: number = isHauler ? ROLE_COLORS.HAULER : ROLE_COLORS.MINER;
+            if (droneState === DRONE_STATE_ID.QUEUING) color = ROLE_COLORS.QUEUING;
+            
+            _tmpColor.setHex(color);
+            bodyMesh.setColorAt(i, _tmpColor);
+            bodyColorsDirty = true;
+            if (i < bodyColorMin) bodyColorMin = i;
+            if (i > bodyColorMax) bodyColorMax = i;
+          }
       }
 
       // --- target box ---
