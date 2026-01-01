@@ -1,7 +1,7 @@
 import React, { useMemo } from "react";
 import * as THREE from "three";
 
-import { getVoxelColor } from "../../utils";
+import { getVoxelColor } from "../../sim/terrain-core";
 
 interface SimplifiedChunkProps {
   cx: number;

@@ -18,6 +18,13 @@ const TARGET_BOX_COLORS = {
   MOVING: 0x00ffff,
 } as const;
 
+// Pre-computed Color objects to avoid repeated setHex calls
+const _colorMiner = new Color(ROLE_COLORS.MINER);
+const _colorHauler = new Color(ROLE_COLORS.HAULER);
+const _colorQueuing = new Color(ROLE_COLORS.QUEUING);
+const _colorMining = new Color(TARGET_BOX_COLORS.MINING);
+const _colorMoving = new Color(TARGET_BOX_COLORS.MOVING);
+
 const _tmp = new Object3D();
 const _tmpColor = new Color();
 const _pos = new Vector3();
@@ -25,6 +32,12 @@ const _target = new Vector3();
 const _dir = new Vector3();
 const _quat = new Quaternion();
 const _unitY = new Vector3(0, 1, 0);
+
+// Pre-allocated arrays for per-frame animation values to avoid repeated Math operations
+let _bobbingCache: Float32Array | null = null;
+let _pulseCache: Float32Array | null = null;
+let _jitterCache: Float32Array | null = null;
+let _cachedCapacity = 0;
 
 const ensureUint8Cache = (mesh: InstancedMesh, key: string, len: number, fillValue: number) => {
   const existing = mesh.userData[key] as Uint8Array | undefined;
@@ -93,6 +106,30 @@ export const updateDroneInstancedVisuals = (
 
   const count = Math.min(droneCount, Math.floor(positions.length / 3));
 
+  // Pre-compute animation values once per frame instead of per-instance
+  // This avoids calling Math.sin() hundreds of times per frame
+  if (count > _cachedCapacity) {
+    _cachedCapacity = Math.max(count, Math.ceil(_cachedCapacity * 1.5));
+    _bobbingCache = new Float32Array(_cachedCapacity);
+    _pulseCache = new Float32Array(_cachedCapacity);
+    _jitterCache = new Float32Array(_cachedCapacity);
+  }
+
+  // Compute all animation values in batches for better cache locality
+  const bobbingSpeed = cfg.drones.visual.bobbing.speed;
+  const bobbingAmp = cfg.drones.visual.bobbing.amplitude;
+  const pulseFreq = cfg.drones.visual.targetBox.pulseFreq;
+  const pulseAmp = cfg.drones.visual.targetBox.pulseAmplitude;
+  const pulseBase = cfg.drones.visual.targetBox.baseScale;
+  const jitterBase = cfg.drones.visual.miningLaser.baseWidth;
+  const jitterAmp = cfg.drones.visual.miningLaser.jitterAmplitude;
+
+  for (let i = 0; i < count; i += 1) {
+    _bobbingCache![i] = Math.sin(elapsedTime * bobbingSpeed + i) * bobbingAmp;
+    _pulseCache![i] = pulseBase + Math.sin(elapsedTime * pulseFreq + i) * pulseAmp;
+    _jitterCache![i] = jitterBase + Math.sin(elapsedTime * 40 + i) * jitterAmp;
+  }
+
   bodyMesh.count = count;
   miningLaserMesh.count = count;
   scanningLaserMesh.count = count;
@@ -113,9 +150,8 @@ export const updateDroneInstancedVisuals = (
     const y = positions[base + 1];
     const z = positions[base + 2];
 
-    const bob =
-      Math.sin(elapsedTime * cfg.drones.visual.bobbing.speed + i) *
-      cfg.drones.visual.bobbing.amplitude;
+    // Use pre-computed bobbing value from cache
+    const bob = _bobbingCache![i];
 
     _pos.set(x, y + bob, z);
 
@@ -156,11 +192,13 @@ export const updateDroneInstancedVisuals = (
           // Simplified: Just always update color if state is queuing?
           // Better: use a combined cache key or just force update.
           const isHauler = role === 1;
-          let color: number = isHauler ? ROLE_COLORS.HAULER : ROLE_COLORS.MINER;
-          if (droneState === DRONE_STATE_ID.QUEUING) color = ROLE_COLORS.QUEUING;
+          // Use pre-computed Color objects instead of setHex
+          const colorObj =
+            droneState === DRONE_STATE_ID.QUEUING ? _colorQueuing
+            : isHauler ? _colorHauler
+            : _colorMiner;
 
-          _tmpColor.setHex(color);
-          bodyMesh.setColorAt(i, _tmpColor);
+          bodyMesh.setColorAt(i, colorObj);
           bodyColorsDirty = true;
           if (i < bodyColorMin) bodyColorMin = i;
           if (i > bodyColorMax) bodyColorMax = i;
@@ -169,10 +207,8 @@ export const updateDroneInstancedVisuals = (
 
       // --- target box ---
       {
-        const scale =
-          cfg.drones.visual.targetBox.baseScale +
-          Math.sin(elapsedTime * cfg.drones.visual.targetBox.pulseFreq + i) *
-            cfg.drones.visual.targetBox.pulseAmplitude;
+        // Use pre-computed pulse value from cache
+        const scale = _pulseCache![i];
 
         _tmp.position.copy(_target);
         _tmp.quaternion.identity();
@@ -185,9 +221,9 @@ export const updateDroneInstancedVisuals = (
           const stateCode = isMining ? 1 : 0;
           if (targetStateCache[i] !== stateCode) {
             targetStateCache[i] = stateCode;
-            const targetColor = isMining ? TARGET_BOX_COLORS.MINING : TARGET_BOX_COLORS.MOVING;
-            _tmpColor.setHex(targetColor);
-            targetBoxMesh.setColorAt(i, _tmpColor);
+            // Use pre-computed Color objects instead of setHex
+            const colorObj = isMining ? _colorMining : _colorMoving;
+            targetBoxMesh.setColorAt(i, colorObj);
             targetBoxColorsDirty = true;
             if (i < targetColorMin) targetColorMin = i;
             if (i > targetColorMax) targetColorMax = i;
@@ -197,9 +233,8 @@ export const updateDroneInstancedVisuals = (
 
       // --- lasers ---
       if (isMining && dist > 1e-4) {
-        const jitter =
-          cfg.drones.visual.miningLaser.baseWidth +
-          Math.sin(elapsedTime * 40 + i) * cfg.drones.visual.miningLaser.jitterAmplitude;
+        // Use pre-computed jitter value from cache
+        const jitter = _jitterCache![i];
         _tmp.position.copy(_pos).addScaledVector(_dir, dist * 0.5);
         _tmp.quaternion.copy(_quat);
         _tmp.scale.set(jitter, dist, jitter);
@@ -234,8 +269,9 @@ export const updateDroneInstancedVisuals = (
       if (roleCache[i] !== role) {
         roleCache[i] = role;
         const isHauler = role === 1;
-        _tmpColor.setHex(isHauler ? ROLE_COLORS.HAULER : ROLE_COLORS.MINER);
-        bodyMesh.setColorAt(i, _tmpColor);
+        // Use pre-computed Color objects instead of setHex
+        const colorObj = isHauler ? _colorHauler : _colorMiner;
+        bodyMesh.setColorAt(i, colorObj);
         bodyColorsDirty = true;
         if (i < bodyColorMin) bodyColorMin = i;
         if (i > bodyColorMax) bodyColorMax = i;

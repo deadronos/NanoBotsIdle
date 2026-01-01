@@ -7,7 +7,7 @@ import {
   rebuildVoxelInstances,
   setVoxelInstance,
 } from "../src/components/world/instancedVoxels/voxelInstanceMesh";
-import { getVoxelColor } from "../src/utils";
+import { getVoxelColor } from "../src/sim/terrain-core";
 
 describe("voxel color allocations", () => {
   it("getVoxelColor returns numeric hex without allocating Color objects", () => {

@@ -5,7 +5,7 @@ import { expect, test } from "vitest";
 import { getConfig } from "../src/config/index";
 import { getSeed } from "../src/sim/seed";
 import { generateInstances, getSurfaceHeight } from "../src/sim/terrain";
-import { getVoxelColor } from "../src/utils";
+import { getVoxelColor } from "../src/sim/terrain-core";
 
 const noiseTypes: ("sincos" | "open-simplex")[] = ["sincos", "open-simplex"];
 

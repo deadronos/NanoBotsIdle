@@ -1,7 +1,11 @@
 import { getConfig } from "../config/index";
-import { getVoxelColor } from "../utils";
 import { getSeed } from "./seed";
-import { getSurfaceHeightCore, getVoxelValueFromHeight, noise2D } from "./terrain-core";
+import {
+  getSurfaceHeightCore,
+  getVoxelColor,
+  getVoxelValueFromHeight,
+  noise2D,
+} from "./terrain-core";
 
 export { getSeed } from "./seed";
 
