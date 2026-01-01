@@ -60,6 +60,16 @@ export const RenderDeltaSchema = z.object({
       }),
     )
     .optional(),
+  depositEvents: z
+    .array(
+      z.object({
+        x: z.number(),
+        y: z.number(),
+        z: z.number(),
+        amount: z.number(),
+      }),
+    )
+    .optional(),
 });
 
 export const UiSnapshotSchema = z.object({

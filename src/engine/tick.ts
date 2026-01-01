@@ -28,6 +28,7 @@ export const tickEngine = (
   const editsThisTick: VoxelEdit[] = [];
   const frontierAdded: number[] = [];
   const frontierRemoved: number[] = [];
+  const depositEvents: { x: number; y: number; z: number; amount: number }[] = [];
   const debugChunksProcessed: string[] = [];
   const debugQueueLengthAtTickStart = ctx.playerChunksToScan.length;
 
@@ -70,6 +71,7 @@ export const tickEngine = (
       editsThisTick,
       frontierAdded,
       frontierRemoved,
+      depositEvents,
     });
   }
 
@@ -87,6 +89,7 @@ export const tickEngine = (
     debugChunksProcessed: debugChunksProcessed.length > 0 ? debugChunksProcessed : undefined,
     debugQueueLengthAtTickStart,
     outposts: w?.getOutposts(),
+    depositEvents: depositEvents.length > 0 ? depositEvents : undefined,
   };
 
   if (ctx.pendingFrontierSnapshot) {

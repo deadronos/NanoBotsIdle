@@ -35,7 +35,15 @@ export type RenderDelta = {
     toZ: number;
     ttl: number;
   }[];
+  depositEvents?: DepositEvent[];
   outposts?: { id: string; x: number; y: number; z: number; level: number }[];
+};
+
+export type DepositEvent = {
+  x: number;
+  y: number;
+  z: number;
+  amount: number;
 };
 
 export type UiSnapshot = {

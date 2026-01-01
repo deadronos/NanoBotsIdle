@@ -46,6 +46,7 @@ export const tickDrones = (options: {
   editsThisTick: VoxelEdit[];
   frontierAdded: number[];
   frontierRemoved: number[];
+  depositEvents: { x: number; y: number; z: number; amount: number }[];
 }) => {
   const {
     world,
@@ -63,6 +64,7 @@ export const tickDrones = (options: {
     editsThisTick,
     frontierAdded,
     frontierRemoved,
+    depositEvents,
   } = options;
 
   for (const drone of drones) {
@@ -222,11 +224,17 @@ export const tickDrones = (options: {
           drone.miningTimer += dtSeconds;
           if (drone.miningTimer >= 0.5) {
             uiSnapshot.credits += drone.payload;
-            drone.payload = 0;
-
-            // Undock!
             const outpost = world.getNearestOutpost(drone.x, drone.y, drone.z);
-            if (outpost) world.undock(outpost, drone.id);
+            if (outpost) {
+              depositEvents.push({
+                x: outpost.x,
+                y: outpost.y,
+                z: outpost.z,
+                amount: Math.floor(drone.payload),
+              });
+              world.undock(outpost, drone.id);
+            }
+            drone.payload = 0;
 
             drone.state = "SEEKING";
             drone.miningTimer = 0;
@@ -351,10 +359,18 @@ export const tickDrones = (options: {
           drone.miningTimer += dtSeconds;
           if (drone.miningTimer >= 0.5) {
             uiSnapshot.credits += drone.payload;
-            drone.payload = 0;
-
+            
             const outpost = world.getNearestOutpost(drone.x, drone.y, drone.z);
-            if (outpost) world.undock(outpost, drone.id);
+            if (outpost) {
+              depositEvents.push({
+                x: outpost.x,
+                y: outpost.y,
+                z: outpost.z,
+                amount: Math.floor(drone.payload),
+              });
+              world.undock(outpost, drone.id);
+            }
+            drone.payload = 0;
 
             drone.state = "IDLE";
             drone.miningTimer = 0;

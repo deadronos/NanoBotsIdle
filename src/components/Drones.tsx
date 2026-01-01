@@ -12,6 +12,7 @@ import type { FlashHandle } from "./drones/FlashEffect";
 import { FlashEffect } from "./drones/FlashEffect";
 import type { ParticleHandle } from "./drones/Particles";
 import { Particles } from "./drones/Particles";
+import { FloatingTextHandle, FloatingTextSystem } from "./effects/FloatingTextSystem";
 import { updateDronesFrame } from "./drones/updateDronesFrame";
 
 const MAX_DRONES = 512;
@@ -64,9 +65,11 @@ export const Drones: React.FC = () => {
   const statesRef = useRef<Uint8Array | null>(null);
   const rolesRef = useRef<Uint8Array | null>(null);
   const minedPositionsRef = useRef<Float32Array | null>(null);
+  const depositEventsRef = useRef<{ x: number; y: number; z: number; amount: number }[] | null>(null);
 
   const particlesRef = useRef<ParticleHandle>(null);
   const flashRef = useRef<FlashHandle>(null);
+  const floatingTextRef = useRef<FloatingTextHandle>(null);
 
   const bodyMeshRef = useRef<InstancedMesh>(null);
   const miningLaserMeshRef = useRef<InstancedMesh>(null);
@@ -120,9 +123,11 @@ export const Drones: React.FC = () => {
     effects: {
       particles: null,
       flash: null,
+      floatingText: null,
     },
     elapsedTime: 0,
     minedPositions: null,
+    depositEvents: null,
     tempWorldTarget: new Vector3(),
   });
 
@@ -133,6 +138,7 @@ export const Drones: React.FC = () => {
       statesRef.current = frame.delta.entityStates ?? null;
       rolesRef.current = frame.delta.entityRoles ?? null;
       minedPositionsRef.current = frame.delta.minedPositions ?? null;
+      depositEventsRef.current = frame.delta.depositEvents ?? null;
     });
   }, [bridge]);
 
@@ -155,6 +161,7 @@ export const Drones: React.FC = () => {
 
     frameOptions.effects.particles = particlesRef.current;
     frameOptions.effects.flash = flashRef.current;
+    frameOptions.effects.floatingText = floatingTextRef.current;
     frameOptions.droneCount = desired;
     frameOptions.positions = positions;
     frameOptions.targets = targets;
@@ -162,18 +169,22 @@ export const Drones: React.FC = () => {
     frameOptions.roles = rolesRef.current;
     frameOptions.elapsedTime = state.clock.elapsedTime;
     frameOptions.minedPositions = minedPositionsRef.current;
+    frameOptions.depositEvents = depositEventsRef.current;
 
     const didConsumeMined = updateDronesFrame(frameOptions);
 
     if (didConsumeMined) {
       minedPositionsRef.current = null;
     }
+    // Always clear deposit events after frame
+    depositEventsRef.current = null;
   });
 
   return (
     <group>
       <Particles ref={particlesRef} />
       <FlashEffect ref={flashRef} />
+      <FloatingTextSystem ref={floatingTextRef} />
 
       {cfg.drones.useGLBMesh && (
         <Suspense fallback={null}>

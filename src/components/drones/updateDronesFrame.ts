@@ -16,6 +16,7 @@ export const updateDronesFrame = (options: {
   effects: DroneEffectRefs;
   elapsedTime: number;
   minedPositions: Float32Array | null;
+  depositEvents: { x: number; y: number; z: number; amount: number }[] | null;
   tempWorldTarget: Vector3;
 }) => {
   const bodyMesh = options.refs.bodyMesh;
@@ -39,10 +40,24 @@ export const updateDronesFrame = (options: {
     );
   }
 
-  return consumeMinedEffects({
+  const consumedMined = consumeMinedEffects({
     cfg: options.cfg,
     minedPositions: options.minedPositions,
     effects: options.effects,
     tempWorldTarget: options.tempWorldTarget,
   });
+
+  const depositEvents = options.depositEvents;
+  if (depositEvents && options.effects.floatingText) {
+    for (const event of depositEvents) {
+      options.tempWorldTarget.set(event.x, event.y, event.z);
+      options.effects.floatingText.spawn(
+        options.tempWorldTarget,
+        `+${event.amount}`,
+        "#ffaa00", // Gold/Orange color for credits
+      );
+    }
+  }
+
+  return consumedMined;
 };
