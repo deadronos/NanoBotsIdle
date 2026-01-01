@@ -136,7 +136,7 @@ export const resetGame = () => {
   // Temporarily disable persistence so any subsequent setState doesn't write to storage
   try {
     setAllowPersist(false);
-  } catch {
+  } catch (err: unknown) {
     // ignore
   }
 

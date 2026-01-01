@@ -39,6 +39,7 @@ export default defineConfig(() => {
     plugins: [tailwindcss(), react(), ...(isProd ? [stripConsolePlugin()] : [])],
     test: {
       include: ["tests/**/*.{test,spec}.{ts,tsx,js,jsx}"],
+      setupFiles: ["tests/setup/setup.ts"],
     },
     resolve: {
       alias: {
