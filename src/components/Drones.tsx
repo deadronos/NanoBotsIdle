@@ -8,13 +8,13 @@ import { getConfig } from "../config/index";
 import { ensureGeometryHasVertexColors } from "../render/instanced";
 import { getSimBridge } from "../simBridge/simBridge";
 import { useUiStore } from "../ui/store";
+import { playSound } from "../utils/audio";
 import type { FlashHandle } from "./drones/FlashEffect";
 import { FlashEffect } from "./drones/FlashEffect";
 import type { ParticleHandle } from "./drones/Particles";
 import { Particles } from "./drones/Particles";
 import { updateDronesFrame } from "./drones/updateDronesFrame";
 import type { FloatingTextHandle } from "./effects/FloatingTextSystem";
-import { playSound } from "../utils/audio";
 import { FloatingTextSystem } from "./effects/FloatingTextSystem";
 
 const MAX_DRONES = 512;

@@ -2,13 +2,9 @@ import { useFrame, useThree } from "@react-three/fiber";
 import React, { useRef } from "react";
 import * as THREE from "three";
 
-import { useConfig } from "../../config/useConfig";
-import { getSimBridge } from "../../simBridge/simBridge";
-
 export const BlockHighlight: React.FC = () => {
   const { camera } = useThree();
   const meshRef = useRef<THREE.LineSegments>(null);
-  const cfg = useConfig();
 
   // We need to raycast against the world.
   // Since the world is procedurally generated in chunks, simple math is often faster/easier than physics raycasting if we just want "block looking at".
@@ -34,7 +30,7 @@ export const BlockHighlight: React.FC = () => {
     // This is expensive to do every frame if we search the whole scene.
     // But React Three Fiber scene graph is accessible.
 
-    const scene = camera.parent?.parent || camera.parent || null; // Heuristic to find scene root if camera is nested
+    // const scene = camera.parent?.parent || camera.parent || null; // Heuristic to find scene root if camera is nested
     // Better: useThree().scene
 
     // Actually, we can just use `scene` from `useThree` in the component scope? No, `useThree` returns it.
