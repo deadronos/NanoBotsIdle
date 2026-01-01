@@ -5,7 +5,7 @@ import { expect, test } from "vitest";
 import { getConfig, updateConfig } from "../src/config/index";
 import { getSeed } from "../src/sim/seed";
 import { generateInstances } from "../src/sim/terrain";
-import { getVoxelColor } from "../src/utils";
+import { getVoxelColor } from "../src/sim/terrain-core";
 
 test("validate open-simplex tuned params (bias=2, scale=3)", () => {
   const cfg = getConfig();

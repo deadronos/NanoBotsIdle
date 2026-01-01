@@ -5,7 +5,7 @@ import { expect, test } from "vitest";
 import { getConfig, updateConfig } from "../src/config/index";
 import { getSeed } from "../src/sim/seed";
 import { getSurfaceHeight } from "../src/sim/terrain";
-import { getVoxelColor } from "../src/utils";
+import { getVoxelColor } from "../src/sim/terrain-core";
 
 const parsePPMPixels = (content: string) => {
   const lines = content.split(/\r?\n/).slice(3); // skip header
