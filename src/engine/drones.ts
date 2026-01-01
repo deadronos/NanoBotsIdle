@@ -12,7 +12,9 @@ export type DroneState =
   | "DEPOSITING"
   | "WAITING_PICKUP"
   | "FETCHING" // Hauler only
-  | "TRANSFER"; // Hauler only
+  | "TRANSFER" // Hauler only
+  | "QUEUING";
+
 
 export type Drone = {
   id: number;

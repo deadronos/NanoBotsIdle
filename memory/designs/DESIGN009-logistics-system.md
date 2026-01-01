@@ -21,6 +21,8 @@ Drones are no longer generic. They have roles:
 Outposts serve as drop-off points. They allow the player to extend the effective range of their operation.
 - **Model**: Simple point entity `(x, y, z)`.
 - **Function**: Valid target for `RETURNING` state.
+- **Capacity**: Limited to 4 docking slots.
+- **Queue**: Manages extensive traffic via "Smart Queuing" protocol.
 - **Persistence**: Saved in `GameState` to persist layout across sessions.
 
 ## Detailed Design
@@ -40,7 +42,15 @@ The Hauler acts as a "servant" to the Mining fleet.
     - `miner.payload -= transferAmount`
     - **Crucial:** If `miner.payload == 0`, Miner state forced to `SEEKING`. This "resets" the miner to work mode immediately.
 4.  **RETURNING**: Full (or target lost with cargo). Moves to nearest Outpost.
-5.  **DEPOSITING**: Converts payload to credits.
+    - **Smart Queuing**: Upon arrival, requests a docking slot.
+    - If granted -> `DEPOSITING`.
+    - If denied -> `QUEUING`.
+5.  **QUEUING**: Safe holding pattern.
+    - Behavior: Orbit the outpost at `altitude + 5`.
+    - Retry: Periodically requests docking slot.
+    - Reroute: If queue > 5, may seek other outposts (future improvement).
+6.  **DEPOSITING**: Converts payload to credits.
+    - Undocks (frees slot) upon completion.
 
 ### Interception Mechanic
 

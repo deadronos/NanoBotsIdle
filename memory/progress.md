@@ -18,6 +18,24 @@
 
 ## Recent updates
 
+### 2026-01-01
+
+- **Smart Queuing (Logistics):** Implemented outpost traffic management to prevent drone congestion.
+  - **Limited Slots:** Outposts now have 4 docking slots.
+  - **Orbital Queuing:** Drones denied docking enter an orbital queuing state above the outpost.
+  - **Visual Feedback:** Queuing drones turn yellow to signal congestion to the player.
+  - **Protocol:** Updated main thread/worker synchronization for queue states.
+
+- **Chunk LOD System (Performance):** Implemented distance-based Level of Detail.
+  - **LOD0 (< 6 chunks):** Full InstancedMesh rendering.
+  - **LOD1-2 (6-12 chunks):** Simplified "Proxy Buffers" (currently colored boxes) to reduce draw calls and vertex count.
+  - **Unloading (> 12 chunks):** Aggressive cleanup of distant chunk memory.
+
+- **Typed Worker Bridge (Reliability):**
+  - Integrated `zod` for runtime validation of all `ToWorker` and `FromWorker` messages.
+  - Prevents silent serialization failures and "undefined property" bugs between threads.
+
+
 ### 2025-12-31
 
 - **Hotpath Performance Optimizations:** Significantly reduced main-thread CPU usage during meshing and movement.

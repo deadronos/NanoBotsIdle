@@ -27,6 +27,10 @@ The Logistics System separates resource extraction from resource transportation,
 
 - **Definition:** Player-placed drop-off points.
 - **Function:** Serves as a valid destination for `RETURNING` drones (Miners or Haulers).
+- **Smart Queuing:**
+  - Has 4 docking slots.
+  - Implements an orbital queue for excess traffic.
+  - Drones visually circle the outpost while waiting for permission to dock.
 - **Persistence:** Outpost locations are part of the save file (`UiSnapshot.outposts`). They are hydrated into the `WorldModel` upon engine initialization.
 
 ## Economy Model
