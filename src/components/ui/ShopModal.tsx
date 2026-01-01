@@ -18,16 +18,19 @@ export const ShopModal: React.FC<ShopModalProps> = ({ onClose }) => {
   const bridge = getSimBridge();
 
   return (
-    <ModalShell onClose={onClose}>
+    <ModalShell
+      onClose={onClose}
+      contentClassName="bg-gray-900 border border-white/10 p-8 rounded-2xl max-w-2xl w-full shadow-2xl relative cursor-default z-10 flex flex-col max-h-[85vh]"
+    >
       <button onClick={onClose} className="absolute top-4 right-4 text-white/50 hover:text-white">
         ✕
       </button>
 
-      <h2 className="text-3xl font-bold text-white mb-6 border-b border-white/10 pb-4">
+      <h2 className="text-3xl font-bold text-white mb-6 border-b border-white/10 pb-4 shrink-0">
         Research & Development
       </h2>
 
-      <div className="grid grid-cols-2 gap-4 mb-8">
+      <div className="grid grid-cols-2 gap-4 mb-8 overflow-y-auto min-h-0 pr-2">
         <UpgradeCard
           title="Drone Fleet"
           level={snapshot.droneCount}
@@ -70,7 +73,7 @@ export const ShopModal: React.FC<ShopModalProps> = ({ onClose }) => {
         />
       </div>
 
-      <div className="bg-purple-900/20 border border-purple-500/30 p-6 rounded-xl flex items-center justify-between">
+      <div className="bg-purple-900/20 border border-purple-500/30 p-6 rounded-xl flex items-center justify-between shrink-0">
         <div>
           <h3 className="text-xl font-bold text-purple-400">Planetary Jump (Prestige)</h3>
           <p className="text-sm text-purple-200/60 mt-1">

@@ -40,6 +40,7 @@ The economy is driven by **Credits** earned from mining.
 ### Currency Flow
 - **Source:** Mining blocks. Value depends on depth/type + Prestige Multiplier.
 - **Sink:** Purchasing Upgrades (Drones, Speed, etc.) and Structures (Outposts).
+- **Feedback:** "Floating Text" appears above outposts when resources are deposited, giving immediate visual confirmation of income (See `DEC008-visual-effects-system.md`).
 
 ### Cost Scaling
 
