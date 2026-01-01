@@ -14,6 +14,7 @@ import type { ParticleHandle } from "./drones/Particles";
 import { Particles } from "./drones/Particles";
 import { updateDronesFrame } from "./drones/updateDronesFrame";
 import type { FloatingTextHandle } from "./effects/FloatingTextSystem";
+import { playSound } from "../utils/audio";
 import { FloatingTextSystem } from "./effects/FloatingTextSystem";
 
 const MAX_DRONES = 512;
@@ -176,9 +177,15 @@ export const Drones: React.FC = () => {
 
     const didConsumeMined = updateDronesFrame(frameOptions);
 
-    if (didConsumeMined) {
+    if (didConsumeMined && minedPositionsRef.current && minedPositionsRef.current.length > 0) {
       minedPositionsRef.current = null;
+      playSound("mine");
     }
+
+    if (depositEventsRef.current && depositEventsRef.current.length > 0) {
+        playSound("deposit");
+    }
+
     // Always clear deposit events after frame
     depositEventsRef.current = null;
   });

@@ -43,6 +43,9 @@ export const Environment: React.FC = () => {
       {/* Ambient Light */}
       <ambientLight intensity={cfg.render.ambientLightIntensity} />
 
+      {/* Fog to hide chunk loading boundaries */}
+      <fog attach="fog" args={["#d6dbdf", 30, 120]} />
+
       {/* Sun / Directional Light */}
       <directionalLight
         ref={lightRef}
