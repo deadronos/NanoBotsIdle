@@ -20,6 +20,12 @@
 
 ### 2025-12-31
 
+- **Hotpath Performance Optimizations:** Significantly reduced main-thread CPU usage during meshing and movement.
+  - Implemented 3-layered strategy: reduced worker concurrency (`maxInFlight: 4`), per-frame result batching (`maxMeshesPerFrame: 4`), and worker-side bounding sphere pre-computation.
+  - Added 150ms debounce to `reprioritizeDirty()` to optimize movement overhead.
+  - Integrated optional frame handler timing for easier profiling.
+  - Consolidated documentation into `docs/ARCHITECTURE/TECH005-performance-optimizations.md`.
+
 - **Logistics System (Phase 3):** Implemented Hauler drones and Outpost persistence (`TASK013`, `DESIGN009`).
   - **Hauler Drones:** New role dedicated to transport. Includes AI for intercepting miners and depositing cargo.
   - **Outposts:** Persistent player-placed structures serving as drop-off points.
