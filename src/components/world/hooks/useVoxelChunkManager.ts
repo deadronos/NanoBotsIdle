@@ -65,7 +65,7 @@ export function useVoxelChunkManager({
         }
       }
     },
-    [chunkSize, removeVoxel]
+    [chunkSize, removeVoxel],
   );
 
   const ensureInitialChunk = useCallback(() => {

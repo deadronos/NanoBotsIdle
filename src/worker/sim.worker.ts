@@ -1,8 +1,8 @@
 /// <reference lib="webworker" />
 
 import { createEngine } from "../engine/engine";
-import { ToWorkerSchema } from "../shared/schemas";
 import type { FromWorker, ToWorker } from "../shared/protocol";
+import { ToWorkerSchema } from "../shared/schemas";
 
 const scope = self as DedicatedWorkerGlobalScope;
 
@@ -20,7 +20,13 @@ const send = (message: FromWorker) => {
     const tryAdd = (v: unknown) => {
       if (v && typeof v === "object") {
         // Float32Array / Uint8Array / etc.
-        if (v instanceof Float32Array || v instanceof Uint8Array || v instanceof Int32Array || v instanceof Uint32Array || v instanceof Uint8ClampedArray) {
+        if (
+          v instanceof Float32Array ||
+          v instanceof Uint8Array ||
+          v instanceof Int32Array ||
+          v instanceof Uint32Array ||
+          v instanceof Uint8ClampedArray
+        ) {
           const buffer = (v as ArrayBufferView).buffer;
           // Only transfer ArrayBuffer (not SharedArrayBuffer)
           if (buffer instanceof ArrayBuffer) {

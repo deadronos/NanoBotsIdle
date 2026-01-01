@@ -33,7 +33,9 @@ export interface GameState {
 
 // Toggle used to temporarily suppress persistence during critical operations (e.g., reset)
 export let allowPersist = true;
-export const setAllowPersist = (v: boolean) => { allowPersist = v; };
+export const setAllowPersist = (v: boolean) => {
+  allowPersist = v;
+};
 
 export const useGameStore = create<GameState>()(
   persist(
@@ -94,7 +96,7 @@ export const useGameStore = create<GameState>()(
       version: 2,
       // Suppress persistence when `allowPersist` is false. This protects against races where
       // the app writes to storage while a reset/remove is in progress.
-      partialize: (state) => (allowPersist ? state : {} as Partial<GameState>),
+      partialize: (state) => (allowPersist ? state : ({} as Partial<GameState>)),
     },
   ),
 );

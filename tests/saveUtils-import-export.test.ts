@@ -287,7 +287,9 @@ describe("saveUtils: exportSave/importSave", () => {
   it("importSave rejects when FileReader errors", async () => {
     MockFileReader.next = { kind: "error" };
 
-    await expect(importSave(new File(["x"], "save.json"))).rejects.toThrow("Failed to read save file");
+    await expect(importSave(new File(["x"], "save.json"))).rejects.toThrow(
+      "Failed to read save file",
+    );
     expect(loggerErrorMock).toHaveBeenCalledWith("Failed to read save file");
   });
 });

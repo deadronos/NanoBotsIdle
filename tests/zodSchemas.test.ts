@@ -1,6 +1,6 @@
+import { describe, expect, it } from "vitest";
 
-import { describe, it, expect } from "vitest";
-import { ToWorkerSchema, FromWorkerSchema } from "../src/shared/schemas";
+import { FromWorkerSchema, ToWorkerSchema } from "../src/shared/schemas";
 
 describe("Zod Bridge Schemas", () => {
   it("validates correct INIT message", () => {
@@ -17,9 +17,9 @@ describe("Zod Bridge Schemas", () => {
         laserPowerLevel: 1,
         minedBlocks: 0,
         totalBlocks: 0,
-        upgrades: { "speed": 1 },
-        outposts: []
-      }
+        upgrades: { speed: 1 },
+        outposts: [],
+      },
     };
     const result = ToWorkerSchema.safeParse(msg);
     expect(result.success).toBe(true);
@@ -32,7 +32,7 @@ describe("Zod Bridge Schemas", () => {
       nowMs: 2000,
       budgetMs: 8,
       maxSubsteps: 4,
-      cmds: []
+      cmds: [],
     };
     const result = ToWorkerSchema.safeParse(msg);
     expect(result.success).toBe(true);
@@ -45,7 +45,7 @@ describe("Zod Bridge Schemas", () => {
       // nowMs missing
       budgetMs: 8,
       maxSubsteps: 4,
-      cmds: []
+      cmds: [],
     };
     const result = ToWorkerSchema.safeParse(msg);
     expect(result.success).toBe(false);
@@ -70,8 +70,8 @@ describe("Zod Bridge Schemas", () => {
         minedBlocks: 0,
         totalBlocks: 0,
         upgrades: {},
-        outposts: []
-      }
+        outposts: [],
+      },
     };
     const result = FromWorkerSchema.safeParse(msg);
     expect(result.success).toBe(true);
@@ -80,7 +80,7 @@ describe("Zod Bridge Schemas", () => {
   it("validates correct ERROR message", () => {
     const msg = {
       t: "ERROR",
-      message: "Something went wrong"
+      message: "Something went wrong",
     };
     const result = FromWorkerSchema.safeParse(msg);
     expect(result.success).toBe(true);

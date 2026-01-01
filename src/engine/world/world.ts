@@ -94,7 +94,7 @@ export class WorldModel {
 
   requestDock(outpost: Outpost, droneId: number): DockResult {
     const MAX_SLOTS = 4; // Start with 4 slots
-    
+
     // If already docked, keep it
     if (outpost.docked.has(droneId)) return "GRANTED";
 

@@ -1,8 +1,8 @@
 import type { InstancedMesh } from "three";
 
+import type { FloatingTextHandle } from "../effects/FloatingTextSystem";
 import type { FlashHandle } from "./FlashEffect";
 import type { ParticleHandle } from "./Particles";
-import type { FloatingTextHandle } from "../effects/FloatingTextSystem";
 
 export type DroneVisualRefs = {
   bodyMesh: InstancedMesh | null;

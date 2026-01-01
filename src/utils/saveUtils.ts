@@ -1,4 +1,4 @@
-import { setAllowPersist,useGameStore  } from "../store";
+import { setAllowPersist, useGameStore } from "../store";
 import { error, warn } from "./logger";
 import { applyMigrations, getMigrationsPath } from "./migrations/registry";
 import type { SaveData } from "./migrations/types";

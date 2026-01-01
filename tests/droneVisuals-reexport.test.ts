@@ -8,4 +8,3 @@ describe("droneVisuals (re-export)", () => {
     expect(updateDroneVisuals).toBe(updateDroneInstancedVisuals);
   });
 });
-

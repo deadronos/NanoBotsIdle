@@ -97,4 +97,3 @@ describe("occlusionCuller", () => {
     expect(c.userData.culledByOcclusion).toBeUndefined();
   });
 });
-

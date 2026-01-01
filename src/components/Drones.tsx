@@ -12,8 +12,9 @@ import type { FlashHandle } from "./drones/FlashEffect";
 import { FlashEffect } from "./drones/FlashEffect";
 import type { ParticleHandle } from "./drones/Particles";
 import { Particles } from "./drones/Particles";
-import { FloatingTextHandle, FloatingTextSystem } from "./effects/FloatingTextSystem";
 import { updateDronesFrame } from "./drones/updateDronesFrame";
+import type { FloatingTextHandle } from "./effects/FloatingTextSystem";
+import { FloatingTextSystem } from "./effects/FloatingTextSystem";
 
 const MAX_DRONES = 512;
 
@@ -65,7 +66,9 @@ export const Drones: React.FC = () => {
   const statesRef = useRef<Uint8Array | null>(null);
   const rolesRef = useRef<Uint8Array | null>(null);
   const minedPositionsRef = useRef<Float32Array | null>(null);
-  const depositEventsRef = useRef<{ x: number; y: number; z: number; amount: number }[] | null>(null);
+  const depositEventsRef = useRef<{ x: number; y: number; z: number; amount: number }[] | null>(
+    null,
+  );
 
   const particlesRef = useRef<ParticleHandle>(null);
   const flashRef = useRef<FlashHandle>(null);
@@ -192,7 +195,7 @@ export const Drones: React.FC = () => {
         </Suspense>
       )}
 
-      {droneGeo && droneMat ? (
+      {droneGeo && droneMat ?
         <instancedMesh
           ref={bodyMeshRef}
           args={[droneGeo, droneMat, MAX_DRONES]}
@@ -200,8 +203,7 @@ export const Drones: React.FC = () => {
           receiveShadow
           frustumCulled={false}
         />
-      ) : (
-        <instancedMesh
+      : <instancedMesh
           ref={bodyMeshRef}
           args={[undefined, undefined, MAX_DRONES]}
           castShadow
@@ -217,7 +219,7 @@ export const Drones: React.FC = () => {
             vertexColors={true}
           />
         </instancedMesh>
-      )}
+      }
 
       <instancedMesh
         ref={miningLaserMeshRef}

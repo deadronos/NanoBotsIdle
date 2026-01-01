@@ -1,8 +1,8 @@
 import type { Camera, Group, Vector3 } from "three";
 
 import type { Config } from "../../config/index";
+import { getVoxelMaterialAt, MATERIAL_BEDROCK, MATERIAL_SOLID } from "../../sim/collision";
 import { getPlayerGroundHeight } from "../../sim/player";
-import { getVoxelMaterialAt, MATERIAL_SOLID, MATERIAL_BEDROCK } from "../../sim/collision";
 import type { ViewMode } from "../../types";
 
 type PlayerFrameTemps = {
@@ -123,7 +123,9 @@ export const updatePlayerFrame = (options: {
   }
 
   const cameraOffsetDist = 5;
-  const targetCamPos = camPos.copy(position).sub(camOffset.copy(lookDir).multiplyScalar(cameraOffsetDist));
+  const targetCamPos = camPos
+    .copy(position)
+    .sub(camOffset.copy(lookDir).multiplyScalar(cameraOffsetDist));
   targetCamPos.y += 1.0;
 
   // Camera Collision Check

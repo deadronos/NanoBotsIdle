@@ -24,8 +24,9 @@ describe("ensureInstanceColors buffer reuse", () => {
 
     const mesh = {
       geometry,
-      instanceColor: initialCapacity > 0
-        ? new InstancedBufferAttribute(new Float32Array(initialCapacity * 3).fill(1), 3)
+      instanceColor:
+        initialCapacity > 0 ?
+          new InstancedBufferAttribute(new Float32Array(initialCapacity * 3).fill(1), 3)
         : undefined,
     } as unknown as InstancedMesh;
 
