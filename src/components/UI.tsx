@@ -5,6 +5,7 @@ import { useUiStore } from "../ui/store";
 import { SettingsModal } from "./SettingsModal";
 import { BuildingDrawer } from "./ui/BuildingDrawer";
 import { Hud } from "./ui/Hud";
+import { Minimap } from "./ui/Minimap";
 import { Reticle } from "./ui/Reticle";
 import { ShopModal } from "./ui/ShopModal";
 import { TitlePanel } from "./ui/TitlePanel";
@@ -65,6 +66,7 @@ export const UI: React.FC<UIProps> = ({ viewMode, onToggleView }) => {
       {/* Desktop Layout (>= md) */}
       <div className="hidden md:contents">
         <BuildingDrawer />
+        <Minimap />
         <Hud
           credits={credits}
           prestigeLevel={prestigeLevel}
