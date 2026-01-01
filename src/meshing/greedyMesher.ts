@@ -8,6 +8,24 @@ const chooseIndexArray = (vertexCount: number, indices: number[]) => {
   return Uint16Array.from(indices);
 };
 
+// Reusable arrays pool to reduce allocations in hot path
+// Using a simple pool with a max size to avoid unbounded growth
+const ARRAY_POOL_MAX_SIZE = 4;
+const positionsPool: number[][] = [];
+const normalsPool: number[][] = [];
+const indicesPool: number[][] = [];
+
+const getArrayFromPool = (pool: number[][]): number[] => {
+  return pool.pop() ?? [];
+};
+
+const returnArrayToPool = (pool: number[][], arr: number[]) => {
+  if (pool.length < ARRAY_POOL_MAX_SIZE) {
+    arr.length = 0; // Clear the array
+    pool.push(arr);
+  }
+};
+
 export const downsampleMaterials = (
   materials: Uint8Array,
   size: number,
@@ -71,9 +89,10 @@ export const greedyMeshChunk = (input: GreedyMeshInput): MeshGeometry => {
     return materials[index3D(x + 1, y + 1, z + 1, dim)];
   };
 
-  const positions: number[] = [];
-  const normals: number[] = [];
-  const indices: number[] = [];
+  // Use pooled arrays to reduce allocations
+  const positions = getArrayFromPool(positionsPool);
+  const normals = getArrayFromPool(normalsPool);
+  const indices = getArrayFromPool(indicesPool);
 
   const pushVertex = (x: number, y: number, z: number, nx: number, ny: number, nz: number) => {
     const index = positions.length / 3;
@@ -209,6 +228,11 @@ export const greedyMeshChunk = (input: GreedyMeshInput): MeshGeometry => {
   const positionsTyped = new Float32Array(positions);
   const normalsTyped = new Float32Array(normals);
   const indicesTyped = chooseIndexArray(positionsTyped.length / 3, indices);
+
+  // Return arrays to pool for reuse
+  returnArrayToPool(positionsPool, positions);
+  returnArrayToPool(normalsPool, normals);
+  returnArrayToPool(indicesPool, indices);
 
   return {
     positions: positionsTyped,
