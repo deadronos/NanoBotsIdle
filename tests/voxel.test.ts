@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import { getConfig } from "../src/config/index";
-import { getVoxelColor, getVoxelValue } from "../src/utils";
+import { getVoxelColor, getVoxelValueFromHeight as getVoxelValue } from "../src/sim/terrain-core";
 
 describe("voxel utils", () => {
   it("getVoxelValue boundaries (relative to waterLevel)", () => {

@@ -2,7 +2,7 @@ import type { InstancedMesh, Object3D } from "three";
 import { Color, InstancedBufferAttribute } from "three";
 
 import { ensureGeometryHasVertexColors } from "../../../render/instanced";
-import { getVoxelColor } from "../../../utils";
+import { getVoxelColor } from "../../../sim/terrain-core";
 
 export type VoxelColorFn = (x: number, y: number, z: number) => number;
 

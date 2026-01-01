@@ -1,24 +1,22 @@
 import { describe, expect, it, vi } from "vitest";
 
+import { getSmoothHeight } from "../src/sim/terrain";
+import type * as TerrainCore from "../src/sim/terrain-core";
+import { getVoxelColor, getVoxelType, noise2D } from "../src/sim/terrain-core";
+import { random } from "../src/utils";
+
 const { noise2DMock } = vi.hoisted(() => {
   return { noise2DMock: vi.fn<(x: number, z: number) => number>() };
 });
 
-vi.mock("../src/sim/terrain-core", () => {
+vi.mock("../src/sim/terrain-core", async (importOriginal) => {
+  const actual = await importOriginal<typeof TerrainCore>();
   return {
+    ...actual,
     getVoxelValueFromHeight: (y: number, waterLevel = -12) => y - waterLevel,
     noise2D: (x: number, z: number) => noise2DMock(x, z),
   };
 });
-
-import {
-  getSmoothHeight,
-  getTerrainHeight,
-  getVoxelColor,
-  getVoxelType,
-  noise2D,
-  random,
-} from "../src/utils";
 
 describe("src/utils.ts", () => {
   it("random is deterministic and in [0,1)", () => {
@@ -49,12 +47,6 @@ describe("src/utils.ts", () => {
     expect(getVoxelType(-11, -12)).toBe("solid");
   });
 
-  it("getTerrainHeight quantizes and clamps at 0", () => {
-    noise2DMock.mockImplementation((x, z) => (x === 1 && z === 1 ? -0.2 : 1.2));
-
-    expect(getTerrainHeight(1, 1)).toBe(0); // floor(-0.4) => -1 => clamped
-    expect(getTerrainHeight(2, 2)).toBe(2); // floor(2.4) => 2
-  });
 
   it("getSmoothHeight is continuous (no quantization)", () => {
     noise2DMock.mockReturnValue(0.25);

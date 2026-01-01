@@ -3,7 +3,8 @@ import { Color, type InstancedMesh, Object3D } from "three";
 
 import { applyInstanceUpdates } from "../../render/instanced";
 import { getGroundHeightWithEdits } from "../../sim/collision";
-import { forEachRadialChunk, getVoxelColor } from "../../utils";
+import { getVoxelColor } from "../../sim/terrain-core";
+import { forEachRadialChunk } from "../../utils";
 import { ensureInstanceColors } from "./instancedVoxels/voxelInstanceMesh";
 
 export const FrontierFillRenderer: React.FC<{

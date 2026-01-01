@@ -2,7 +2,7 @@ import type {
   FromInstanceRebuildWorker,
   InstanceRebuildJob,
 } from "../../../shared/instanceRebuildProtocol";
-import { getVoxelColor } from "../../../utils";
+import { getVoxelColor } from "../../../sim/terrain-core";
 
 /**
  * Process an instance rebuild job in the worker.

@@ -2,7 +2,7 @@ import type { Vector3 } from "three";
 import { Color } from "three";
 
 import type { Config } from "../../config/index";
-import { getVoxelColor } from "../../utils";
+import { getVoxelColor } from "../../sim/terrain-core";
 import type { DroneEffectRefs } from "./types";
 
 const _tmpColor = new Color();
