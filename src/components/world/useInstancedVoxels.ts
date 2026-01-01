@@ -2,6 +2,8 @@ import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } fr
 import type { InstancedMesh } from "three";
 import { Object3D } from "three";
 
+import { error } from "@/utils/logger";
+
 import { applyInstanceUpdates } from "../../render/instanced";
 import { InstanceRebuildManager } from "./instancedVoxels/rebuildManager";
 import {
@@ -143,10 +145,9 @@ export const useInstancedVoxels = (
         // Apply the result atomically in one frame (double-buffering)
         rebuildManager.applyRebuildToMesh(mesh, result.matrices, result.colors, result.count);
         needsRebuild.current = false;
-      } catch (error) {
+      } catch (err) {
         // Fallback to main-thread rebuild on error
-        // eslint-disable-next-line no-console
-        console.error("Instance rebuild worker failed:", error);
+        error("Instance rebuild worker failed:", err);
         rebuildVoxelInstances(mesh, tmp, positions, getColorFn);
         needsRebuild.current = false;
       } finally {
