@@ -7,10 +7,10 @@ import { getConfig } from "../config/index";
 import { playerPosition } from "../engine/playerState";
 import type { ViewMode } from "../types";
 import { useUiStore } from "../ui/store";
+import { playSound } from "../utils/audio";
 import { PlayerVisuals } from "./player/PlayerVisuals";
 import { updatePlayerFrame } from "./player/updatePlayerFrame";
 import { usePointerLockInput } from "./player/usePointerLockInput";
-import { playSound } from "../utils/audio";
 
 interface PlayerProps {
   viewMode: ViewMode;

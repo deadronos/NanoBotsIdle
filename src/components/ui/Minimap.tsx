@@ -1,4 +1,5 @@
 import React, { useEffect, useRef } from "react";
+
 import { getSimBridge } from "../../simBridge/simBridge";
 
 export const Minimap: React.FC = () => {
@@ -42,9 +43,6 @@ export const Minimap: React.FC = () => {
       // The `Player` component updates `playerPosition` vector in `src/engine/playerState`.
       // We can import that if it's shared memory, but it's likely client-side only state.
       // Yes, `src/engine/playerState.ts` exports `playerPosition`.
-
-      const px = 0; // Relative center
-      const py = 0;
 
       // Draw Player (Center)
       ctx.fillStyle = "#00ff00";

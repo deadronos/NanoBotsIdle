@@ -1,5 +1,5 @@
 // Simple synthesized audio manager
-import { debug, error } from "./logger";
+import { error } from "./logger";
 
 type SoundType = "mine" | "jump" | "scan" | "deposit";
 
@@ -9,7 +9,7 @@ let masterGain: GainNode | null = null;
 const initAudio = () => {
   if (audioContext) return;
   try {
-    const Ctx = window.AudioContext || (window as any).webkitAudioContext;
+    const Ctx = window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
     if (!Ctx) return;
     audioContext = new Ctx();
     masterGain = audioContext.createGain();
@@ -25,7 +25,9 @@ export const playSound = (type: SoundType) => {
   if (!audioContext || !masterGain) return;
 
   if (audioContext.state === "suspended") {
-    audioContext.resume().catch(() => {});
+    audioContext.resume().catch(() => {
+        // Ignore resume errors
+    });
   }
 
   const osc = audioContext.createOscillator();
