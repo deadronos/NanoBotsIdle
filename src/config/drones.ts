@@ -111,7 +111,10 @@ export const defaultDronesConfig: DronesConfig = {
     },
   },
   useGLBMesh: true,
-  glbPath: "/assets/glb/drone/drone_compressed.glb",
+  glbPath: `${import.meta.env.BASE_URL}assets/glb/drone/drone_compressed.glb`.replace(
+    /\/\//g,
+    "/",
+  ),
 };
 
 import type { Config } from "./index";
