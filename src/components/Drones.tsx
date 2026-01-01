@@ -1,6 +1,7 @@
+import { useGLTF } from "@react-three/drei";
 import { useFrame } from "@react-three/fiber";
-import React, { useCallback, useEffect, useLayoutEffect, useRef } from "react";
-import type { InstancedMesh } from "three";
+import React, { Suspense, useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
+import type { BufferGeometry, InstancedMesh, Material, Mesh } from "three";
 import { InstancedBufferAttribute, Vector3 } from "three";
 
 import { getConfig } from "../config/index";
@@ -15,11 +16,48 @@ import { updateDronesFrame } from "./drones/updateDronesFrame";
 
 const MAX_DRONES = 512;
 
+type DroneMeshLoaderProps = {
+  path: string;
+  onLoad: (geo: BufferGeometry, mat: Material) => void;
+};
+
+// Component that suspends while loading the GLB
+const DroneMeshLoader: React.FC<DroneMeshLoaderProps> = ({ path, onLoad }) => {
+  const { scene } = useGLTF(path);
+
+  useEffect(() => {
+    let foundGeo: BufferGeometry | null = null;
+    let foundMat: Material | null = null;
+
+    scene.traverse((child) => {
+      if ((child as Mesh).isMesh && !foundGeo) {
+        const mesh = child as Mesh;
+        foundGeo = mesh.geometry;
+        foundMat = mesh.material as Material;
+      }
+    });
+
+    if (foundGeo && foundMat) {
+      onLoad(foundGeo, foundMat);
+    }
+  }, [scene, onLoad]);
+
+  return null;
+};
+
 export const Drones: React.FC = () => {
   const cfg = getConfig();
   const droneCount = useUiStore((state) => state.snapshot.droneCount);
   const haulerCount = useUiStore((state) => state.snapshot.haulerCount);
   const bridge = getSimBridge();
+
+  const [droneGeo, setDroneGeo] = useState<BufferGeometry | null>(null);
+  const [droneMat, setDroneMat] = useState<Material | null>(null);
+
+  const onGLBLoaded = useCallback((geo: BufferGeometry, mat: Material) => {
+    setDroneGeo(geo);
+    setDroneMat(mat);
+  }, []);
 
   const positionsRef = useRef<Float32Array | null>(null);
   const targetsRef = useRef<Float32Array | null>(null);
@@ -50,7 +88,9 @@ export const Drones: React.FC = () => {
       ensureInstanceColors(bodyMesh, MAX_DRONES);
       bodyMesh.count = 0;
     }
+  }, [ensureInstanceColors, droneGeo, droneMat]); // Re-run when geometry/material changes
 
+  useLayoutEffect(() => {
     const targetBoxMesh = targetBoxMeshRef.current;
     if (targetBoxMesh) {
       ensureInstanceColors(targetBoxMesh, MAX_DRONES);
@@ -135,22 +175,38 @@ export const Drones: React.FC = () => {
       <Particles ref={particlesRef} />
       <FlashEffect ref={flashRef} />
 
-      <instancedMesh
-        ref={bodyMeshRef}
-        args={[undefined, undefined, MAX_DRONES]}
-        castShadow
-        receiveShadow
-        frustumCulled={false}
-      >
-        <coneGeometry args={[0.3, 0.8, 4]} />
-        <meshStandardMaterial
-          color="#ffffff"
-          emissive="#004444"
-          emissiveIntensity={0.75}
-          roughness={0.2}
-          vertexColors={true}
+      {cfg.drones.useGLBMesh && (
+        <Suspense fallback={null}>
+          <DroneMeshLoader path={cfg.drones.glbPath} onLoad={onGLBLoaded} />
+        </Suspense>
+      )}
+
+      {droneGeo && droneMat ? (
+        <instancedMesh
+          ref={bodyMeshRef}
+          args={[droneGeo, droneMat, MAX_DRONES]}
+          castShadow
+          receiveShadow
+          frustumCulled={false}
         />
-      </instancedMesh>
+      ) : (
+        <instancedMesh
+          ref={bodyMeshRef}
+          args={[undefined, undefined, MAX_DRONES]}
+          castShadow
+          receiveShadow
+          frustumCulled={false}
+        >
+          <coneGeometry args={[0.3, 0.8, 4]} />
+          <meshStandardMaterial
+            color="#ffffff"
+            emissive="#004444"
+            emissiveIntensity={0.75}
+            roughness={0.2}
+            vertexColors={true}
+          />
+        </instancedMesh>
+      )}
 
       <instancedMesh
         ref={miningLaserMeshRef}
