@@ -58,8 +58,14 @@ export const updatePlayerFrame = (options: {
   const yaw = cameraAngle.yaw;
   const pitch = cameraAngle.pitch;
 
-  forward.set(-Math.sin(yaw), 0, -Math.cos(yaw));
-  right.set(Math.cos(yaw), 0, -Math.sin(yaw));
+  // Pre-compute trig values used multiple times
+  const sinYaw = Math.sin(yaw);
+  const cosYaw = Math.cos(yaw);
+  const sinPitch = Math.sin(pitch);
+  const cosPitch = Math.cos(pitch);
+
+  forward.set(-sinYaw, 0, -cosYaw);
+  right.set(cosYaw, 0, -sinYaw);
 
   direction.set(0, 0, 0);
   if (keys["KeyW"]) direction.add(forward);
@@ -112,8 +118,8 @@ export const updatePlayerFrame = (options: {
     playerVisuals.rotation.y = yaw;
   }
 
-  const cosPitch = Math.cos(pitch);
-  lookDir.set(-Math.sin(yaw) * cosPitch, Math.sin(pitch), -Math.cos(yaw) * cosPitch);
+  // Use pre-computed trig values
+  lookDir.set(-sinYaw * cosPitch, sinPitch, -cosYaw * cosPitch);
 
   if (viewMode === "FIRST_PERSON") {
     camera.position.copy(position);
