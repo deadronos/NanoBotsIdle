@@ -2,6 +2,7 @@ import type { Camera, Group, Vector3 } from "three";
 
 import type { Config } from "../../config/index";
 import { getPlayerGroundHeight } from "../../sim/player";
+import { getVoxelMaterialAt, MATERIAL_SOLID, MATERIAL_BEDROCK } from "../../sim/collision";
 import type { ViewMode } from "../../types";
 
 type PlayerFrameTemps = {
@@ -122,8 +123,37 @@ export const updatePlayerFrame = (options: {
   }
 
   const cameraOffsetDist = 5;
-  camPos.copy(position).sub(camOffset.copy(lookDir).multiplyScalar(cameraOffsetDist));
-  camPos.y += 1.0;
+  const targetCamPos = camPos.copy(position).sub(camOffset.copy(lookDir).multiplyScalar(cameraOffsetDist));
+  targetCamPos.y += 1.0;
+
+  // Camera Collision Check
+  // Trace from player head position to target camera position
+  const headPos = temps.lookAt.copy(position);
+  headPos.y += 1.0;
+
+  let finalDist = cameraOffsetDist;
+  const steps = 10;
+  for (let i = 1; i <= steps; i++) {
+    const t = i / steps;
+    const checkPos = temps.direction.copy(headPos).lerp(targetCamPos, t);
+    const mat = getVoxelMaterialAt(
+      Math.round(checkPos.x),
+      Math.round(checkPos.y),
+      Math.round(checkPos.z),
+      prestigeLevel,
+    );
+
+    if (mat === MATERIAL_SOLID || mat === MATERIAL_BEDROCK) {
+      // Hit a block, shorten distance
+      // We take the distance from headPos to the point just before the hit
+      finalDist = headPos.distanceTo(checkPos) - 0.5;
+      break;
+    }
+  }
+
+  finalDist = Math.max(0.5, finalDist);
+  camPos.copy(headPos).sub(camOffset.copy(lookDir).multiplyScalar(finalDist));
+
   camera.position.lerp(camPos, 0.2);
-  camera.lookAt(position);
+  camera.lookAt(headPos);
 };
