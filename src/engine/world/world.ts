@@ -1,4 +1,4 @@
-import { getConfig } from "../../config/index";
+import { type Config, getConfig } from "../../config/index";
 import type { VoxelEdit } from "../../shared/protocol";
 import {
   coordsFromVoxelKey,
@@ -128,6 +128,74 @@ export class WorldModel {
     this.frontierAboveWater.delete(key);
   }
 
+  private addFrontierColumn(
+    x: number,
+    z: number,
+    cfg: Config,
+    outAdded?: { x: number; y: number; z: number }[],
+  ): number {
+    // Get local height
+    const y = getSurfaceHeightCore(
+      x,
+      z,
+      this.seed,
+      cfg.terrain.surfaceBias,
+      cfg.terrain.quantizeScale,
+    );
+    if (y <= this.bedrockY) return 0;
+
+    let aboveWaterAdded = 0;
+
+    // Always add the surface voxel (it is exposed from above)
+    const topKey = this.key(x, y, z);
+    if (!this.frontierSolid.has(topKey)) {
+      this.frontierSolid.add(topKey);
+      if (outAdded) outAdded.push({ x, y, z });
+      if (y >= this.waterlineVoxelY) {
+        this.frontierAboveWater.add(topKey);
+        aboveWaterAdded++;
+      }
+    }
+
+    // Check neighbors to determine how deep the exposed wall goes
+    let minNeighborY = y;
+
+    const check = (nx: number, nz: number) => {
+      const ny = getSurfaceHeightCore(
+        nx,
+        nz,
+        this.seed,
+        cfg.terrain.surfaceBias,
+        cfg.terrain.quantizeScale,
+      );
+      if (ny < minNeighborY) minNeighborY = ny;
+    };
+
+    check(x + 1, z);
+    check(x - 1, z);
+    check(x, z + 1);
+    check(x, z - 1);
+
+    // If neighbors are lower, we have exposed sides.
+    // Range: [minNeighborY + 1, y - 1]
+    // (y is already added)
+
+    const bottomY = Math.max(this.bedrockY + 1, minNeighborY + 1);
+
+    for (let vy = y - 1; vy >= bottomY; vy--) {
+      const vKey = this.key(x, vy, z);
+      if (this.frontierSolid.has(vKey)) continue;
+
+      this.frontierSolid.add(vKey);
+      if (outAdded) outAdded.push({ x, y: vy, z });
+      if (vy >= this.waterlineVoxelY) {
+        this.frontierAboveWater.add(vKey);
+        aboveWaterAdded++;
+      }
+    }
+    return aboveWaterAdded;
+  }
+
   initializeFrontierFromSurface(worldRadius: number) {
     this.frontierSolid.clear();
     this.frontierAboveWater.clear();
@@ -136,78 +204,9 @@ export class WorldModel {
     const cfg = getConfig();
     const chunkSize = cfg.terrain.chunkSize ?? 16;
 
-    // We only track added during incremental updates, not full init
-    const added: { x: number; y: number; z: number }[] = [];
-
-    const addColumn = (x: number, z: number, track: boolean) => {
-      // Get local height
-      const y = getSurfaceHeightCore(
-        x,
-        z,
-        this.seed,
-        cfg.terrain.surfaceBias,
-        cfg.terrain.quantizeScale,
-      );
-      if (y <= this.bedrockY) return;
-
-      // Always add the surface voxel (it is exposed from above)
-      const topKey = this.key(x, y, z);
-      if (!this.frontierSolid.has(topKey)) {
-        this.frontierSolid.add(topKey);
-        if (y >= this.waterlineVoxelY) {
-          this.frontierAboveWater.add(topKey);
-        }
-        if (track) added.push({ x, y, z });
-        if (!track) aboveWaterCount += y >= this.waterlineVoxelY ? 1 : 0;
-      }
-
-      // Check neighbors to determine how deep the exposed wall goes
-      let minNeighborY = y;
-
-      const check = (nx: number, nz: number) => {
-        const ny = getSurfaceHeightCore(
-          nx,
-          nz,
-          this.seed,
-          cfg.terrain.surfaceBias,
-          cfg.terrain.quantizeScale,
-        );
-        if (ny < minNeighborY) minNeighborY = ny;
-      };
-
-      check(x + 1, z);
-      check(x - 1, z);
-      check(x, z + 1);
-      check(x, z - 1);
-
-      // If neighbors are lower, we have exposed sides.
-      // Range: [minNeighborY + 1, y - 1]
-      // (y is already added)
-
-      const bottomY = Math.max(this.bedrockY + 1, minNeighborY + 1);
-
-      for (let vy = y - 1; vy >= bottomY; vy--) {
-        const key = this.key(x, vy, z);
-        if (this.frontierSolid.has(key)) continue;
-
-        this.frontierSolid.add(key);
-        if (vy >= this.waterlineVoxelY) {
-          this.frontierAboveWater.add(key);
-        }
-
-        if (track) added.push({ x, y: vy, z });
-        // For 'count', strictly speaking we only counted top-surface before.
-        // But the return value 'aboveWaterCount' is mostly for UI stats.
-        // Let's count all frontier blocks for now or stick to purely surface?
-        // Original `initializeFrontierFromSurface` only counted surface tops.
-        // Let's count all to be consistent with "frontier size".
-        if (!track) aboveWaterCount += vy >= this.waterlineVoxelY ? 1 : 0;
-      }
-    };
-
     for (let x = -worldRadius; x <= worldRadius; x += 1) {
       for (let z = -worldRadius; z <= worldRadius; z += 1) {
-        addColumn(x, z, false);
+        aboveWaterCount += this.addFrontierColumn(x, z, cfg);
       }
     }
 
@@ -252,59 +251,9 @@ export class WorldModel {
 
     const added: { x: number; y: number; z: number }[] = [];
 
-    // Inline helper to share logic? Or copy-paste for performance/scope?
-    // Let's just inline the loop logic properly.
-
     for (let x = startX; x < endX; x++) {
       for (let z = startZ; z < endZ; z++) {
-        const y = getSurfaceHeightCore(
-          x,
-          z,
-          this.seed,
-          cfg.terrain.surfaceBias,
-          cfg.terrain.quantizeScale,
-        );
-        if (y <= this.bedrockY) continue;
-
-        // Always add the surface voxel
-        const topKey = this.key(x, y, z);
-        if (!this.frontierSolid.has(topKey)) {
-          this.frontierSolid.add(topKey);
-          added.push({ x, y, z });
-          if (y >= this.waterlineVoxelY) {
-            this.frontierAboveWater.add(topKey);
-          }
-        }
-
-        let minNeighborY = y;
-        // Check 4 neighbors
-        const check = (nx: number, nz: number) => {
-          const ny = getSurfaceHeightCore(
-            nx,
-            nz,
-            this.seed,
-            cfg.terrain.surfaceBias,
-            cfg.terrain.quantizeScale,
-          );
-          if (ny < minNeighborY) minNeighborY = ny;
-        };
-        check(x + 1, z);
-        check(x - 1, z);
-        check(x, z + 1);
-        check(x, z - 1);
-
-        const bottomY = Math.max(this.bedrockY + 1, minNeighborY + 1);
-
-        for (let vy = y - 1; vy >= bottomY; vy--) {
-          const vKey = this.key(x, vy, z);
-          if (this.frontierSolid.has(vKey)) continue;
-
-          this.frontierSolid.add(vKey);
-          added.push({ x, y: vy, z });
-          if (vy >= this.waterlineVoxelY) {
-            this.frontierAboveWater.add(vKey);
-          }
-        }
+        this.addFrontierColumn(x, z, cfg, added);
       }
     }
 

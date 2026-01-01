@@ -1,17 +1,17 @@
 import { describe, expect, it } from "vitest";
 
-import { PLAYER_HEIGHT } from "../src/constants";
+import { getConfig } from "../src/config/index";
+import { getGroundHeightWithEdits } from "../src/sim/collision";
 import { getPlayerGroundHeight } from "../src/sim/player";
-import { getSeed, getSurfaceHeight } from "../src/sim/terrain";
 
 describe("player physics helper (TDD)", () => {
-  it("getPlayerGroundHeight should equal surfaceHeight + player offsets", () => {
+  it("getPlayerGroundHeight should equal groundHeight + player offsets", () => {
     const x = 3;
     const z = -2;
     const prestige = 1;
-    const seed = getSeed(prestige);
+    const cfg = getConfig();
 
-    const expected = getSurfaceHeight(x, z, seed) + 0.5 + PLAYER_HEIGHT;
+    const expected = getGroundHeightWithEdits(x, z, prestige) + 1.0 + cfg.player.playerHeight;
     expect(getPlayerGroundHeight(x, z, prestige)).toBe(expected);
   });
 });

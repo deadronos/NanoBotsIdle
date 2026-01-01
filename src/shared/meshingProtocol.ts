@@ -10,6 +10,7 @@ export type MeshingJob = {
   origin: ChunkOrigin;
   rev: number;
   materials: Uint8Array;
+  waterLevel?: number;
   queuedAt?: number; // Timestamp when job was queued
 };
 

@@ -1,7 +1,7 @@
 import type { Config } from "../config/index";
 import type { UiSnapshot, VoxelEdit } from "../shared/protocol";
 import { getVoxelValueFromHeight } from "../sim/terrain-core";
-import type { Drone, DroneState } from "./drones";
+import type { Drone } from "./drones";
 import { addKey, type KeyIndex, removeKey } from "./keyIndex";
 import { pickTargetKey } from "./targeting";
 import type { WorldModel } from "./world/world";
@@ -134,6 +134,9 @@ export const tickDrones = (options: {
 
               const value = getVoxelValueFromHeight(drone.targetY, cfg.terrain.waterLevel);
               drone.payload += value * uiSnapshot.prestigeLevel;
+
+              // Track mined block count for prestige unlocking.
+              uiSnapshot.minedBlocks += 1;
             }
           }
 

@@ -4,7 +4,7 @@ import type { InstancedMesh } from "three";
 import { Color, Object3D, Vector3 } from "three";
 
 import { getConfig } from "../../config/index";
-import { setInstanceColor } from "../../render/instanced";
+import { applyInstanceUpdates, setInstanceColor } from "../../render/instanced";
 
 export interface ParticleHandle {
   spawn: (pos: Vector3, color: Color) => void;
@@ -30,14 +30,31 @@ export const Particles = forwardRef<ParticleHandle, ParticlesProps>((props, ref)
     }));
   }, [MAX_PARTICLES]);
 
+  // Free-list for O(1) particle allocation
+  const freeList = useRef<number[]>([]);
+
+  // Initialize free-list with all indices
+  useEffect(() => {
+    freeList.current = [];
+    for (let i = MAX_PARTICLES - 1; i >= 0; i -= 1) {
+      freeList.current.push(i);
+    }
+  }, [MAX_PARTICLES]);
+
   const tmp = useMemo(() => new Object3D(), []);
 
   useEffect(() => {
     const handle = ref as React.MutableRefObject<ParticleHandle | null>;
     handle.current = {
       spawn: (pos: Vector3, color: Color) => {
-        let idx = particles.findIndex((p) => p.life <= 0);
-        if (idx === -1) idx = Math.floor(Math.random() * MAX_PARTICLES);
+        // O(1) allocation from free-list
+        let idx: number;
+        if (freeList.current.length > 0) {
+          idx = freeList.current.pop()!;
+        } else {
+          // Fallback to random if all particles are active
+          idx = Math.floor(Math.random() * MAX_PARTICLES);
+        }
 
         const p = particles[idx];
         p.position.copy(pos);
@@ -81,6 +98,8 @@ export const Particles = forwardRef<ParticleHandle, ParticlesProps>((props, ref)
     if (!meshRef.current) return;
 
     let needsUpdate = false;
+    let minIndex = Number.POSITIVE_INFINITY;
+    let maxIndex = Number.NEGATIVE_INFINITY;
 
     const mesh = meshRef.current;
 
@@ -99,6 +118,8 @@ export const Particles = forwardRef<ParticleHandle, ParticlesProps>((props, ref)
         tmp.updateMatrix();
         mesh.setMatrixAt(i, tmp.matrix);
         needsUpdate = true;
+        if (i < minIndex) minIndex = i;
+        if (i > maxIndex) maxIndex = i;
         continue;
       }
 
@@ -109,11 +130,21 @@ export const Particles = forwardRef<ParticleHandle, ParticlesProps>((props, ref)
         tmp.updateMatrix();
         mesh.setMatrixAt(i, tmp.matrix);
         needsUpdate = true;
+        if (i < minIndex) minIndex = i;
+        if (i > maxIndex) maxIndex = i;
+        // Return particle to free-list for O(1) reallocation
+        freeList.current.push(i);
       }
     }
 
     if (needsUpdate) {
-      meshRef.current.instanceMatrix.needsUpdate = true;
+      if (minIndex <= maxIndex) {
+        applyInstanceUpdates(meshRef.current, {
+          matrixRange: { start: minIndex, end: maxIndex },
+        });
+      } else {
+        applyInstanceUpdates(meshRef.current, { matrix: true });
+      }
     }
   });
 

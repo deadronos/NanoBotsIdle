@@ -52,6 +52,8 @@ export type DronesConfig = {
       randomIntensity: number;
     };
   };
+  useGLBMesh: boolean;
+  glbPath: string;
 };
 
 export const defaultDronesConfig: DronesConfig = {
@@ -108,6 +110,8 @@ export const defaultDronesConfig: DronesConfig = {
       randomIntensity: 3,
     },
   },
+  useGLBMesh: true,
+  glbPath: "/assets/glb/drone/drone_compressed.glb",
 };
 
 import type { Config } from "./index";
