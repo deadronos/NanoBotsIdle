@@ -35,7 +35,17 @@
   - Integrated `zod` for runtime validation of all `ToWorker` and `FromWorker` messages.
   - Prevents silent serialization failures and "undefined property" bugs between threads.
 
+- **Typed Worker Bridge (Reliability):**
+  - Integrated `zod` for runtime validation of all `ToWorker` and `FromWorker` messages.
+  - Prevents silent serialization failures and "undefined property" bugs between threads.
 
+- **Visual & Thematic Enhancements:**
+  - **Strata & Biomes:** Implemented depth-based terrain coloring (Surface, Stone, Deep Crystal).
+  - **"Juice" Effects:** Added particle bursts for mining and floating text for resource deposits.
+  - **Architecture:** Documented event-driven visual system in `docs/ARCHITECTURE/DEC008-visual-effects-system.md`.
+
+- **UI Improvements:**
+  - **Scrollable Panels:** Fixed `ShopModal` layout to handle small screens/overflowing content gracefully.
 ### 2025-12-31
 
 - **Hotpath Performance Optimizations:** Significantly reduced main-thread CPU usage during meshing and movement.

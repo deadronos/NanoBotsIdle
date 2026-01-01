@@ -56,6 +56,7 @@ export const Outposts: React.FC = () => {
       args={[undefined, undefined, MAX_OUTPOSTS]}
       castShadow
       receiveShadow
+      frustumCulled={false}
     >
       <boxGeometry args={[1, 1, 1]} />
       <meshStandardMaterial color="#ff8800" roughness={0.3} metalness={0.8} />

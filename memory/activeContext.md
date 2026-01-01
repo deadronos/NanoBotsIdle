@@ -22,7 +22,9 @@
 - **Player Collision:** Fixed ground height calculation for accurate standing position.
 - Removed legacy `importmap` usage from `index.html`; runtime deps come from `node_modules` via Vite.
 - Installed Tailwind v4+ and configured the official Vite plugin (`@tailwindcss/vite`).
-- Standardized tests to `tests/` and configured Vitest to only include that folder.
+- **Visual & Thematic:** Strata-based terrain colors, mining particles, and floating text for economy feedback.
+- **Scrollable UI:** Fixed Research Panel for small screens.
+- **Standardized tests** to `tests/` and configured Vitest to only include that folder.
 
 ## Next steps (suggested)
 

@@ -74,7 +74,7 @@ export const FloatingTextSystem = forwardRef<FloatingTextHandle>((_, ref) => {
     <>
       {texts.map((t) => (
         <group key={t.id} position={[t.x, t.y, t.z]}>
-          <Html center style={{ pointerEvents: "none" }}>
+          <Html center style={{ pointerEvents: "none" }} zIndexRange={[100, 0]}>
             <div
               style={{
                 color: t.color,
