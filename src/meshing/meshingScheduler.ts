@@ -247,10 +247,12 @@ export class MeshingScheduler {
     if (this.dirtyHeap.length === 0) return null;
 
     // Find the entry with the lowest priority (highest priority value)
-    let worst = this.dirtyHeap[0]!;
+    let worst = this.dirtyHeap[0];
+    if (!worst) return null;
+
     for (let i = 1; i < this.dirtyHeap.length; i++) {
-      const entry = this.dirtyHeap[i]!;
-      if (!this.heapLess(entry, worst)) {
+      const entry = this.dirtyHeap[i];
+      if (entry && !this.heapLess(entry, worst)) {
         worst = entry;
       }
     }
@@ -285,10 +287,11 @@ export class MeshingScheduler {
     let i = index;
     while (i > 0) {
       const parent = Math.floor((i - 1) / 2);
-      if (!this.heapLess(this.dirtyHeap[i]!, this.dirtyHeap[parent]!)) break;
-      const tmp = this.dirtyHeap[i]!;
-      this.dirtyHeap[i] = this.dirtyHeap[parent]!;
-      this.dirtyHeap[parent] = tmp;
+      const current = this.dirtyHeap[i];
+      const parentNode = this.dirtyHeap[parent];
+      if (!current || !parentNode || !this.heapLess(current, parentNode)) break;
+      this.dirtyHeap[i] = parentNode;
+      this.dirtyHeap[parent] = current;
       i = parent;
     }
   }
@@ -301,25 +304,39 @@ export class MeshingScheduler {
       const right = left + 1;
       let smallest = i;
 
-      if (left < n && this.heapLess(this.dirtyHeap[left]!, this.dirtyHeap[smallest]!)) {
+      if (
+        left < n &&
+        this.dirtyHeap[left] &&
+        this.dirtyHeap[smallest] &&
+        this.heapLess(this.dirtyHeap[left]!, this.dirtyHeap[smallest]!)
+      ) {
         smallest = left;
       }
-      if (right < n && this.heapLess(this.dirtyHeap[right]!, this.dirtyHeap[smallest]!)) {
+      if (
+        right < n &&
+        this.dirtyHeap[right] &&
+        this.dirtyHeap[smallest] &&
+        this.heapLess(this.dirtyHeap[right]!, this.dirtyHeap[smallest]!)
+      ) {
         smallest = right;
       }
       if (smallest === i) break;
 
-      const tmp = this.dirtyHeap[i]!;
-      this.dirtyHeap[i] = this.dirtyHeap[smallest]!;
-      this.dirtyHeap[smallest] = tmp;
+      const current = this.dirtyHeap[i];
+      const smallestNode = this.dirtyHeap[smallest];
+      if (!current || !smallestNode) break;
+
+      this.dirtyHeap[i] = smallestNode;
+      this.dirtyHeap[smallest] = current;
       i = smallest;
     }
   }
 
   private heapPop(): DirtyEntry | null {
     if (this.dirtyHeap.length === 0) return null;
-    const root = this.dirtyHeap[0]!;
-    const last = this.dirtyHeap.pop()!;
+    const root = this.dirtyHeap[0];
+    const last = this.dirtyHeap.pop();
+    if (!root || !last) return null;
     if (this.dirtyHeap.length > 0) {
       this.dirtyHeap[0] = last;
       this.heapSiftDown(0);
