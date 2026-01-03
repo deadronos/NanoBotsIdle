@@ -7,7 +7,7 @@
 
 ## Pending
 
-- (none)
+- [TASK011] Multiplayer PoC: Authoritative Server Foundation — Phase 1 proof-of-concept for multiplayer with 2 players (Pending)
 
 ## Completed
 
