@@ -425,11 +425,9 @@ When performing a code review, apply these prompt engineering principles from th
 
 ## Project Context
 
-This is a generic template. Customize this section with your project-specific information:
-
-- **Tech Stack**: [e.g., Java 17, Spring Boot 3.x, PostgreSQL]
-- **Architecture**: [e.g., Hexagonal/Clean Architecture, Microservices]
-- **Build Tool**: [e.g., Gradle, Maven, npm, pip]
-- **Testing**: [e.g., JUnit 5, Jest, pytest]
-- **Code Style**: [e.g., follows Google Style Guide]
+- **Tech Stack**: React 19, React Three Fiber, Zustand, Vite, Tailwind v4+
+- **Architecture**: Component-based, Modular Engine (src/engine), Web Worker simulation
+- **Build Tool**: Vite
+- **Testing**: Vitest (Unit), Playwright (Verification)
+- **Code Style**: Prettier + ESLint
 ```

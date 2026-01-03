@@ -1,76 +1,20 @@
-# Agent guide (NanoBotsIdle)
+# Agent Instructions
 
-This repo is a React + Vite + React Three Fiber game prototype ("Voxel Walker").
-Use this file as the starting point for any agentic work (Copilot, automation, or subagents).
+Welcome to the NanoBotsIdle repository.
 
-## Start here
+## Core Documentation
 
-- Read `.github/copilot-instructions.md` first. It is the repo-specific source of truth for architecture, performance constraints, and conventions.
-- Then read `docs/ARCHITECTURE.md` (and `docs/ARCHITECTURE/README.md`) for the high-level architecture spec and numbered TECH/GAME/DEC docs.
-- Look for additional repo guidance in `.github/`:
-  - `.github/instructions/` (coding standards, testing, React, TypeScript, performance, etc.)
-  - `.github/prompts/` (prompt templates)
-  - `.github/workflows/` (CI expectations)
+- **Project Specifics**: Read [.github/copilot-instructions.md](.github/copilot-instructions.md) first. This contains the architecture, tech stack, and project-specific conventions.
+- **Workflow**: Follow the Spec-Driven Workflow defined in [.github/instructions/spec-driven-workflow-v1.instructions.md](.github/instructions/spec-driven-workflow-v1.instructions.md).
+- **Memory Bank**: Maintain project context using the Memory Bank system described in [.github/instructions/memory-bank.instructions.md](.github/instructions/memory-bank.instructions.md).
 
-  Consider updating this file if the architecture or coding style changes significantly.
+## Specialized Guidelines
 
-## When to use subagents
+Refer to these files for specific domains:
 
-If a task is broad or uncertain, prefer delegating to a purpose-built subagent rather than guessing.
-Subagents available in `.github/agents/` include (examples):
-
-- Planning/research: `planning-subagent`, `Implementation Plan Generation Mode`, `specification`
-- Implementation: `implement-subagent`, `software-engineer-agent-v1`, `Expert React Frontend Engineer`
-- Review: `code-review-subagent`
-- Debugging: `debug`
-- Architecture/UX/RAI: `SE: Architect`, `SE: UX Designer`, `SE: Responsible AI`
-
-Tip: Use `Conductor` when you want an orchestrated Plan → Implement → Review loop.
-
-## Agent skills
-
-Reusable “skills” live in:
-
-- `skills/`
-- `.github/skills/`
-
-If a user request matches a skill area (performance, workers, dynamic res scaling, webapp testing), consult the relevant skill doc and follow its workflow.
-
-## Memory Bank (project context)
-
-Persistent project context and planning artifacts live in `memory/`:
-
-- Designs: `memory/designs/` (archive to `memory/designs/COMPLETED/` when done)
-- Tasks/implementation plans: `memory/tasks/` (archive to `memory/tasks/COMPLETED/` when done)
-
-Use the Memory Bank instructions at `.github/instructions/memory-bank.instructions.md`.
-
-## Architecture docs (resumable work)
-
-- Treat `docs/ARCHITECTURE.md` as the high-level source of truth for intended architecture and system boundaries.
-- Keep deeper specs and decisions split into `docs/ARCHITECTURE/` as numbered documents:
-  - `TECH###-*` (technical specs)
-  - `GAME###-*` (gameplay specs)
-  - `DEC###-*` (decisions / ADRs)
-- If work is interrupted, resume by re-reading and updating `docs/ARCHITECTURE.md` + the relevant `TECH/GAME/DEC` docs before continuing implementation.
-- New designs and implementation plans in `memory/designs/` and `memory/tasks/` should reference the relevant `TECH/GAME/DEC` IDs.
-
-## Workflow expectations
-
-- Prefer small, surgical changes that match existing patterns.
-- Prefer a TDD loop for implementation work:
-  - Red: add one failing test for the next behavior
-  - Green: minimal code to pass
-  - Refactor: improve design/quality and keep tests green
-- Keep `useFrame()` work allocation-free when possible (R3F performance).
-- Validate changes with the repo scripts:
-  - `npm run lint` / `npm run lint:fix`
-  - `npm run typecheck`
-  - `npm test`
-  - `npm run build`
-
-Tip: the repo includes TDD-focused agents in `.github/agents/`:
-
-- `tdd-red.agent.md`
-- `tdd-green.agent.md`
-- `tdd-refactor.agent.md`
+- **React**: [.github/instructions/reactjs.instructions.md](.github/instructions/reactjs.instructions.md)
+- **TypeScript**: [.github/instructions/typescript-5-es2022.instructions.md](.github/instructions/typescript-5-es2022.instructions.md)
+- **Testing**: [.github/instructions/nodejs-javascript-vitest.instructions.md](.github/instructions/nodejs-javascript-vitest.instructions.md)
+- **Performance**: [.github/instructions/performance-optimization.instructions.md](.github/instructions/performance-optimization.instructions.md)
+- **Verification**: [.github/instructions/playwright-typescript.instructions.md](.github/instructions/playwright-typescript.instructions.md)
+- **Code Review**: [.github/instructions/code-review-generic.instructions.md](.github/instructions/code-review-generic.instructions.md)
