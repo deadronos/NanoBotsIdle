@@ -5,6 +5,8 @@ applyTo: '**'
 
 # Spec-Driven Workflow — Quick Loop
 
+> **Project Reference**: For project-specific architecture, tech stack, and constraints, refer to [.github/copilot-instructions.md](../copilot-instructions.md).
+
 Hint: use memory folder ( look at .github/instructions/memory-bank.instructions.md for templates)
 use /memory/designs folder to store designs
 ensure design IDs stay unique across `/memory/designs` and `/memory/designs/COMPLETED`; check both locations before assigning a new number because completed designs may be archived there.

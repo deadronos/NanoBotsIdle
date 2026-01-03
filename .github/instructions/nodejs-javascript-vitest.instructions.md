@@ -22,7 +22,8 @@ applyTo: '**/*.js, **/*.mjs, **/*.cjs'
 - Use Vitest for testing
 - Write tests for all new features and bug fixes
 - Ensure tests cover edge cases and error handling
-- NEVER change the original code to make it easier to test, instead, write tests that cover the original code as it is
+- Refactor code for testability (e.g., extracting pure functions, using dependency injection) is encouraged.
+- Avoid changing valid business logic solely to accommodate a test limitation; instead, improve the test harness or mock appropriately.
 
 ## Documentation
 
