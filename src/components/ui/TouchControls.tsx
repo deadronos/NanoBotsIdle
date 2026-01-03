@@ -65,9 +65,29 @@ export const TouchControls: React.FC<{ className?: string }> = ({ className = ""
     return () => document.removeEventListener("contextmenu", handleContextMenu);
   }, []);
 
+  // Detect touch-capable devices (e.g., tablets like iPad) rather than relying solely on screen width
+  const [isTouch, setIsTouch] = useState(false);
+  useEffect(() => {
+    const mq = typeof window !== "undefined" && window.matchMedia?.("(pointer: coarse)");
+    const check = () => {
+      const hasTouch = typeof window !== "undefined" && ("ontouchstart" in window || navigator.maxTouchPoints > 0 || (mq && mq.matches));
+      setIsTouch(!!hasTouch);
+    };
+    check();
+    if (mq && mq.addEventListener) mq.addEventListener("change", check);
+    window.addEventListener("resize", check);
+    return () => {
+      if (mq && mq.removeEventListener) mq.removeEventListener("change", check);
+      window.removeEventListener("resize", check);
+    };
+  }, []);
+
+  // Don't render touch controls on non-touch devices (desktop keyboards)
+  if (!isTouch) return null;
+
   return (
     <div
-      className={`fixed bottom-8 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 pointer-events-auto z-50 md:hidden ${className}`}
+      className={`fixed bottom-8 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 pointer-events-auto z-50 ${className}`}
     >
       <div className="flex gap-2">
         <ArrowButton rotation={0} code="KeyW" />
