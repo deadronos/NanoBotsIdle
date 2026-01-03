@@ -92,6 +92,29 @@ export class WorldModel {
     return best;
   }
 
+  /**
+   * Choose an outpost balancing distance and current load (docked + queue).
+   * Lower score is better. This is a lightweight heuristic to avoid busy outposts.
+   */
+  getBestOutpost(x: number, y: number, z: number): Outpost | null {
+    if (this.outposts.length === 0) return null;
+    let best: Outpost | null = null;
+    let bestScore = Number.POSITIVE_INFINITY;
+
+    for (const op of this.outposts) {
+      const dist = Math.hypot(op.x - x, op.y - y, op.z - z);
+      const load = op.docked.size + op.queue.length;
+      // Weight load relative to distance. Tune LOAD_WEIGHT as needed.
+      const LOAD_WEIGHT = 10;
+      const score = dist + load * LOAD_WEIGHT;
+      if (score < bestScore) {
+        bestScore = score;
+        best = op;
+      }
+    }
+    return best;
+  }
+
   requestDock(outpost: Outpost, droneId: number): DockResult {
     const MAX_SLOTS = 4; // Start with 4 slots
 
