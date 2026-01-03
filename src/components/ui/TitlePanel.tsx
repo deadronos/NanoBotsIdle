@@ -1,18 +1,38 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 
 import { PauseButton } from "./PauseButton";
+
+const TouchHint: React.FC = () => {
+  const [isTouch, setIsTouch] = useState(false);
+  useEffect(() => {
+    const mq = typeof window !== "undefined" && window.matchMedia?.("(pointer: coarse)");
+    const check = () => setIsTouch(typeof window !== "undefined" && ("ontouchstart" in window || navigator.maxTouchPoints > 0 || (mq && mq.matches)));
+    check();
+    if (mq && mq.addEventListener) mq.addEventListener("change", check);
+    return () => {
+      if (mq && mq.removeEventListener) mq.removeEventListener("change", check);
+    };
+  }, []);
+  if (!isTouch) return null;
+  return <div className="block md:hidden text-xs text-white/60 bg-black/40 p-2 rounded">Tap arrows to Move | Drag to Look</div>;
+};
 
 export const TitlePanel: React.FC<{
   percentMined: number;
   onOpenSettings: () => void;
   className?: string;
 }> = ({ percentMined, onOpenSettings, className = "" }) => {
+  const fillRef = React.useRef<HTMLDivElement | null>(null);
+  useEffect(() => {
+    if (fillRef.current) fillRef.current.style.width = `${percentMined}%`;
+  }, [percentMined]);
+
   return (
     <div
       className={`text-white opacity-80 hover:opacity-100 transition-opacity pointer-events-auto ${className}`}
     >
       <div className="flex items-center gap-3 mb-2">
-        <h1 className="text-xl md:text-2xl font-bold drop-shadow-md tracking-tighter bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-green-400">
+        <h1 className="text-xl md:text-2xl font-bold drop-shadow-md tracking-tighter bg-clip-text text-transparent bg-linear-to-r from-blue-400 to-green-400">
           VOXEL WALKER
         </h1>
         <div className="flex items-center gap-2">
@@ -49,11 +69,13 @@ export const TitlePanel: React.FC<{
         WASD to Move | Shift to Run | Drag to Look
       </div>
 
+      {/* Touch hint for touch-capable devices (tablets) */}
+      {typeof window !== "undefined" && (
+        <TouchHint />
+      )}
+
       <div className="mt-2 md:mt-4 w-32 md:w-48 bg-gray-800 rounded-full h-2.5 dark:bg-gray-700 border border-white/10">
-        <div
-          className="bg-green-500 h-2.5 rounded-full transition-all duration-1000"
-          style={{ width: `${percentMined}%` }}
-        ></div>
+        <div ref={fillRef} className="bg-green-500 h-2.5 rounded-full transition-all duration-1000"></div>
       </div>
       <div className="text-xs mt-1 text-green-400">{percentMined.toFixed(1)}% Mined</div>
     </div>

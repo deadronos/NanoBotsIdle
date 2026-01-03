@@ -29,6 +29,8 @@ export type Drone = {
   role: DroneRole;
   payload: number;
   maxPayload: number;
+  // Timestamp (ms) of the last time this drone attempted a reroute to avoid thrashing
+  lastRerouteAt?: number;
 };
 
 export const syncDroneCount = (

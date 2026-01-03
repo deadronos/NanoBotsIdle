@@ -67,6 +67,9 @@ export const tickDrones = (options: {
     depositEvents,
   } = options;
 
+  // Choose outpost using getBestOutpost if available; fall back to getNearestOutpost for test stubs
+  const pickOutpost = ((world as any).getBestOutpost ?? world.getNearestOutpost).bind(world);
+
   for (const drone of drones) {
     if (drone.role === "MINER") {
       switch (drone.state) {
@@ -159,12 +162,8 @@ export const tickDrones = (options: {
             break;
           }
 
-          const outpost = world.getNearestOutpost(drone.x, drone.y, drone.z);
+          const outpost = pickOutpost(drone.x, drone.y, drone.z);
           if (!outpost) break;
-
-          // Reroute check logic (simple version)
-          // If closest outpost has long queue, check others?
-          // We do this check when entering QUEUING state primarily.
 
           const dist = moveTowards(
             drone,
@@ -182,13 +181,22 @@ export const tickDrones = (options: {
               drone.state = "DEPOSITING";
               drone.miningTimer = 0;
             } else {
-              drone.state = "QUEUING";
+              // If queue seems long and cooldown expired, re-evaluate next tick
+              const QUEUE_THRESHOLD = 5;
+              const REROUTE_COOLDOWN_MS = 5000;
+              const now = Date.now();
+              if (world.getQueueLength(outpost) > QUEUE_THRESHOLD && (drone.lastRerouteAt ?? 0) + REROUTE_COOLDOWN_MS < now) {
+                drone.lastRerouteAt = now;
+                drone.state = "RETURNING"; // stay in returning so getBestOutpost will pick a different one next tick
+              } else {
+                drone.state = "QUEUING";
+              }
             }
           }
           break;
         }
         case "QUEUING": {
-          const outpost = world.getNearestOutpost(drone.x, drone.y, drone.z);
+          const outpost = pickOutpost(drone.x, drone.y, drone.z);
           if (!outpost) {
             drone.state = "RETURNING";
             break;
@@ -202,12 +210,14 @@ export const tickDrones = (options: {
             break;
           }
 
-          // Reroute check: Too many people waiting?
-          // Only checks every few seconds ideally, but per frame is fine for < 1000 drones if cheap.
-          // Let's just check length.
-          if (world.getQueueLength(outpost) > 5) {
-            // Find alternate outpost?
-            // For now, naive orbit.
+          // Reroute check with cooldown
+          const QUEUE_THRESHOLD = 5;
+          const REROUTE_COOLDOWN_MS = 5000;
+          const now = Date.now();
+          if (world.getQueueLength(outpost) > QUEUE_THRESHOLD && (drone.lastRerouteAt ?? 0) + REROUTE_COOLDOWN_MS < now) {
+            drone.lastRerouteAt = now;
+            drone.state = "RETURNING";
+            break;
           }
 
           // Orbit behavior: Circle around center at y + 5
@@ -319,7 +329,7 @@ export const tickDrones = (options: {
           break;
         }
         case "RETURNING": {
-          const outpost = world.getNearestOutpost(drone.x, drone.y, drone.z);
+          const outpost = pickOutpost(drone.x, drone.y, drone.z);
           if (!outpost) break;
 
           const dist = moveTowards(drone, outpost.x, outpost.y + 4, outpost.z, hSpeed, dtSeconds);
@@ -331,7 +341,16 @@ export const tickDrones = (options: {
               drone.state = "DEPOSITING";
               drone.miningTimer = 0;
             } else {
-              drone.state = "QUEUING";
+              // Reroute cooldown heuristic
+              const QUEUE_THRESHOLD = 5;
+              const REROUTE_COOLDOWN_MS = 5000;
+              const now = Date.now();
+              if (world.getQueueLength(outpost) > QUEUE_THRESHOLD && (drone.lastRerouteAt ?? 0) + REROUTE_COOLDOWN_MS < now) {
+                drone.lastRerouteAt = now;
+                drone.state = "RETURNING";
+              } else {
+                drone.state = "QUEUING";
+              }
             }
           }
           break;
@@ -339,7 +358,7 @@ export const tickDrones = (options: {
         case "QUEUING": {
           // Hauler Queue logic (copy/paste similar to Miner for now)
           // Haulers might have VIP priority in future?
-          const outpost = world.getNearestOutpost(drone.x, drone.y, drone.z);
+          const outpost = world.getBestOutpost(drone.x, drone.y, drone.z);
           if (!outpost) {
             drone.state = "RETURNING";
             break;
@@ -349,6 +368,15 @@ export const tickDrones = (options: {
             drone.state = "DEPOSITING";
             drone.miningTimer = 0;
           } else {
+            // Reroute check with cooldown
+            const QUEUE_THRESHOLD = 5;
+            const REROUTE_COOLDOWN_MS = 5000;
+            const now = Date.now();
+            if (world.getQueueLength(outpost) > QUEUE_THRESHOLD && (drone.lastRerouteAt ?? 0) + REROUTE_COOLDOWN_MS < now) {
+              drone.lastRerouteAt = now;
+              drone.state = "RETURNING";
+              break;
+            }
             // Orbit
             const angle = Date.now() / 1000 + drone.id;
             moveTowards(
