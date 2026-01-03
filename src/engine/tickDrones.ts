@@ -67,6 +67,9 @@ export const tickDrones = (options: {
     depositEvents,
   } = options;
 
+  // Choose outpost using getBestOutpost if available; fall back to getNearestOutpost for test stubs
+  const pickOutpost = ((world as any).getBestOutpost ?? world.getNearestOutpost).bind(world);
+
   for (const drone of drones) {
     if (drone.role === "MINER") {
       switch (drone.state) {
@@ -159,7 +162,7 @@ export const tickDrones = (options: {
             break;
           }
 
-          const outpost = world.getBestOutpost(drone.x, drone.y, drone.z);
+          const outpost = pickOutpost(drone.x, drone.y, drone.z);
           if (!outpost) break;
 
           const dist = moveTowards(
@@ -193,7 +196,7 @@ export const tickDrones = (options: {
           break;
         }
         case "QUEUING": {
-          const outpost = world.getBestOutpost(drone.x, drone.y, drone.z);
+          const outpost = pickOutpost(drone.x, drone.y, drone.z);
           if (!outpost) {
             drone.state = "RETURNING";
             break;
@@ -326,7 +329,7 @@ export const tickDrones = (options: {
           break;
         }
         case "RETURNING": {
-          const outpost = world.getBestOutpost(drone.x, drone.y, drone.z);
+          const outpost = pickOutpost(drone.x, drone.y, drone.z);
           if (!outpost) break;
 
           const dist = moveTowards(drone, outpost.x, outpost.y + 4, outpost.z, hSpeed, dtSeconds);
