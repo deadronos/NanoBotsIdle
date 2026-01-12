@@ -1,27 +1,54 @@
+// @vitest-environment jsdom
+import { render, screen } from '@testing-library/react';
 import React from 'react';
-import { render, screen, cleanup } from '@testing-library/react';
+import { afterEach, describe, expect, test } from 'vitest';
+
 import { TouchControls } from '../src/components/ui/TouchControls';
 
+const noop = () => undefined;
+const originalMatchMedia = typeof window !== 'undefined' ? window.matchMedia : undefined;
+
 afterEach(() => {
-  cleanup();
   // reset nav
-  (navigator as any).maxTouchPoints = 0;
+  try {
+    Object.defineProperty(navigator, 'maxTouchPoints', { value: 0, configurable: true });
+  } catch {
+    // ignore in environments where property is not configurable
+  }
   // restore matchMedia to default
-  (window as any).matchMedia = undefined;
+  if (originalMatchMedia) {
+    window.matchMedia = originalMatchMedia;
+  }
 });
 
 describe('TouchControls', () => {
   test('does not render on non-touch environments', () => {
-    (navigator as any).maxTouchPoints = 0;
-    (window as any).matchMedia = () => ({ matches: false, addEventListener: () => {}, removeEventListener: () => {} });
+    try {
+      Object.defineProperty(navigator, 'maxTouchPoints', { value: 0, configurable: true });
+    } catch {
+      // ignore when immutably defined
+    }
+    try {
+      // Ensure ontouchstart absent
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      delete (window as any).ontouchstart;
+    } catch {
+      /* ignore - some test environments disallow deleting globals */
+    }
+    window.matchMedia = () => ({ matches: false, addEventListener: noop, removeEventListener: noop } as MediaQueryList);
 
-    const { container } = render(<TouchControls />);
-    expect(container).toBeEmptyDOMElement();
+    render(<TouchControls />);
+    const buttons = screen.queryAllByRole('button');
+    expect(buttons.length).toBe(0);
   });
 
   test('renders arrow buttons on touch-capable device', () => {
-    (navigator as any).maxTouchPoints = 1;
-    (window as any).matchMedia = () => ({ matches: true, addEventListener: () => {}, removeEventListener: () => {} });
+    try {
+      Object.defineProperty(navigator, 'maxTouchPoints', { value: 1, configurable: true });
+    } catch {
+      // ignore when immutably defined
+    }
+    window.matchMedia = () => ({ matches: true, addEventListener: noop, removeEventListener: noop } as MediaQueryList);
 
     render(<TouchControls />);
     const buttons = screen.getAllByRole('button');

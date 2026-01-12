@@ -1,0 +1,14 @@
+{
+  "version": 2,
+  "date": "2024-12-30T15:45:00.000Z",
+  "data": {
+    "credits": "not-a-number",
+    "prestigeLevel": true,
+    "droneCount": null,
+    "miningSpeedLevel": "invalid",
+    "moveSpeedLevel": "wrong",
+    "laserPowerLevel": "bad",
+    "minedBlocks": "string",
+    "totalBlocks": "text"
+  }
+}

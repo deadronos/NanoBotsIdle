@@ -63,7 +63,9 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: profile-metrics-${{ github.sha }}
-          path: profile-metrics.json
+          path: |
+            profile-metrics.json
+            regression-report.json
           retention-days: 30
 
       - name: Download baseline metrics (if available)
@@ -83,7 +85,13 @@ jobs:
           echo "## Performance Profile Comparison" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
 
-          # Extract key metrics from both files
+          # Run regression check script
+          node scripts/check-performance-regression.js \
+            --current ./profile-metrics.json \
+            --baseline ./baseline/profile-metrics.json \
+            --output ./regression-report.json || REGRESSION_EXIT=$?
+
+          # Extract key metrics from both files for summary
           BASELINE_FPS=$(jq -r '.aggregate.fps.avg' ./baseline/profile-metrics.json)
           CURRENT_FPS=$(jq -r '.aggregate.fps.avg' ./profile-metrics.json)
 
@@ -112,7 +120,22 @@ jobs:
           echo "| Meshing Time (ms) | $BASELINE_MESHING | $CURRENT_MESHING | ${MESH_CHANGE} (${MESH_PERCENT}%) |" >> $GITHUB_STEP_SUMMARY
 
           echo "" >> $GITHUB_STEP_SUMMARY
-          echo "Full metrics available in artifacts." >> $GITHUB_STEP_SUMMARY
+          
+          # Add regression check result
+          if [ -f ./regression-report.json ]; then
+            HAS_FAILURE=$(jq -r '.summary.hasFailure' ./regression-report.json)
+            if [ "$HAS_FAILURE" = "true" ]; then
+              echo "⚠️ **Performance regression detected!** See details above." >> $GITHUB_STEP_SUMMARY
+            else
+              echo "✅ No performance regressions detected." >> $GITHUB_STEP_SUMMARY
+            fi
+          fi
+          
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "Full metrics and regression report available in artifacts." >> $GITHUB_STEP_SUMMARY
+
+          # Exit with the regression check's exit code
+          exit ${REGRESSION_EXIT:-0}
 
       - name: Display current metrics summary
         if: github.event_name != 'pull_request' || hashFiles('./baseline/profile-metrics.json') == ''

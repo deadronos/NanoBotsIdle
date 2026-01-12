@@ -247,7 +247,12 @@ export const useMeshedChunks = (options: {
           transfer: [materials.buffer],
         };
       },
-      onApply: (res) => applyMeshResult(res),
+      // Keep message handler lightweight: just enqueue results so the message
+    // event isn't blocked by expensive main-thread mesh construction.
+    onApply: (res) => {
+      const key = chunkKey(res.chunk.cx, res.chunk.cy, res.chunk.cz);
+      pendingResultsRef.current.set(key, res);
+    },
       maxInFlight: config.meshing.maxInFlight,
       maxQueueSize: config.meshing.maxQueueSize,
       getPriority: priorityFromFocus,

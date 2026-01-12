@@ -68,7 +68,12 @@ export const tickDrones = (options: {
   } = options;
 
   // Choose outpost using getBestOutpost if available; fall back to getNearestOutpost for test stubs
-  const pickOutpost = ((world as any).getBestOutpost ?? world.getNearestOutpost).bind(world);
+  type Outpost = { x: number; y: number; z: number };
+  const worldWithOptional = world as unknown as {
+    getBestOutpost?: (x: number, y: number, z: number) => Outpost | null;
+    getNearestOutpost: (x: number, y: number, z: number) => Outpost | null;
+  };
+  const pickOutpost = (worldWithOptional.getBestOutpost ?? worldWithOptional.getNearestOutpost).bind(worldWithOptional);
 
   for (const drone of drones) {
     if (drone.role === "MINER") {

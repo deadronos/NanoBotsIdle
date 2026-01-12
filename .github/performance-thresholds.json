@@ -1,0 +1,33 @@
+{
+  "description": "Performance regression thresholds for CI checks",
+  "version": "1.0.0",
+  "thresholds": {
+    "fps": {
+      "min": 50,
+      "avgMin": 55,
+      "regressionPercent": 10,
+      "description": "Frames per second - lower values indicate performance degradation"
+    },
+    "frameTime": {
+      "max": 20,
+      "avgMax": 18,
+      "regressionPercent": 15,
+      "description": "Frame time in milliseconds - higher values indicate slower rendering"
+    },
+    "meshingTime": {
+      "avgMax": 10,
+      "regressionPercent": 20,
+      "description": "Average meshing time per chunk in milliseconds"
+    },
+    "workerSimMs": {
+      "avgMax": 15,
+      "regressionPercent": 20,
+      "description": "Worker simulation time in milliseconds"
+    }
+  },
+  "notes": {
+    "regressionPercent": "Maximum allowed percentage increase/decrease from baseline",
+    "failFast": "CI will fail if any threshold is exceeded",
+    "warningOnly": "Set PERF_WARNING_ONLY=true to only warn instead of failing"
+  }
+}

@@ -10,7 +10,7 @@ import { debug } from "../utils/logger";
 const CHECK_INTERVAL = 500; // ms
 
 export const DynamicResScaler: FC = () => {
-  const setDpr = useThree((state) => state.setDpr);
+  const { setDpr, gl } = useThree();
   const frameCount = useRef(0);
   const lastTime = useRef(0);
   const dprRef = useRef(MAX_DPR);
@@ -42,6 +42,7 @@ export const DynamicResScaler: FC = () => {
       if (config.telemetry.enabled) {
         telemetry.recordFps(fps);
         telemetry.recordFrameTime(frameTime);
+        telemetry.recordDrawCalls(gl.info.render.calls);
       }
 
       const nextDpr = computeNextDpr(fps, dprRef.current);
@@ -49,6 +50,12 @@ export const DynamicResScaler: FC = () => {
       if (nextDpr !== dprRef.current) {
         dprRef.current = nextDpr;
         setDpr(nextDpr);
+        
+        // Record DPR change in telemetry
+        if (config.telemetry.enabled) {
+          telemetry.recordDprChange(nextDpr);
+        }
+        
         debug(`[DynamicResScaler] FPS: ${fps}, DPR: ${nextDpr.toFixed(2)}`);
       }
     }

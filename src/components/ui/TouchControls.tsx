@@ -70,15 +70,47 @@ export const TouchControls: React.FC<{ className?: string }> = ({ className = ""
   useEffect(() => {
     const mq = typeof window !== "undefined" && window.matchMedia?.("(pointer: coarse)");
     const check = () => {
-      const hasTouch = typeof window !== "undefined" && ("ontouchstart" in window || navigator.maxTouchPoints > 0 || (mq && mq.matches));
-      setIsTouch(!!hasTouch);
+      const hasTouch =
+        typeof window !== "undefined" &&
+        ("ontouchstart" in window || navigator.maxTouchPoints > 0 || (mq && mq.matches));
+      setIsTouch((prev) => {
+        if (prev === !!hasTouch) return prev; // avoid unnecessary re-renders
+        return !!hasTouch;
+      });
     };
     check();
     if (mq && mq.addEventListener) mq.addEventListener("change", check);
-    window.addEventListener("resize", check);
+
+    // Debounce resize to avoid running `check` excessively during continuous resize
+    let resizeTimeout: number | null = null;
+    let rafId: number | null = null;
+    const onResize = () => {
+      if (resizeTimeout !== null) {
+        clearTimeout(resizeTimeout);
+      }
+      resizeTimeout = window.setTimeout(() => {
+        resizeTimeout = null;
+        if (rafId !== null) {
+          cancelAnimationFrame(rafId);
+          rafId = null;
+        }
+        rafId = requestAnimationFrame(() => {
+          rafId = null;
+          check();
+        });
+      }, 120);
+    };
+
+    window.addEventListener("resize", onResize, { passive: true });
     return () => {
       if (mq && mq.removeEventListener) mq.removeEventListener("change", check);
-      window.removeEventListener("resize", check);
+      window.removeEventListener("resize", onResize);
+      if (resizeTimeout !== null) {
+        clearTimeout(resizeTimeout);
+      }
+      if (rafId !== null) {
+        cancelAnimationFrame(rafId);
+      }
     };
   }, []);
 
