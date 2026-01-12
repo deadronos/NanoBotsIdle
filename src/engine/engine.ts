@@ -35,6 +35,7 @@ export const createEngine = (_seed?: number, saveState?: Partial<UiSnapshot>): E
       prestigeLevel: saveState?.prestigeLevel ?? 1,
       droneCount: saveState?.droneCount ?? 3,
       haulerCount: saveState?.haulerCount ?? 0,
+      diverCount: saveState?.diverCount ?? 0,
       miningSpeedLevel: saveState?.miningSpeedLevel ?? 1,
       moveSpeedLevel: saveState?.moveSpeedLevel ?? 1,
       laserPowerLevel: saveState?.laserPowerLevel ?? 1,

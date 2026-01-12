@@ -34,7 +34,10 @@ export const encodeDrones = (drones: Drone[]) => {
     if (drone.state === "QUEUING") stateValue = DRONE_STATE_ID.QUEUING;
     entityStates[i] = stateValue;
 
-    entityRoles[i] = drone.role === "HAULER" ? 1 : 0;
+    let roleValue = 0; // MINER
+    if (drone.role === "HAULER") roleValue = 1;
+    if (drone.role === "DIVER") roleValue = 2;
+    entityRoles[i] = roleValue;
 
     entityTargets[base] = drone.targetX;
     entityTargets[base + 1] = drone.targetY;

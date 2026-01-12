@@ -11,6 +11,7 @@ export interface GameState {
   // Upgrades
   droneCount: number;
   haulerCount: number;
+  diverCount: number;
   miningSpeedLevel: number;
   moveSpeedLevel: number;
   laserPowerLevel: number;
@@ -24,9 +25,9 @@ export interface GameState {
   addCredits: (amount: number) => void;
   incrementMinedBlocks: () => void;
   setTotalBlocks: (count: number) => void;
-  buyUpgrade: (type: "drone" | "hauler" | "speed" | "move" | "laser") => void;
+  buyUpgrade: (type: "drone" | "hauler" | "diver" | "speed" | "move" | "laser") => void;
   resetPrestige: () => void;
-  getUpgradeCost: (type: "drone" | "hauler" | "speed" | "move" | "laser") => number;
+  getUpgradeCost: (type: "drone" | "hauler" | "diver" | "speed" | "move" | "laser") => number;
 }
 
 // Legacy defaults remain in config (see src/config/economy.ts)
@@ -45,6 +46,7 @@ export const useGameStore = create<GameState>()(
 
       droneCount: 3,
       haulerCount: 0,
+      diverCount: 0,
       miningSpeedLevel: 1,
       moveSpeedLevel: 1,
       laserPowerLevel: 1,
@@ -83,6 +85,7 @@ export const useGameStore = create<GameState>()(
             const updates: Partial<GameState> = { credits: prev.credits - cost };
             if (type === "drone") updates.droneCount = prev.droneCount + 1;
             if (type === "hauler") updates.haulerCount = prev.haulerCount + 1;
+            if (type === "diver") updates.diverCount = prev.diverCount + 1;
             if (type === "speed") updates.miningSpeedLevel = prev.miningSpeedLevel + 1;
             if (type === "move") updates.moveSpeedLevel = prev.moveSpeedLevel + 1;
             if (type === "laser") updates.laserPowerLevel = prev.laserPowerLevel + 1;

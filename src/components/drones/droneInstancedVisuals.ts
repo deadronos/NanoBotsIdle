@@ -9,6 +9,7 @@ import { DRONE_STATE_ID } from "../../shared/droneState";
 const ROLE_COLORS = {
   MINER: 0x00ffcc,
   HAULER: 0xffaa00,
+  DIVER: 0x0066ff,
   QUEUING: 0xffff00,
 } as const;
 
@@ -21,6 +22,7 @@ const TARGET_BOX_COLORS = {
 // Pre-computed Color objects to avoid repeated setHex calls
 const _colorMiner = new Color(ROLE_COLORS.MINER);
 const _colorHauler = new Color(ROLE_COLORS.HAULER);
+const _colorDiver = new Color(ROLE_COLORS.DIVER);
 const _colorQueuing = new Color(ROLE_COLORS.QUEUING);
 const _colorMining = new Color(TARGET_BOX_COLORS.MINING);
 const _colorMoving = new Color(TARGET_BOX_COLORS.MOVING);
@@ -191,10 +193,12 @@ export const updateDroneInstancedVisuals = (
           // Actually, we need to cache state too if we use it for color.
           // Simplified: Just always update color if state is queuing?
           // Better: use a combined cache key or just force update.
+          const isDiver = role === 2;
           const isHauler = role === 1;
           // Use pre-computed Color objects instead of setHex
           const colorObj =
             droneState === DRONE_STATE_ID.QUEUING ? _colorQueuing
+            : isDiver ? _colorDiver
             : isHauler ? _colorHauler
             : _colorMiner;
 
@@ -268,9 +272,10 @@ export const updateDroneInstancedVisuals = (
       const role = roles ? roles[i] : 0;
       if (roleCache[i] !== role) {
         roleCache[i] = role;
+        const isDiver = role === 2;
         const isHauler = role === 1;
         // Use pre-computed Color objects instead of setHex
-        const colorObj = isHauler ? _colorHauler : _colorMiner;
+        const colorObj = isDiver ? _colorDiver : isHauler ? _colorHauler : _colorMiner;
         bodyMesh.setColorAt(i, colorObj);
         bodyColorsDirty = true;
         if (i < bodyColorMin) bodyColorMin = i;

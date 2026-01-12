@@ -19,6 +19,7 @@ export const tickEngine = (
     ctx.drones,
     ctx.uiSnapshot.droneCount,
     ctx.uiSnapshot.haulerCount,
+    ctx.uiSnapshot.diverCount,
     ctx.cfg,
   );
 

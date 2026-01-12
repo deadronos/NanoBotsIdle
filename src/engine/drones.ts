@@ -1,7 +1,7 @@
 import { getDroneCargo } from "../config/drones";
 import { type Config } from "../config/index";
 
-export type DroneRole = "MINER" | "HAULER";
+export type DroneRole = "MINER" | "HAULER" | "DIVER";
 
 export type DroneState =
   | "IDLE" // Hauler waiting
@@ -37,10 +37,12 @@ export const syncDroneCount = (
   drones: Drone[],
   minerCount: number,
   haulerCount: number,
+  diverCount: number,
   cfg: Config,
 ) => {
   let miners = drones.filter((d) => d.role === "MINER");
   let haulers = drones.filter((d) => d.role === "HAULER");
+  let divers = drones.filter((d) => d.role === "DIVER");
 
   // Sync Miners
   if (miners.length < minerCount) {
@@ -81,7 +83,7 @@ export const syncDroneCount = (
   }
 
   // Correct implementation merging both
-  const nextDrones = [...miners, ...haulers];
+  const nextDrones = [...miners, ...haulers, ...divers];
 
   // Fill Haulers
   while (nextDrones.filter((d) => d.role === "HAULER").length < haulerCount) {
@@ -103,9 +105,32 @@ export const syncDroneCount = (
     });
   }
 
-  // Remove Haulers if too many
-  // (Filter approach above was cleaner but I need to handle IDs sequentially)
+  // Fill Divers
+  while (nextDrones.filter((d) => d.role === "DIVER").length < diverCount) {
+    const maxId = nextDrones.length > 0 ? Math.max(...nextDrones.map((d) => d.id)) : -1;
+    nextDrones.push({
+      id: maxId + 1,
+      x: 0,
+      y: cfg.terrain.waterLevel - 5 - Math.random() * 10, // Spawn underwater
+      z: 0,
+      targetKey: null,
+      targetX: Number.NaN,
+      targetY: Number.NaN,
+      targetZ: Number.NaN,
+      state: "SEEKING" as DroneState,
+      miningTimer: 0,
+      role: "DIVER",
+      payload: 0,
+      maxPayload: cfg.drones.divers.baseCargo,
+    });
+  }
 
-  // Let's rely on the final array method.
-  return nextDrones;
+  // Remove excess drones if counts decreased
+  const finalDrones = [
+    ...nextDrones.filter((d) => d.role === "MINER").slice(0, minerCount),
+    ...nextDrones.filter((d) => d.role === "HAULER").slice(0, haulerCount),
+    ...nextDrones.filter((d) => d.role === "DIVER").slice(0, diverCount),
+  ];
+
+  return finalDrones;
 };
