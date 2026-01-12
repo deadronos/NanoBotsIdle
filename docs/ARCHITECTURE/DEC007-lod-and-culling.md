@@ -12,9 +12,11 @@ Implement a layered visibility system:
 
 1. **Distance-based LOD** — Chunks beyond `lowDistanceMultiplier × chunkSize` use downsampled geometry. Chunks beyond `hideDistanceMultiplier × chunkSize` are hidden.
 
-2. **Frustum culling** — Chunks outside camera frustum are hidden regardless of distance.
+2. **Progressive LOD refinement** — When enabled, chunks appear with low LOD first and refine to high LOD after a short delay to reduce pop-in churn.
 
-3. **Optional occlusion culling** — WebGL2 occlusion queries can hide chunks behind other geometry. Disabled by default due to async query complexity.
+3. **Frustum culling** — Chunks outside camera frustum are hidden regardless of distance.
+
+4. **Optional occlusion culling** — WebGL2 occlusion queries can hide chunks behind other geometry. Disabled by default due to async query complexity.
 
 ## Configuration
 
@@ -24,6 +26,16 @@ Located in `config.render.voxels`:
 lod: {
   lowDistanceMultiplier: 12,   // Switch to low LOD at 12 × chunkSize
   hideDistanceMultiplier: 24,  // Hide at 24 × chunkSize
+  progressive: {
+    enabled: false,            // Coarse-first LOD refinement
+    refineDelayFrames: 2,      // Frames to wait before upgrading to high LOD
+  },
+},
+chunkLoad: {
+  initialRadius: 1,            // Initial chunk neighborhood radius
+  initialDims: 2,              // 2 = planar, 3 = full cube
+  activeRadius: 1,             // Active chunk neighborhood radius
+  activeDims: 3,               // 2 = planar, 3 = full cube
 },
 occlusion: {
   enabled: false,              // Opt-in experimental feature

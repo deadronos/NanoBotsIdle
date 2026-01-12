@@ -176,6 +176,11 @@
                 <div class="chart-title">Frame Time Over Time</div>
                 <canvas id="frameTimeChart"></canvas>
             </div>
+
+            <div class="chart-container">
+                <div class="chart-title">Draw Calls Over Time</div>
+                <canvas id="drawCallChart"></canvas>
+            </div>
             
             <div class="chart-container">
                 <div class="chart-title">Worker & Meshing Performance</div>
@@ -257,6 +262,7 @@
             metricsGrid.innerHTML = `
                 ${createMetricCard('FPS', data.aggregate.fps, '')}
                 ${createMetricCard('Frame Time', data.aggregate.frameTime, 'ms')}
+                ${createMetricCard('Draw Calls', data.aggregate.drawCalls, '')}
                 ${createMetricCard('Meshing Time', data.aggregate.meshingTime, 'ms')}
                 ${createMetricCard('Worker SimMs', data.aggregate.workerSimMs, 'ms')}
             `;
@@ -264,6 +270,7 @@
             // Render charts
             renderFpsChart(data.history);
             renderFrameTimeChart(data.history);
+            renderDrawCallChart(data.history);
             renderWorkerChart(data.history);
         }
         
@@ -327,6 +334,26 @@
                     }]
                 },
                 options: getChartOptions('Frame Time (ms)')
+            });
+        }
+
+        function renderDrawCallChart(history) {
+            const ctx = document.getElementById('drawCallChart').getContext('2d');
+            const drawCalls = history.map(h => h.drawCalls?.current || 0);
+
+            new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: history.map((_, i) => i),
+                    datasets: [{
+                        label: 'Draw Calls',
+                        data: drawCalls,
+                        borderColor: '#57ab5a',
+                        backgroundColor: 'rgba(87, 171, 90, 0.1)',
+                        tension: 0.1
+                    }]
+                },
+                options: getChartOptions('Draw Calls')
             });
         }
         

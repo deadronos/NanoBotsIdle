@@ -18,6 +18,12 @@
 
 ## Recent updates
 
+### 2026-01-02
+
+- **Progressive LOD:** Added coarse-first LOD refinement with configurable delay in meshed rendering.
+- **Occlusion Culling:** Wired optional WebGL2 occlusion queries into meshed chunk visibility.
+- **Benchmarking:** Added draw-call telemetry and profiling presets for heavy meshed scenes.
+
 ### 2026-01-01
 
 - **Smart Queuing (Logistics):** Implemented outpost traffic management to prevent drone congestion.
