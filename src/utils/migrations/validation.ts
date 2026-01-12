@@ -54,6 +54,23 @@ export function validateSaveStructure(json: unknown): ValidationResult {
 }
 
 /**
+ * Known game state fields in the current version.
+ * Used for detecting unknown/future fields.
+ */
+const KNOWN_GAME_STATE_FIELDS = new Set<string>([
+  "credits",
+  "prestigeLevel",
+  "droneCount",
+  "haulerCount",
+  "miningSpeedLevel",
+  "moveSpeedLevel",
+  "laserPowerLevel",
+  "minedBlocks",
+  "totalBlocks",
+  "outposts",
+]);
+
+/**
  * Validate game state data fields.
  * @param data - Game state to validate
  * @returns Validation result with errors and warnings
@@ -94,6 +111,21 @@ export function validateGameState(data: Partial<GameState>): ValidationResult {
     warnings.push(`Drone count is less than 1 (${data.droneCount}), will be clamped to 1`);
   }
 
+  // Detect unknown/future fields (forward compatibility check)
+  const unknownFields: string[] = [];
+  for (const key in data) {
+    if (!KNOWN_GAME_STATE_FIELDS.has(key)) {
+      unknownFields.push(key);
+    }
+  }
+
+  if (unknownFields.length > 0) {
+    warnings.push(
+      `Save contains unknown fields that may be from a future version: ${unknownFields.join(", ")}. ` +
+        `These fields will be ignored. Consider updating the app to preserve all data.`,
+    );
+  }
+
   return {
     valid: errors.length === 0,
     errors,
@@ -103,12 +135,13 @@ export function validateGameState(data: Partial<GameState>): ValidationResult {
 
 /**
  * Sanitize game state data to ensure all values are within acceptable ranges.
+ * Also filters out unknown fields to maintain schema integrity.
  * @param data - Game state to sanitize
  * @returns Sanitized game state
  */
 export function sanitizeGameState(data: Partial<GameState>): Partial<GameState> {
-  return {
-    ...data,
+  // Only keep known fields
+  const sanitized: Partial<GameState> = {
     credits: Math.max(0, data.credits ?? 0),
     prestigeLevel: Math.max(1, data.prestigeLevel ?? 1),
     droneCount: Math.max(1, data.droneCount ?? 3),
@@ -118,4 +151,16 @@ export function sanitizeGameState(data: Partial<GameState>): Partial<GameState> 
     minedBlocks: Math.max(0, data.minedBlocks ?? 0),
     totalBlocks: Math.max(0, data.totalBlocks ?? 0),
   };
+
+  // Include outposts if present
+  if (data.outposts !== undefined) {
+    sanitized.outposts = data.outposts;
+  }
+
+  // Include haulerCount if present
+  if (data.haulerCount !== undefined) {
+    sanitized.haulerCount = Math.max(0, data.haulerCount);
+  }
+
+  return sanitized;
 }

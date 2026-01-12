@@ -1,0 +1,21 @@
+{
+  "version": 3,
+  "date": "2026-06-15T12:00:00.000Z",
+  "data": {
+    "credits": 5000,
+    "prestigeLevel": 4,
+    "droneCount": 12,
+    "miningSpeedLevel": 6,
+    "moveSpeedLevel": 5,
+    "laserPowerLevel": 7,
+    "minedBlocks": 800,
+    "totalBlocks": 1500,
+    "newFeatureInV3": "advanced_mining",
+    "anotherNewField": {
+      "complexData": [1, 2, 3],
+      "nestedObject": {
+        "value": 42
+      }
+    }
+  }
+}
