@@ -32,7 +32,9 @@ describe('TouchControls', () => {
       // Ensure ontouchstart absent
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       delete (window as any).ontouchstart;
-    } catch {}
+    } catch {
+      /* ignore - some test environments disallow deleting globals */
+    }
     window.matchMedia = () => ({ matches: false, addEventListener: noop, removeEventListener: noop } as MediaQueryList);
 
     render(<TouchControls />);
