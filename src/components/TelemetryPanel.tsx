@@ -13,6 +13,8 @@ export const TelemetryPanel: React.FC<TelemetryPanelProps> = ({ isOpen, onClose 
   const config = useConfig();
   const [snapshot, setSnapshot] = useState<TelemetrySnapshot | null>(null);
   const [copySuccess, setCopySuccess] = useState(false);
+  const [copying, setCopying] = useState(false);
+  const workerRef = React.useRef<Worker | null>(null);
 
   useEffect(() => {
     if (!isOpen || !config.telemetry.enabled) {
@@ -27,19 +29,66 @@ export const TelemetryPanel: React.FC<TelemetryPanelProps> = ({ isOpen, onClose 
     return () => clearInterval(interval);
   }, [isOpen, config.telemetry.enabled]);
 
+  React.useEffect(() => {
+    // Lazily create worker on mount when telemetry panel is used; keep around for lifetime of panel
+    const w = new Worker(new URL("../worker/telemetryStringify.worker.ts", import.meta.url), {
+      type: "module",
+    });
+    workerRef.current = w;
+
+    const handler = (e: MessageEvent) => {
+      const msg = e.data as { t: string; json?: string; message?: string };
+      if (msg.t === "DONE") {
+        const json = msg.json ?? "";
+        navigator.clipboard.writeText(json).then(
+          () => {
+            setCopySuccess(true);
+            setTimeout(() => setCopySuccess(false), 2000);
+          },
+          () => {
+            // Ignore clipboard errors for now
+          },
+        );
+      } else if (msg.t === "ERROR") {
+        // Could surface an error toast here; for now just warn
+        // eslint-disable-next-line no-console
+        console.warn("Telemetry stringify worker error:", msg.message);
+      }
+      setCopying(false);
+    };
+
+    w.addEventListener("message", handler);
+
+    return () => {
+      w.removeEventListener("message", handler);
+      w.terminate();
+      workerRef.current = null;
+    };
+  }, []);
+
   const handleCopyJSON = () => {
     if (!snapshot) return;
-    // Defer JSON stringify and clipboard work to avoid blocking the click event
-    // handler (which can show up as a long 'click' task in the browser).
-    setTimeout(() => {
-      const telemetry = getTelemetryCollector();
-      const json = telemetry.exportJSON();
-      navigator.clipboard.writeText(json).then(() => {
-        // Update state on the next tick to keep handler lightweight
-        setCopySuccess(true);
-        setTimeout(() => setCopySuccess(false), 2000);
-      });
-    }, 0);
+
+    // Avoid duplicate copy operations
+    if (copying) return;
+
+    setCopying(true);
+    // Post snapshot to worker for stringify; worker will post back the string
+    try {
+      workerRef.current?.postMessage({ t: "STRINGIFY", snapshot });
+    } catch (err) {
+      // Fallback: stringify on main thread if worker fails
+      setCopying(false);
+      try {
+        const json = JSON.stringify(snapshot, null, 2);
+        navigator.clipboard.writeText(json).then(() => {
+          setCopySuccess(true);
+          setTimeout(() => setCopySuccess(false), 2000);
+        });
+      } catch (e) {
+        // ignore
+      }
+    }
   };
 
   if (!isOpen) return null;
@@ -57,8 +106,9 @@ export const TelemetryPanel: React.FC<TelemetryPanelProps> = ({ isOpen, onClose 
             onClick={handleCopyJSON}
             className="px-2 py-1 bg-blue-600 hover:bg-blue-700 rounded text-xs transition-colors"
             title="Copy JSON"
+            disabled={copying}
           >
-            {copySuccess ? "✓ Copied" : "Copy JSON"}
+            {copying ? "Copying…" : copySuccess ? "✓ Copied" : "Copy JSON"}
           </button>
           <button
             onClick={onClose}
