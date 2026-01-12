@@ -77,6 +77,7 @@ export const UiSnapshotSchema = z.object({
   prestigeLevel: z.number(),
   droneCount: z.number(),
   haulerCount: z.number(),
+  diverCount: z.number(),
   miningSpeedLevel: z.number(),
   moveSpeedLevel: z.number(),
   laserPowerLevel: z.number(),

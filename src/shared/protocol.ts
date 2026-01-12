@@ -51,6 +51,7 @@ export type UiSnapshot = {
   prestigeLevel: number;
   droneCount: number;
   haulerCount: number;
+  diverCount: number;
   miningSpeedLevel: number;
   moveSpeedLevel: number;
   laserPowerLevel: number;

@@ -185,7 +185,10 @@ export const tickDrones = (options: {
               const QUEUE_THRESHOLD = 5;
               const REROUTE_COOLDOWN_MS = 5000;
               const now = Date.now();
-              if (world.getQueueLength(outpost) > QUEUE_THRESHOLD && (drone.lastRerouteAt ?? 0) + REROUTE_COOLDOWN_MS < now) {
+              if (
+                world.getQueueLength(outpost) > QUEUE_THRESHOLD &&
+                (drone.lastRerouteAt ?? 0) + REROUTE_COOLDOWN_MS < now
+              ) {
                 drone.lastRerouteAt = now;
                 drone.state = "RETURNING"; // stay in returning so getBestOutpost will pick a different one next tick
               } else {
@@ -214,7 +217,10 @@ export const tickDrones = (options: {
           const QUEUE_THRESHOLD = 5;
           const REROUTE_COOLDOWN_MS = 5000;
           const now = Date.now();
-          if (world.getQueueLength(outpost) > QUEUE_THRESHOLD && (drone.lastRerouteAt ?? 0) + REROUTE_COOLDOWN_MS < now) {
+          if (
+            world.getQueueLength(outpost) > QUEUE_THRESHOLD &&
+            (drone.lastRerouteAt ?? 0) + REROUTE_COOLDOWN_MS < now
+          ) {
             drone.lastRerouteAt = now;
             drone.state = "RETURNING";
             break;
@@ -345,7 +351,10 @@ export const tickDrones = (options: {
               const QUEUE_THRESHOLD = 5;
               const REROUTE_COOLDOWN_MS = 5000;
               const now = Date.now();
-              if (world.getQueueLength(outpost) > QUEUE_THRESHOLD && (drone.lastRerouteAt ?? 0) + REROUTE_COOLDOWN_MS < now) {
+              if (
+                world.getQueueLength(outpost) > QUEUE_THRESHOLD &&
+                (drone.lastRerouteAt ?? 0) + REROUTE_COOLDOWN_MS < now
+              ) {
                 drone.lastRerouteAt = now;
                 drone.state = "RETURNING";
               } else {
@@ -372,7 +381,10 @@ export const tickDrones = (options: {
             const QUEUE_THRESHOLD = 5;
             const REROUTE_COOLDOWN_MS = 5000;
             const now = Date.now();
-            if (world.getQueueLength(outpost) > QUEUE_THRESHOLD && (drone.lastRerouteAt ?? 0) + REROUTE_COOLDOWN_MS < now) {
+            if (
+              world.getQueueLength(outpost) > QUEUE_THRESHOLD &&
+              (drone.lastRerouteAt ?? 0) + REROUTE_COOLDOWN_MS < now
+            ) {
               drone.lastRerouteAt = now;
               drone.state = "RETURNING";
               break;

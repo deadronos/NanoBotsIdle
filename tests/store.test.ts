@@ -10,6 +10,7 @@ const resetStore = () => {
     prestigeLevel: 1,
     droneCount: 3,
     haulerCount: 0,
+    diverCount: 0,
     miningSpeedLevel: 1,
     moveSpeedLevel: 1,
     laserPowerLevel: 1,

@@ -48,6 +48,14 @@ export const ShopModal: React.FC<ShopModalProps> = ({ onClose }) => {
           desc="Transports resources from miners to base, improving efficiency."
         />
         <UpgradeCard
+          title="Diver Drone"
+          level={snapshot.diverCount}
+          cost={nextCosts.diver ?? 0}
+          onClick={() => bridge.enqueue({ t: "BUY_UPGRADE", id: "diver", n: 1 })}
+          canAfford={snapshot.credits >= (nextCosts.diver ?? Number.POSITIVE_INFINITY)}
+          desc="Autonomous underwater mining unit. Can mine resources below the waterline."
+        />
+        <UpgradeCard
           title="Mining Drill"
           level={snapshot.miningSpeedLevel}
           cost={nextCosts.speed ?? 0}

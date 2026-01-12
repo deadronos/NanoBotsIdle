@@ -14,6 +14,14 @@ export type DronesConfig = {
     baseCargo: number;
     cargoPerLevel: number;
   };
+  divers: {
+    baseSpeed: number;
+    speedPerLevel: number;
+    underwaterSpeedMultiplier: number;
+    baseCargo: number;
+    cargoPerLevel: number;
+    maxDepth: number;
+  };
   particle: {
     maxParticles: number;
     spread: number;
@@ -71,6 +79,14 @@ export const defaultDronesConfig: DronesConfig = {
     speedPerLevel: 2,
     baseCargo: 50,
     cargoPerLevel: 10,
+  },
+  divers: {
+    baseSpeed: 4,
+    speedPerLevel: 1.5,
+    underwaterSpeedMultiplier: 0.8,
+    baseCargo: 15,
+    cargoPerLevel: 3,
+    maxDepth: -50,
   },
   particle: {
     maxParticles: 400,

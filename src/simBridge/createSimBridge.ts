@@ -132,6 +132,7 @@ export const createSimBridge = (options: SimBridgeOptions = {}): SimBridge => {
         prestigeLevel: state.prestigeLevel,
         droneCount: state.droneCount,
         haulerCount: state.haulerCount,
+        diverCount: state.diverCount,
         miningSpeedLevel: state.miningSpeedLevel,
         moveSpeedLevel: state.moveSpeedLevel,
         laserPowerLevel: state.laserPowerLevel,
