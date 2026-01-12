@@ -29,11 +29,17 @@ export const TelemetryPanel: React.FC<TelemetryPanelProps> = ({ isOpen, onClose 
 
   const handleCopyJSON = () => {
     if (!snapshot) return;
-    const json = JSON.stringify(snapshot, null, 2);
-    navigator.clipboard.writeText(json).then(() => {
-      setCopySuccess(true);
-      setTimeout(() => setCopySuccess(false), 2000);
-    });
+    // Defer JSON stringify and clipboard work to avoid blocking the click event
+    // handler (which can show up as a long 'click' task in the browser).
+    setTimeout(() => {
+      const telemetry = getTelemetryCollector();
+      const json = telemetry.exportJSON();
+      navigator.clipboard.writeText(json).then(() => {
+        // Update state on the next tick to keep handler lightweight
+        setCopySuccess(true);
+        setTimeout(() => setCopySuccess(false), 2000);
+      });
+    }, 0);
   };
 
   if (!isOpen) return null;
