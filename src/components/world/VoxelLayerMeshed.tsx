@@ -6,14 +6,14 @@ import { useConfig } from "../../config/useConfig";
 import { playerChunk, playerPosition } from "../../engine/playerState";
 import { applyLodGeometry } from "../../render/lodGeometry";
 import { applyChunkVisibility, createLodThresholds, isChunkVisible as isChunkVisibleFn } from "../../render/lodUtils";
-import { createOcclusionCuller, applyOcclusionVisibility, defaultOcclusionConfig } from "../../render/occlusionCuller";
+import { applyOcclusionVisibility, createOcclusionCuller, defaultOcclusionConfig } from "../../render/occlusionCuller";
 import { applyVoxelEdits, resetVoxelEdits } from "../../sim/collision";
 import { getSurfaceHeightCore } from "../../sim/terrain-core";
 import { getSimBridge } from "../../simBridge/simBridge";
 import { forEachRadialChunk } from "../../utils";
 import { debug, groupCollapsed, groupEnd } from "../../utils/logger";
-import { normalizeChunkLoadConfig } from "./chunkLoadConfig";
 import { chunkKey } from "./chunkHelpers";
+import { normalizeChunkLoadConfig } from "./chunkLoadConfig";
 import { countDenseSolidsInChunk } from "./renderDebugCompare";
 import { useMeshedChunks } from "./useMeshedChunks";
 
@@ -121,9 +121,7 @@ export const VoxelLayerMeshed: React.FC<{
     };
   }, [
     gl,
-    occlusionConfig.enabled,
-    occlusionConfig.maxQueriesPerFrame,
-    occlusionConfig.queryDelayFrames,
+    occlusionConfig,
   ]);
 
   useEffect(() => {

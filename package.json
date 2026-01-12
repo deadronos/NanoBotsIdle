@@ -20,6 +20,9 @@
     "profile": "node ./scripts/profile.js",
     "profile:baseline": "node --expose-gc --loader ts-node/esm dev/profiling/baseline-generator.ts"
   },
+  "vitest": {
+    "setupFiles": ["./tests/setupTests.ts"]
+  },
   "dependencies": {
     "@react-three/drei": "10.7.7",
     "@react-three/fiber": "9.5.0",

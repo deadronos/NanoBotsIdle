@@ -76,7 +76,7 @@ export const TelemetryPanel: React.FC<TelemetryPanelProps> = ({ isOpen, onClose 
     // Post snapshot to worker for stringify; worker will post back the string
     try {
       workerRef.current?.postMessage({ t: "STRINGIFY", snapshot });
-    } catch (err) {
+    } catch {
       // Fallback: stringify on main thread if worker fails
       setCopying(false);
       try {
@@ -85,7 +85,7 @@ export const TelemetryPanel: React.FC<TelemetryPanelProps> = ({ isOpen, onClose 
           setCopySuccess(true);
           setTimeout(() => setCopySuccess(false), 2000);
         });
-      } catch (e) {
+      } catch {
         // ignore
       }
     }

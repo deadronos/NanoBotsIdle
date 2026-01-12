@@ -51,9 +51,11 @@ export type TelemetrySnapshot = {
   dpr: {
     current: number;
     changes: number;
-    history: Array<{ timestamp: number; value: number }>;
+    history: { timestamp: number; value: number }[];
   };
 };
+
+
 
 type Sample = {
   value: number;
@@ -97,7 +99,7 @@ export class TelemetryCollector {
   // DPR tracking
   private currentDpr = 1;
   private dprChangeCount = 0;
-  private dprHistory: Array<{ timestamp: number; value: number }> = [];
+  private dprHistory: { timestamp: number; value: number }[] = [];
 
   // Config
   private readonly maxHistorySize = 120; // ~2 seconds at 60fps
