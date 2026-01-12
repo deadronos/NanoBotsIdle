@@ -301,7 +301,7 @@ To profile the application locally and collect performance metrics:
 
 ### Manual Telemetry Access
 
-You can enable telemetry in your browser and access metrics via the console:
+You can enable telemetry in your browser to monitor real-time performance metrics:
 
 1. **Start the dev server with telemetry enabled:**
 
@@ -312,12 +312,24 @@ You can enable telemetry in your browser and access metrics via the console:
 2. **Open the app with telemetry enabled:**
    Navigate to `http://localhost:5173?telemetry=true`
 
-3. **Access metrics in the console:**
+3. **Use the telemetry panel:**
+   - Click the 📊 button in the bottom-right corner to open the panel
+   - View real-time metrics:
+     - **FPS**: Current, average, min, max frames per second
+     - **Frame Time**: Milliseconds per frame
+     - **DPR**: Device pixel ratio and scaling events
+     - **Meshing**: Queue length, processing time, errors
+     - **Worker**: Simulation time, backlog, errors
+   - Click "Copy JSON" to export metrics for analysis
+
+4. **Access metrics programmatically in the console:**
    ```javascript
    // Get current telemetry snapshot
    const metrics = JSON.parse(window.getTelemetrySnapshot());
    console.log(metrics);
    ```
+
+For detailed guidance on interpreting metrics and establishing baselines, see [dev/profiling/PERFORMANCE_BASELINES.md](dev/profiling/PERFORMANCE_BASELINES.md).
 
 ### CI Profiling
 
