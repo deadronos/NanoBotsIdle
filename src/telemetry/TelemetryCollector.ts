@@ -4,6 +4,7 @@
  * Tracks:
  * - FPS (frames per second)
  * - Frame time (ms per frame)
+ * - Draw calls per frame
  * - Meshing time per chunk
  * - Worker queue lengths
  * - Meshing queue wait times
@@ -20,6 +21,12 @@ export type TelemetrySnapshot = {
     max: number;
   };
   frameTime: {
+    current: number;
+    avg: number;
+    min: number;
+    max: number;
+  };
+  drawCalls: {
     current: number;
     avg: number;
     min: number;
@@ -59,6 +66,10 @@ export class TelemetryCollector {
   // Frame time tracking
   private frameTimeHistory: Sample[] = [];
   private lastFrameTime = 0;
+
+  // Draw call tracking
+  private drawCallHistory: Sample[] = [];
+  private lastDrawCalls = 0;
 
   // Meshing tracking
   private meshingTimes: Sample[] = [];
@@ -100,6 +111,7 @@ export class TelemetryCollector {
   reset() {
     this.fpsHistory = [];
     this.frameTimeHistory = [];
+    this.drawCallHistory = [];
     this.meshingTimes = [];
     this.meshingWaitTimes = [];
     this.totalChunksMeshed = 0;
@@ -112,6 +124,7 @@ export class TelemetryCollector {
     this.workerRetryCount = 0;
     this.meshingErrorCount = 0;
     this.meshingRetryCount = 0;
+    this.lastDrawCalls = 0;
   }
 
   recordFps(fps: number) {
@@ -129,6 +142,14 @@ export class TelemetryCollector {
     this.lastFrameTime = frameTime;
     this.frameTimeHistory.push({ value: frameTime, timestamp: now });
     this.trimHistory(this.frameTimeHistory);
+  }
+
+  recordDrawCalls(drawCalls: number) {
+    if (!this.enabled) return;
+    const now = performance.now();
+    this.lastDrawCalls = drawCalls;
+    this.drawCallHistory.push({ value: drawCalls, timestamp: now });
+    this.trimHistory(this.drawCallHistory);
   }
 
   recordMeshingTime(timeMs: number) {
@@ -205,6 +226,7 @@ export class TelemetryCollector {
   getSnapshot(): TelemetrySnapshot {
     const fpsStats = this.computeStats(this.fpsHistory);
     const frameTimeStats = this.computeStats(this.frameTimeHistory);
+    const drawCallStats = this.computeStats(this.drawCallHistory);
     const meshingStats = this.computeStats(this.meshingTimes);
     const waitTimeStats = this.computeStats(this.meshingWaitTimes);
 
@@ -217,6 +239,10 @@ export class TelemetryCollector {
       frameTime: {
         current: this.lastFrameTime,
         ...frameTimeStats,
+      },
+      drawCalls: {
+        current: this.lastDrawCalls,
+        ...drawCallStats,
       },
       meshing: {
         avgTimePerChunk: meshingStats.avg,
