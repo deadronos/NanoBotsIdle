@@ -1,7 +1,7 @@
 import type { Config } from "../config/index";
 import type { UiSnapshot, VoxelEdit } from "../shared/protocol";
 import { getVoxelValueFromHeight } from "../sim/terrain-core";
-import type { Drone } from "./drones";
+import type { Drone, DroneState } from "./drones";
 import { addKey, type KeyIndex, removeKey } from "./keyIndex";
 import { pickTargetKey } from "./targeting";
 import type { WorldModel } from "./world/world";
@@ -28,6 +28,84 @@ const moveTowards = (
     drone.z += dz * inv;
   }
   return dist;
+};
+
+// --- Helper Functions ---
+
+const handleDockingRequest = (
+  drone: Drone,
+  world: WorldModel,
+  outpost: { x: number; y: number; z: number },
+) => {
+  const result = world.requestDock(outpost, drone.id);
+  if (result === "GRANTED") {
+    drone.state = "DEPOSITING";
+    drone.miningTimer = 0;
+    return true;
+  }
+  return false;
+};
+
+const checkReroute = (
+  drone: Drone,
+  world: WorldModel,
+  outpost: { x: number; y: number; z: number },
+) => {
+  const QUEUE_THRESHOLD = 5;
+  const REROUTE_COOLDOWN_MS = 5000;
+  const now = Date.now();
+  if (
+    world.getQueueLength(outpost) > QUEUE_THRESHOLD &&
+    (drone.lastRerouteAt ?? 0) + REROUTE_COOLDOWN_MS < now
+  ) {
+    drone.lastRerouteAt = now;
+    drone.state = "RETURNING";
+    return true;
+  }
+  return false;
+};
+
+const orbitOutpost = (
+  drone: Drone,
+  outpost: { x: number; y: number; z: number },
+  radius: number,
+  heightOffset: number,
+  speed: number,
+  dtSeconds: number,
+) => {
+  const angle = Date.now() / 1000 + drone.id;
+  const targetX = outpost.x + Math.sin(angle) * radius;
+  const targetZ = outpost.z + Math.cos(angle) * radius;
+  const targetY = outpost.y + heightOffset;
+
+  moveTowards(drone, targetX, targetY, targetZ, speed, dtSeconds);
+};
+
+const handleDepositing = (
+  drone: Drone,
+  dtSeconds: number,
+  world: WorldModel,
+  uiSnapshot: UiSnapshot,
+  depositEvents: { x: number; y: number; z: number; amount: number }[],
+  nextState: DroneState,
+) => {
+  drone.miningTimer += dtSeconds;
+  if (drone.miningTimer >= 0.5) {
+    uiSnapshot.credits += drone.payload;
+    const outpost = world.getNearestOutpost(drone.x, drone.y, drone.z);
+    if (outpost) {
+      depositEvents.push({
+        x: outpost.x,
+        y: outpost.y,
+        z: outpost.z,
+        amount: Math.floor(drone.payload),
+      });
+      world.undock(outpost, drone.id);
+    }
+    drone.payload = 0;
+    drone.state = nextState;
+    drone.miningTimer = 0;
+  }
 };
 
 export const tickDrones = (options: {
@@ -73,7 +151,9 @@ export const tickDrones = (options: {
     getBestOutpost?: (x: number, y: number, z: number) => Outpost | null;
     getNearestOutpost: (x: number, y: number, z: number) => Outpost | null;
   };
-  const pickOutpost = (worldWithOptional.getBestOutpost ?? worldWithOptional.getNearestOutpost).bind(worldWithOptional);
+  const pickOutpost = (
+    worldWithOptional.getBestOutpost ?? worldWithOptional.getNearestOutpost
+  ).bind(worldWithOptional);
 
   for (const drone of drones) {
     if (drone.role === "MINER") {
@@ -180,19 +260,9 @@ export const tickDrones = (options: {
           );
 
           if (dist < 1.0) {
-            // Request slot
-            const result = world.requestDock(outpost, drone.id);
-            if (result === "GRANTED") {
-              drone.state = "DEPOSITING";
-              drone.miningTimer = 0;
-            } else {
-              // If queue seems long and cooldown expired, re-evaluate next tick
-              const QUEUE_THRESHOLD = 5;
-              const REROUTE_COOLDOWN_MS = 5000;
-              const now = Date.now();
-              if (world.getQueueLength(outpost) > QUEUE_THRESHOLD && (drone.lastRerouteAt ?? 0) + REROUTE_COOLDOWN_MS < now) {
-                drone.lastRerouteAt = now;
-                drone.state = "RETURNING"; // stay in returning so getBestOutpost will pick a different one next tick
+            if (!handleDockingRequest(drone, world, outpost)) {
+              if (checkReroute(drone, world, outpost)) {
+                // Reroute check passed, state already set to RETURNING
               } else {
                 drone.state = "QUEUING";
               }
@@ -207,53 +277,15 @@ export const tickDrones = (options: {
             break;
           }
 
-          // Retry dock
-          const result = world.requestDock(outpost, drone.id);
-          if (result === "GRANTED") {
-            drone.state = "DEPOSITING";
-            drone.miningTimer = 0;
-            break;
-          }
+          if (handleDockingRequest(drone, world, outpost)) break;
 
-          // Reroute check with cooldown
-          const QUEUE_THRESHOLD = 5;
-          const REROUTE_COOLDOWN_MS = 5000;
-          const now = Date.now();
-          if (world.getQueueLength(outpost) > QUEUE_THRESHOLD && (drone.lastRerouteAt ?? 0) + REROUTE_COOLDOWN_MS < now) {
-            drone.lastRerouteAt = now;
-            drone.state = "RETURNING";
-            break;
-          }
+          if (checkReroute(drone, world, outpost)) break;
 
-          // Orbit behavior: Circle around center at y + 5
-          const angle = Date.now() / 1000 + drone.id;
-          const orbitRadius = 6;
-          const targetX = outpost.x + Math.sin(angle) * orbitRadius;
-          const targetZ = outpost.z + Math.cos(angle) * orbitRadius;
-          const targetY = outpost.y + 5;
-
-          moveTowards(drone, targetX, targetY, targetZ, moveSpeed, dtSeconds);
+          orbitOutpost(drone, outpost, 6, 5, moveSpeed, dtSeconds);
           break;
         }
         case "DEPOSITING": {
-          drone.miningTimer += dtSeconds;
-          if (drone.miningTimer >= 0.5) {
-            uiSnapshot.credits += drone.payload;
-            const outpost = world.getNearestOutpost(drone.x, drone.y, drone.z);
-            if (outpost) {
-              depositEvents.push({
-                x: outpost.x,
-                y: outpost.y,
-                z: outpost.z,
-                amount: Math.floor(drone.payload),
-              });
-              world.undock(outpost, drone.id);
-            }
-            drone.payload = 0;
-
-            drone.state = "SEEKING";
-            drone.miningTimer = 0;
-          }
+          handleDepositing(drone, dtSeconds, world, uiSnapshot, depositEvents, "SEEKING");
           break;
         }
         default:
@@ -340,19 +372,9 @@ export const tickDrones = (options: {
           const dist = moveTowards(drone, outpost.x, outpost.y + 4, outpost.z, hSpeed, dtSeconds);
 
           if (dist < 1.5) {
-            // Request slot
-            const result = world.requestDock(outpost, drone.id);
-            if (result === "GRANTED") {
-              drone.state = "DEPOSITING";
-              drone.miningTimer = 0;
-            } else {
-              // Reroute cooldown heuristic
-              const QUEUE_THRESHOLD = 5;
-              const REROUTE_COOLDOWN_MS = 5000;
-              const now = Date.now();
-              if (world.getQueueLength(outpost) > QUEUE_THRESHOLD && (drone.lastRerouteAt ?? 0) + REROUTE_COOLDOWN_MS < now) {
-                drone.lastRerouteAt = now;
-                drone.state = "RETURNING";
+            if (!handleDockingRequest(drone, world, outpost)) {
+              if (checkReroute(drone, world, outpost)) {
+                // Reroute check passed, state already set to RETURNING
               } else {
                 drone.state = "QUEUING";
               }
@@ -361,60 +383,21 @@ export const tickDrones = (options: {
           break;
         }
         case "QUEUING": {
-          // Hauler Queue logic (copy/paste similar to Miner for now)
-          // Haulers might have VIP priority in future?
+          // Hauler Queue logic
           const outpost = world.getBestOutpost(drone.x, drone.y, drone.z);
           if (!outpost) {
             drone.state = "RETURNING";
             break;
           }
-          const result = world.requestDock(outpost, drone.id);
-          if (result === "GRANTED") {
-            drone.state = "DEPOSITING";
-            drone.miningTimer = 0;
-          } else {
-            // Reroute check with cooldown
-            const QUEUE_THRESHOLD = 5;
-            const REROUTE_COOLDOWN_MS = 5000;
-            const now = Date.now();
-            if (world.getQueueLength(outpost) > QUEUE_THRESHOLD && (drone.lastRerouteAt ?? 0) + REROUTE_COOLDOWN_MS < now) {
-              drone.lastRerouteAt = now;
-              drone.state = "RETURNING";
-              break;
-            }
-            // Orbit
-            const angle = Date.now() / 1000 + drone.id;
-            moveTowards(
-              drone,
-              outpost.x + Math.sin(angle) * 8,
-              outpost.y + 8,
-              outpost.z + Math.cos(angle) * 8,
-              hSpeed,
-              dtSeconds,
-            );
-          }
+          if (handleDockingRequest(drone, world, outpost)) break;
+
+          if (checkReroute(drone, world, outpost)) break;
+
+          orbitOutpost(drone, outpost, 8, 8, hSpeed, dtSeconds);
           break;
         }
         case "DEPOSITING": {
-          drone.miningTimer += dtSeconds;
-          if (drone.miningTimer >= 0.5) {
-            uiSnapshot.credits += drone.payload;
-
-            const outpost = world.getNearestOutpost(drone.x, drone.y, drone.z);
-            if (outpost) {
-              depositEvents.push({
-                x: outpost.x,
-                y: outpost.y,
-                z: outpost.z,
-                amount: Math.floor(drone.payload),
-              });
-              world.undock(outpost, drone.id);
-            }
-            drone.payload = 0;
-
-            drone.state = "IDLE";
-            drone.miningTimer = 0;
-          }
+          handleDepositing(drone, dtSeconds, world, uiSnapshot, depositEvents, "IDLE");
           break;
         }
         default:
