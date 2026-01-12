@@ -95,8 +95,7 @@ export const TelemetryPanel: React.FC<TelemetryPanelProps> = ({ isOpen, onClose 
 
   return (
     <div
-      className="fixed top-2 right-2 w-96 max-h-[90vh] overflow-y-auto bg-gray-900/95 text-white text-xs font-mono rounded-lg shadow-2xl border border-gray-700 z-50 pointer-events-auto"
-      style={{ backdropFilter: "blur(4px)" }}
+      className="fixed top-2 right-2 w-96 max-h-[90vh] overflow-y-auto bg-gray-900/95 text-white text-xs font-mono rounded-lg shadow-2xl border border-gray-700 z-50 pointer-events-auto backdrop-blur-md"
     >
       {/* Header */}
       <div className="flex items-center justify-between p-3 border-b border-gray-700 sticky top-0 bg-gray-900">
