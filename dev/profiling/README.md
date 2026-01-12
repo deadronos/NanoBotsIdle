@@ -64,6 +64,23 @@ These tests verify that:
 node --expose-gc dev/profiling/baseline-generator.js
 ```
 
+### 2b. Profile FPS + Draw Calls for Heavy Render Scenes
+
+Use the headless profiling script to capture FPS and draw-call metrics for a heavy meshed scene:
+
+```bash
+npm run dev
+node scripts/profile.js --scene meshed-heavy --duration 30 --output ./profile-metrics.json
+```
+
+To include occlusion culling in the benchmark:
+
+```bash
+node scripts/profile.js --scene meshed-heavy-occlusion --duration 30 --output ./profile-metrics.json
+```
+
+Load the resulting JSON in `docs/performance-dashboard.html` to visualize FPS, frame time, and draw calls.
+
 This simulates common operations and captures heap snapshots for regression detection.
 
 ### 3. Analyze Heap Snapshots

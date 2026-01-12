@@ -31,6 +31,17 @@ describe("TelemetryCollector", () => {
     expect(snapshot.frameTime.avg).toBeCloseTo(16.6, 0);
   });
 
+  it("should collect draw call metrics", () => {
+    collector.recordDrawCalls(120);
+    collector.recordDrawCalls(90);
+    collector.recordDrawCalls(100);
+
+    const snapshot = collector.getSnapshot();
+    expect(snapshot.drawCalls.current).toBe(100);
+    expect(snapshot.drawCalls.min).toBe(90);
+    expect(snapshot.drawCalls.max).toBe(120);
+  });
+
   it("should collect meshing metrics", () => {
     collector.recordMeshingTime(5.2);
     collector.recordMeshingTime(4.8);

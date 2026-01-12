@@ -10,6 +10,7 @@ import { getSurfaceHeightCore } from "../../sim/terrain-core";
 import { getSimBridge } from "../../simBridge/simBridge";
 import { forEachRadialChunk } from "../../utils";
 import { debug, groupCollapsed, groupEnd } from "../../utils/logger";
+import { normalizeChunkLoadConfig } from "./chunkLoadConfig";
 import { chunkKey } from "./chunkHelpers";
 import { countDenseSolidsInChunk } from "./renderDebugCompare";
 import { useMeshedChunks } from "./useMeshedChunks";
@@ -26,7 +27,7 @@ export const VoxelLayerMeshed: React.FC<{
   const lastRequestedPlayerChunkRef = useRef<{ cx: number; cy: number; cz: number } | null>(null);
   const cfg = useConfig();
   const bridge = getSimBridge();
-  const { camera } = useThree();
+  const { camera, gl } = useThree();
 
   const lodThresholds = useMemo(() => createLodThresholds(chunkSize), [chunkSize]);
 
@@ -44,6 +45,7 @@ export const VoxelLayerMeshed: React.FC<{
       waterLevel: cfg.terrain.waterLevel,
       seed,
       onSchedulerChange: handleSchedulerChange,
+      isChunkVisible,
     });
 
   const debugCfg = cfg.render.voxels.debugCompare;
@@ -74,11 +76,18 @@ export const VoxelLayerMeshed: React.FC<{
     const baseCz = Math.floor(spawnZ / chunkSize);
     initialSurfaceChunkRef.current = { cx: baseCx, cy, cz: baseCz };
     setFocusChunk(baseCx, cy, baseCz);
-    forEachRadialChunk({ cx: baseCx, cy, cz: baseCz }, 1, 2, (c) => {
-      addChunk(c.cx, cy, c.cz);
-    });
+    forEachRadialChunk(
+      { cx: baseCx, cy, cz: baseCz },
+      chunkLoadConfig.initialRadius,
+      chunkLoadConfig.initialDims,
+      (c) => {
+        addChunk(c.cx, c.cy, c.cz);
+      },
+    );
   }, [
     addChunk,
+    chunkLoadConfig.initialDims,
+    chunkLoadConfig.initialRadius,
     chunkSize,
     cfg.terrain.quantizeScale,
     cfg.terrain.surfaceBias,
@@ -86,6 +95,20 @@ export const VoxelLayerMeshed: React.FC<{
     setFocusChunk,
     spawnX,
     spawnZ,
+  ]);
+
+  useEffect(() => {
+    const culler = createOcclusionCuller(gl, occlusionConfig);
+    occlusionRef.current = culler;
+    return () => {
+      culler.dispose();
+      occlusionRef.current = null;
+    };
+  }, [
+    gl,
+    occlusionConfig.enabled,
+    occlusionConfig.maxQueriesPerFrame,
+    occlusionConfig.queryDelayFrames,
   ]);
 
   useEffect(() => {
@@ -121,9 +144,14 @@ export const VoxelLayerMeshed: React.FC<{
         playerChunk.cz = pcz;
         setFocusChunk(pcx, pcy, pcz);
         // Ensure the same 3D neighborhood we debug/expect is actually requested.
-        forEachRadialChunk({ cx: pcx, cy: pcy, cz: pcz }, 1, 3, (c) => {
-          addChunk(c.cx, c.cy, c.cz);
-        });
+        forEachRadialChunk(
+          { cx: pcx, cy: pcy, cz: pcz },
+          chunkLoadConfig.activeRadius,
+          chunkLoadConfig.activeDims,
+          (c) => {
+            addChunk(c.cx, c.cy, c.cz);
+          },
+        );
       }
 
       if (debugEnabled) {
@@ -202,6 +230,8 @@ export const VoxelLayerMeshed: React.FC<{
     debugEnabled,
     ensureInitialChunk,
     getDebugState,
+    chunkLoadConfig.activeDims,
+    chunkLoadConfig.activeRadius,
     markDirtyForEdits,
     prestigeLevel,
     reset,
@@ -211,8 +241,9 @@ export const VoxelLayerMeshed: React.FC<{
   const lodVisibilityOptions = useMemo(
     () => ({
       onLodChange: applyLodGeometry,
+      progressive: cfg.render.voxels.lod.progressive,
     }),
-    [],
+    [cfg.render.voxels.lod.progressive],
   );
 
   useFrame(() => {
@@ -220,6 +251,12 @@ export const VoxelLayerMeshed: React.FC<{
     if (!group) return;
 
     applyChunkVisibility(group.children, camera, lodThresholds, lodVisibilityOptions);
+
+    const occlusion = occlusionRef.current;
+    if (occlusionConfig.enabled && occlusion?.isSupported) {
+      occlusion.update(group.children, camera);
+      applyOcclusionVisibility(group.children);
+    }
   });
 
   return <group ref={groupRef} />;

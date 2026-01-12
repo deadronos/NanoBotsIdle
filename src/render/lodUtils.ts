@@ -14,6 +14,11 @@ export type LodThresholdOptions = {
   hideDistanceMultiplier?: number;
 };
 
+export type LodProgressiveConfig = {
+  enabled: boolean;
+  refineDelayFrames: number;
+};
+
 export const createLodThresholds = (
   chunkSize: number,
   options?: LodThresholdOptions,
@@ -46,12 +51,80 @@ const distanceSqToPoint = (
   return dx * dx + dy * dy + dz * dz;
 };
 
+export const isChunkVisible = (
+  coord: { cx: number; cy: number; cz: number },
+  chunkSize: number,
+  camera: Camera,
+  thresholds: LodThresholds,
+): boolean => {
+  const center = {
+    x: (coord.cx + 0.5) * chunkSize,
+    y: (coord.cy + 0.5) * chunkSize,
+    z: (coord.cz + 0.5) * chunkSize,
+  };
+  const radius = (Math.sqrt(3) * chunkSize) / 2;
+  const distanceSq = distanceSqToPoint(camera.position, center);
+  const lod = selectLodLevel(distanceSq, thresholds);
+  if (lod === "hidden") return false;
+
+  const frustum = getFrustumFromCamera(camera);
+  return isSphereVisible(frustum, center, radius);
+};
+
+const resetProgressiveState = (mesh: Mesh) => {
+  delete mesh.userData.lodTarget;
+  delete mesh.userData.lodRefineFrames;
+};
+
+export const resolveProgressiveLod = (
+  mesh: Mesh,
+  desired: LodLevel,
+  config: LodProgressiveConfig,
+): LodLevel => {
+  if (!config.enabled) {
+    resetProgressiveState(mesh);
+    return desired;
+  }
+
+  if (desired !== "high") {
+    resetProgressiveState(mesh);
+    return desired;
+  }
+
+  const geometries = mesh.userData.lodGeometries as { low?: unknown } | undefined;
+  if (!geometries?.low) {
+    resetProgressiveState(mesh);
+    return desired;
+  }
+
+  const current = mesh.userData.lod as LodLevel | undefined;
+  if (current === "high") {
+    resetProgressiveState(mesh);
+    return "high";
+  }
+
+  if (mesh.userData.lodTarget !== "high") {
+    mesh.userData.lodTarget = "high";
+    mesh.userData.lodRefineFrames = Math.max(0, config.refineDelayFrames);
+  }
+
+  const remaining = mesh.userData.lodRefineFrames as number | undefined;
+  if (!remaining || remaining <= 0) {
+    resetProgressiveState(mesh);
+    return "high";
+  }
+
+  mesh.userData.lodRefineFrames = remaining - 1;
+  return "low";
+};
+
 export const applyChunkVisibility = (
   meshes: Iterable<Object3D>,
   camera: Camera,
   thresholds: LodThresholds,
   options?: {
     onLodChange?: (mesh: Mesh, lod: LodLevel) => void;
+    progressive?: LodProgressiveConfig;
   },
 ) => {
   const frustum = getFrustumFromCamera(camera);
@@ -72,13 +145,16 @@ export const applyChunkVisibility = (
 
     const frustumVisible = isSphereVisible(frustum, boundingSphere.center, boundingSphere.radius);
     const distanceSq = distanceSqToPoint(camera.position, boundingSphere.center);
-    const lod = selectLodLevel(distanceSq, thresholds);
+    const desiredLod = selectLodLevel(distanceSq, thresholds);
+    const lod = options?.progressive
+      ? resolveProgressiveLod(mesh, desiredLod, options.progressive)
+      : desiredLod;
 
     const prevLod: LodLevel | undefined = mesh.userData.lod;
     mesh.userData.lod = lod;
     mesh.userData.culledByFrustum = !frustumVisible;
-    mesh.userData.culledByDistance = lod === "hidden";
-    mesh.visible = frustumVisible && lod !== "hidden";
+    mesh.userData.culledByDistance = desiredLod === "hidden";
+    mesh.visible = frustumVisible && desiredLod !== "hidden";
 
     if (options?.onLodChange && prevLod !== lod) {
       options.onLodChange(mesh, lod);

@@ -165,6 +165,110 @@ npm run typecheck
 npm run format
 ```
 
+## 💾 Save Data & Migrations
+
+### Save Format
+
+NanoBotsIdle uses a versioned save schema to ensure backward compatibility as the game evolves. All saves follow this structure:
+
+```json
+{
+  "version": 2,
+  "date": "2024-12-30T15:45:00.000Z",
+  "data": {
+    "credits": 3000,
+    "prestigeLevel": 3,
+    "droneCount": 8
+    // ... more game state fields
+  }
+}
+```
+
+### Creating a Migration
+
+When you need to make breaking changes to the save format, follow this checklist:
+
+#### Migration Authoring Checklist
+
+- [ ] **1. Update Version**
+  - Increment `CURRENT_SAVE_VERSION` in `src/utils/migrations/types.ts`
+  - Example: `export const CURRENT_SAVE_VERSION = 3;`
+
+- [ ] **2. Create Migration File**
+  - Create `src/utils/migrations/vN-to-vN+1.ts` (e.g., `v2-to-v3.ts`)
+  - Define old and new data structures with TypeScript interfaces
+  - Implement transformation logic
+  - Export migration object with `fromVersion`, `toVersion`, `description`, and `migrate` function
+
+- [ ] **3. Register Migration**
+  - Add migration to `migrations` array in `src/utils/migrations/registry.ts`
+  - Ensure migrations are ordered by version
+
+- [ ] **4. Update Validation** (if needed)
+  - Update `KNOWN_GAME_STATE_FIELDS` in `src/utils/migrations/validation.ts`
+  - Add validation rules for new fields in `validateGameState()`
+  - Update sanitization logic in `sanitizeGameState()` if new fields need clamping
+
+- [ ] **5. Create Test Fixtures**
+  - Add valid save file for new version: `tests/fixtures/saves/valid-vN.json`
+  - Add edge case fixtures if needed (empty data, extreme values, etc.)
+
+- [ ] **6. Write Tests**
+  - Add migration test in `tests/save-migrations.test.ts`
+  - Add validation tests in `tests/save-validation.test.ts`
+  - Add roundtrip test in `tests/save-roundtrip.test.ts`
+  - Test edge cases in `tests/save-migration-edge-cases.test.ts`
+
+- [ ] **7. Test Migration Path**
+  ```bash
+  npm test -- save
+  ```
+
+- [ ] **8. Update Documentation**
+  - Update `docs/ARCHITECTURE/TECH004-save-migration-framework.md`
+  - Document breaking changes and migration rationale
+  - Update version history section
+
+#### Best Practices
+
+- **Never delete data**: Migrations should be additive when possible
+- **Provide sensible defaults**: New required fields must have fallback values
+- **Validate at each step**: Ensure data integrity through the migration chain
+- **Test thoroughly**: Cover edge cases like empty saves, negative values, and extreme values
+- **Handle unknown fields**: Future versions may add fields; sanitization should filter them
+
+#### Example Migration
+
+```typescript
+// src/utils/migrations/v2-to-v3.ts
+export const migrateV2ToV3: Migration = {
+  fromVersion: 2,
+  toVersion: 3,
+  description: "Add haulerCount field for logistics system",
+  migrate: (data: unknown): SaveDataV3 => {
+    if (!data || typeof data !== "object") {
+      throw new Error("Invalid v2 save data");
+    }
+    return {
+      ...data,
+      haulerCount: 0, // New field with sensible default
+    };
+  },
+};
+```
+
+### Forward Compatibility
+
+The system handles future version saves gracefully:
+- Warns when importing saves from newer app versions
+- Detects and warns about unknown fields
+- Sanitizes data to known schema, filtering incompatible fields
+- Preserves as much data as possible
+
+For detailed migration documentation, see:
+- `src/utils/migrations/README.md` - Developer guide
+- `docs/ARCHITECTURE/TECH004-save-migration-framework.md` - Architecture overview
+
 ## 🔬 Performance Profiling
 
 ### Local Profiling
