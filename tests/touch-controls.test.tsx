@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
-import { afterEach, describe, expect, test } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import React from 'react';
+import { afterEach, describe, expect, test } from 'vitest';
 
 import { TouchControls } from '../src/components/ui/TouchControls';
 
