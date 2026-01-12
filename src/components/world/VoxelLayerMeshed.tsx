@@ -4,7 +4,8 @@ import React, { useCallback, useEffect, useMemo, useRef } from "react";
 import { useConfig } from "../../config/useConfig";
 import { playerChunk, playerPosition } from "../../engine/playerState";
 import { applyLodGeometry } from "../../render/lodGeometry";
-import { applyChunkVisibility, createLodThresholds } from "../../render/lodUtils";
+import { applyChunkVisibility, createLodThresholds, isChunkVisible as isChunkVisibleFn } from "../../render/lodUtils";
+import { createOcclusionCuller, applyOcclusionVisibility, defaultOcclusionConfig } from "../../render/occlusionCuller";
 import { applyVoxelEdits, resetVoxelEdits } from "../../sim/collision";
 import { getSurfaceHeightCore } from "../../sim/terrain-core";
 import { getSimBridge } from "../../simBridge/simBridge";
@@ -31,6 +32,18 @@ export const VoxelLayerMeshed: React.FC<{
 
   const lodThresholds = useMemo(() => createLodThresholds(chunkSize), [chunkSize]);
 
+  const chunkLoadConfig = useMemo(
+    () => normalizeChunkLoadConfig(cfg.render.voxels.chunkLoad),
+    [cfg.render.voxels.chunkLoad],
+  );
+
+  const occlusionConfig = useMemo(
+    () => ({ ...defaultOcclusionConfig, ...(cfg.render.voxels.occlusion ?? {}) }),
+    [cfg.render.voxels.occlusion],
+  );
+
+  const occlusionRef = useRef<ReturnType<typeof createOcclusionCuller> | null>(null);
+
   const handleSchedulerChange = useCallback(() => {
     // Clear activeChunks when scheduler is recreated (e.g., when actualSeed arrives)
     activeChunks.current.clear();
@@ -45,7 +58,8 @@ export const VoxelLayerMeshed: React.FC<{
       waterLevel: cfg.terrain.waterLevel,
       seed,
       onSchedulerChange: handleSchedulerChange,
-      isChunkVisible,
+      isChunkVisible: (coord: { cx: number; cy: number; cz: number }) =>
+        isChunkVisibleFn(coord, chunkSize, camera, lodThresholds),
     });
 
   const debugCfg = cfg.render.voxels.debugCompare;
