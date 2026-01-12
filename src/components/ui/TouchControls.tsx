@@ -70,7 +70,9 @@ export const TouchControls: React.FC<{ className?: string }> = ({ className = ""
   useEffect(() => {
     const mq = typeof window !== "undefined" && window.matchMedia?.("(pointer: coarse)");
     const check = () => {
-      const hasTouch = typeof window !== "undefined" && ("ontouchstart" in window || navigator.maxTouchPoints > 0 || (mq && mq.matches));
+      const hasTouch =
+        typeof window !== "undefined" &&
+        ("ontouchstart" in window || navigator.maxTouchPoints > 0 || (mq && mq.matches));
       setIsTouch(!!hasTouch);
     };
     check();

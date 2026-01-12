@@ -5,7 +5,12 @@ export type UpgradeType = "drone" | "hauler" | "diver" | "speed" | "move" | "las
 
 type UpgradeLevels = Pick<
   UiSnapshot,
-  "droneCount" | "haulerCount" | "diverCount" | "miningSpeedLevel" | "moveSpeedLevel" | "laserPowerLevel"
+  | "droneCount"
+  | "haulerCount"
+  | "diverCount"
+  | "miningSpeedLevel"
+  | "moveSpeedLevel"
+  | "laserPowerLevel"
 >;
 
 export const getUpgradeCost = (type: UpgradeType, levels: UpgradeLevels, cfg: Config) => {

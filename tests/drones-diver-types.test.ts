@@ -12,7 +12,7 @@ describe("DIVER drone role - Type System", () => {
 
   test("divers config exists with required fields", () => {
     const cfg = getConfig();
-    
+
     expect(cfg.drones.divers).toBeDefined();
     expect(cfg.drones.divers.baseSpeed).toBeGreaterThan(0);
     expect(cfg.drones.divers.speedPerLevel).toBeGreaterThan(0);
@@ -25,7 +25,7 @@ describe("DIVER drone role - Type System", () => {
 
   test("diver cost exists in economy config", () => {
     const cfg = getConfig();
-    
+
     expect(cfg.economy.baseCosts.diver).toBeDefined();
     expect(cfg.economy.baseCosts.diver).toBeGreaterThan(0);
     // Should be more expensive than miners but reasonable

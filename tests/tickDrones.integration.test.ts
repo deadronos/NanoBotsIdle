@@ -15,6 +15,7 @@ describe("tickDrones integration: hauler pickup and deposit", () => {
       credits: 0,
       prestigeLevel: 1,
       droneCount: 2,
+      diverCount: 0,
       haulerCount: 1,
       miningSpeedLevel: 1,
       moveSpeedLevel: 1,

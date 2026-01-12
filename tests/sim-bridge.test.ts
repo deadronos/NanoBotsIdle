@@ -53,6 +53,7 @@ describe("sim bridge gating", () => {
         prestigeLevel: 1,
         droneCount: 0,
         haulerCount: 0,
+        diverCount: 0,
         miningSpeedLevel: 1,
         moveSpeedLevel: 1,
         laserPowerLevel: 1,

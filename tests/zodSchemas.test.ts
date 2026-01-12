@@ -64,6 +64,7 @@ describe("Zod Bridge Schemas", () => {
         prestigeLevel: 1,
         droneCount: 5,
         haulerCount: 2,
+        diverCount: 0,
         miningSpeedLevel: 1,
         moveSpeedLevel: 1,
         laserPowerLevel: 1,

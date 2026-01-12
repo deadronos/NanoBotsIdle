@@ -66,19 +66,22 @@ const BlockHighlightInner: React.FC = () => {
     // We can assume terrain meshes don't have special names or we check for specific props.
     // Drones are InstancedMesh. Terrain chunks are likely Mesh.
 
-    const hit = intersects.find(i => {
+    const hit = intersects.find((i) => {
       // Filter out self (the highlight box)
       if (i.object === meshRef.current) return false;
       // Filter out helper objects (lines, etc)
-      if (i.object.type === 'LineSegments' || i.object.type === 'Line') return false;
+      if (i.object.type === "LineSegments" || i.object.type === "Line") return false;
       // Filter out InstancedMesh (Drones) to prioritize blocks?
       // Actually we might want to highlight drones too, but let's stick to blocks.
-      if (i.object.type === 'InstancedMesh') return false;
+      if (i.object.type === "InstancedMesh") return false;
       // Filter out transparent/phantom objects if any
-      if ((i.object as THREE.Mesh).material && ((i.object as THREE.Mesh).material as THREE.Material).transparent) {
-         // Maybe ignore water? Water is transparent.
-         // Let's assume opacity check or specific check.
-         if (((i.object as THREE.Mesh).material as THREE.Material).opacity < 0.9) return false;
+      if (
+        (i.object as THREE.Mesh).material &&
+        ((i.object as THREE.Mesh).material as THREE.Material).transparent
+      ) {
+        // Maybe ignore water? Water is transparent.
+        // Let's assume opacity check or specific check.
+        if (((i.object as THREE.Mesh).material as THREE.Material).opacity < 0.9) return false;
       }
       return true;
     });

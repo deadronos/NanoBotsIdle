@@ -275,7 +275,10 @@ export const updateDroneInstancedVisuals = (
         const isDiver = role === 2;
         const isHauler = role === 1;
         // Use pre-computed Color objects instead of setHex
-        const colorObj = isDiver ? _colorDiver : isHauler ? _colorHauler : _colorMiner;
+        const colorObj =
+          isDiver ? _colorDiver
+          : isHauler ? _colorHauler
+          : _colorMiner;
         bodyMesh.setColorAt(i, colorObj);
         bodyColorsDirty = true;
         if (i < bodyColorMin) bodyColorMin = i;
