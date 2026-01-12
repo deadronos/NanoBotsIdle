@@ -4,7 +4,11 @@ import React, { useCallback, useEffect, useMemo, useRef } from "react";
 import { useConfig } from "../../config/useConfig";
 import { playerChunk, playerPosition } from "../../engine/playerState";
 import { applyLodGeometry } from "../../render/lodGeometry";
-import { applyChunkVisibility, createLodThresholds } from "../../render/lodUtils";
+import {
+  applyChunkVisibility,
+  createLodThresholds,
+  isChunkVisible as isChunkVisibleForPriority,
+} from "../../render/lodUtils";
 import { applyVoxelEdits, resetVoxelEdits } from "../../sim/collision";
 import { getSurfaceHeightCore } from "../../sim/terrain-core";
 import { getSimBridge } from "../../simBridge/simBridge";
@@ -29,6 +33,11 @@ export const VoxelLayerMeshed: React.FC<{
   const { camera } = useThree();
 
   const lodThresholds = useMemo(() => createLodThresholds(chunkSize), [chunkSize]);
+  const isChunkVisible = useCallback(
+    (coord: { cx: number; cy: number; cz: number }) =>
+      isChunkVisibleForPriority(coord, chunkSize, camera, lodThresholds),
+    [camera, chunkSize, lodThresholds],
+  );
 
   const handleSchedulerChange = useCallback(() => {
     // Clear activeChunks when scheduler is recreated (e.g., when actualSeed arrives)
@@ -44,6 +53,7 @@ export const VoxelLayerMeshed: React.FC<{
       waterLevel: cfg.terrain.waterLevel,
       seed,
       onSchedulerChange: handleSchedulerChange,
+      isChunkVisible,
     });
 
   const debugCfg = cfg.render.voxels.debugCompare;

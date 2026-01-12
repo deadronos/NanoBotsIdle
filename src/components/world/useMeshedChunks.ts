@@ -33,8 +33,10 @@ export const useMeshedChunks = (options: {
   waterLevel: number;
   seed?: number;
   onSchedulerChange?: () => void;
+  isChunkVisible?: (coord: { cx: number; cy: number; cz: number }) => boolean;
 }) => {
-  const { chunkSize, prestigeLevel, waterLevel, seed, onSchedulerChange } = options;
+  const { chunkSize, prestigeLevel, waterLevel, seed, onSchedulerChange, isChunkVisible } =
+    options;
 
   const focusChunkRef = useRef<{ cx: number; cy: number; cz: number }>({ cx: 0, cy: 0, cz: 0 });
   const reprioritizeTimeoutRef = useRef<number | null>(null);
@@ -249,6 +251,7 @@ export const useMeshedChunks = (options: {
       maxInFlight: config.meshing.maxInFlight,
       maxQueueSize: config.meshing.maxQueueSize,
       getPriority: priorityFromFocus,
+      isVisible: isChunkVisible,
     });
 
     schedulerRef.current = scheduler;
@@ -268,6 +271,7 @@ export const useMeshedChunks = (options: {
     applyMeshResult,
     chunkSize,
     disposeAllMeshes,
+    isChunkVisible,
     onSchedulerChange,
     prestigeLevel,
     seed,
