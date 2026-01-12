@@ -51,6 +51,26 @@ const distanceSqToPoint = (
   return dx * dx + dy * dy + dz * dz;
 };
 
+export const isChunkVisible = (
+  coord: { cx: number; cy: number; cz: number },
+  chunkSize: number,
+  camera: Camera,
+  thresholds: LodThresholds,
+): boolean => {
+  const center = {
+    x: (coord.cx + 0.5) * chunkSize,
+    y: (coord.cy + 0.5) * chunkSize,
+    z: (coord.cz + 0.5) * chunkSize,
+  };
+  const radius = (Math.sqrt(3) * chunkSize) / 2;
+  const distanceSq = distanceSqToPoint(camera.position, center);
+  const lod = selectLodLevel(distanceSq, thresholds);
+  if (lod === "hidden") return false;
+
+  const frustum = getFrustumFromCamera(camera);
+  return isSphereVisible(frustum, center, radius);
+};
+
 const resetProgressiveState = (mesh: Mesh) => {
   delete mesh.userData.lodTarget;
   delete mesh.userData.lodRefineFrames;
