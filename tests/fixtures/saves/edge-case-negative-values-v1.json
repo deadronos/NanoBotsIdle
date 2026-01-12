@@ -1,0 +1,13 @@
+{
+  "version": 1,
+  "date": "2024-01-15T10:30:00.000Z",
+  "data": {
+    "credits": -100,
+    "prestigeLevel": 0,
+    "droneCount": -5,
+    "miningSpeedLevel": 0,
+    "moveSpeedLevel": -1,
+    "laserPowerLevel": 0,
+    "minedBlocks": -50
+  }
+}
