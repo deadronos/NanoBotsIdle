@@ -5,10 +5,8 @@
 
 import {
   BVXGeometry,
-  BVXLayer,
   MortonKey,
   VoxelChunk0,
-  VoxelFaceGeometry,
   VoxelIndex,
   VoxelWorld,
 } from "@astrumforge/bvx-kit";
