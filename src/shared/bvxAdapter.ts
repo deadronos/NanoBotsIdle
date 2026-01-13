@@ -85,7 +85,16 @@ export class BVXWorldAdapter {
     const { lx, ly, lz } = this.worldToLocalCoords(x, y, z);
 
     const chunk = this.getOrCreateChunk(cx, cy, cz);
-    const index = VoxelIndex.from(lx, ly, lz);
+    
+    // Split 0-15 local coords into voxel (0-3) and bitvoxel (0-3) components
+    const vx = Math.floor(lx / 4);
+    const vy = Math.floor(ly / 4);
+    const vz = Math.floor(lz / 4);
+    const bx = lx % 4;
+    const by = ly % 4;
+    const bz = lz % 4;
+    
+    const index = VoxelIndex.from(vx, vy, vz, bx, by, bz);
 
     if (material === MATERIAL_AIR) {
       chunk.layer.unset(index);
@@ -112,7 +121,15 @@ export class BVXWorldAdapter {
       return MATERIAL_AIR;
     }
 
-    const index = VoxelIndex.from(lx, ly, lz);
+    // Split 0-15 local coords into voxel (0-3) and bitvoxel (0-3) components
+    const vx = Math.floor(lx / 4);
+    const vy = Math.floor(ly / 4);
+    const vz = Math.floor(lz / 4);
+    const bx = lx % 4;
+    const by = ly % 4;
+    const bz = lz % 4;
+    
+    const index = VoxelIndex.from(vx, vy, vz, bx, by, bz);
     return chunk.layer.get(index) ? MATERIAL_SOLID : MATERIAL_AIR;
   }
 
@@ -131,7 +148,13 @@ export class BVXWorldAdapter {
     const { lx, ly, lz } = this.worldToLocalCoords(x, y, z);
 
     const chunk = this.getOrCreateChunk(cx, cy, cz);
-    const index = VoxelIndex.from(lx, ly, lz);
+    
+    // Split 0-15 local coords into voxel (0-3) components only (bitvoxels default to 0)
+    const vx = Math.floor(lx / 4);
+    const vy = Math.floor(ly / 4);
+    const vz = Math.floor(lz / 4);
+    
+    const index = VoxelIndex.from(vx, vy, vz);
     chunk.layer.fill(index);
   }
 
@@ -143,7 +166,13 @@ export class BVXWorldAdapter {
     const { lx, ly, lz } = this.worldToLocalCoords(x, y, z);
 
     const chunk = this.getOrCreateChunk(cx, cy, cz);
-    const index = VoxelIndex.from(lx, ly, lz);
+    
+    // Split 0-15 local coords into voxel (0-3) components only (bitvoxels default to 0)
+    const vx = Math.floor(lx / 4);
+    const vy = Math.floor(ly / 4);
+    const vz = Math.floor(lz / 4);
+    
+    const index = VoxelIndex.from(vx, vy, vz);
     chunk.layer.empty(index);
   }
 

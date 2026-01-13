@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-
+import { BVXWorldAdapter, MATERIAL_AIR, MATERIAL_SOLID } from "../src/shared/bvxAdapter";
 import {
   createBVXWorld,
   createChunk,
@@ -122,30 +122,55 @@ describe("bvx-kit integration", () => {
     expect(chunk!.length).toBeGreaterThan(0); // Should have some voxels set
   });
 
-  it("maintains voxel consistency across operations", () => {
-    const chunk = createChunk(0, 0, 0);
+  it("correctly maps world coordinates beyond 3 to proper voxel indices", () => {
+    const adapter = new BVXWorldAdapter();
 
-    // Set multiple bitvoxels (0-15 range for bitvoxel coordinates in a chunk)
-    for (let i = 0; i < 10; i++) {
-      setVoxelInChunk(chunk, i, 0, 0, true);
-    }
+    // Test coordinates that would have been broken with the old implementation
+    // These are coordinates within the first chunk (0-15 range)
+    
+    // Set voxels at various positions
+    adapter.setVoxel(0, 0, 0, MATERIAL_SOLID);
+    adapter.setVoxel(3, 0, 0, MATERIAL_SOLID);
+    adapter.setVoxel(4, 0, 0, MATERIAL_SOLID); // Would have mapped to (0,0,0) before fix
+    adapter.setVoxel(7, 0, 0, MATERIAL_SOLID); // Would have mapped to (0,0,0) before fix
+    adapter.setVoxel(8, 0, 0, MATERIAL_SOLID); // Would have mapped to (0,0,0) before fix
+    adapter.setVoxel(15, 0, 0, MATERIAL_SOLID); // Would have mapped to (0,0,0) before fix
 
-    // Verify they're all set
-    for (let i = 0; i < 10; i++) {
-      expect(getVoxelInChunk(chunk, i, 0, 0)).toBe(true);
-    }
+    // Verify they are all set correctly and independently
+    expect(adapter.getVoxel(0, 0, 0)).toBe(MATERIAL_SOLID);
+    expect(adapter.getVoxel(3, 0, 0)).toBe(MATERIAL_SOLID);
+    expect(adapter.getVoxel(4, 0, 0)).toBe(MATERIAL_SOLID);
+    expect(adapter.getVoxel(7, 0, 0)).toBe(MATERIAL_SOLID);
+    expect(adapter.getVoxel(8, 0, 0)).toBe(MATERIAL_SOLID);
+    expect(adapter.getVoxel(15, 0, 0)).toBe(MATERIAL_SOLID);
 
-    // Clear some
-    for (let i = 0; i < 5; i++) {
-      setVoxelInChunk(chunk, i, 0, 0, false);
-    }
+    // Verify they don't interfere with each other
+    adapter.setVoxel(4, 0, 0, MATERIAL_AIR);
+    expect(adapter.getVoxel(4, 0, 0)).toBe(MATERIAL_AIR);
+    expect(adapter.getVoxel(0, 0, 0)).toBe(MATERIAL_SOLID); // Should still be solid
+    expect(adapter.getVoxel(8, 0, 0)).toBe(MATERIAL_SOLID); // Should still be solid
+  });
 
-    // Verify the state
-    for (let i = 0; i < 5; i++) {
-      expect(getVoxelInChunk(chunk, i, 0, 0)).toBe(false);
-    }
-    for (let i = 5; i < 10; i++) {
-      expect(getVoxelInChunk(chunk, i, 0, 0)).toBe(true);
-    }
+  it("correctly handles coordinates in different chunks", () => {
+    const adapter = new BVXWorldAdapter();
+
+    // Set voxels in different chunks
+    adapter.setVoxel(0, 0, 0, MATERIAL_SOLID); // Chunk (0,0,0)
+    adapter.setVoxel(16, 0, 0, MATERIAL_SOLID); // Chunk (1,0,0)
+    adapter.setVoxel(32, 0, 0, MATERIAL_SOLID); // Chunk (2,0,0)
+    adapter.setVoxel(0, 16, 0, MATERIAL_SOLID); // Chunk (0,1,0)
+    adapter.setVoxel(0, 0, 16, MATERIAL_SOLID); // Chunk (0,0,1)
+
+    // Verify all are set correctly
+    expect(adapter.getVoxel(0, 0, 0)).toBe(MATERIAL_SOLID);
+    expect(adapter.getVoxel(16, 0, 0)).toBe(MATERIAL_SOLID);
+    expect(adapter.getVoxel(32, 0, 0)).toBe(MATERIAL_SOLID);
+    expect(adapter.getVoxel(0, 16, 0)).toBe(MATERIAL_SOLID);
+    expect(adapter.getVoxel(0, 0, 16)).toBe(MATERIAL_SOLID);
+
+    // Verify they are independent
+    adapter.setVoxel(0, 0, 0, MATERIAL_AIR);
+    expect(adapter.getVoxel(0, 0, 0)).toBe(MATERIAL_AIR);
+    expect(adapter.getVoxel(16, 0, 0)).toBe(MATERIAL_SOLID);
   });
 });
