@@ -21,9 +21,12 @@
     "profile:baseline": "node --expose-gc --loader ts-node/esm dev/profiling/baseline-generator.ts"
   },
   "vitest": {
-    "setupFiles": ["./tests/setupTests.ts"]
+    "setupFiles": [
+      "./tests/setupTests.ts"
+    ]
   },
   "dependencies": {
+    "@astrumforge/bvx-kit": "file:vendor/bvx-kit",
     "@react-three/drei": "10.7.7",
     "@react-three/fiber": "9.5.0",
     "@react-three/postprocessing": "^3.0.4",
