@@ -8,8 +8,8 @@
  * - Gated by config flag
  */
 
-import type { Camera, Mesh, Object3D, WebGLRenderer } from "three";
-import { Box3, Sphere, Vector3 } from "three";
+import type { Camera, Object3D, WebGLRenderer } from "three";
+import { Box3, BoxGeometry, Mesh, MeshBasicMaterial, Scene, Vector3 } from "three";
 
 export type OcclusionConfig = {
   enabled: boolean;
@@ -37,9 +37,9 @@ export type OcclusionCuller = {
   dispose: () => void;
 };
 
-const _sphere = new Sphere();
 const _box = new Box3();
 const _center = new Vector3();
+const _size = new Vector3();
 
 /**
  * Create an occlusion culler bound to a WebGL renderer.
@@ -52,9 +52,7 @@ export const createOcclusionCuller = (
   const gl = renderer.getContext();
   const isWebGL2 = "WebGL2RenderingContext" in globalThis && gl instanceof WebGL2RenderingContext;
 
-  const proxyRenderingEnabled = true;
-
-  if (!config.enabled || !isWebGL2 || !proxyRenderingEnabled) {
+  if (!config.enabled || !isWebGL2) {
     return {
       isSupported: false,
       // eslint-disable-next-line @typescript-eslint/no-empty-function
@@ -65,6 +63,17 @@ export const createOcclusionCuller = (
   }
 
   const gl2 = gl as WebGL2RenderingContext;
+
+  const proxyScene = new Scene();
+  const proxyGeometry = new BoxGeometry(1, 1, 1);
+  const proxyMaterial = new MeshBasicMaterial({
+    colorWrite: false,
+    depthWrite: false,
+    depthTest: true,
+  });
+  const proxyMesh = new Mesh(proxyGeometry, proxyMaterial);
+  proxyMesh.frustumCulled = false;
+  proxyScene.add(proxyMesh);
 
   // Query pool
   const pool: QuerySlot[] = [];
@@ -105,8 +114,10 @@ export const createOcclusionCuller = (
     }
   };
 
-  const update = (meshes: Iterable<Object3D>, _camera: Camera) => {
+  const update = (meshes: Iterable<Object3D>, camera: Camera) => {
     let queriesThisFrame = 0;
+    const prevAutoClear = renderer.autoClear;
+    renderer.autoClear = false;
 
     // Process pending queries and issue new ones
     for (const node of meshes) {
@@ -146,18 +157,35 @@ export const createOcclusionCuller = (
       const boundingSphere = geometry.boundingSphere;
       if (!boundingSphere) continue;
 
+      if (!geometry.boundingBox) {
+        geometry.computeBoundingBox();
+      }
+      const boundingBox = geometry.boundingBox;
+      if (!boundingBox) continue;
+
+      mesh.updateMatrixWorld();
+      _box.copy(boundingBox);
+      _box.applyMatrix4(mesh.matrixWorld);
+      _box.getCenter(_center);
+      _box.getSize(_size);
+
+      if (_size.x <= 0 || _size.y <= 0 || _size.z <= 0) continue;
+
       // Begin occlusion query
       gl2.beginQuery(gl2.ANY_SAMPLES_PASSED_CONSERVATIVE, slot.query);
 
-      // TODO(occlusion): render a proxy mesh for the bounding volume before ending the query.
-      // Until proxy rendering is implemented, occlusion queries are disabled via
-      // `proxyRenderingEnabled` to avoid incorrect culling.
+      proxyMesh.position.copy(_center);
+      proxyMesh.scale.copy(_size);
+      proxyMesh.updateMatrixWorld();
+      renderer.render(proxyScene, camera);
 
       gl2.endQuery(gl2.ANY_SAMPLES_PASSED_CONSERVATIVE);
 
       slot.pendingFrames = config.queryDelayFrames;
       queriesThisFrame += 1;
     }
+
+    renderer.autoClear = prevAutoClear;
   };
 
   const dispose = () => {
@@ -166,6 +194,8 @@ export const createOcclusionCuller = (
       releaseSlot(slot);
     }
     pool.length = 0;
+    proxyGeometry.dispose();
+    proxyMaterial.dispose();
   };
 
   return {
