@@ -496,6 +496,7 @@ describe("tickDrones edge cases", () => {
       countFrontierAboveWater: () => 0,
       getNearestOutpost: () => ({ id: "o1", x: 0, y: 0, z: 0, level: 1 }),
       undock: () => undefined,
+      coordsFromKey: () => ({ x: 0, y: 0, z: 0 }),
     } as unknown as WorldModel;
 
     const drones = [minerA, minerB, hauler];

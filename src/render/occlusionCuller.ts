@@ -52,7 +52,7 @@ export const createOcclusionCuller = (
   const gl = renderer.getContext();
   const isWebGL2 = "WebGL2RenderingContext" in globalThis && gl instanceof WebGL2RenderingContext;
 
-  const proxyRenderingEnabled = false;
+  const proxyRenderingEnabled = true;
 
   if (!config.enabled || !isWebGL2 || !proxyRenderingEnabled) {
     return {
