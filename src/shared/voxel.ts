@@ -1,12 +1,9 @@
-export const MATERIAL_AIR = 0 as const;
-export const MATERIAL_SOLID = 1 as const;
-export const MATERIAL_BEDROCK = 2 as const;
+// Re-export from bvxAdapter for backward compatibility
+export { MATERIAL_AIR, MATERIAL_BEDROCK, MATERIAL_SOLID } from "./bvxAdapter";
+export type { VoxelMaterial } from "./bvxAdapter";
 
-export type VoxelMaterial = typeof MATERIAL_AIR | typeof MATERIAL_SOLID | typeof MATERIAL_BEDROCK;
+// Re-export utility functions from bvxAdapter
+import { BVXWorldAdapter } from "./bvxAdapter";
 
-export const voxelKey = (x: number, y: number, z: number) => `${x},${y},${z}`;
-
-export const coordsFromVoxelKey = (key: string) => {
-  const [x, y, z] = key.split(",").map((value) => Number(value));
-  return { x, y, z };
-};
+export const voxelKey = BVXWorldAdapter.voxelKey;
+export const coordsFromVoxelKey = BVXWorldAdapter.coordsFromVoxelKey;
