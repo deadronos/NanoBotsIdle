@@ -11,12 +11,18 @@
 - Expand test coverage (store + utility functions).
 - Tune performance as drone counts increase (avoid allocations in `useFrame()`).
 - Plan/execute worker-authoritative engine refactor (protocol + engine + deltas), per `docs/ARCHITECTURE.md`.
+- Migrate voxel keying/edit storage to BVX-backed helpers for mining/frontier consistency.
 
 ## Known notes
 
 - Vite build warns about large chunks (>500kB) after minification; not currently blocking.
 
 ## Recent updates
+
+### 2026-01-13
+
+- Integrated BVX-backed voxel keying and edit storage for mined voxel overrides.
+- Updated frontier/debug tracking and tests to use numeric BVX keys.
 
 ### 2026-01-02
 
