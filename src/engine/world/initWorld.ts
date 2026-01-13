@@ -1,11 +1,12 @@
 import type { Config } from "../../config/index";
+import type { VoxelKey } from "../../shared/voxel";
 import { getSeed } from "../../sim/seed";
 import { WorldModel } from "./world";
 
 export type WorldInitResult = {
   world: WorldModel;
   actualSeed: number;
-  frontierKeys: string[];
+  frontierKeys: VoxelKey[];
   frontierPositions: Float32Array;
   aboveWaterCount: number;
 };

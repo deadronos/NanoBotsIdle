@@ -29,6 +29,7 @@ import type { KeyIndex } from "../src/engine/keyIndex";
 import { tickDrones } from "../src/engine/tickDrones";
 import type { WorldModel } from "../src/engine/world/world";
 import type { UiSnapshot, VoxelEdit } from "../src/shared/protocol";
+import { type VoxelKey, voxelKey } from "../src/shared/voxel";
 
 const makeUiSnapshot = (overrides?: Partial<UiSnapshot>): UiSnapshot => {
   return {
@@ -56,7 +57,7 @@ describe("tickDrones edge cases", () => {
 
   it("MINER SEEKING -> MOVING when a target is picked", () => {
     const cfg = getConfig();
-    pickTargetKeyMock.mockReturnValue("k1");
+    pickTargetKeyMock.mockReturnValue(1 as VoxelKey);
 
     const miner: Drone = {
       id: 1,
@@ -79,11 +80,11 @@ describe("tickDrones edge cases", () => {
       countFrontierAboveWater: () => 123,
       mineVoxel: () => null,
       getNearestOutpost: () => null,
-      key: (_x: number, _y: number, _z: number) => "k",
+      key: (x: number, y: number, z: number) => voxelKey(x, y, z),
     } as unknown as WorldModel;
 
     const uiSnapshot = makeUiSnapshot();
-    const frontier: KeyIndex = { keys: ["k1"], index: new Map([["k1", 0]]) };
+    const frontier: KeyIndex<VoxelKey> = { keys: [1], index: new Map([[1, 0]]) };
 
     tickDrones({
       world,
@@ -91,8 +92,8 @@ describe("tickDrones edge cases", () => {
       dtSeconds: 0.016,
       cfg,
       frontier,
-      minedKeys: new Set(),
-      reservedKeys: new Set(),
+      minedKeys: new Set<VoxelKey>(),
+      reservedKeys: new Set<VoxelKey>(),
       moveSpeed: 10,
       mineDuration: 1,
       maxTargetAttempts: 10,
@@ -105,7 +106,7 @@ describe("tickDrones edge cases", () => {
     });
 
     expect(miner.state).toBe("MOVING");
-    expect(miner.targetKey).toBe("k1");
+    expect(miner.targetKey).toBe(1);
     expect(miner.targetX).toBe(1);
     expect(miner.targetY).toBe(2);
     expect(miner.targetZ).toBe(3);
@@ -119,7 +120,7 @@ describe("tickDrones edge cases", () => {
       x: 0,
       y: 2,
       z: 0,
-      targetKey: "k1",
+      targetKey: 1,
       targetX: 0,
       targetY: 0,
       targetZ: 0,
@@ -135,7 +136,7 @@ describe("tickDrones edge cases", () => {
       countFrontierAboveWater: () => 0,
       mineVoxel: () => null,
       getNearestOutpost: () => null,
-      key: (_x: number, _y: number, _z: number) => "k",
+      key: (x: number, y: number, z: number) => voxelKey(x, y, z),
     } as unknown as WorldModel;
 
     tickDrones({
@@ -143,9 +144,9 @@ describe("tickDrones edge cases", () => {
       drones: [miner],
       dtSeconds: 0.016,
       cfg,
-      frontier: { keys: [], index: new Map() },
-      minedKeys: new Set(),
-      reservedKeys: new Set(),
+      frontier: { keys: [], index: new Map<VoxelKey, number>() },
+      minedKeys: new Set<VoxelKey>(),
+      reservedKeys: new Set<VoxelKey>(),
       moveSpeed: 10,
       mineDuration: 1,
       maxTargetAttempts: 10,
@@ -170,7 +171,7 @@ describe("tickDrones edge cases", () => {
       x: 0,
       y: 0,
       z: 0,
-      targetKey: "k1",
+      targetKey: 1,
       targetX: 0,
       targetY: 10,
       targetZ: 0,
@@ -185,7 +186,7 @@ describe("tickDrones edge cases", () => {
       mineVoxel: mineSpy,
       countFrontierAboveWater: () => 0,
       getNearestOutpost: () => null,
-      key: (_x: number, _y: number, _z: number) => "k",
+      key: (x: number, y: number, z: number) => voxelKey(x, y, z),
     } as unknown as WorldModel;
 
     tickDrones({
@@ -193,9 +194,9 @@ describe("tickDrones edge cases", () => {
       drones: [miner],
       dtSeconds: 0.25,
       cfg,
-      frontier: { keys: [], index: new Map() },
-      minedKeys: new Set(),
-      reservedKeys: new Set(),
+      frontier: { keys: [], index: new Map<VoxelKey, number>() },
+      minedKeys: new Set<VoxelKey>(),
+      reservedKeys: new Set<VoxelKey>(),
       moveSpeed: 10,
       mineDuration: 1,
       maxTargetAttempts: 10,
@@ -215,15 +216,15 @@ describe("tickDrones edge cases", () => {
   it("MINER MINING clears targetKey and returns to SEEKING if target already mined", () => {
     const cfg = getConfig();
     const mineSpy = vi.fn(() => null);
-    const minedKeys = new Set<string>(["k1"]);
-    const reservedKeys = new Set<string>(["k1"]);
+    const minedKeys = new Set<VoxelKey>([1]);
+    const reservedKeys = new Set<VoxelKey>([1]);
 
     const miner: Drone = {
       id: 1,
       x: 0,
       y: 0,
       z: 0,
-      targetKey: "k1",
+      targetKey: 1,
       targetX: 0,
       targetY: 10,
       targetZ: 0,
@@ -238,7 +239,7 @@ describe("tickDrones edge cases", () => {
       mineVoxel: mineSpy,
       countFrontierAboveWater: () => 0,
       getNearestOutpost: () => null,
-      key: (_x: number, _y: number, _z: number) => "k",
+      key: (x: number, y: number, z: number) => voxelKey(x, y, z),
     } as unknown as WorldModel;
 
     tickDrones({
@@ -246,7 +247,7 @@ describe("tickDrones edge cases", () => {
       drones: [miner],
       dtSeconds: 1.0,
       cfg,
-      frontier: { keys: [], index: new Map() },
+      frontier: { keys: [], index: new Map<VoxelKey, number>() },
       minedKeys,
       reservedKeys,
       moveSpeed: 10,
@@ -264,7 +265,7 @@ describe("tickDrones edge cases", () => {
     expect(miner.state).toBe("SEEKING");
     expect(miner.targetKey).toBeNull();
     // reservedKeys is only cleared on successful mine
-    expect(reservedKeys.has("k1")).toBe(true);
+    expect(reservedKeys.has(1)).toBe(true);
   });
 
   it("MINER MINING -> RETURNING when payload reaches maxPayload and tracks frontier changes", () => {
@@ -276,7 +277,7 @@ describe("tickDrones edge cases", () => {
       x: 0,
       y: 0,
       z: 0,
-      targetKey: "k1",
+      targetKey: 1,
       targetX: 1,
       targetY: 10,
       targetZ: 3,
@@ -296,12 +297,15 @@ describe("tickDrones edge cases", () => {
       }),
       countFrontierAboveWater: () => 42,
       getNearestOutpost: () => null,
-      key: (x: number, y: number, z: number) => `k-${x},${y},${z}`,
+      key: (x: number, y: number, z: number) => voxelKey(x, y, z),
     } as unknown as WorldModel;
 
-    const minedKeys = new Set<string>();
-    const reservedKeys = new Set<string>(["k1"]);
-    const frontier: KeyIndex = { keys: ["k-5,5,5"], index: new Map([["k-5,5,5", 0]]) };
+    const minedKeys = new Set<VoxelKey>();
+    const reservedKeys = new Set<VoxelKey>([1]);
+    const frontier: KeyIndex<VoxelKey> = {
+      keys: [voxelKey(5, 5, 5)],
+      index: new Map([[voxelKey(5, 5, 5), 0]]),
+    };
     const minedPositions: number[] = [];
     const editsThisTick: VoxelEdit[] = [];
     const frontierAdded: number[] = [];
@@ -326,14 +330,14 @@ describe("tickDrones edge cases", () => {
       depositEvents: [],
     });
 
-    expect(minedKeys.has("k1")).toBe(true);
-    expect(reservedKeys.has("k1")).toBe(false);
+    expect(minedKeys.has(1)).toBe(true);
+    expect(reservedKeys.has(1)).toBe(false);
     expect(minedPositions).toEqual([1, 10, 3]);
     expect(editsThisTick).toEqual([edit]);
     expect(frontierAdded).toEqual([9, 9, 9]);
     expect(frontierRemoved).toEqual([5, 5, 5]);
-    expect(frontier.keys).toContain("k-9,9,9");
-    expect(frontier.index.has("k-5,5,5")).toBe(false);
+    expect(frontier.keys).toContain(voxelKey(9, 9, 9));
+    expect(frontier.index.has(voxelKey(5, 5, 5))).toBe(false);
     expect(uiSnapshot.minedBlocks).toBe(1);
     expect(miner.payload).toBeGreaterThanOrEqual(1);
     expect(miner.state).toBe("RETURNING");
@@ -369,9 +373,9 @@ describe("tickDrones edge cases", () => {
       drones: [miner],
       dtSeconds: 1.0,
       cfg,
-      frontier: { keys: [], index: new Map() },
-      minedKeys: new Set(),
-      reservedKeys: new Set(),
+      frontier: { keys: [], index: new Map<VoxelKey, number>() },
+      minedKeys: new Set<VoxelKey>(),
+      reservedKeys: new Set<VoxelKey>(),
       moveSpeed: 10,
       mineDuration: 1,
       maxTargetAttempts: 10,
@@ -416,9 +420,9 @@ describe("tickDrones edge cases", () => {
       drones: [miner],
       dtSeconds: 0.2,
       cfg,
-      frontier: { keys: [], index: new Map() },
-      minedKeys: new Set(),
-      reservedKeys: new Set(),
+      frontier: { keys: [], index: new Map<VoxelKey, number>() },
+      minedKeys: new Set<VoxelKey>(),
+      reservedKeys: new Set<VoxelKey>(),
       moveSpeed: 10,
       mineDuration: 1,
       maxTargetAttempts: 10,
@@ -502,9 +506,9 @@ describe("tickDrones edge cases", () => {
       drones,
       dtSeconds: 0.016,
       cfg,
-      frontier: { keys: [], index: new Map() },
-      minedKeys: new Set(),
-      reservedKeys: new Set(),
+      frontier: { keys: [], index: new Map<VoxelKey, number>() },
+      minedKeys: new Set<VoxelKey>(),
+      reservedKeys: new Set<VoxelKey>(),
       moveSpeed: 10,
       mineDuration: 1,
       maxTargetAttempts: 10,
@@ -525,9 +529,9 @@ describe("tickDrones edge cases", () => {
       drones,
       dtSeconds: 1.0,
       cfg,
-      frontier: { keys: [], index: new Map() },
-      minedKeys: new Set(),
-      reservedKeys: new Set(),
+      frontier: { keys: [], index: new Map<VoxelKey, number>() },
+      minedKeys: new Set<VoxelKey>(),
+      reservedKeys: new Set<VoxelKey>(),
       // Keep miner positions stable so the hauler stays within the <3 transfer threshold.
       moveSpeed: 0,
       mineDuration: 1,
