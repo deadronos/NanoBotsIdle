@@ -2,6 +2,10 @@
  * Adapter layer for integrating bvx-kit library with NanoBotsIdle voxel logic.
  * Provides a bridge between the game's existing voxel system and bvx-kit's
  * BitVoxel architecture.
+ *
+ * This adapter provides optional integration with bvx-kit for efficient voxel storage
+ * and geometry generation, while maintaining backward compatibility with the existing
+ * Map-based storage system.
  */
 
 import {
