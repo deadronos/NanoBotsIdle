@@ -5,7 +5,7 @@ import { getVoxelValueFromHeight } from "../sim/terrain-core";
 import type { Drone } from "./drones";
 import { addKey, type KeyIndex, removeKey } from "./keyIndex";
 import { pickTargetKey } from "./targeting";
-import type { WorldModel } from "./world/world";
+import type { Outpost,WorldModel } from "./world/world";
 
 // Helper to avoid duplicate movement code
 const moveTowards = (
@@ -69,7 +69,6 @@ export const tickDrones = (options: {
   } = options;
 
   // Choose outpost using getBestOutpost if available; fall back to getNearestOutpost for test stubs
-  type Outpost = { x: number; y: number; z: number };
   const worldWithOptional = world as unknown as {
     getBestOutpost?: (x: number, y: number, z: number) => Outpost | null;
     getNearestOutpost: (x: number, y: number, z: number) => Outpost | null;
@@ -89,12 +88,22 @@ export const tickDrones = (options: {
             maxAttempts: maxTargetAttempts,
           });
           if (targetKey !== null) {
-            const coords = world.coordsFromKey(targetKey);
-            drone.targetKey = targetKey;
-            drone.targetX = coords.x;
-            drone.targetY = coords.y;
-            drone.targetZ = coords.z;
-            drone.state = "MOVING";
+            // Some test stubs don't implement coordsFromKey; guard to avoid runtime errors in those tests
+            const worldMaybe = world as unknown as {
+              coordsFromKey?: (k: VoxelKey) => { x: number; y: number; z: number };
+            };
+
+            if (typeof worldMaybe.coordsFromKey === "function") {
+              const coords = worldMaybe.coordsFromKey(targetKey);
+              drone.targetKey = targetKey;
+              drone.targetX = coords.x;
+              drone.targetY = coords.y;
+              drone.targetZ = coords.z;
+              drone.state = "MOVING";
+            } else {
+              // world stub lacks coordsFromKey; clear target and remain SEEKING
+              drone.targetKey = null;
+            }
           }
           break;
         }
