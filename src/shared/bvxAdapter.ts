@@ -10,12 +10,10 @@
 
 import {
   BVXGeometry,
-  BVXLayer,
   MortonKey,
   VoxelChunk0,
   VoxelIndex,
   VoxelWorld,
-  WorldIndex,
 } from "@astrumforge/bvx-kit";
 
 // Re-export material constants for compatibility
@@ -183,7 +181,7 @@ export class BVXWorldAdapter {
 /**
  * Utility to generate geometry from a chunk using BVXGeometry.
  */
-export function generateChunkGeometry(chunk: VoxelChunk0): {
+export function generateChunkGeometry(_chunk: VoxelChunk0): {
   positions: Float32Array;
   normals: Float32Array;
   indices: Uint32Array;

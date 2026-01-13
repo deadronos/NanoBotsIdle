@@ -35,7 +35,7 @@ describe('TouchControls', () => {
     } catch {
       /* ignore - some test environments disallow deleting globals */
     }
-    window.matchMedia = () => ({ matches: false, addEventListener: noop, removeEventListener: noop } as MediaQueryList);
+    window.matchMedia = () => ({ matches: false, addEventListener: noop, removeEventListener: noop } as unknown as MediaQueryList);
 
     render(<TouchControls />);
     const buttons = screen.queryAllByRole('button');
@@ -48,7 +48,7 @@ describe('TouchControls', () => {
     } catch {
       // ignore when immutably defined
     }
-    window.matchMedia = () => ({ matches: true, addEventListener: noop, removeEventListener: noop } as MediaQueryList);
+    window.matchMedia = () => ({ matches: true, addEventListener: noop, removeEventListener: noop } as unknown as MediaQueryList);
 
     render(<TouchControls />);
     const buttons = screen.getAllByRole('button');

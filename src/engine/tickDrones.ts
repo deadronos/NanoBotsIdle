@@ -4,7 +4,7 @@ import { getVoxelValueFromHeight } from "../sim/terrain-core";
 import type { Drone } from "./drones";
 import { addKey, type KeyIndex, removeKey } from "./keyIndex";
 import { pickTargetKey } from "./targeting";
-import type { WorldModel } from "./world/world";
+import type { Outpost,WorldModel } from "./world/world";
 
 // Helper to avoid duplicate movement code
 const moveTowards = (
@@ -68,7 +68,6 @@ export const tickDrones = (options: {
   } = options;
 
   // Choose outpost using getBestOutpost if available; fall back to getNearestOutpost for test stubs
-  type Outpost = { x: number; y: number; z: number };
   const worldWithOptional = world as unknown as {
     getBestOutpost?: (x: number, y: number, z: number) => Outpost | null;
     getNearestOutpost: (x: number, y: number, z: number) => Outpost | null;
