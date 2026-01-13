@@ -88,22 +88,12 @@ export const tickDrones = (options: {
             maxAttempts: maxTargetAttempts,
           });
           if (targetKey !== null) {
-            // Some test stubs don't implement coordsFromKey; guard to avoid runtime errors in those tests
-            const worldMaybe = world as unknown as {
-              coordsFromKey?: (k: VoxelKey) => { x: number; y: number; z: number };
-            };
-
-            if (typeof worldMaybe.coordsFromKey === "function") {
-              const coords = worldMaybe.coordsFromKey(targetKey);
-              drone.targetKey = targetKey;
-              drone.targetX = coords.x;
-              drone.targetY = coords.y;
-              drone.targetZ = coords.z;
-              drone.state = "MOVING";
-            } else {
-              // world stub lacks coordsFromKey; clear target and remain SEEKING
-              drone.targetKey = null;
-            }
+            const coords = world.coordsFromKey(targetKey);
+            drone.targetKey = targetKey;
+            drone.targetX = coords.x;
+            drone.targetY = coords.y;
+            drone.targetZ = coords.z;
+            drone.state = "MOVING";
           }
           break;
         }

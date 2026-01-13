@@ -52,7 +52,9 @@ export const createOcclusionCuller = (
   const gl = renderer.getContext();
   const isWebGL2 = "WebGL2RenderingContext" in globalThis && gl instanceof WebGL2RenderingContext;
 
-  if (!config.enabled || !isWebGL2) {
+  const proxyRenderingEnabled = false;
+
+  if (!config.enabled || !isWebGL2 || !proxyRenderingEnabled) {
     return {
       isSupported: false,
       // eslint-disable-next-line @typescript-eslint/no-empty-function
@@ -147,9 +149,9 @@ export const createOcclusionCuller = (
       // Begin occlusion query
       gl2.beginQuery(gl2.ANY_SAMPLES_PASSED_CONSERVATIVE, slot.query);
 
-      // Simplified: We just mark that we started a query.
-      // In a real implementation, we'd render a proxy geometry here.
-      // For now, this is a prototype that tracks the query lifecycle.
+      // TODO(occlusion): render a proxy mesh for the bounding volume before ending the query.
+      // Until proxy rendering is implemented, occlusion queries are disabled via
+      // `proxyRenderingEnabled` to avoid incorrect culling.
 
       gl2.endQuery(gl2.ANY_SAMPLES_PASSED_CONSERVATIVE);
 
