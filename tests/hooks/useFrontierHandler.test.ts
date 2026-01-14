@@ -9,15 +9,7 @@ import { playerChunk } from "../../src/engine/playerState";
 import { resetVoxelEdits } from "../../src/sim/collision";
 import { getSimBridge } from "../../src/simBridge/simBridge";
 
-function renderHook<T>(fn: () => T) {
-  let result: { current: T } = { current: undefined as unknown as T };
-  const Wrapper = () => {
-    result.current = fn();
-    return null;
-  };
-  render(React.createElement(Wrapper));
-  return { result };
-}
+import { renderHook } from "../utils/renderHook";
 
 vi.mock("../../src/simBridge/simBridge", () => ({
   getSimBridge: vi.fn(),

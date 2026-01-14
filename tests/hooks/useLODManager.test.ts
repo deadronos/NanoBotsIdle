@@ -9,15 +9,7 @@ import { useLODManager } from "../../src/components/world/hooks/useLODManager";
 import { playerPosition } from "../../src/engine/playerState";
 import { getSimBridge } from "../../src/simBridge/simBridge";
 
-function renderHook<T>(fn: () => T) {
-  let result: { current: T } = { current: undefined as unknown as T };
-  const Wrapper = () => {
-    result.current = fn();
-    return null;
-  };
-  render(React.createElement(Wrapper));
-  return { result };
-}
+import { renderHook } from "../utils/renderHook";
 
 vi.mock("../../src/simBridge/simBridge", () => ({
   getSimBridge: vi.fn(),
