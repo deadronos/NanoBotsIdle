@@ -9,7 +9,7 @@ import { getSeed } from "../src/sim/terrain";
 class MockVoxelReader implements VoxelReader {
   private map = new Map<string, number>();
 
-  constructor(defaultMat = MATERIAL_AIR) {
+  constructor(defaultMat: number = MATERIAL_AIR) {
     this.defaultMat = defaultMat;
   }
   private defaultMat: number;

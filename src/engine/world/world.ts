@@ -132,7 +132,6 @@ export class WorldModel implements VoxelReader {
     const frontierRemoved: { x: number; y: number; z: number }[] = [];
 
     const update = (cx: number, cy: number, cz: number) => {
-      const key = this.key(cx, cy, cz);
       const was = this.frontierManager.hasFrontier(cx, cy, cz);
       this.frontierManager.updateFrontierAt(this, cx, cy, cz);
       const now = this.frontierManager.hasFrontier(cx, cy, cz);
