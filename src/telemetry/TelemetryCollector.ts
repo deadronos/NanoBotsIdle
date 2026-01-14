@@ -4,6 +4,7 @@
  * Tracks:
  * - FPS (frames per second)
  * - Frame time (ms per frame)
+ * - Draw calls per frame
  * - Meshing time per chunk
  * - Worker queue lengths
  * - Meshing queue wait times
@@ -25,6 +26,12 @@ export type TelemetrySnapshot = {
     min: number;
     max: number;
   };
+  drawCalls: {
+    current: number;
+    avg: number;
+    min: number;
+    max: number;
+  };
   meshing: {
     avgTimePerChunk: number;
     totalChunks: number;
@@ -41,7 +48,14 @@ export type TelemetrySnapshot = {
     errorCount: number;
     retryCount: number;
   };
+  dpr: {
+    current: number;
+    changes: number;
+    history: { timestamp: number; value: number }[];
+  };
 };
+
+
 
 type Sample = {
   value: number;
@@ -59,6 +73,10 @@ export class TelemetryCollector {
   // Frame time tracking
   private frameTimeHistory: Sample[] = [];
   private lastFrameTime = 0;
+
+  // Draw call tracking
+  private drawCallHistory: Sample[] = [];
+  private lastDrawCalls = 0;
 
   // Meshing tracking
   private meshingTimes: Sample[] = [];
@@ -78,9 +96,15 @@ export class TelemetryCollector {
   private meshingErrorCount = 0;
   private meshingRetryCount = 0;
 
+  // DPR tracking
+  private currentDpr = 1;
+  private dprChangeCount = 0;
+  private dprHistory: { timestamp: number; value: number }[] = [];
+
   // Config
   private readonly maxHistorySize = 120; // ~2 seconds at 60fps
   private readonly maxMeshingHistory = 100;
+  private readonly maxDprHistory = 50;
 
   constructor(enabled = false) {
     this.enabled = enabled;
@@ -100,6 +124,7 @@ export class TelemetryCollector {
   reset() {
     this.fpsHistory = [];
     this.frameTimeHistory = [];
+    this.drawCallHistory = [];
     this.meshingTimes = [];
     this.meshingWaitTimes = [];
     this.totalChunksMeshed = 0;
@@ -112,6 +137,10 @@ export class TelemetryCollector {
     this.workerRetryCount = 0;
     this.meshingErrorCount = 0;
     this.meshingRetryCount = 0;
+    this.lastDrawCalls = 0;
+    this.currentDpr = 1;
+    this.dprChangeCount = 0;
+    this.dprHistory = [];
   }
 
   recordFps(fps: number) {
@@ -129,6 +158,14 @@ export class TelemetryCollector {
     this.lastFrameTime = frameTime;
     this.frameTimeHistory.push({ value: frameTime, timestamp: now });
     this.trimHistory(this.frameTimeHistory);
+  }
+
+  recordDrawCalls(drawCalls: number) {
+    if (!this.enabled) return;
+    const now = performance.now();
+    this.lastDrawCalls = drawCalls;
+    this.drawCallHistory.push({ value: drawCalls, timestamp: now });
+    this.trimHistory(this.drawCallHistory);
   }
 
   recordMeshingTime(timeMs: number) {
@@ -183,6 +220,17 @@ export class TelemetryCollector {
     this.meshingRetryCount++;
   }
 
+  recordDprChange(dpr: number) {
+    if (!this.enabled) return;
+    const now = performance.now();
+    this.currentDpr = dpr;
+    this.dprChangeCount++;
+    this.dprHistory.push({ timestamp: now, value: dpr });
+    if (this.dprHistory.length > this.maxDprHistory) {
+      this.dprHistory.shift();
+    }
+  }
+
   private trimHistory(history: Sample[]) {
     while (history.length > this.maxHistorySize) {
       history.shift();
@@ -205,6 +253,7 @@ export class TelemetryCollector {
   getSnapshot(): TelemetrySnapshot {
     const fpsStats = this.computeStats(this.fpsHistory);
     const frameTimeStats = this.computeStats(this.frameTimeHistory);
+    const drawCallStats = this.computeStats(this.drawCallHistory);
     const meshingStats = this.computeStats(this.meshingTimes);
     const waitTimeStats = this.computeStats(this.meshingWaitTimes);
 
@@ -217,6 +266,10 @@ export class TelemetryCollector {
       frameTime: {
         current: this.lastFrameTime,
         ...frameTimeStats,
+      },
+      drawCalls: {
+        current: this.lastDrawCalls,
+        ...drawCallStats,
       },
       meshing: {
         avgTimePerChunk: meshingStats.avg,
@@ -233,6 +286,11 @@ export class TelemetryCollector {
         backlog: this.workerBacklog,
         errorCount: this.workerErrorCount,
         retryCount: this.workerRetryCount,
+      },
+      dpr: {
+        current: this.currentDpr,
+        changes: this.dprChangeCount,
+        history: [...this.dprHistory],
       },
     };
   }

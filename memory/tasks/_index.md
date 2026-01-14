@@ -11,6 +11,9 @@
 
 ## Completed
 
+- [TASK016] Occlusion proxy rendering — Proxy volume rendering for occlusion queries to avoid false culling (Completed)
+- [TASK015] BVX-Kit voxel integration — Replace voxel keying/edit storage with BVX-backed helpers (Completed)
+- [TASK014] Progressive LOD, Occlusion Path, and Benchmark Scene — Progressive LOD, occlusion integration, draw-call telemetry, and benchmark preset (Completed)
 - [TASK013] Logistics Phase 3: Hauler Drones & Polish — Haulers, Outposts, Persistence, and UI integration (Completed)
 - [TASK012] Meshing priority queue with back-pressure — Implemented chunk meshing scheduler with configurable queue depth and tests (Completed)
 - [TASK011] Save migration system — Versioned save schema (v1→v2) with migration framework, validation, and roundtrip tests (Completed)

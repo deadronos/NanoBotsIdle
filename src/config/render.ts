@@ -40,6 +40,8 @@ export type SunConfig = {
   intensity: number;
   shadowMapSize: [number, number];
   cameraBounds: { left: number; right: number; top: number; bottom: number };
+  bias: number;
+  normalBias: number;
 };
 
 export const voxelRenderModes = ["frontier", "frontier-fill", "dense", "meshed"] as const;
@@ -65,6 +67,16 @@ export type RenderConfig = {
     lod: {
       lowDistanceMultiplier: number;
       hideDistanceMultiplier: number;
+      progressive: {
+        enabled: boolean;
+        refineDelayFrames: number;
+      };
+    };
+    chunkLoad: {
+      initialRadius: number;
+      initialDims: 2 | 3;
+      activeRadius: number;
+      activeDims: 2 | 3;
     };
     occlusion: {
       enabled: boolean;
@@ -104,6 +116,8 @@ export const defaultRenderConfig: RenderConfig = {
     intensity: 1.5,
     shadowMapSize: [2048, 2048],
     cameraBounds: { left: -50, right: 50, top: 50, bottom: -50 },
+    bias: -0.0005,
+    normalBias: 0.05,
   },
   voxels: {
     mode: "meshed",
@@ -118,6 +132,16 @@ export const defaultRenderConfig: RenderConfig = {
     lod: {
       lowDistanceMultiplier: 12,
       hideDistanceMultiplier: 24,
+      progressive: {
+        enabled: false,
+        refineDelayFrames: 2,
+      },
+    },
+    chunkLoad: {
+      initialRadius: 1,
+      initialDims: 2,
+      activeRadius: 1,
+      activeDims: 3,
     },
     occlusion: {
       enabled: false,

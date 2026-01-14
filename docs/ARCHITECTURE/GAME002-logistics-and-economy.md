@@ -27,6 +27,10 @@ The Logistics System separates resource extraction from resource transportation,
 
 - **Definition:** Player-placed drop-off points.
 - **Function:** Serves as a valid destination for `RETURNING` drones (Miners or Haulers).
+- **Smart Queuing:**
+  - Has 4 docking slots.
+  - Implements an orbital queue for excess traffic.
+  - Drones visually circle the outpost while waiting for permission to dock.
 - **Persistence:** Outpost locations are part of the save file (`UiSnapshot.outposts`). They are hydrated into the `WorldModel` upon engine initialization.
 
 ## Economy Model
@@ -36,6 +40,7 @@ The economy is driven by **Credits** earned from mining.
 ### Currency Flow
 - **Source:** Mining blocks. Value depends on depth/type + Prestige Multiplier.
 - **Sink:** Purchasing Upgrades (Drones, Speed, etc.) and Structures (Outposts).
+- **Feedback:** "Floating Text" appears above outposts when resources are deposited, giving immediate visual confirmation of income (See `DEC008-visual-effects-system.md`).
 
 ### Cost Scaling
 

@@ -15,6 +15,9 @@
 ## Rendering/perf patterns
 - Use `InstancedMesh` for large counts (voxels, particle cubes).
 - Initialize instance matrices/colors in `useLayoutEffect`.
+- **Worker-side Processing**: Offload expensive calculations (e.g., `computeBoundingSphere`) to workers and transfer results to minimize main-thread work.
+- **Main-thread Batching**: Limit per-frame main-thread work (e.g., applying mesh results) via `maxMeshesPerFrame` to prevent frame spikes.
+- **Debounced Scheduling**: Debounce expensive global operations (e.g., `reprioritizeDirty()`) during continuous input/movement.
 - When using `vertexColors` with instanced voxels, ensure the base geometry has
   a `color` attribute (`ensureGeometryHasVertexColors()` in
   `src/render/instanced.ts`) to avoid black materials.

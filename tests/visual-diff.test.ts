@@ -5,7 +5,7 @@ import { expect, test } from "vitest";
 import { getConfig, updateConfig } from "../src/config/index";
 import { getSeed } from "../src/sim/seed";
 import { getSurfaceHeight } from "../src/sim/terrain";
-import { getVoxelColor } from "../src/utils";
+import { getVoxelColor } from "../src/sim/terrain-core";
 
 const parsePPMPixels = (content: string) => {
   const lines = content.split(/\r?\n/).slice(3); // skip header
@@ -36,10 +36,10 @@ const generatePPM = (seedNum: number, cfg: ReturnType<typeof getConfig>) => {
       const x = ix;
       const z = iz;
       const y = getSurfaceHeight(x, z, seed);
-      const color = getVoxelColor(y, cfg.terrain.waterLevel).getHexString();
-      const r = parseInt(color.slice(0, 2), 16);
-      const g = parseInt(color.slice(2, 4), 16);
-      const b = parseInt(color.slice(4, 6), 16);
+      const hexColor = getVoxelColor(y, cfg.terrain.waterLevel);
+      const r = (hexColor >> 16) & 0xff;
+      const g = (hexColor >> 8) & 0xff;
+      const b = hexColor & 0xff;
       pixels.push(`${r} ${g} ${b}`);
     }
   }

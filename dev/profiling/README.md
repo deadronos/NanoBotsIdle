@@ -1,25 +1,52 @@
-# Memory Profiling Tools
+# Memory Profiling & Performance Telemetry Tools
 
-This directory contains utilities for detecting memory leaks and tracking resource usage in NanoBotsIdle. These tools help ensure long-running sessions remain stable and performant.
+This directory contains utilities for detecting memory leaks, tracking resource usage, and monitoring runtime performance in NanoBotsIdle. These tools help ensure long-running sessions remain stable and performant.
 
 ## Overview
 
-Memory leaks in a voxel game can manifest as:
+Memory leaks and performance regressions in a voxel game can manifest as:
 
 - Detached DOM nodes from destroyed UI components
 - Retained Three.js `Object3D` or `InstancedMesh` references
 - Unclean worker termination leaving event handlers attached
 - Unbounded growth in internal maps/sets for chunks or voxels
+- FPS degradation from inefficient rendering or simulation logic
+- Worker backlog growth from unbalanced work distribution
 
 This profiling toolkit provides:
 
-1. **Memory Tracker** - Lightweight memory snapshots and comparison
-2. **Heap Snapshot Tool** - Chrome DevTools-compatible V8 heap dumps
-3. **Baseline Generator** - Automated baseline memory profile generation
+1. **Telemetry System** - Real-time performance monitoring in dev mode
+2. **Memory Tracker** - Lightweight memory snapshots and comparison
+3. **Heap Snapshot Tool** - Chrome DevTools-compatible V8 heap dumps
+4. **Baseline Generator** - Automated baseline memory profile generation
+5. **CI Performance Checks** - Automated regression detection in CI/CD
 
 ## Quick Start
 
-### 1. Run Memory Leak Detection Tests
+### 1. Enable Telemetry in Dev Mode
+
+To enable telemetry during development, add the `?telemetry=true` URL parameter:
+
+```
+http://localhost:5173/?telemetry=true
+```
+
+This will:
+- Enable real-time metric collection
+- Show a floating 📊 button in the bottom-right corner
+- Click the button to open the telemetry panel
+
+**Metrics Tracked:**
+- **FPS**: Current, average, min, max frames per second
+- **Frame Time**: Current, average, min, max milliseconds per frame
+- **DPR (Device Pixel Ratio)**: Current value and change history
+- **Meshing**: Average time per chunk, queue length, in-flight tasks, wait time
+- **Worker**: Simulation time, backlog, error/retry counts
+
+**Export Metrics:**
+Click "Copy JSON" in the telemetry panel to copy metrics to clipboard for analysis.
+
+### 2. Run Memory Leak Detection Tests
 
 ```bash
 npm test -- lifecycle
@@ -36,6 +63,23 @@ These tests verify that:
 ```bash
 node --expose-gc dev/profiling/baseline-generator.js
 ```
+
+### 2b. Profile FPS + Draw Calls for Heavy Render Scenes
+
+Use the headless profiling script to capture FPS and draw-call metrics for a heavy meshed scene:
+
+```bash
+npm run dev
+node scripts/profile.js --scene meshed-heavy --duration 30 --output ./profile-metrics.json
+```
+
+To include occlusion culling in the benchmark:
+
+```bash
+node scripts/profile.js --scene meshed-heavy-occlusion --duration 30 --output ./profile-metrics.json
+```
+
+Load the resulting JSON in `docs/performance-dashboard.html` to visualize FPS, frame time, and draw calls.
 
 This simulates common operations and captures heap snapshots for regression detection.
 
@@ -247,6 +291,116 @@ Add these to `package.json`:
     "test:lifecycle": "vitest run lifecycle"
   }
 }
+```
+
+## CI Performance Regression Detection
+
+The repository includes automated performance regression detection that runs in CI/CD pipelines.
+
+### Overview
+
+On every PR, the CI system:
+1. Runs a headless browser session with telemetry enabled
+2. Collects performance metrics for 30 seconds
+3. Compares against the baseline from the main branch
+4. Fails the build if regressions exceed configured thresholds
+
+### Running Performance Checks Locally
+
+```bash
+# Run the profiler (ensure dev server is running)
+npm run dev &
+sleep 5  # Wait for server to start
+node scripts/profile.js --duration 30 --output ./my-metrics.json
+
+# Compare against baseline
+node scripts/check-performance-regression.js \
+  --current ./my-metrics.json \
+  --baseline ./path/to/baseline.json \
+  --output ./regression-report.json
+```
+
+### Configuring Thresholds
+
+Edit `.github/performance-thresholds.json` to adjust acceptable regression limits:
+
+```json
+{
+  "thresholds": {
+    "fps": {
+      "regressionPercent": 10,  // Max 10% FPS decrease
+      "avgMin": 55               // Minimum acceptable average FPS
+    },
+    "frameTime": {
+      "regressionPercent": 15,  // Max 15% frame time increase
+      "avgMax": 18               // Maximum acceptable average frame time (ms)
+    }
+  }
+}
+```
+
+### Understanding Regression Reports
+
+When a regression is detected, the CI output will show:
+
+```
+❌ FPS regression detected: -13.33% (threshold: 10%)
+
+| Metric | Baseline | Current | Change | Threshold | Status |
+|--------|----------|---------|--------|-----------|--------|
+| FPS (avg) | 60.00 | 52.00 | -13.33% | ±10% | ❌ FAIL |
+```
+
+**Status indicators:**
+- ✅ PASS: Within acceptable thresholds
+- ⚠️  WARN: Exceeds absolute limits but not regression threshold
+- ❌ FAIL: Exceeds regression threshold
+
+### Troubleshooting CI Performance Failures
+
+**1. Check the regression report artifact**
+- Download the `regression-report.json` from the CI run
+- Contains detailed metrics and comparison data
+
+**2. Identify the cause**
+- Review recent changes that might affect performance
+- Check if new features added significant computational cost
+- Look for inefficient loops, allocations, or render operations
+
+**3. Common causes:**
+- Increased object allocation in hot paths (useFrame, workers)
+- New features without optimization
+- Inefficient data structures or algorithms
+- Missing caching or memoization
+- Blocking operations in render loop
+
+**4. Fixing regressions**
+- Profile locally with telemetry panel
+- Use browser DevTools Performance tab
+- Check worker backlog for task queueing issues
+- Optimize hot paths identified in telemetry
+
+**5. Adjusting thresholds (last resort)**
+- If the regression is intentional (e.g., new features with known cost)
+- Document why thresholds were adjusted in the commit message
+- Consider if optimization can reduce the impact
+
+### Warning-Only Mode
+
+To temporarily bypass CI failures while investigating:
+
+```yaml
+# In .github/workflows/profile.yml
+env:
+  PERF_WARNING_ONLY: true
+```
+
+Or locally:
+```bash
+node scripts/check-performance-regression.js \
+  --current ./current.json \
+  --baseline ./baseline.json \
+  --warning-only
 ```
 
 ## CI Integration (Optional)

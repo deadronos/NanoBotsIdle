@@ -2,6 +2,7 @@ import { useFrame } from "@react-three/fiber";
 import React, { useLayoutEffect, useRef } from "react";
 import * as THREE from "three";
 
+import { applyInstanceUpdates } from "../render/instanced";
 import { getSimBridge } from "../simBridge/simBridge";
 
 const MAX_OUTPOSTS = 100;
@@ -42,7 +43,11 @@ export const Outposts: React.FC = () => {
       mesh.setMatrixAt(i, dummy.matrix);
     });
 
-    mesh.instanceMatrix.needsUpdate = true;
+    if (mesh.count > 0) {
+      applyInstanceUpdates(mesh, { matrixRange: { start: 0, end: mesh.count - 1 } });
+    } else {
+      applyInstanceUpdates(mesh, { matrix: true });
+    }
   });
 
   return (
@@ -51,6 +56,7 @@ export const Outposts: React.FC = () => {
       args={[undefined, undefined, MAX_OUTPOSTS]}
       castShadow
       receiveShadow
+      frustumCulled={false}
     >
       <boxGeometry args={[1, 1, 1]} />
       <meshStandardMaterial color="#ff8800" roughness={0.3} metalness={0.8} />

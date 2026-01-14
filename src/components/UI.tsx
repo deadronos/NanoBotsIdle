@@ -1,10 +1,13 @@
 import React, { useState } from "react";
 
+import { useConfig } from "../config/useConfig";
 import type { ViewMode } from "../types";
 import { useUiStore } from "../ui/store";
 import { SettingsModal } from "./SettingsModal";
+import { TelemetryPanel } from "./TelemetryPanel";
 import { BuildingDrawer } from "./ui/BuildingDrawer";
 import { Hud } from "./ui/Hud";
+import { Minimap } from "./ui/Minimap";
 import { Reticle } from "./ui/Reticle";
 import { ShopModal } from "./ui/ShopModal";
 import { TitlePanel } from "./ui/TitlePanel";
@@ -24,6 +27,8 @@ export const UI: React.FC<UIProps> = ({ viewMode, onToggleView }) => {
   const totalBlocks = snapshot.totalBlocks;
   const [isShopOpen, setShopOpen] = useState(false);
   const [isSettingsOpen, setSettingsOpen] = useState(false);
+  const [isTelemetryOpen, setTelemetryOpen] = useState(false);
+  const config = useConfig();
   const percentMined = totalBlocks > 0 ? (minedBlocks / totalBlocks) * 100 : 0;
 
   return (
@@ -65,6 +70,7 @@ export const UI: React.FC<UIProps> = ({ viewMode, onToggleView }) => {
       {/* Desktop Layout (>= md) */}
       <div className="hidden md:contents">
         <BuildingDrawer />
+        <Minimap />
         <Hud
           credits={credits}
           prestigeLevel={prestigeLevel}
@@ -91,6 +97,20 @@ export const UI: React.FC<UIProps> = ({ viewMode, onToggleView }) => {
 
       {/* Settings Modal */}
       {isSettingsOpen && <SettingsModal onClose={() => setSettingsOpen(false)} />}
+
+      {/* Telemetry Panel (dev mode only) */}
+      {config.telemetry.enabled && (
+        <>
+          <button
+            onClick={() => setTelemetryOpen(!isTelemetryOpen)}
+            className="fixed bottom-4 right-4 pointer-events-auto bg-blue-600 hover:bg-blue-700 text-white rounded-full w-12 h-12 flex items-center justify-center shadow-lg transition-colors z-40"
+            title="Toggle Telemetry"
+          >
+            📊
+          </button>
+          <TelemetryPanel isOpen={isTelemetryOpen} onClose={() => setTelemetryOpen(false)} />
+        </>
+      )}
     </div>
   );
 };

@@ -1,18 +1,7 @@
-import { describe, expect, it, beforeEach, afterEach } from "vitest";
-import { useGameStore } from "../src/store";
-import { resetConfig, updateConfig } from "../src/config";
+import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
-// Mock localStorage if not available (Vitest might be running in node environment)
-if (typeof localStorage === 'undefined') {
-  global.localStorage = {
-    getItem: () => null,
-    setItem: () => {},
-    removeItem: () => {},
-    clear: () => {},
-    length: 0,
-    key: () => null,
-  } as Storage;
-}
+import { resetConfig, updateConfig } from "../src/config";
+import { useGameStore } from "../src/store";
 
 // Helper to reset the store state
 const resetStore = () => {
@@ -47,7 +36,7 @@ describe("useGameStore", () => {
     expect(state.droneCount).toBe(3);
     expect(state.haulerCount).toBe(0);
     expect(state.minedBlocks).toBe(0);
-    expect(typeof state.addCredits).toBe('function');
+    expect(typeof state.addCredits).toBe("function");
   });
 
   it("should add credits", () => {

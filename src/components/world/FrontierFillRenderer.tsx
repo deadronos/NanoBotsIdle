@@ -1,8 +1,10 @@
 import React, { useEffect, useMemo, useRef } from "react";
-import { type InstancedMesh, Object3D } from "three";
+import { Color, type InstancedMesh, Object3D } from "three";
 
+import { applyInstanceUpdates } from "../../render/instanced";
 import { getGroundHeightWithEdits } from "../../sim/collision";
-import { forEachRadialChunk, getVoxelColor } from "../../utils";
+import { getVoxelColor } from "../../sim/terrain-core";
+import { forEachRadialChunk } from "../../utils";
 import { ensureInstanceColors } from "./instancedVoxels/voxelInstanceMesh";
 
 export const FrontierFillRenderer: React.FC<{
@@ -16,6 +18,7 @@ export const FrontierFillRenderer: React.FC<{
 }> = ({ bedrockY, center, chunkSize, prestigeLevel, radius, waterLevel, debugVisuals = false }) => {
   const meshRef = useRef<InstancedMesh>(null);
   const dummy = useMemo(() => new Object3D(), []);
+  const tmpColor = useRef(new Color());
   // Use a reasonably high limit for fill (3x3 chunks * 20 depth ~ 45k voxels)
   const MAX_INSTANCES = 150000;
 
@@ -60,7 +63,9 @@ export const FrontierFillRenderer: React.FC<{
             mesh.setMatrixAt(index, dummy.matrix);
 
             if (!debugVisuals && mesh.instanceColor) {
-              mesh.setColorAt(index, getVoxelColor(y, waterLevel));
+              const c = getVoxelColor(y, waterLevel);
+              tmpColor.current.setHex(c);
+              mesh.setColorAt(index, tmpColor.current);
             }
 
             index++;
@@ -70,8 +75,14 @@ export const FrontierFillRenderer: React.FC<{
     });
 
     mesh.count = index;
-    if (mesh.instanceMatrix) mesh.instanceMatrix.needsUpdate = true;
-    if (mesh.instanceColor) mesh.instanceColor.needsUpdate = true;
+    if (index > 0) {
+      applyInstanceUpdates(mesh, {
+        matrixRange: { start: 0, end: index - 1 },
+        colorRange: debugVisuals ? undefined : { start: 0, end: index - 1 },
+      });
+    } else {
+      applyInstanceUpdates(mesh, { matrix: true, color: !debugVisuals });
+    }
   }, [
     bedrockY,
     center,

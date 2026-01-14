@@ -1,10 +1,11 @@
 import type { Config } from "../config/index";
 import type { UiSnapshot, VoxelEdit } from "../shared/protocol";
+import type { VoxelKey } from "../shared/voxel";
 import { getVoxelValueFromHeight } from "../sim/terrain-core";
 import type { Drone } from "./drones";
 import { addKey, type KeyIndex, removeKey } from "./keyIndex";
 import { pickTargetKey } from "./targeting";
-import type { WorldModel } from "./world/world";
+import type { Outpost,WorldModel } from "./world/world";
 
 // Helper to avoid duplicate movement code
 const moveTowards = (
@@ -35,9 +36,9 @@ export const tickDrones = (options: {
   drones: Drone[];
   dtSeconds: number;
   cfg: Config;
-  frontier: KeyIndex;
-  minedKeys: Set<string>;
-  reservedKeys: Set<string>;
+  frontier: KeyIndex<VoxelKey>;
+  minedKeys: Set<VoxelKey>;
+  reservedKeys: Set<VoxelKey>;
   moveSpeed: number;
   mineDuration: number;
   maxTargetAttempts: number;
@@ -46,6 +47,7 @@ export const tickDrones = (options: {
   editsThisTick: VoxelEdit[];
   frontierAdded: number[];
   frontierRemoved: number[];
+  depositEvents: { x: number; y: number; z: number; amount: number }[];
 }) => {
   const {
     world,
@@ -63,7 +65,15 @@ export const tickDrones = (options: {
     editsThisTick,
     frontierAdded,
     frontierRemoved,
+    depositEvents,
   } = options;
+
+  // Choose outpost using getBestOutpost if available; fall back to getNearestOutpost for test stubs
+  const worldWithOptional = world as unknown as {
+    getBestOutpost?: (x: number, y: number, z: number) => Outpost | null;
+    getNearestOutpost: (x: number, y: number, z: number) => Outpost | null;
+  };
+  const pickOutpost = (worldWithOptional.getBestOutpost ?? worldWithOptional.getNearestOutpost).bind(worldWithOptional);
 
   for (const drone of drones) {
     if (drone.role === "MINER") {
@@ -77,7 +87,7 @@ export const tickDrones = (options: {
             waterLevel: cfg.terrain.waterLevel,
             maxAttempts: maxTargetAttempts,
           });
-          if (targetKey) {
+          if (targetKey !== null) {
             const coords = world.coordsFromKey(targetKey);
             drone.targetKey = targetKey;
             drone.targetX = coords.x;
@@ -88,7 +98,7 @@ export const tickDrones = (options: {
           break;
         }
         case "MOVING": {
-          if (!drone.targetKey) {
+          if (drone.targetKey === null || typeof drone.targetKey !== "number") {
             drone.state = "SEEKING";
             break;
           }
@@ -112,7 +122,7 @@ export const tickDrones = (options: {
           if (drone.miningTimer < mineDuration) break;
 
           const key = drone.targetKey;
-          if (key && !minedKeys.has(key)) {
+          if (key !== null && typeof key === "number" && !minedKeys.has(key)) {
             const editResult = world.mineVoxel(drone.targetX, drone.targetY, drone.targetZ);
             if (editResult) {
               minedKeys.add(key);
@@ -134,6 +144,9 @@ export const tickDrones = (options: {
 
               const value = getVoxelValueFromHeight(drone.targetY, cfg.terrain.waterLevel);
               drone.payload += value * uiSnapshot.prestigeLevel;
+
+              // Track mined block count for prestige unlocking.
+              uiSnapshot.minedBlocks += 1;
             }
           }
 
@@ -154,7 +167,7 @@ export const tickDrones = (options: {
             break;
           }
 
-          const outpost = world.getNearestOutpost(drone.x, drone.y, drone.z);
+          const outpost = pickOutpost(drone.x, drone.y, drone.z);
           if (!outpost) break;
 
           const dist = moveTowards(
@@ -167,16 +180,77 @@ export const tickDrones = (options: {
           );
 
           if (dist < 1.0) {
+            // Request slot
+            const result = world.requestDock(outpost, drone.id);
+            if (result === "GRANTED") {
+              drone.state = "DEPOSITING";
+              drone.miningTimer = 0;
+            } else {
+              // If queue seems long and cooldown expired, re-evaluate next tick
+              const QUEUE_THRESHOLD = 5;
+              const REROUTE_COOLDOWN_MS = 5000;
+              const now = Date.now();
+              if (world.getQueueLength(outpost) > QUEUE_THRESHOLD && (drone.lastRerouteAt ?? 0) + REROUTE_COOLDOWN_MS < now) {
+                drone.lastRerouteAt = now;
+                drone.state = "RETURNING"; // stay in returning so getBestOutpost will pick a different one next tick
+              } else {
+                drone.state = "QUEUING";
+              }
+            }
+          }
+          break;
+        }
+        case "QUEUING": {
+          const outpost = pickOutpost(drone.x, drone.y, drone.z);
+          if (!outpost) {
+            drone.state = "RETURNING";
+            break;
+          }
+
+          // Retry dock
+          const result = world.requestDock(outpost, drone.id);
+          if (result === "GRANTED") {
             drone.state = "DEPOSITING";
             drone.miningTimer = 0;
+            break;
           }
+
+          // Reroute check with cooldown
+          const QUEUE_THRESHOLD = 5;
+          const REROUTE_COOLDOWN_MS = 5000;
+          const now = Date.now();
+          if (world.getQueueLength(outpost) > QUEUE_THRESHOLD && (drone.lastRerouteAt ?? 0) + REROUTE_COOLDOWN_MS < now) {
+            drone.lastRerouteAt = now;
+            drone.state = "RETURNING";
+            break;
+          }
+
+          // Orbit behavior: Circle around center at y + 5
+          const angle = Date.now() / 1000 + drone.id;
+          const orbitRadius = 6;
+          const targetX = outpost.x + Math.sin(angle) * orbitRadius;
+          const targetZ = outpost.z + Math.cos(angle) * orbitRadius;
+          const targetY = outpost.y + 5;
+
+          moveTowards(drone, targetX, targetY, targetZ, moveSpeed, dtSeconds);
           break;
         }
         case "DEPOSITING": {
           drone.miningTimer += dtSeconds;
           if (drone.miningTimer >= 0.5) {
             uiSnapshot.credits += drone.payload;
+            const outpost = world.getNearestOutpost(drone.x, drone.y, drone.z);
+            if (outpost) {
+              depositEvents.push({
+                x: outpost.x,
+                y: outpost.y,
+                z: outpost.z,
+                amount: Math.floor(drone.payload),
+              });
+              world.undock(outpost, drone.id);
+            }
             drone.payload = 0;
+
             drone.state = "SEEKING";
             drone.miningTimer = 0;
           }
@@ -223,11 +297,15 @@ export const tickDrones = (options: {
           break;
         }
         case "FETCHING": {
-          if (!drone.targetKey || !drone.targetKey.startsWith("miner-")) {
+          if (
+            drone.targetKey === null ||
+            typeof drone.targetKey !== "string" ||
+            !drone.targetKey.startsWith("miner-")
+          ) {
             drone.state = "IDLE";
             break;
           }
-          const targetId = parseInt(drone.targetKey.split("-")[1]);
+          const targetId = parseInt(drone.targetKey.split("-")[1], 10);
           const target = drones.find((d) => d.id === targetId);
 
           if (!target || target.payload <= 0 || target.state === "DEPOSITING") {
@@ -260,14 +338,64 @@ export const tickDrones = (options: {
           break;
         }
         case "RETURNING": {
-          const outpost = world.getNearestOutpost(drone.x, drone.y, drone.z);
+          const outpost = pickOutpost(drone.x, drone.y, drone.z);
           if (!outpost) break;
 
           const dist = moveTowards(drone, outpost.x, outpost.y + 4, outpost.z, hSpeed, dtSeconds);
 
           if (dist < 1.5) {
+            // Request slot
+            const result = world.requestDock(outpost, drone.id);
+            if (result === "GRANTED") {
+              drone.state = "DEPOSITING";
+              drone.miningTimer = 0;
+            } else {
+              // Reroute cooldown heuristic
+              const QUEUE_THRESHOLD = 5;
+              const REROUTE_COOLDOWN_MS = 5000;
+              const now = Date.now();
+              if (world.getQueueLength(outpost) > QUEUE_THRESHOLD && (drone.lastRerouteAt ?? 0) + REROUTE_COOLDOWN_MS < now) {
+                drone.lastRerouteAt = now;
+                drone.state = "RETURNING";
+              } else {
+                drone.state = "QUEUING";
+              }
+            }
+          }
+          break;
+        }
+        case "QUEUING": {
+          // Hauler Queue logic (copy/paste similar to Miner for now)
+          // Haulers might have VIP priority in future?
+          const outpost = world.getBestOutpost(drone.x, drone.y, drone.z);
+          if (!outpost) {
+            drone.state = "RETURNING";
+            break;
+          }
+          const result = world.requestDock(outpost, drone.id);
+          if (result === "GRANTED") {
             drone.state = "DEPOSITING";
             drone.miningTimer = 0;
+          } else {
+            // Reroute check with cooldown
+            const QUEUE_THRESHOLD = 5;
+            const REROUTE_COOLDOWN_MS = 5000;
+            const now = Date.now();
+            if (world.getQueueLength(outpost) > QUEUE_THRESHOLD && (drone.lastRerouteAt ?? 0) + REROUTE_COOLDOWN_MS < now) {
+              drone.lastRerouteAt = now;
+              drone.state = "RETURNING";
+              break;
+            }
+            // Orbit
+            const angle = Date.now() / 1000 + drone.id;
+            moveTowards(
+              drone,
+              outpost.x + Math.sin(angle) * 8,
+              outpost.y + 8,
+              outpost.z + Math.cos(angle) * 8,
+              hSpeed,
+              dtSeconds,
+            );
           }
           break;
         }
@@ -275,7 +403,19 @@ export const tickDrones = (options: {
           drone.miningTimer += dtSeconds;
           if (drone.miningTimer >= 0.5) {
             uiSnapshot.credits += drone.payload;
+
+            const outpost = world.getNearestOutpost(drone.x, drone.y, drone.z);
+            if (outpost) {
+              depositEvents.push({
+                x: outpost.x,
+                y: outpost.y,
+                z: outpost.z,
+                amount: Math.floor(drone.payload),
+              });
+              world.undock(outpost, drone.id);
+            }
             drone.payload = 0;
+
             drone.state = "IDLE";
             drone.miningTimer = 0;
           }

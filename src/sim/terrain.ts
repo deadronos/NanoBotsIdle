@@ -1,9 +1,11 @@
-import type { Color } from "three";
-
 import { getConfig } from "../config/index";
-import { getVoxelColor } from "../utils";
 import { getSeed } from "./seed";
-import { getSurfaceHeightCore, getVoxelValueFromHeight, noise2D } from "./terrain-core";
+import {
+  getSurfaceHeightCore,
+  getVoxelColor,
+  getVoxelValueFromHeight,
+  noise2D,
+} from "./terrain-core";
 
 export { getSeed } from "./seed";
 
@@ -12,7 +14,7 @@ export type Voxel = {
   x: number;
   y: number;
   z: number;
-  color: Color;
+  color: number;
   value: number;
   type: "water" | "solid";
 };
@@ -27,8 +29,11 @@ export const computeVoxel = (x: number, z: number, seed?: number): Voxel => {
 
   return { x, y, z, color, value, type };
 };
-export const getSurfaceHeight = (x: number, z: number, seed?: number): number =>
-  computeVoxel(x, z, seed).y;
+export const getSurfaceHeight = (x: number, z: number, seed?: number): number => {
+  const s = seed ?? getSeed(1);
+  const cfg = getConfig();
+  return getSurfaceHeightCore(x, z, s, cfg.terrain.surfaceBias, cfg.terrain.quantizeScale);
+};
 
 export const getSmoothHeight = (x: number, z: number, seed?: number): number =>
   noise2D(x, z, seed) * 2;

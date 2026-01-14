@@ -1,5 +1,6 @@
 import { getDroneCargo } from "../config/drones";
 import { type Config } from "../config/index";
+import type { VoxelKey } from "../shared/voxel";
 
 export type DroneRole = "MINER" | "HAULER";
 
@@ -12,14 +13,17 @@ export type DroneState =
   | "DEPOSITING"
   | "WAITING_PICKUP"
   | "FETCHING" // Hauler only
-  | "TRANSFER"; // Hauler only
+  | "TRANSFER" // Hauler only
+  | "QUEUING";
+
+export type DroneTargetKey = VoxelKey | `miner-${number}`;
 
 export type Drone = {
   id: number;
   x: number;
   y: number;
   z: number;
-  targetKey: string | null;
+  targetKey: DroneTargetKey | null;
   targetX: number;
   targetY: number;
   targetZ: number;
@@ -28,6 +32,8 @@ export type Drone = {
   role: DroneRole;
   payload: number;
   maxPayload: number;
+  // Timestamp (ms) of the last time this drone attempted a reroute to avoid thrashing
+  lastRerouteAt?: number;
 };
 
 export const syncDroneCount = (

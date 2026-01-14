@@ -31,6 +31,17 @@ describe("TelemetryCollector", () => {
     expect(snapshot.frameTime.avg).toBeCloseTo(16.6, 0);
   });
 
+  it("should collect draw call metrics", () => {
+    collector.recordDrawCalls(120);
+    collector.recordDrawCalls(90);
+    collector.recordDrawCalls(100);
+
+    const snapshot = collector.getSnapshot();
+    expect(snapshot.drawCalls.current).toBe(100);
+    expect(snapshot.drawCalls.min).toBe(90);
+    expect(snapshot.drawCalls.max).toBe(120);
+  });
+
   it("should collect meshing metrics", () => {
     collector.recordMeshingTime(5.2);
     collector.recordMeshingTime(4.8);
@@ -100,5 +111,41 @@ describe("TelemetryCollector", () => {
     const snapshot = collector.getSnapshot();
     // Should have trimmed to maxHistorySize, but still computing stats
     expect(snapshot.fps.avg).toBe(60);
+  });
+
+  it("should track DPR changes", () => {
+    collector.recordDprChange(1.0);
+    collector.recordDprChange(0.8);
+    collector.recordDprChange(1.2);
+
+    const snapshot = collector.getSnapshot();
+    expect(snapshot.dpr.current).toBe(1.2);
+    expect(snapshot.dpr.changes).toBe(3);
+    expect(snapshot.dpr.history.length).toBe(3);
+    expect(snapshot.dpr.history[0].value).toBe(1.0);
+    expect(snapshot.dpr.history[1].value).toBe(0.8);
+    expect(snapshot.dpr.history[2].value).toBe(1.2);
+  });
+
+  it("should trim DPR history to maxDprHistory", () => {
+    // Record more than maxDprHistory (50)
+    for (let i = 0; i < 60; i++) {
+      collector.recordDprChange(1.0 + i * 0.01);
+    }
+
+    const snapshot = collector.getSnapshot();
+    expect(snapshot.dpr.changes).toBe(60);
+    expect(snapshot.dpr.history.length).toBe(50); // Trimmed to max
+    expect(snapshot.dpr.current).toBeCloseTo(1.59, 2); // Last value
+  });
+
+  it("should not record DPR changes when disabled", () => {
+    const disabledCollector = new TelemetryCollector(false);
+    disabledCollector.recordDprChange(0.8);
+
+    const snapshot = disabledCollector.getSnapshot();
+    expect(snapshot.dpr.current).toBe(1); // Default value
+    expect(snapshot.dpr.changes).toBe(0);
+    expect(snapshot.dpr.history.length).toBe(0);
   });
 });

@@ -16,6 +16,8 @@ The previous architecture notes are preserved in `docs/ARCHITECTURE_LEGACY.md`.
 - Detailed spec index: `docs/ARCHITECTURE/README.md`
 - Sim/render split + Worker protocol: `docs/ARCHITECTURE/TECH001-sim-render-separation.md`
 - True 3D voxel model: `docs/ARCHITECTURE/TECH002-voxel-world-model.md`
+- Save migration framework: `docs/ARCHITECTURE/TECH004-save-migration-framework.md`
+- Performance optimizations: `docs/ARCHITECTURE/TECH005-performance-optimizations.md`
 - Progression loop + soft-lock rules: `docs/ARCHITECTURE/GAME001-progression-loop.md`
 
 ## Product summary
@@ -141,6 +143,7 @@ Decision record: `docs/ARCHITECTURE/DEC001-main-thread-player-collision.md`.
 - Voxels:
   - Rendered via chunk mesh caches (instancing/meshing strategy can evolve).
   - Voxel edits mark affected chunks dirty and schedule rebuilds.
+  - Performance: Uses a priority queue with back-pressure, worker-side bounding sphere pre-computation, and main-thread per-frame batching to ensure stable 60fps. See `docs/ARCHITECTURE/TECH005-performance-optimizations.md`.
   - If using `vertexColors` with `InstancedMesh`, ensure the base geometry has a
     `color` attribute (see `ensureGeometryHasVertexColors()` in
     `src/render/instanced.ts`) or colors can appear black.

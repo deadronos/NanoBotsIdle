@@ -32,11 +32,53 @@ export const setInstanceColor = (mesh: InstancedMesh, index: number, color: Colo
 
 export const applyInstanceUpdates = (
   mesh: InstancedMesh,
-  opts?: { matrix?: boolean; color?: boolean },
+  opts?: {
+    matrix?: boolean;
+    color?: boolean;
+    matrixRange?: { start: number; end: number };
+    colorRange?: { start: number; end: number };
+  },
 ) => {
   if (!opts) return;
   if (opts.matrix && mesh.instanceMatrix) mesh.instanceMatrix.needsUpdate = true;
   if (opts.color && mesh.instanceColor) mesh.instanceColor.needsUpdate = true;
+
+  const applyRange = (
+    attr: InstancedMesh["instanceMatrix"] | InstancedMesh["instanceColor"],
+    range?: { start: number; end: number },
+  ) => {
+    if (!attr || !range) return;
+    const itemSize = attr.itemSize;
+    const start = Math.min(range.start, range.end);
+    const end = Math.max(range.start, range.end);
+    const offset = start * itemSize;
+    const count = (end - start + 1) * itemSize;
+
+    if ("addUpdateRange" in attr && typeof attr.addUpdateRange === "function") {
+      attr.addUpdateRange(offset, count);
+      attr.needsUpdate = true;
+      return;
+    }
+
+    const legacy = attr as unknown as { updateRange?: { offset: number; count: number } };
+    if (legacy.updateRange) {
+      if (legacy.updateRange.count < 0) {
+        legacy.updateRange.offset = offset;
+        legacy.updateRange.count = count;
+      } else {
+        const currentStart = legacy.updateRange.offset;
+        const currentEnd = legacy.updateRange.offset + legacy.updateRange.count;
+        const nextStart = Math.min(currentStart, offset);
+        const nextEnd = Math.max(currentEnd, offset + count);
+        legacy.updateRange.offset = nextStart;
+        legacy.updateRange.count = nextEnd - nextStart;
+      }
+      attr.needsUpdate = true;
+    }
+  };
+
+  applyRange(mesh.instanceMatrix, opts.matrixRange);
+  applyRange(mesh.instanceColor, opts.colorRange);
 };
 
 export const populateInstancedMesh = (

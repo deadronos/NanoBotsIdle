@@ -1,12 +1,14 @@
-import { type Config,getConfig } from "../../config/index";
+import { type Config, getConfig } from "../../config/index";
 import type { VoxelEdit } from "../../shared/protocol";
 import {
   coordsFromVoxelKey,
   MATERIAL_AIR,
   MATERIAL_BEDROCK,
   MATERIAL_SOLID,
+  type VoxelKey,
   voxelKey,
 } from "../../shared/voxel";
+import { VoxelEditStore } from "../../shared/voxelEdits";
 import { getSurfaceHeightCore } from "../../sim/terrain-core";
 import { getBaseMaterialAt } from "../../sim/voxelBaseMaterial";
 import { debug } from "../../utils/logger";
@@ -34,15 +36,19 @@ export type Outpost = {
   y: number;
   z: number;
   level: number;
+  docked: Set<number>;
+  queue: number[];
 };
+
+export type DockResult = "GRANTED" | "QUEUED" | "DENIED";
 
 export class WorldModel {
   private readonly seed: number;
-  private readonly edits = new Map<string, number>();
+  private readonly edits = new VoxelEditStore();
   private readonly bedrockY: number;
   private readonly waterlineVoxelY: number;
-  private readonly frontierSolid = new Set<string>();
-  private readonly frontierAboveWater = new Set<string>();
+  private readonly frontierSolid = new Set<VoxelKey>();
+  private readonly frontierAboveWater = new Set<VoxelKey>();
   private readonly visitedChunks = new Set<string>();
   private readonly outposts: Outpost[] = [];
 
@@ -64,6 +70,8 @@ export class WorldModel {
       y,
       z,
       level: 1,
+      docked: new Set(),
+      queue: [],
     });
   }
 
@@ -86,11 +94,71 @@ export class WorldModel {
     return best;
   }
 
-  key(x: number, y: number, z: number) {
+  /**
+   * Choose an outpost balancing distance and current load (docked + queue).
+   * Lower score is better. This is a lightweight heuristic to avoid busy outposts.
+   */
+  getBestOutpost(x: number, y: number, z: number): Outpost | null {
+    if (this.outposts.length === 0) return null;
+    let best: Outpost | null = null;
+    let bestScore = Number.POSITIVE_INFINITY;
+
+    for (const op of this.outposts) {
+      const dist = Math.hypot(op.x - x, op.y - y, op.z - z);
+      const load = op.docked.size + op.queue.length;
+      // Weight load relative to distance. Tune LOAD_WEIGHT as needed.
+      const LOAD_WEIGHT = 10;
+      const score = dist + load * LOAD_WEIGHT;
+      if (score < bestScore) {
+        bestScore = score;
+        best = op;
+      }
+    }
+    return best;
+  }
+
+  requestDock(outpost: Outpost, droneId: number): DockResult {
+    const MAX_SLOTS = 4; // Start with 4 slots
+
+    // If already docked, keep it
+    if (outpost.docked.has(droneId)) return "GRANTED";
+
+    // If slots available and queue empty (or at front), allow
+    if (outpost.docked.size < MAX_SLOTS) {
+      if (outpost.queue.length === 0 || outpost.queue[0] === droneId) {
+        if (outpost.queue[0] === droneId) outpost.queue.shift();
+        outpost.docked.add(droneId);
+        return "GRANTED";
+      }
+    }
+
+    // Otherwise, queue
+    if (!outpost.queue.includes(droneId)) {
+      outpost.queue.push(droneId);
+    }
+    return "QUEUED";
+  }
+
+  undock(outpost: Outpost, droneId: number) {
+    if (outpost.docked.has(droneId)) {
+      outpost.docked.delete(droneId);
+    }
+    // Remove from queue if they leave early
+    const qIdx = outpost.queue.indexOf(droneId);
+    if (qIdx !== -1) {
+      outpost.queue.splice(qIdx, 1);
+    }
+  }
+
+  getQueueLength(outpost: Outpost) {
+    return outpost.queue.length;
+  }
+
+  key(x: number, y: number, z: number): VoxelKey {
     return voxelKey(x, y, z);
   }
 
-  coordsFromKey(key: string) {
+  coordsFromKey(key: VoxelKey) {
     return coordsFromVoxelKey(key);
   }
 
@@ -100,8 +168,7 @@ export class WorldModel {
   }
 
   materialAt(x: number, y: number, z: number) {
-    const edit = this.edits.get(this.key(x, y, z));
-    if (edit !== undefined) return edit;
+    if (this.edits.hasAirEdit(x, y, z)) return MATERIAL_AIR;
     return this.baseMaterialAt(x, y, z);
   }
 
@@ -266,7 +333,7 @@ export class WorldModel {
     return added;
   }
 
-  getFrontierKeys() {
+  getFrontierKeys(): VoxelKey[] {
     return Array.from(this.frontierSolid);
   }
 
@@ -295,7 +362,7 @@ export class WorldModel {
     if (!this.isFrontier(x, y, z)) return null;
 
     const edit: VoxelEdit = { x, y, z, mat: MATERIAL_AIR };
-    this.edits.set(this.key(x, y, z), MATERIAL_AIR);
+    this.edits.setMaterial(x, y, z, MATERIAL_AIR);
 
     const frontierAdded: { x: number; y: number; z: number }[] = [];
     const frontierRemoved: { x: number; y: number; z: number }[] = [];

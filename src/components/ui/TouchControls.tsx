@@ -65,9 +65,61 @@ export const TouchControls: React.FC<{ className?: string }> = ({ className = ""
     return () => document.removeEventListener("contextmenu", handleContextMenu);
   }, []);
 
+  // Detect touch-capable devices (e.g., tablets like iPad) rather than relying solely on screen width
+  const [isTouch, setIsTouch] = useState(false);
+  useEffect(() => {
+    const mq = typeof window !== "undefined" && window.matchMedia?.("(pointer: coarse)");
+    const check = () => {
+      const hasTouch =
+        typeof window !== "undefined" &&
+        ("ontouchstart" in window || navigator.maxTouchPoints > 0 || (mq && mq.matches));
+      setIsTouch((prev) => {
+        if (prev === !!hasTouch) return prev; // avoid unnecessary re-renders
+        return !!hasTouch;
+      });
+    };
+    check();
+    if (mq && mq.addEventListener) mq.addEventListener("change", check);
+
+    // Debounce resize to avoid running `check` excessively during continuous resize
+    let resizeTimeout: number | null = null;
+    let rafId: number | null = null;
+    const onResize = () => {
+      if (resizeTimeout !== null) {
+        clearTimeout(resizeTimeout);
+      }
+      resizeTimeout = window.setTimeout(() => {
+        resizeTimeout = null;
+        if (rafId !== null) {
+          cancelAnimationFrame(rafId);
+          rafId = null;
+        }
+        rafId = requestAnimationFrame(() => {
+          rafId = null;
+          check();
+        });
+      }, 120);
+    };
+
+    window.addEventListener("resize", onResize, { passive: true });
+    return () => {
+      if (mq && mq.removeEventListener) mq.removeEventListener("change", check);
+      window.removeEventListener("resize", onResize);
+      if (resizeTimeout !== null) {
+        clearTimeout(resizeTimeout);
+      }
+      if (rafId !== null) {
+        cancelAnimationFrame(rafId);
+      }
+    };
+  }, []);
+
+  // Don't render touch controls on non-touch devices (desktop keyboards)
+  if (!isTouch) return null;
+
   return (
     <div
-      className={`fixed bottom-8 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 pointer-events-auto z-50 md:hidden ${className}`}
+      className={`fixed bottom-8 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 pointer-events-auto z-50 ${className}`}
     >
       <div className="flex gap-2">
         <ArrowButton rotation={0} code="KeyW" />

@@ -15,7 +15,12 @@ export const tickEngine = (
   _maxSubsteps: number,
 ): { delta: RenderDelta; ui: UiSnapshot; backlog: number } => {
   ctx.tick += 1;
-  ctx.drones = syncDroneCount(ctx.drones, ctx.uiSnapshot.droneCount, ctx.uiSnapshot.haulerCount, ctx.cfg);
+  ctx.drones = syncDroneCount(
+    ctx.drones,
+    ctx.uiSnapshot.droneCount,
+    ctx.uiSnapshot.haulerCount,
+    ctx.cfg,
+  );
 
   const moveSpeed = getDroneMoveSpeed(ctx.uiSnapshot.moveSpeedLevel, ctx.cfg);
   const mineDuration = getMineDuration(ctx.uiSnapshot.miningSpeedLevel, ctx.cfg);
@@ -23,6 +28,7 @@ export const tickEngine = (
   const editsThisTick: VoxelEdit[] = [];
   const frontierAdded: number[] = [];
   const frontierRemoved: number[] = [];
+  const depositEvents: { x: number; y: number; z: number; amount: number }[] = [];
   const debugChunksProcessed: string[] = [];
   const debugQueueLengthAtTickStart = ctx.playerChunksToScan.length;
 
@@ -65,6 +71,7 @@ export const tickEngine = (
       editsThisTick,
       frontierAdded,
       frontierRemoved,
+      depositEvents,
     });
   }
 
@@ -82,6 +89,7 @@ export const tickEngine = (
     debugChunksProcessed: debugChunksProcessed.length > 0 ? debugChunksProcessed : undefined,
     debugQueueLengthAtTickStart,
     outposts: w?.getOutposts(),
+    depositEvents: depositEvents.length > 0 ? depositEvents : undefined,
   };
 
   if (ctx.pendingFrontierSnapshot) {

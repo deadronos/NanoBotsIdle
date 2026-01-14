@@ -1,6 +1,14 @@
 import { useCallback, useEffect, useMemo, useRef } from "react";
 import type { Group } from "three";
-import { BufferAttribute, BufferGeometry, Color, Mesh, MeshStandardMaterial } from "three";
+import {
+  BufferAttribute,
+  BufferGeometry,
+  Color,
+  Mesh,
+  MeshStandardMaterial,
+  Sphere,
+  Vector3,
+} from "three";
 
 import { getConfig } from "../../config";
 import { createApronField, fillApronField } from "../../meshing/apronField";
@@ -16,6 +24,7 @@ import type { LodLevel } from "../../render/lodUtils";
 import type { MeshResult } from "../../shared/meshingProtocol";
 import type { VoxelEdit } from "../../shared/protocol";
 import { getVoxelMaterialAt } from "../../sim/collision";
+import { TERRAIN_COLORS, TERRAIN_THRESHOLDS } from "../../sim/terrain-constants";
 import { chunkDistanceSq3 } from "../../utils";
 import { chunkKey } from "./chunkHelpers";
 
@@ -25,31 +34,34 @@ export const useMeshedChunks = (options: {
   waterLevel: number;
   seed?: number;
   onSchedulerChange?: () => void;
+  isChunkVisible?: (coord: { cx: number; cy: number; cz: number }) => boolean;
 }) => {
-  const { chunkSize, prestigeLevel, waterLevel, seed, onSchedulerChange } = options;
+  const { chunkSize, prestigeLevel, waterLevel, seed, onSchedulerChange, isChunkVisible } =
+    options;
 
   const focusChunkRef = useRef<{ cx: number; cy: number; cz: number }>({ cx: 0, cy: 0, cz: 0 });
+  const reprioritizeTimeoutRef = useRef<number | null>(null);
 
   // Color mapping kept local to avoid importing `three` types in worker code.
   // Reuse Color instances to avoid per-vertex allocations.
-  const deepWater = useMemo(() => new Color("#1a4d8c"), []);
-  const water = useMemo(() => new Color("#2d73bf"), []);
-  const sand = useMemo(() => new Color("#e3dba3"), []);
-  const grass = useMemo(() => new Color("#59a848"), []);
-  const darkGrass = useMemo(() => new Color("#3b7032"), []);
-  const rock = useMemo(() => new Color("#6e6e6e"), []);
-  const snow = useMemo(() => new Color("#f2f4f8"), []);
+  const deepWater = useMemo(() => new Color(TERRAIN_COLORS.DEEP_WATER), []);
+  const water = useMemo(() => new Color(TERRAIN_COLORS.WATER), []);
+  const sand = useMemo(() => new Color(TERRAIN_COLORS.SAND), []);
+  const grass = useMemo(() => new Color(TERRAIN_COLORS.GRASS), []);
+  const darkGrass = useMemo(() => new Color(TERRAIN_COLORS.DARK_GRASS), []);
+  const rock = useMemo(() => new Color(TERRAIN_COLORS.ROCK), []);
+  const snow = useMemo(() => new Color(TERRAIN_COLORS.SNOW), []);
 
   const writeVertexColor = useCallback(
     (out: Float32Array, base: number, y: number) => {
       // Mirrors the intent of `getVoxelColor()` without allocations.
       let c: Color;
-      if (y < waterLevel - 2) c = deepWater;
-      else if (y < waterLevel + 0.5) c = water;
-      else if (y < waterLevel + 2.5) c = sand;
-      else if (y < waterLevel + 6) c = grass;
-      else if (y < waterLevel + 12) c = darkGrass;
-      else if (y < waterLevel + 20) c = rock;
+      if (y < waterLevel + TERRAIN_THRESHOLDS.DEEP_WATER) c = deepWater;
+      else if (y < waterLevel + TERRAIN_THRESHOLDS.WATER) c = water;
+      else if (y < waterLevel + TERRAIN_THRESHOLDS.SAND) c = sand;
+      else if (y < waterLevel + TERRAIN_THRESHOLDS.GRASS) c = grass;
+      else if (y < waterLevel + TERRAIN_THRESHOLDS.DARK_GRASS) c = darkGrass;
+      else if (y < waterLevel + TERRAIN_THRESHOLDS.ROCK) c = rock;
       else c = snow;
       out[base] = c.r;
       out[base + 1] = c.g;
@@ -94,15 +106,28 @@ export const useMeshedChunks = (options: {
       buffer.setAttribute("position", new BufferAttribute(geometry.positions, 3));
       buffer.setAttribute("normal", new BufferAttribute(geometry.normals, 3));
 
-      const colors = new Float32Array(geometry.positions.length);
-      for (let i = 0; i < geometry.positions.length; i += 3) {
-        // positions are already in world coordinates
-        writeVertexColor(colors, i, geometry.positions[i + 1]);
+      if (geometry.colors && geometry.colors.length === geometry.positions.length) {
+        buffer.setAttribute("color", new BufferAttribute(geometry.colors, 3));
+      } else {
+        const colors = new Float32Array(geometry.positions.length);
+        for (let i = 0; i < geometry.positions.length; i += 3) {
+          // positions are already in world coordinates
+          writeVertexColor(colors, i, geometry.positions[i + 1]);
+        }
+        buffer.setAttribute("color", new BufferAttribute(colors, 3));
       }
-      buffer.setAttribute("color", new BufferAttribute(colors, 3));
 
       buffer.setIndex(new BufferAttribute(geometry.indices, 1));
-      buffer.computeBoundingSphere();
+
+      // Use pre-computed bounding sphere from worker if available (performance optimization)
+      if (geometry.boundingSphere) {
+        const { center, radius } = geometry.boundingSphere;
+        buffer.boundingSphere = new Sphere(new Vector3(center.x, center.y, center.z), radius);
+      } else {
+        // Fallback to computing on main thread if not provided
+        buffer.computeBoundingSphere();
+      }
+
       return buffer;
     },
     [writeVertexColor],
@@ -166,12 +191,18 @@ export const useMeshedChunks = (options: {
 
   useEffect(() => {
     let raf = 0;
+    const config = getConfig();
     const tick = () => {
       const group = groupRef.current;
       if (group && pendingResultsRef.current.size > 0) {
-        const pending = Array.from(pendingResultsRef.current.values());
-        pendingResultsRef.current.clear();
-        pending.forEach((res) => applyMeshResult(res));
+        // Apply a limited number of mesh results per frame to bound main-thread work
+        const maxPerFrame = config.meshing.maxMeshesPerFrame;
+        const pending = Array.from(pendingResultsRef.current.entries()).slice(0, maxPerFrame);
+
+        pending.forEach(([key, res]) => {
+          pendingResultsRef.current.delete(key);
+          applyMeshResult(res);
+        });
       }
       raf = requestAnimationFrame(tick);
     };
@@ -212,25 +243,46 @@ export const useMeshedChunks = (options: {
             chunk: { ...coord, size: chunkSize },
             origin,
             materials,
+            waterLevel,
           },
           transfer: [materials.buffer],
         };
       },
-      onApply: (res) => applyMeshResult(res),
+      // Keep message handler lightweight: just enqueue results so the message
+    // event isn't blocked by expensive main-thread mesh construction.
+    onApply: (res) => {
+      const key = chunkKey(res.chunk.cx, res.chunk.cy, res.chunk.cz);
+      pendingResultsRef.current.set(key, res);
+    },
       maxInFlight: config.meshing.maxInFlight,
       maxQueueSize: config.meshing.maxQueueSize,
       getPriority: priorityFromFocus,
+      isVisible: isChunkVisible,
     });
 
     schedulerRef.current = scheduler;
     // Notify parent that scheduler was (re)created so it can re-sync its chunk tracking
     onSchedulerChange?.();
     return () => {
+      // Clear any pending reprioritization timeout
+      if (reprioritizeTimeoutRef.current !== null) {
+        clearTimeout(reprioritizeTimeoutRef.current);
+        reprioritizeTimeoutRef.current = null;
+      }
       schedulerRef.current = null;
       scheduler.dispose();
       disposeAllMeshes();
     };
-  }, [applyMeshResult, chunkSize, disposeAllMeshes, onSchedulerChange, prestigeLevel, seed]);
+  }, [
+    applyMeshResult,
+    chunkSize,
+    disposeAllMeshes,
+    isChunkVisible,
+    onSchedulerChange,
+    prestigeLevel,
+    seed,
+    waterLevel,
+  ]);
 
   useEffect(() => {
     return () => {
@@ -272,7 +324,23 @@ export const useMeshedChunks = (options: {
     focusChunkRef.current = { cx, cy, cz };
     const scheduler = schedulerRef.current;
     if (!scheduler) return;
-    scheduler.reprioritizeDirty();
+
+    // Debounce reprioritization to avoid expensive heap rebuilds on every frame when player moves.
+    // Update focus immediately but defer the actual reprioritization for 150ms.
+    if (reprioritizeTimeoutRef.current !== null) {
+      clearTimeout(reprioritizeTimeoutRef.current);
+    }
+
+    reprioritizeTimeoutRef.current = window.setTimeout(() => {
+      reprioritizeTimeoutRef.current = null;
+      const currentScheduler = schedulerRef.current;
+      if (currentScheduler) {
+        currentScheduler.reprioritizeDirty();
+        currentScheduler.pump();
+      }
+    }, 150);
+
+    // Always pump immediately to process any pending chunks, even without reprioritization
     scheduler.pump();
   }, []);
 

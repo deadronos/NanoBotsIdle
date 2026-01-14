@@ -149,11 +149,26 @@ The migration system has three levels of tests:
 
 Located in `tests/fixtures/saves/`:
 
-- `valid-v1.json`: Valid version 1 save
-- `valid-v2.json`: Valid version 2 save
-- `minimal-v1.json`: Minimal v1 save with defaults
-- `invalid-*.json`: Various invalid save files for error testing
-- `future-version.json`: Save from future version (for forward compatibility testing)
+**Valid Saves:**
+- `valid-v1.json`: Valid version 1 save with typical data
+- `valid-v2.json`: Valid version 2 save with all current fields
+- `minimal-v1.json`: Minimal v1 save with only required fields
+
+**Edge Cases:**
+- `edge-case-empty-v1.json`: Completely empty data object (tests defaults)
+- `edge-case-extreme-values-v2.json`: Very large numbers (tests value preservation)
+- `edge-case-negative-values-v1.json`: Negative/invalid values (tests sanitization)
+- `backward-compat-v2-missing-optional.json`: Missing optional fields (tests defaults)
+
+**Invalid Saves:**
+- `invalid-no-version.json`: Missing version field
+- `invalid-no-data.json`: Missing data field
+- `invalid-bad-types.json`: Wrong types for numeric fields
+
+**Future Compatibility:**
+- `future-version.json`: Simple future version (v99)
+- `future-v3-with-unknown-fields.json`: Future version with new fields
+- `future-v10-minimal.json`: Far future version with minimal data
 
 ## Best Practices
 
@@ -164,6 +179,31 @@ Located in `tests/fixtures/saves/`:
 3. **Validate inputs**: Validate data at each migration step
 4. **Document changes**: Clearly document what changed and why in the migration description
 5. **Test thoroughly**: Create fixtures for edge cases and test migration paths
+
+### Edge Case Handling
+
+When designing migrations, consider these edge cases:
+
+1. **Empty Data**: Saves with no fields should migrate successfully with all defaults
+2. **Negative Values**: Handle out-of-range values with validation warnings and sanitization
+3. **Missing Optional Fields**: Old saves may be missing fields that became required
+4. **Extreme Values**: Very large or small numbers should be preserved if valid
+5. **Invalid Types**: Type mismatches should be caught by validation, not migration
+
+### Forward Compatibility
+
+The migration system includes forward compatibility handling:
+
+1. **Future Version Detection**: Warns users when importing saves from newer app versions
+2. **Unknown Field Detection**: Identifies and warns about fields not in the current schema
+3. **Graceful Degradation**: Sanitization filters unknown fields while preserving known data
+4. **User Guidance**: Clear messages encourage users to update the app for full compatibility
+
+Example warning:
+```
+Save contains unknown fields that may be from a future version: newFeatureInV3, quantumState.
+These fields will be ignored. Consider updating the app to preserve all data.
+```
 
 ### Error Handling
 

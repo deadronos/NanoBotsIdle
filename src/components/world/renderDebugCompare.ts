@@ -1,3 +1,4 @@
+import { type VoxelKey, voxelKey } from "../../shared/voxel";
 import { getVoxelMaterialAt, MATERIAL_SOLID } from "../../sim/collision";
 
 export type ChunkCoord3 = { cx: number; cy: number; cz: number };
@@ -140,14 +141,14 @@ export const getMissingFrontierVoxelsInChunk = (options: {
   cz: number;
   chunkSize: number;
   prestigeLevel: number;
-  trackedKeys: Set<string>;
+  trackedKeys: Set<VoxelKey>;
 }) => {
   const { cx, cy, cz, chunkSize, prestigeLevel, trackedKeys } = options;
   const baseX = cx * chunkSize;
   const baseY = cy * chunkSize;
   const baseZ = cz * chunkSize;
 
-  const missingKeys: string[] = [];
+  const missingKeys: VoxelKey[] = [];
   let expectedFrontierCount = 0;
 
   for (let x = 0; x < chunkSize; x += 1) {
@@ -169,7 +170,7 @@ export const getMissingFrontierVoxelsInChunk = (options: {
           !isSolid(wx, wy, wz - 1, prestigeLevel)
         ) {
           expectedFrontierCount++;
-          const key = `${wx},${wy},${wz}`;
+          const key = voxelKey(wx, wy, wz);
           if (!trackedKeys.has(key)) {
             missingKeys.push(key);
           }

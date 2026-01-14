@@ -31,6 +31,12 @@ export interface GameState {
 
 // Legacy defaults remain in config (see src/config/economy.ts)
 
+// Toggle used to temporarily suppress persistence during critical operations (e.g., reset)
+export let allowPersist = true;
+export const setAllowPersist = (v: boolean) => {
+  allowPersist = v;
+};
+
 export const useGameStore = create<GameState>()(
   persist(
     (set, get) => ({
@@ -88,7 +94,9 @@ export const useGameStore = create<GameState>()(
     {
       name: "voxel-walker-storage",
       version: 2,
-      // We can filter what to persist if needed, but for now persisting everything (except functions which persist doesn't save anyway) is fine.
+      // Suppress persistence when `allowPersist` is false. This protects against races where
+      // the app writes to storage while a reset/remove is in progress.
+      partialize: (state) => (allowPersist ? state : ({} as Partial<GameState>)),
     },
   ),
 );

@@ -1,24 +1,20 @@
 import React, { useCallback, useEffect, useRef } from "react";
-import type { Color } from "three";
 
 import type { VoxelRenderMode } from "../../config/render";
 import { useConfig } from "../../config/useConfig";
 import { playerChunk, playerPosition } from "../../engine/playerState";
 import { getBiomeAt, getBiomeColor } from "../../sim/biomes";
-import {
-  applyVoxelEdits,
-  MATERIAL_SOLID,
-  resetVoxelEdits,
-} from "../../sim/collision";
-import { getSurfaceHeightCore } from "../../sim/terrain-core";
+import { applyVoxelEdits, MATERIAL_SOLID, resetVoxelEdits } from "../../sim/collision";
+import { getSurfaceHeightCore, getVoxelColor } from "../../sim/terrain-core";
 import { getSimBridge } from "../../simBridge/simBridge";
-import { forEachRadialChunk, getVoxelColor } from "../../utils";
-import { ensureNeighborChunksForMinedVoxel } from "./chunkHelpers";
+import { forEachRadialChunk } from "../../utils";
+import { chunkKey, ensureNeighborChunksForMinedVoxel } from "./chunkHelpers";
 import { FrontierFillRenderer } from "./FrontierFillRenderer";
 import { useFrontierLogic } from "./hooks/useFrontierLogic";
 import { useVoxelChunkManager } from "./hooks/useVoxelChunkManager";
 // Hooks
 import { useVoxelLayerDebug } from "./hooks/useVoxelLayerDebug";
+import { SimplifiedChunk } from "./SimplifiedChunk";
 import { useInstancedVoxels } from "./useInstancedVoxels";
 
 export const VoxelLayerInstanced: React.FC<{
@@ -33,7 +29,7 @@ export const VoxelLayerInstanced: React.FC<{
   const bridge = getSimBridge();
 
   const biomeOverlayEnabled = cfg.render.voxels.biomeOverlay.enabled;
-  const biomeColorCacheRef = useRef<Map<string, Color>>(new Map());
+  const biomeColorCacheRef = useRef<Map<string, number>>(new Map());
 
   // --- Hooks ---
   const {
@@ -48,6 +44,9 @@ export const VoxelLayerInstanced: React.FC<{
   } = useVoxelLayerDebug({ chunkSize, prestigeLevel });
 
   const { sentFrontierChunkRef } = useFrontierLogic({ voxelRenderMode });
+  const [simplifiedChunks, setSimplifiedChunks] = React.useState<
+    Record<string, { cx: number; cy: number; cz: number; lod: number }>
+  >({});
 
   useEffect(() => {
     biomeColorCacheRef.current.clear();
@@ -101,16 +100,18 @@ export const VoxelLayerInstanced: React.FC<{
     solidCountRef,
   } = useInstancedVoxels(chunkSize, cfg.terrain.waterLevel, getInstanceColor);
 
-  const { addChunk, ensureInitialChunk, resetChunks } = useVoxelChunkManager({
-    chunkSize,
-    prestigeLevel,
-    spawnX,
-    spawnZ,
-    seed,
-    ensureCapacity,
-    solidCountRef,
-    addVoxel,
-  });
+  const { activeChunks, addChunk, removeChunk, ensureInitialChunk, resetChunks } =
+    useVoxelChunkManager({
+      chunkSize,
+      prestigeLevel,
+      spawnX,
+      spawnZ,
+      seed,
+      ensureCapacity,
+      solidCountRef,
+      addVoxel,
+      removeVoxel,
+    });
 
   useEffect(() => {
     return bridge.onFrame((frame) => {
@@ -144,10 +145,82 @@ export const VoxelLayerInstanced: React.FC<{
           bridge.enqueue({ t: "SET_PLAYER_CHUNK", cx: pcx, cy: pcy, cz: pcz });
           sentFrontierChunkRef.current = true;
         } else {
-          // Prioritize nearby chunks in radial order to fill nearest areas first
-          forEachRadialChunk({ cx: pcx, cy: pcy, cz: pcz }, 1, 3, (c) => {
-            addChunk(c.cx, c.cy, c.cz);
+          // LOD Logic
+          // Only update if we moved enough to warrant a recalc (e.g. crossing a chunk boundary is effectively handled by the block above)
+          // We define radius:
+          const LOD0_DIST_SQ = 6 * 6; // Close: < 6 chunks (Instanced)
+          const LOD1_DIST_SQ = 12 * 12; // Med: < 12 chunks (Simplified/Merged)
+          const LOD2_DIST_SQ = 24 * 24; // Far: < 24 chunks (Proxy)
+          // We iterate a larger area to find chunks to unload/downgrade
+          // But iterating 24 chunks radius is expensive (50x50x50).
+          // Optimization: Keep track of "loaded" list and only check them?
+          // Or just stick to a reasonable radius for now.
+          // Let's use 16 radius max for now?
+          // Actually, forEachRadialChunk is efficient enough up to r=10. r=24 is 110k chunks. Too slow.
+          // Let's limit current implementation to r=12.
+          const MAX_RADIUS = 12;
+
+          const newSimplified: Record<string, { cx: number; cy: number; cz: number; lod: number }> =
+            {};
+          const visitedKeys = new Set<string>();
+
+          forEachRadialChunk({ cx: pcx, cy: pcy, cz: pcz }, MAX_RADIUS, 3, (c) => {
+            visitedKeys.add(chunkKey(c.cx, c.cy, c.cz));
+            const dx = c.cx - pcx;
+            const dy = c.cy - pcy;
+            const dz = c.cz - pcz;
+            const distSq = dx * dx + dy * dy + dz * dz;
+
+            if (distSq <= LOD0_DIST_SQ) {
+              addChunk(c.cx, c.cy, c.cz);
+              // Not simplified
+            } else if (distSq <= LOD1_DIST_SQ) {
+              removeChunk(c.cx, c.cy, c.cz); // Ensure it's not in instanced
+              newSimplified[chunkKey(c.cx, c.cy, c.cz)] = { cx: c.cx, cy: c.cy, cz: c.cz, lod: 1 };
+            } else if (distSq <= LOD2_DIST_SQ) {
+              removeChunk(c.cx, c.cy, c.cz);
+              newSimplified[chunkKey(c.cx, c.cy, c.cz)] = { cx: c.cx, cy: c.cy, cz: c.cz, lod: 2 };
+            } else {
+              removeChunk(c.cx, c.cy, c.cz);
+            }
           });
+
+          // Also need to clean up chunks that are NO LONGER in radius?
+          // removeChunk handles instanced.
+          // setSimplifiedChunks replaces the whole object, so old simplifieds are gone.
+          // But we need to make sure we removeChunk for things that were LOD0 and are now Out of Range.
+          // The loop above handles things IN range.
+          // What about things OUT of range?
+          // useVoxelChunkManager tracks activeChunks. We can't iterate them efficiently there.
+          // But strict radius cleanup: maybe just rely on LRU or "remove if dist > MAX"?
+          // For now, chunks just persist?
+          // NO, the loop covers 0..MAX_RADIUS. If a chunk was at dist 5 (LOD0) and now is dist 15 (Out),
+          // it won't be visited by the loop (if loop is max 12).
+          // So it will stay in InstancedMesh!
+          // We must iterate "all currently active instanced chunks" and check distance?
+          // Accessing `activeChunks` from hook might require exposing it ref.
+          // Or we assume the player doesn't teleport large distances, so standard walk covers boundaries.
+          // If we restrict MAX_RADIUS to what we check, we should remove anything outside it.
+          // But iterating all keys in `activeChunks` (Set) is fine if count is not huge.
+          // Let's defer "Unload completely" to a cleanup-tick or similar.
+
+          // Cleanup chunks that are out of processing radius
+          if (activeChunks.current) {
+            for (const key of activeChunks.current) {
+              if (!visitedKeys.has(key)) {
+                // Key format is cx,cy,cz
+                const parts = key.split(",");
+                if (parts.length === 3) {
+                  const cx = parseInt(parts[0], 10);
+                  const cy = parseInt(parts[1], 10);
+                  const cz = parseInt(parts[2], 10);
+                  removeChunk(cx, cy, cz);
+                }
+              }
+            }
+          }
+
+          setSimplifiedChunks(newSimplified);
         }
       }
 
@@ -223,6 +296,7 @@ export const VoxelLayerInstanced: React.FC<{
     ensureInitialChunk,
     flushRebuild,
     removeVoxel,
+    removeChunk,
     solidCountRef,
     voxelRenderMode,
     resetChunks,
@@ -232,6 +306,7 @@ export const VoxelLayerInstanced: React.FC<{
     trackFrontierRemove,
     clearFrontierKeys,
     logDebugInfo,
+    activeChunks,
   ]);
 
   return (
@@ -275,6 +350,17 @@ export const VoxelLayerInstanced: React.FC<{
           debugVisuals={true}
         />
       : null}
+
+      {Object.values(simplifiedChunks).map((c) => (
+        <SimplifiedChunk
+          key={chunkKey(c.cx, c.cy, c.cz)}
+          cx={c.cx}
+          cy={c.cy}
+          cz={c.cz}
+          size={chunkSize}
+          lodLevel={c.lod}
+        />
+      ))}
     </group>
   );
 };

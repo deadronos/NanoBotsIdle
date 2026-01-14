@@ -13,6 +13,7 @@
  *   --duration <seconds>  How long to run the profile (default: 30)
  *   --output <path>       Where to save the metrics JSON (default: ./profile-metrics.json)
  *   --url <url>           URL to profile (default: http://localhost:5173)
+ *   --scene <preset>      Scene preset: default | meshed-heavy | meshed-heavy-occlusion
  */
 
 import { writeFileSync } from "fs";
@@ -29,11 +30,42 @@ const getArg = (name, defaultValue) => {
 const DURATION_SECONDS = parseInt(getArg("--duration", "30"), 10);
 const OUTPUT_PATH = resolve(getArg("--output", "./profile-metrics.json"));
 const URL = getArg("--url", "http://localhost:5173");
+const SCENE = getArg("--scene", "default");
 
 console.log(`[profile] Starting headless profile...`);
 console.log(`[profile] URL: ${URL}`);
 console.log(`[profile] Duration: ${DURATION_SECONDS}s`);
 console.log(`[profile] Output: ${OUTPUT_PATH}`);
+console.log(`[profile] Scene preset: ${SCENE}`);
+
+const getScenePresetConfig = (preset) => {
+  switch (preset) {
+    case "meshed-heavy":
+      return {
+        render: {
+          voxels: {
+            mode: "meshed",
+            chunkLoad: { initialRadius: 2, initialDims: 2, activeRadius: 6, activeDims: 3 },
+            lod: { progressive: { enabled: true, refineDelayFrames: 2 } },
+          },
+        },
+      };
+    case "meshed-heavy-occlusion":
+      return {
+        render: {
+          voxels: {
+            mode: "meshed",
+            chunkLoad: { initialRadius: 2, initialDims: 2, activeRadius: 6, activeDims: 3 },
+            lod: { progressive: { enabled: true, refineDelayFrames: 2 } },
+            occlusion: { enabled: true },
+          },
+        },
+      };
+    case "default":
+    default:
+      return null;
+  }
+};
 
 async function runProfile() {
   const browser = await chromium.launch({
@@ -60,6 +92,16 @@ async function runProfile() {
       updateConfig({ telemetry: { enabled: true } });
     }
   });
+
+  const sceneConfig = getScenePresetConfig(SCENE);
+  if (sceneConfig) {
+    await page.evaluate((config) => {
+      const updateConfig = window.updateConfig;
+      if (updateConfig) {
+        updateConfig(config);
+      }
+    }, sceneConfig);
+  }
 
   console.log(`[profile] Running for ${DURATION_SECONDS}s...`);
 
@@ -121,6 +163,7 @@ function computeAggregateStats(history) {
 
   const fps = history.map((s) => s.fps?.current ?? 0).filter((v) => v > 0);
   const frameTime = history.map((s) => s.frameTime?.current ?? 0).filter((v) => v > 0);
+  const drawCalls = history.map((s) => s.drawCalls?.current ?? 0).filter((v) => v > 0);
   const meshingTime = history.map((s) => s.meshing?.avgTimePerChunk ?? 0).filter((v) => v > 0);
   const workerSimMs = history.map((s) => s.worker?.simMs ?? 0).filter((v) => v > 0);
 
@@ -144,6 +187,7 @@ function computeAggregateStats(history) {
   return {
     fps: computeStats(fps),
     frameTime: computeStats(frameTime),
+    drawCalls: computeStats(drawCalls),
     meshingTime: computeStats(meshingTime),
     workerSimMs: computeStats(workerSimMs),
     totalChunksMeshed:

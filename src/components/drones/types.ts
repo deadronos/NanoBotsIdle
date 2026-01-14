@@ -1,18 +1,18 @@
-import type { Group, Mesh, PointLight } from "three";
+import type { InstancedMesh } from "three";
 
+import type { FloatingTextHandle } from "../effects/FloatingTextSystem";
 import type { FlashHandle } from "./FlashEffect";
 import type { ParticleHandle } from "./Particles";
 
 export type DroneVisualRefs = {
-  groupRefs: (Group | null)[];
-  bodyRefs: (Mesh | null)[];
-  miningLaserRefs: (Mesh | null)[];
-  scanningLaserRefs: (Mesh | null)[];
-  targetBoxRefs: (Mesh | null)[];
-  impactLightRefs: (PointLight | null)[];
+  bodyMesh: InstancedMesh | null;
+  miningLaserMesh: InstancedMesh | null;
+  scanningLaserMesh: InstancedMesh | null;
+  targetBoxMesh: InstancedMesh | null;
 };
 
 export type DroneEffectRefs = {
   particles: ParticleHandle | null;
   flash: FlashHandle | null;
+  floatingText: FloatingTextHandle | null;
 };
