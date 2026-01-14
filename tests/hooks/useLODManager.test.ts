@@ -1,6 +1,4 @@
 // @vitest-environment jsdom
-import React from "react";
-import { render } from "@testing-library/react";
 import { act } from "react-dom/test-utils";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -8,7 +6,6 @@ import { chunkKey } from "../../src/components/world/chunkHelpers";
 import { useLODManager } from "../../src/components/world/hooks/useLODManager";
 import { playerPosition } from "../../src/engine/playerState";
 import { getSimBridge } from "../../src/simBridge/simBridge";
-
 import { renderHook } from "../utils/renderHook";
 
 vi.mock("../../src/simBridge/simBridge", () => ({
