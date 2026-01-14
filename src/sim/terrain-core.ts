@@ -1,6 +1,6 @@
 import { getConfig } from "../config/index";
-import { TERRAIN_COLORS, TERRAIN_THRESHOLDS } from "./terrain-constants";
 import { createNoiseProvider } from "./noise";
+import { TERRAIN_COLORS, TERRAIN_THRESHOLDS } from "./terrain-constants";
 
 // Cached provider per seed+type so we don't create instances per sample
 const providerCache = new Map<string, { noise2D: (x: number, z: number) => number }>();
