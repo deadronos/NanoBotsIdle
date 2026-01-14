@@ -1,6 +1,6 @@
 import { useEffect, useRef } from "react";
 
-import { VoxelRenderMode } from "../../../config/render";
+import type { VoxelRenderMode } from "../../../config/render";
 import { playerChunk } from "../../../engine/playerState";
 import type { RenderDelta } from "../../../shared/protocol";
 import { resetVoxelEdits } from "../../../sim/collision";

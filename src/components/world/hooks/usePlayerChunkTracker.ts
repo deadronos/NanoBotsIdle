@@ -1,6 +1,6 @@
-import { useEffect, useRef } from "react";
+import { useEffect } from "react";
 
-import { VoxelRenderMode } from "../../../config/render";
+import type { VoxelRenderMode } from "../../../config/render";
 import { playerChunk, playerPosition } from "../../../engine/playerState";
 import { getSimBridge } from "../../../simBridge/simBridge";
 
