@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+
 import { PriorityQueue } from "../src/meshing/priorityQueue";
 
 describe("PriorityQueue", () => {
