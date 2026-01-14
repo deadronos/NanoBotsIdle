@@ -29,8 +29,11 @@ export const computeVoxel = (x: number, z: number, seed?: number): Voxel => {
 
   return { x, y, z, color, value, type };
 };
-export const getSurfaceHeight = (x: number, z: number, seed?: number): number =>
-  computeVoxel(x, z, seed).y;
+export const getSurfaceHeight = (x: number, z: number, seed?: number): number => {
+  const s = seed ?? getSeed(1);
+  const cfg = getConfig();
+  return getSurfaceHeightCore(x, z, s, cfg.terrain.surfaceBias, cfg.terrain.quantizeScale);
+};
 
 export const getSmoothHeight = (x: number, z: number, seed?: number): number =>
   noise2D(x, z, seed) * 2;

@@ -1,10 +1,11 @@
+import type { VoxelKey } from "../shared/voxel";
 import type { WorldModel } from "./world/world";
 
 export const pickTargetKey = (options: {
   world: WorldModel | null;
-  frontierKeys: string[];
-  minedKeys: Set<string>;
-  reservedKeys: Set<string>;
+  frontierKeys: VoxelKey[];
+  minedKeys: Set<VoxelKey>;
+  reservedKeys: Set<VoxelKey>;
   waterLevel: number;
   maxAttempts: number;
 }) => {

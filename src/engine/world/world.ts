@@ -5,8 +5,10 @@ import {
   MATERIAL_AIR,
   MATERIAL_BEDROCK,
   MATERIAL_SOLID,
+  type VoxelKey,
   voxelKey,
 } from "../../shared/voxel";
+import { VoxelEditStore } from "../../shared/voxelEdits";
 import { getSurfaceHeightCore } from "../../sim/terrain-core";
 import { getBaseMaterialAt } from "../../sim/voxelBaseMaterial";
 import { debug } from "../../utils/logger";
@@ -42,11 +44,11 @@ export type DockResult = "GRANTED" | "QUEUED" | "DENIED";
 
 export class WorldModel {
   private readonly seed: number;
-  private readonly edits = new Map<string, number>();
+  private readonly edits = new VoxelEditStore();
   private readonly bedrockY: number;
   private readonly waterlineVoxelY: number;
-  private readonly frontierSolid = new Set<string>();
-  private readonly frontierAboveWater = new Set<string>();
+  private readonly frontierSolid = new Set<VoxelKey>();
+  private readonly frontierAboveWater = new Set<VoxelKey>();
   private readonly visitedChunks = new Set<string>();
   private readonly outposts: Outpost[] = [];
 
@@ -152,11 +154,11 @@ export class WorldModel {
     return outpost.queue.length;
   }
 
-  key(x: number, y: number, z: number) {
+  key(x: number, y: number, z: number): VoxelKey {
     return voxelKey(x, y, z);
   }
 
-  coordsFromKey(key: string) {
+  coordsFromKey(key: VoxelKey) {
     return coordsFromVoxelKey(key);
   }
 
@@ -166,8 +168,7 @@ export class WorldModel {
   }
 
   materialAt(x: number, y: number, z: number) {
-    const edit = this.edits.get(this.key(x, y, z));
-    if (edit !== undefined) return edit;
+    if (this.edits.hasAirEdit(x, y, z)) return MATERIAL_AIR;
     return this.baseMaterialAt(x, y, z);
   }
 
@@ -332,7 +333,7 @@ export class WorldModel {
     return added;
   }
 
-  getFrontierKeys() {
+  getFrontierKeys(): VoxelKey[] {
     return Array.from(this.frontierSolid);
   }
 
@@ -361,7 +362,7 @@ export class WorldModel {
     if (!this.isFrontier(x, y, z)) return null;
 
     const edit: VoxelEdit = { x, y, z, mat: MATERIAL_AIR };
-    this.edits.set(this.key(x, y, z), MATERIAL_AIR);
+    this.edits.setMaterial(x, y, z, MATERIAL_AIR);
 
     const frontierAdded: { x: number; y: number; z: number }[] = [];
     const frontierRemoved: { x: number; y: number; z: number }[] = [];

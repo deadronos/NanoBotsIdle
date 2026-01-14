@@ -3,6 +3,7 @@ import React, { useEffect, useState } from "react";
 import { useConfig } from "../config/useConfig";
 import type { TelemetrySnapshot } from "../telemetry";
 import { getTelemetryCollector } from "../telemetry";
+import { warn } from "../utils/logger";
 
 type TelemetryPanelProps = {
   isOpen: boolean;
@@ -51,8 +52,7 @@ export const TelemetryPanel: React.FC<TelemetryPanelProps> = ({ isOpen, onClose 
         );
       } else if (msg.t === "ERROR") {
         // Could surface an error toast here; for now just warn
-        // eslint-disable-next-line no-console
-        console.warn("Telemetry stringify worker error:", msg.message);
+        warn("Telemetry stringify worker error:", msg.message);
       }
       setCopying(false);
     };
@@ -76,8 +76,9 @@ export const TelemetryPanel: React.FC<TelemetryPanelProps> = ({ isOpen, onClose 
     // Post snapshot to worker for stringify; worker will post back the string
     try {
       workerRef.current?.postMessage({ t: "STRINGIFY", snapshot });
-    } catch {
+    } catch (e) {
       // Fallback: stringify on main thread if worker fails
+      warn("Worker postMessage failed, falling back to main thread", e);
       setCopying(false);
       try {
         const json = JSON.stringify(snapshot, null, 2);
@@ -85,8 +86,8 @@ export const TelemetryPanel: React.FC<TelemetryPanelProps> = ({ isOpen, onClose 
           setCopySuccess(true);
           setTimeout(() => setCopySuccess(false), 2000);
         });
-      } catch {
-        // ignore
+      } catch (e2) {
+        warn("Failed to copy telemetry JSON", e2);
       }
     }
   };

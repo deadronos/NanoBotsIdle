@@ -1,5 +1,5 @@
 // Simple synthesized audio manager
-import { error } from "./logger";
+import { error, warn } from "./logger";
 
 type SoundType = "mine" | "jump" | "scan" | "deposit";
 
@@ -25,8 +25,8 @@ export const playSound = (type: SoundType) => {
   if (!audioContext || !masterGain) return;
 
   if (audioContext.state === "suspended") {
-    audioContext.resume().catch(() => {
-        // Ignore resume errors
+    audioContext.resume().catch((e) => {
+      warn("Failed to resume audio context", e);
     });
   }
 

@@ -6,6 +6,7 @@ import type { KeyIndex } from "../src/engine/keyIndex";
 import { tickDrones } from "../src/engine/tickDrones";
 import type { WorldModel } from "../src/engine/world/world";
 import type { UiSnapshot, VoxelEdit } from "../src/shared/protocol";
+import { type VoxelKey, voxelKey } from "../src/shared/voxel";
 
 describe("tickDrones minedBlocks tracking", () => {
   test("increments uiSnapshot.minedBlocks when a miner successfully mines a voxel", () => {
@@ -30,7 +31,7 @@ describe("tickDrones minedBlocks tracking", () => {
       x: 0,
       y: 0,
       z: 0,
-      targetKey: "k-0",
+      targetKey: voxelKey(0, 10, 0),
       targetX: 0,
       targetY: 10,
       targetZ: 0,
@@ -57,31 +58,31 @@ describe("tickDrones minedBlocks tracking", () => {
         y: number,
         z: number,
       ) => { id: string; x: number; y: number; z: number; level: number } | null;
-      key: (x: number, y: number, z: number) => string;
+      key: (x: number, y: number, z: number) => VoxelKey;
     };
 
     const worldStub: WorldStub = {
       mineVoxel: (_x: number, _y: number, _z: number) => ({
         edit: { x: 0, y: 0, z: 0, mat: 0 },
         frontierAdded: [],
-        frontierRemoved: [],
-      }),
-      countFrontierAboveWater: () => 0,
-      getNearestOutpost: () => null,
-      key: (_x: number, _y: number, _z: number) => "k-0",
-    };
+      frontierRemoved: [],
+    }),
+    countFrontierAboveWater: () => 0,
+    getNearestOutpost: () => null,
+    key: (x: number, y: number, z: number) => voxelKey(x, y, z),
+  };
 
     const world = worldStub as unknown as WorldModel;
 
     const drones = [miner];
-    const minedKeys = new Set<string>();
-    const reservedKeys = new Set<string>();
+    const minedKeys = new Set<VoxelKey>();
+    const reservedKeys = new Set<VoxelKey>();
     const minedPositions: number[] = [];
     const editsThisTick: VoxelEdit[] = [];
     const frontierAdded: number[] = [];
     const frontierRemoved: number[] = [];
 
-    const frontier: KeyIndex = { keys: [], index: new Map() };
+    const frontier: KeyIndex<VoxelKey> = { keys: [], index: new Map<VoxelKey, number>() };
 
     // Simulate a full mining tick
     tickDrones({

@@ -1,10 +1,11 @@
 import type { Config } from "../config/index";
 import type { UiSnapshot, VoxelEdit } from "../shared/protocol";
+import type { VoxelKey } from "../shared/voxel";
 import { getVoxelValueFromHeight } from "../sim/terrain-core";
 import type { Drone } from "./drones";
 import { addKey, type KeyIndex, removeKey } from "./keyIndex";
 import { pickTargetKey } from "./targeting";
-import type { WorldModel } from "./world/world";
+import type { Outpost,WorldModel } from "./world/world";
 
 // Helper to avoid duplicate movement code
 const moveTowards = (
@@ -35,9 +36,9 @@ export const tickDrones = (options: {
   drones: Drone[];
   dtSeconds: number;
   cfg: Config;
-  frontier: KeyIndex;
-  minedKeys: Set<string>;
-  reservedKeys: Set<string>;
+  frontier: KeyIndex<VoxelKey>;
+  minedKeys: Set<VoxelKey>;
+  reservedKeys: Set<VoxelKey>;
   moveSpeed: number;
   mineDuration: number;
   maxTargetAttempts: number;
@@ -68,7 +69,6 @@ export const tickDrones = (options: {
   } = options;
 
   // Choose outpost using getBestOutpost if available; fall back to getNearestOutpost for test stubs
-  type Outpost = { x: number; y: number; z: number };
   const worldWithOptional = world as unknown as {
     getBestOutpost?: (x: number, y: number, z: number) => Outpost | null;
     getNearestOutpost: (x: number, y: number, z: number) => Outpost | null;
@@ -87,7 +87,7 @@ export const tickDrones = (options: {
             waterLevel: cfg.terrain.waterLevel,
             maxAttempts: maxTargetAttempts,
           });
-          if (targetKey) {
+          if (targetKey !== null) {
             const coords = world.coordsFromKey(targetKey);
             drone.targetKey = targetKey;
             drone.targetX = coords.x;
@@ -98,7 +98,7 @@ export const tickDrones = (options: {
           break;
         }
         case "MOVING": {
-          if (!drone.targetKey) {
+          if (drone.targetKey === null || typeof drone.targetKey !== "number") {
             drone.state = "SEEKING";
             break;
           }
@@ -122,7 +122,7 @@ export const tickDrones = (options: {
           if (drone.miningTimer < mineDuration) break;
 
           const key = drone.targetKey;
-          if (key && !minedKeys.has(key)) {
+          if (key !== null && typeof key === "number" && !minedKeys.has(key)) {
             const editResult = world.mineVoxel(drone.targetX, drone.targetY, drone.targetZ);
             if (editResult) {
               minedKeys.add(key);
@@ -297,11 +297,15 @@ export const tickDrones = (options: {
           break;
         }
         case "FETCHING": {
-          if (!drone.targetKey || !drone.targetKey.startsWith("miner-")) {
+          if (
+            drone.targetKey === null ||
+            typeof drone.targetKey !== "string" ||
+            !drone.targetKey.startsWith("miner-")
+          ) {
             drone.state = "IDLE";
             break;
           }
-          const targetId = parseInt(drone.targetKey.split("-")[1]);
+          const targetId = parseInt(drone.targetKey.split("-")[1], 10);
           const target = drones.find((d) => d.id === targetId);
 
           if (!target || target.payload <= 0 || target.state === "DEPOSITING") {
