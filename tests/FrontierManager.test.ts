@@ -1,8 +1,9 @@
 import { describe, expect, it } from "vitest";
-import { getConfig, resetConfig, updateConfig } from "../src/config/index";
+
+import { resetConfig, updateConfig } from "../src/config/index";
 import { FrontierManager, type VoxelReader } from "../src/engine/world/FrontierManager";
 import { MATERIAL_AIR, MATERIAL_SOLID } from "../src/shared/voxel";
-import { getSeed, getSurfaceHeight } from "../src/sim/terrain";
+import { getSeed } from "../src/sim/terrain";
 
 // Mock reader that simulates a solid block with air around it, or configurable
 class MockVoxelReader implements VoxelReader {

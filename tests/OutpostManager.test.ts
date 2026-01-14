@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+
 import { OutpostManager } from "../src/engine/world/OutpostManager";
 
 describe("OutpostManager", () => {
