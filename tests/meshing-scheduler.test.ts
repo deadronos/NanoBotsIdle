@@ -453,4 +453,62 @@ describe("MeshingScheduler (TDD)", () => {
 
     scheduler.dispose();
   });
+
+  it("should process chunks with equal priority in FIFO order", () => {
+    const worker = new FakeMeshingWorker();
+
+    const scheduler = new MeshingScheduler({
+      worker,
+      chunkSize: 16,
+      maxInFlight: 1,
+      maxQueueSize: 100,
+      buildJob: (coord, rev, jobId) => ({
+        msg: {
+          t: "MESH_CHUNK",
+          jobId,
+          rev,
+          chunk: { ...coord, size: 16 },
+          origin: { x: 0, y: 0, z: 0 },
+          materials: new Uint8Array(0),
+        },
+        transfer: [],
+      }),
+      onApply: () => {},
+      // Same priority for all
+      getPriority: () => 0,
+    });
+
+    scheduler.markDirty({ cx: 1, cy: 0, cz: 0 }); // First
+    scheduler.markDirty({ cx: 2, cy: 0, cz: 0 }); // Second
+
+    // Pump once to process the first one
+    scheduler.pump();
+
+    expect(worker.posted.length).toBe(1);
+    let job = worker.posted[0]!.msg;
+    if (job.t !== "MESH_CHUNK") throw new Error("expected MESH_CHUNK");
+    expect(job.chunk.cx).toBe(1); // Should be the first one
+
+    // Finish first job
+    worker.emit({
+      t: "MESH_RESULT",
+      jobId: job.jobId,
+      rev: job.rev,
+      chunk: job.chunk,
+      geometry: {
+        positions: new Float32Array(0),
+        normals: new Float32Array(0),
+        indices: new Uint16Array(0),
+      },
+    });
+
+    // Pump to process second
+    scheduler.pump();
+    expect(worker.posted.length).toBe(2);
+    job = worker.posted[1]!.msg;
+    if (job.t !== "MESH_CHUNK") throw new Error("expected MESH_CHUNK");
+    expect(job.chunk.cx).toBe(2); // Should be the second one
+
+    scheduler.dispose();
+  });
 });
