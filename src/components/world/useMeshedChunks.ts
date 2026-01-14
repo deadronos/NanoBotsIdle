@@ -24,6 +24,7 @@ import type { LodLevel } from "../../render/lodUtils";
 import type { MeshResult } from "../../shared/meshingProtocol";
 import type { VoxelEdit } from "../../shared/protocol";
 import { getVoxelMaterialAt } from "../../sim/collision";
+import { TERRAIN_COLORS, TERRAIN_THRESHOLDS } from "../../sim/terrain-constants";
 import { chunkDistanceSq3 } from "../../utils";
 import { chunkKey } from "./chunkHelpers";
 
@@ -43,24 +44,24 @@ export const useMeshedChunks = (options: {
 
   // Color mapping kept local to avoid importing `three` types in worker code.
   // Reuse Color instances to avoid per-vertex allocations.
-  const deepWater = useMemo(() => new Color("#1a4d8c"), []);
-  const water = useMemo(() => new Color("#2d73bf"), []);
-  const sand = useMemo(() => new Color("#e3dba3"), []);
-  const grass = useMemo(() => new Color("#59a848"), []);
-  const darkGrass = useMemo(() => new Color("#3b7032"), []);
-  const rock = useMemo(() => new Color("#6e6e6e"), []);
-  const snow = useMemo(() => new Color("#f2f4f8"), []);
+  const deepWater = useMemo(() => new Color(TERRAIN_COLORS.DEEP_WATER), []);
+  const water = useMemo(() => new Color(TERRAIN_COLORS.WATER), []);
+  const sand = useMemo(() => new Color(TERRAIN_COLORS.SAND), []);
+  const grass = useMemo(() => new Color(TERRAIN_COLORS.GRASS), []);
+  const darkGrass = useMemo(() => new Color(TERRAIN_COLORS.DARK_GRASS), []);
+  const rock = useMemo(() => new Color(TERRAIN_COLORS.ROCK), []);
+  const snow = useMemo(() => new Color(TERRAIN_COLORS.SNOW), []);
 
   const writeVertexColor = useCallback(
     (out: Float32Array, base: number, y: number) => {
       // Mirrors the intent of `getVoxelColor()` without allocations.
       let c: Color;
-      if (y < waterLevel - 2) c = deepWater;
-      else if (y < waterLevel + 0.5) c = water;
-      else if (y < waterLevel + 2.5) c = sand;
-      else if (y < waterLevel + 6) c = grass;
-      else if (y < waterLevel + 12) c = darkGrass;
-      else if (y < waterLevel + 20) c = rock;
+      if (y < waterLevel + TERRAIN_THRESHOLDS.DEEP_WATER) c = deepWater;
+      else if (y < waterLevel + TERRAIN_THRESHOLDS.WATER) c = water;
+      else if (y < waterLevel + TERRAIN_THRESHOLDS.SAND) c = sand;
+      else if (y < waterLevel + TERRAIN_THRESHOLDS.GRASS) c = grass;
+      else if (y < waterLevel + TERRAIN_THRESHOLDS.DARK_GRASS) c = darkGrass;
+      else if (y < waterLevel + TERRAIN_THRESHOLDS.ROCK) c = rock;
       else c = snow;
       out[base] = c.r;
       out[base + 1] = c.g;

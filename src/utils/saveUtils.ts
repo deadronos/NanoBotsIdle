@@ -136,8 +136,8 @@ export const resetGame = () => {
   // Temporarily disable persistence so any subsequent setState doesn't write to storage
   try {
     setAllowPersist(false);
-  } catch {
-    // ignore
+  } catch (e) {
+    warn("Failed to disable persistence during reset", e);
   }
 
   localStorage.removeItem("voxel-walker-storage");

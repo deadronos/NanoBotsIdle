@@ -3,6 +3,7 @@ import React, { useRef } from "react";
 import { updateConfig } from "../config/index";
 import { type VoxelRenderMode, voxelRenderModes } from "../config/render";
 import { useConfig } from "../config/useConfig";
+import { error } from "../utils/logger";
 import { exportSave, importSave, resetGame } from "../utils/saveUtils";
 import { ModalShell } from "./ui/ModalShell";
 
@@ -25,7 +26,8 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ onClose }) => {
         await importSave(file);
         alert("Save loaded successfully!");
         onClose();
-      } catch {
+      } catch (e) {
+        error("Failed to load save file", e);
         alert("Failed to load save file.");
       }
     }
