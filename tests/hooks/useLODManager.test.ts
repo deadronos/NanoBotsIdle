@@ -12,8 +12,10 @@ vi.mock("../../src/simBridge/simBridge", () => ({
 }));
 
 describe("useLODManager", () => {
-  let mockBridge: any;
-  let onFrameCallback: any;
+  let mockBridge: {
+    onFrame: (cb: (frame: unknown) => void) => () => void;
+  };
+  let onFrameCallback: ((frame: unknown) => void) | null;
 
   beforeEach(() => {
     onFrameCallback = null;
@@ -23,7 +25,7 @@ describe("useLODManager", () => {
         return vi.fn();
       }),
     };
-    (getSimBridge as any).mockReturnValue(mockBridge);
+    (getSimBridge as unknown as { mockReturnValue: (v: unknown) => void }).mockReturnValue(mockBridge);
     playerPosition.set(0, 0, 0);
   });
 

@@ -16,8 +16,11 @@ vi.mock("../../src/sim/collision", () => ({
 }));
 
 describe("useFrontierHandler", () => {
-  let mockBridge: any;
-  let onFrameCallback: any;
+  let mockBridge: {
+    onFrame: (cb: (frame: unknown) => void) => () => void;
+    enqueue?: (...args: unknown[]) => unknown;
+  };
+  let onFrameCallback: ((frame: unknown) => void) | null;
 
   beforeEach(() => {
     onFrameCallback = null;
@@ -28,7 +31,7 @@ describe("useFrontierHandler", () => {
       }),
       enqueue: vi.fn(),
     };
-    (getSimBridge as any).mockReturnValue(mockBridge);
+    (getSimBridge as unknown as { mockReturnValue: (v: unknown) => void }).mockReturnValue(mockBridge);
     playerChunk.cx = 0;
     playerChunk.cy = 0;
     playerChunk.cz = 0;
@@ -89,7 +92,7 @@ describe("useFrontierHandler", () => {
   });
 });
 
-function createProps(overrides: any = {}) {
+function createProps(overrides: Partial<Record<string, unknown>> = {}) {
   return {
     voxelRenderMode: "dense",
     addVoxel: vi.fn(),

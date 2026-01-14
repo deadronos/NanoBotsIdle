@@ -11,8 +11,11 @@ vi.mock("../../src/simBridge/simBridge", () => ({
 }));
 
 describe("usePlayerChunkTracker", () => {
-  let mockBridge: any;
-  let onFrameCallback: any;
+  let mockBridge: {
+    onFrame: (cb: (frame: unknown) => void) => () => void;
+    enqueue?: (...args: unknown[]) => unknown;
+  };
+  let onFrameCallback: ((frame: unknown) => void) | null;
 
   beforeEach(() => {
     onFrameCallback = null;
@@ -23,7 +26,7 @@ describe("usePlayerChunkTracker", () => {
       }),
       enqueue: vi.fn(),
     };
-    (getSimBridge as any).mockReturnValue(mockBridge);
+    (getSimBridge as unknown as { mockReturnValue: (v: unknown) => void }).mockReturnValue(mockBridge);
 
     // Reset player state
     playerPosition.set(0, 0, 0);
