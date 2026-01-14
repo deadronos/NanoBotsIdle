@@ -6,6 +6,7 @@ import type { KeyIndex } from "../src/engine/keyIndex";
 import { tickDrones } from "../src/engine/tickDrones";
 import type { WorldModel } from "../src/engine/world/world";
 import type { UiSnapshot, VoxelEdit } from "../src/shared/protocol";
+import { type VoxelKey, voxelKey } from "../src/shared/voxel";
 
 describe("tickDrones integration: hauler pickup and deposit", () => {
   test("minedBlocks increments at mine-time and remains unchanged on deposit; hauler picks up and deposits payload", () => {
@@ -31,7 +32,7 @@ describe("tickDrones integration: hauler pickup and deposit", () => {
       x: 0,
       y: 0,
       z: 0,
-      targetKey: "k-0",
+      targetKey: voxelKey(0, 10, 0),
       targetX: 0,
       targetY: 10,
       targetZ: 0,
@@ -77,7 +78,7 @@ describe("tickDrones integration: hauler pickup and deposit", () => {
         y: number,
         z: number,
       ) => { id: string; x: number; y: number; z: number; level: number } | null;
-      key: (x: number, y: number, z: number) => string;
+      key: (x: number, y: number, z: number) => VoxelKey;
       undock?: (outpost: { id: string }, droneId: number) => void;
     };
 
@@ -95,20 +96,20 @@ describe("tickDrones integration: hauler pickup and deposit", () => {
         z: 10,
         level: 1,
       }),
-      key: (_x: number, _y: number, _z: number) => "k-0",
+      key: (x: number, y: number, z: number) => voxelKey(x, y, z),
       undock: () => undefined,
     };
 
     const world = worldStub as unknown as WorldModel;
 
-    const minedKeys = new Set<string>();
-    const reservedKeys = new Set<string>();
+    const minedKeys = new Set<VoxelKey>();
+    const reservedKeys = new Set<VoxelKey>();
     const minedPositions: number[] = [];
     const editsThisTick: VoxelEdit[] = [];
     const frontierAdded: number[] = [];
     const frontierRemoved: number[] = [];
 
-    const frontier: KeyIndex = { keys: [], index: new Map() };
+    const frontier: KeyIndex<VoxelKey> = { keys: [], index: new Map<VoxelKey, number>() };
 
     // First tick: miner mines and hauler should pick up the payload
     tickDrones({

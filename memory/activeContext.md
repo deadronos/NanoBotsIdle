@@ -4,6 +4,7 @@
 
 - Project tooling and repo guidance are aligned for Vite bundling, Tailwind v4+, and a consistent tests layout.
 - Refactor toward a Worker-authoritative engine with clean sim/render separation (`docs/ARCHITECTURE.md`).
+- BVX-backed voxel keying + edit storage integration for mining/frontier logic.
 - **Save system:** Versioned save schema with migration framework is complete (v1→v2).
 - **Performance:** Progressive LOD and occlusion-culling are now available for meshed chunks, with benchmark presets for profiling.
 - **Reliability:** Integrated Zod-typed bridge for robust Worker <-> Main thread communication.
@@ -11,6 +12,7 @@
 
 ## Recent changes
 
+- Added BVX-backed voxel key encoding and edit storage to replace string-keyed voxel maps.
 - **Progressive LOD:** Added coarse-first LOD refinement with configurable delay.
 - **Occlusion Culling:** Wired optional WebGL2 occlusion queries into meshed chunk visibility.
 - **Benchmark Scene:** Added chunk-load presets and draw-call telemetry for profiling heavy scenes.

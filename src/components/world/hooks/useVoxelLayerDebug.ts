@@ -2,7 +2,7 @@ import { useCallback, useRef, useState } from "react";
 
 import { useConfig } from "../../../config/useConfig";
 import type { RenderDelta } from "../../../shared/protocol";
-import { voxelKey } from "../../../shared/voxel";
+import { coordsFromVoxelKey, type VoxelKey, voxelKey } from "../../../shared/voxel";
 import { getGroundHeightWithEdits } from "../../../sim/collision";
 import { forEachRadialChunk } from "../../../utils";
 import { debug, groupCollapsed, groupEnd } from "../../../utils/logger";
@@ -25,8 +25,8 @@ export function useVoxelLayerDebug({ chunkSize, prestigeLevel }: UseVoxelLayerDe
   const debugCfg = cfg.render.voxels.debugCompare;
   const debugEnabled = debugCfg.enabled;
   const debugLastLogAtMsRef = useRef(0);
-  const frontierKeysRef = useRef<Set<string>>(new Set());
-  const lastMissingMarkerKeyRef = useRef<string | null>(null);
+  const frontierKeysRef = useRef<Set<VoxelKey>>(new Set());
+  const lastMissingMarkerKeyRef = useRef<VoxelKey | null>(null);
   const [missingSurfaceMarker, setMissingSurfaceMarker] = useState<{
     x: number;
     y: number;
@@ -102,7 +102,7 @@ export function useVoxelLayerDebug({ chunkSize, prestigeLevel }: UseVoxelLayerDe
 
       // We iterate over keys to gather stats
       for (const k of frontierKeysRef.current) {
-        const [x, y, z] = k.split(",").map((v) => Number(v));
+        const { x, y, z } = coordsFromVoxelKey(k);
         trackedMinX = Math.min(trackedMinX, x);
         trackedMaxX = Math.max(trackedMaxX, x);
         trackedMinZ = Math.min(trackedMinZ, z);
@@ -145,7 +145,7 @@ export function useVoxelLayerDebug({ chunkSize, prestigeLevel }: UseVoxelLayerDe
       const minZ = Math.max(xzBounds.minZ, -worldRadius);
       const maxZ = Math.min(xzBounds.maxZ, worldRadius);
 
-      const missingSurfaceKeys: string[] = [];
+      const missingSurfaceKeys: VoxelKey[] = [];
       let missingSurfaceCount = 0;
       for (let x = minX; x <= maxX; x += 1) {
         for (let z = minZ; z <= maxZ; z += 1) {
@@ -162,7 +162,7 @@ export function useVoxelLayerDebug({ chunkSize, prestigeLevel }: UseVoxelLayerDe
       }
 
       let trueFrontierExpected = 0;
-      const trueFrontierMissingKeys: string[] = [];
+      const trueFrontierMissingKeys: VoxelKey[] = [];
 
       forEachRadialChunk({ cx: pcx, cy: pcy, cz: pcz }, radius, 3, (c) => {
         const res = getMissingFrontierVoxelsInChunk({
@@ -223,8 +223,8 @@ export function useVoxelLayerDebug({ chunkSize, prestigeLevel }: UseVoxelLayerDe
       if (nextMarkerKey !== lastMissingMarkerKeyRef.current) {
         lastMissingMarkerKeyRef.current = nextMarkerKey;
         if (nextMarkerKey) {
-          const [mx, my, mz] = nextMarkerKey.split(",").map((v) => Number(v));
-          setMissingSurfaceMarker({ x: mx, y: my, z: mz });
+          const coords = coordsFromVoxelKey(nextMarkerKey);
+          setMissingSurfaceMarker({ x: coords.x, y: coords.y, z: coords.z });
         } else {
           setMissingSurfaceMarker(null);
         }

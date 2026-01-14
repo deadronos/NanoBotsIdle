@@ -2,6 +2,7 @@
 import { getConfig } from "../config/index";
 import { computeNextUpgradeCosts } from "../economy/upgrades";
 import type { Cmd, RenderDelta, UiSnapshot } from "../shared/protocol";
+import type { VoxelKey } from "../shared/voxel";
 import { createKeyIndex } from "./keyIndex";
 import { handleCommand, ensureSeedWithMinAboveWater } from "./commands";
 import { tickEngine } from "./tick";
@@ -22,10 +23,10 @@ export const createEngine = (_seed?: number, saveState?: Partial<UiSnapshot>): E
   const ctx: EngineContext = {
     tick: 0,
     cfg,
-    minedKeys: new Set<string>(),
-    reservedKeys: new Set<string>(),
+    minedKeys: new Set<VoxelKey>(),
+    reservedKeys: new Set<VoxelKey>(),
     world: null,
-    frontier: createKeyIndex(),
+    frontier: createKeyIndex<VoxelKey>(),
     pendingFrontierSnapshot: null,
     pendingFrontierReset: false,
     drones: [],

@@ -32,42 +32,50 @@ export const createSimBridge = (options: SimBridgeOptions = {}): SimBridge => {
   const telemetry = getTelemetryCollector();
 
   const handleMessage = (event: MessageEvent<FromWorker>) => {
+    // Optimization: avoid Zod parsing for high-frequency FRAME messages
+    // We trust usage of internal worker and defined protocol.
+    const raw = event.data as FromWorker;
+
+    if (raw && typeof raw === "object" && "t" in raw) {
+      if (raw.t === "FRAME") {
+        stepInFlight = false;
+        lastFrame = raw;
+
+        // Optional performance instrumentation for frame handlers
+        if (enableHandlerTiming) {
+          frameHandlers.forEach((handler) => {
+            const start = performance.now();
+            handler(raw);
+            const duration = performance.now() - start;
+
+            const timing = handlerTimings.get(handler) ?? { total: 0, count: 0 };
+            timing.total += duration;
+            timing.count += 1;
+            handlerTimings.set(handler, timing);
+
+            // Log timing every 300 frames (approximately every 5 seconds at 60fps)
+            if (timing.count % 300 === 0) {
+              const avg = timing.total / timing.count;
+              debug(
+                `[SimBridge] Frame handler avg: ${avg.toFixed(3)}ms (${timing.count} calls, ${timing.total.toFixed(1)}ms total)`,
+              );
+            }
+          });
+        } else {
+          // Fast path: no timing overhead
+          frameHandlers.forEach((handler) => handler(raw));
+        }
+        return;
+      }
+    }
+
+    // For other messages (INIT, READY, ERROR, etc) use safe parse for robustness
     const parse = FromWorkerSchema.safeParse(event.data);
     if (!parse.success) {
       error("SimBridge received invalid message from worker:", parse.error);
       return;
     }
     const msg = parse.data;
-    if (msg.t === "FRAME") {
-      stepInFlight = false;
-      lastFrame = msg;
-
-      // Optional performance instrumentation for frame handlers
-      if (enableHandlerTiming) {
-        frameHandlers.forEach((handler) => {
-          const start = performance.now();
-          handler(msg);
-          const duration = performance.now() - start;
-
-          const timing = handlerTimings.get(handler) ?? { total: 0, count: 0 };
-          timing.total += duration;
-          timing.count += 1;
-          handlerTimings.set(handler, timing);
-
-          // Log timing every 300 frames (approximately every 5 seconds at 60fps)
-          if (timing.count % 300 === 0) {
-            const avg = timing.total / timing.count;
-            debug(
-              `[SimBridge] Frame handler avg: ${avg.toFixed(3)}ms (${timing.count} calls, ${timing.total.toFixed(1)}ms total)`,
-            );
-          }
-        });
-      } else {
-        // Fast path: no timing overhead
-        frameHandlers.forEach((handler) => handler(msg));
-      }
-      return;
-    }
 
     if (msg.t === "ERROR") {
       stepInFlight = false;

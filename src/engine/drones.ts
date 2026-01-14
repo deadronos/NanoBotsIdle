@@ -1,5 +1,6 @@
 import { getDroneCargo } from "../config/drones";
 import { type Config } from "../config/index";
+import type { VoxelKey } from "../shared/voxel";
 
 export type DroneRole = "MINER" | "HAULER";
 
@@ -15,12 +16,14 @@ export type DroneState =
   | "TRANSFER" // Hauler only
   | "QUEUING";
 
+export type DroneTargetKey = VoxelKey | `miner-${number}`;
+
 export type Drone = {
   id: number;
   x: number;
   y: number;
   z: number;
-  targetKey: string | null;
+  targetKey: DroneTargetKey | null;
   targetX: number;
   targetY: number;
   targetZ: number;
