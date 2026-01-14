@@ -56,8 +56,7 @@ export class PriorityQueue<T> {
     // If no filter, we could optimize by scanning only leaves, but scanning all is simpler and safer O(N).
     // Given this is likely used for "queue full" logic (exceptional case or steady state saturation), O(N) is acceptable.
 
-    for (let i = 0; i < this.heap.length; i++) {
-      const node = this.heap[i];
+    for (const node of this.heap) {
       if (filter && !filter(node.value)) continue;
 
       if (!maxNode || this.less(maxNode, node)) {

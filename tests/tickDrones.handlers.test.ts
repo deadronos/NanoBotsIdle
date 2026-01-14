@@ -249,7 +249,7 @@ describe("handleMinerState", () => {
     };
 
     const initialX = drone.x;
-    const initialZ = drone.z;
+    const _initialZ = drone.z;
 
     handleMinerState(drone, context);
 
