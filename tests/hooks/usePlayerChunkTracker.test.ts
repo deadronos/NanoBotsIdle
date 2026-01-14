@@ -1,10 +1,22 @@
 // @vitest-environment jsdom
-import { renderHook } from "@testing-library/react";
+import React from "react";
+import { render } from "@testing-library/react";
+import { act } from "react-dom/test-utils";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { usePlayerChunkTracker } from "../../src/components/world/hooks/usePlayerChunkTracker";
 import { playerChunk, playerPosition } from "../../src/engine/playerState";
 import { getSimBridge } from "../../src/simBridge/simBridge";
+
+function renderHook<T>(fn: () => T) {
+  let result: { current: T } = { current: undefined as unknown as T };
+  const Wrapper = () => {
+    result.current = fn();
+    return null;
+  };
+  render(React.createElement(Wrapper));
+  return { result };
+}
 
 vi.mock("../../src/simBridge/simBridge", () => ({
   getSimBridge: vi.fn(),
@@ -55,7 +67,7 @@ describe("usePlayerChunkTracker", () => {
     // Move player to 15, 0, 0 (chunk 1, 0, 0)
     playerPosition.set(15, 0, 0);
 
-    onFrameCallback({}); // Call frame handler
+    onFrameCallback!({}); // Call frame handler
 
     expect(playerChunk.cx).toBe(1);
     expect(updateDebugBounds).toHaveBeenCalledWith(1, 0, 0);
@@ -76,7 +88,7 @@ describe("usePlayerChunkTracker", () => {
     );
 
     playerPosition.set(15, 0, 0);
-    onFrameCallback({});
+    onFrameCallback!({});
 
     expect(mockBridge.enqueue).toHaveBeenCalledWith({
       t: "SET_PLAYER_CHUNK",
@@ -103,7 +115,7 @@ describe("usePlayerChunkTracker", () => {
 
     // Player is at 0,0,0. Chunk is 0,0,0.
     // Loop runs.
-    onFrameCallback({});
+    onFrameCallback!({});
 
     expect(mockBridge.enqueue).toHaveBeenCalledWith({
       t: "SET_PLAYER_CHUNK",

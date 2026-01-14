@@ -1,11 +1,23 @@
 // @vitest-environment jsdom
-import { act, renderHook } from "@testing-library/react";
+import React from "react";
+import { render } from "@testing-library/react";
+import { act } from "react-dom/test-utils";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import { useFrontierHandler } from "../../src/components/world/hooks/useFrontierHandler";
+import { useFrontierHandler, type UseFrontierHandlerProps } from "../../src/components/world/hooks/useFrontierHandler";
 import { playerChunk } from "../../src/engine/playerState";
 import { resetVoxelEdits } from "../../src/sim/collision";
 import { getSimBridge } from "../../src/simBridge/simBridge";
+
+function renderHook<T>(fn: () => T) {
+  let result: { current: T } = { current: undefined as unknown as T };
+  const Wrapper = () => {
+    result.current = fn();
+    return null;
+  };
+  render(React.createElement(Wrapper));
+  return { result };
+}
 
 vi.mock("../../src/simBridge/simBridge", () => ({
   getSimBridge: vi.fn(),
@@ -51,7 +63,7 @@ describe("useFrontierHandler", () => {
 
     // Simulate frame with reset
     act(() => {
-      onFrameCallback({ delta: { frontierReset: true } });
+      onFrameCallback!({ delta: { frontierReset: true } });
     });
 
     expect(props.resetChunks).toHaveBeenCalled();
@@ -68,7 +80,7 @@ describe("useFrontierHandler", () => {
     // Simulate add
     const positions = [1, 2, 3]; // x,y,z
     act(() => {
-      onFrameCallback({ delta: { frontierAdd: positions } });
+      onFrameCallback!({ delta: { frontierAdd: positions } });
     });
 
     expect(props.ensureCapacity).toHaveBeenCalled();
@@ -85,14 +97,14 @@ describe("useFrontierHandler", () => {
 
     const frame = { delta: {} };
     act(() => {
-      onFrameCallback(frame);
+      onFrameCallback!(frame);
     });
 
     expect(props.logDebugInfo).toHaveBeenCalledWith(5, 0, 0, frame);
   });
 });
 
-function createProps(overrides: Partial<Record<string, unknown>> = {}) {
+function createProps(overrides: Partial<UseFrontierHandlerProps> = {}) {
   return {
     voxelRenderMode: "dense",
     addVoxel: vi.fn(),
@@ -107,5 +119,5 @@ function createProps(overrides: Partial<Record<string, unknown>> = {}) {
     clearFrontierKeys: vi.fn(),
     logDebugInfo: vi.fn(),
     ...overrides,
-  };
+  } as UseFrontierHandlerProps;
 }

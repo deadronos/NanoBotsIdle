@@ -6,7 +6,7 @@ import type { RenderDelta } from "../../../shared/protocol";
 import { resetVoxelEdits } from "../../../sim/collision";
 import { getSimBridge } from "../../../simBridge/simBridge";
 
-interface UseFrontierHandlerProps {
+export interface UseFrontierHandlerProps {
   voxelRenderMode: VoxelRenderMode;
   addVoxel: (x: number, y: number, z: number) => void;
   removeVoxel: (x: number, y: number, z: number) => void;

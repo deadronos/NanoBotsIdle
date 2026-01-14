@@ -1,11 +1,23 @@
 // @vitest-environment jsdom
-import { act, renderHook } from "@testing-library/react";
+import React from "react";
+import { render } from "@testing-library/react";
+import { act } from "react-dom/test-utils";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { chunkKey } from "../../src/components/world/chunkHelpers";
 import { useLODManager } from "../../src/components/world/hooks/useLODManager";
 import { playerPosition } from "../../src/engine/playerState";
 import { getSimBridge } from "../../src/simBridge/simBridge";
+
+function renderHook<T>(fn: () => T) {
+  let result: { current: T } = { current: undefined as unknown as T };
+  const Wrapper = () => {
+    result.current = fn();
+    return null;
+  };
+  render(React.createElement(Wrapper));
+  return { result };
+}
 
 vi.mock("../../src/simBridge/simBridge", () => ({
   getSimBridge: vi.fn(),
@@ -51,7 +63,7 @@ describe("useLODManager", () => {
     // Simulate frame. Player at 0,0,0.
     // Nearby chunks should be added.
     act(() => {
-      onFrameCallback({});
+      onFrameCallback!({});
     });
 
     // Chunk 0,0,0 is distance 0 -> LOD0 -> addChunk
@@ -66,7 +78,7 @@ describe("useLODManager", () => {
 
     playerPosition.set(80, 0, 0);
     act(() => {
-      onFrameCallback({});
+      onFrameCallback!({});
     });
 
     // Should remove chunk 0,0,0 from instanced (removeChunk) and add to simplified
@@ -98,7 +110,7 @@ describe("useLODManager", () => {
       }),
     );
 
-    onFrameCallback({});
+    onFrameCallback!({});
     expect(addChunk).not.toHaveBeenCalled();
   });
 });
