@@ -1,4 +1,4 @@
-import { BufferGeometry, Mesh } from "three";
+import { BoxGeometry, BufferGeometry, Mesh } from "three";
 import { describe, expect, it, vi } from "vitest";
 
 import {
@@ -43,7 +43,7 @@ describe("occlusionCuller", () => {
     vi.stubGlobal("WebGL2RenderingContext", FakeWebGL2RenderingContext as never);
 
     const gl2 = new FakeWebGL2RenderingContext();
-    const renderer = { getContext: () => gl2 } as never;
+    const renderer = { getContext: () => gl2, render: vi.fn(), autoClear: false } as never;
     const culler = createOcclusionCuller(renderer, {
       enabled: true,
       queryDelayFrames: 1,
@@ -52,7 +52,7 @@ describe("occlusionCuller", () => {
 
     expect(culler.isSupported).toBe(true);
 
-    const geometry = new BufferGeometry();
+    const geometry = new BoxGeometry(1, 1, 1);
     const mesh = new Mesh(geometry, undefined as never);
     mesh.visible = true;
 
