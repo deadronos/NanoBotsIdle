@@ -1,4 +1,5 @@
 import { getConfig } from "../config/index";
+import { TERRAIN_COLORS, TERRAIN_THRESHOLDS } from "./terrain-constants";
 import { createNoiseProvider } from "./noise";
 
 // Cached provider per seed+type so we don't create instances per sample
@@ -42,13 +43,13 @@ export const getVoxelValueFromHeight = (y: number, waterLevel = -12): number => 
  */
 export const getVoxelColor = (y: number, waterLevel = -12): number => {
   // Height-based coloring relative to water level
-  if (y < waterLevel - 2) return 0x1a4d8c; // Deep Water
-  if (y < waterLevel + 0.5) return 0x2d73bf; // Water
-  if (y < waterLevel + 2.5) return 0xe3dba3; // Sand
-  if (y < waterLevel + 6) return 0x59a848; // Grass
-  if (y < waterLevel + 12) return 0x3b7032; // Dark Grass/Forest
-  if (y < waterLevel + 20) return 0x6e6e6e; // Rock
-  return 0xffffff; // Snow
+  if (y < waterLevel + TERRAIN_THRESHOLDS.DEEP_WATER) return TERRAIN_COLORS.DEEP_WATER;
+  if (y < waterLevel + TERRAIN_THRESHOLDS.WATER) return TERRAIN_COLORS.WATER;
+  if (y < waterLevel + TERRAIN_THRESHOLDS.SAND) return TERRAIN_COLORS.SAND;
+  if (y < waterLevel + TERRAIN_THRESHOLDS.GRASS) return TERRAIN_COLORS.GRASS;
+  if (y < waterLevel + TERRAIN_THRESHOLDS.DARK_GRASS) return TERRAIN_COLORS.DARK_GRASS;
+  if (y < waterLevel + TERRAIN_THRESHOLDS.ROCK) return TERRAIN_COLORS.ROCK;
+  return TERRAIN_COLORS.SNOW;
 };
 
 export const getVoxelType = (y: number, waterLevel = -12): "water" | "solid" => {
