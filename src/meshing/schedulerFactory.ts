@@ -1,6 +1,7 @@
 import type { MeshResult } from "../shared/meshingProtocol";
 import { getVoxelMaterialAt } from "../sim/collision";
 import { createApronField, fillApronField } from "./apronField";
+import type { MeshingWorkerLike } from "./meshingScheduler";
 import { MeshingScheduler } from "./meshingScheduler";
 import { defaultMeshingWorkerFactory } from "./meshingWorkerFactory";
 
@@ -14,7 +15,7 @@ export interface SchedulerOptions {
   getPriority: (coord: { cx: number; cy: number; cz: number }) => number;
   maxInFlight: number;
   maxQueueSize: number;
-  worker?: Worker;
+  worker?: MeshingWorkerLike;
 }
 
 export const createMeshingScheduler = (options: SchedulerOptions): MeshingScheduler => {
