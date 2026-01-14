@@ -4,32 +4,9 @@ import type { VoxelKey } from "../shared/voxel";
 import { getVoxelValueFromHeight } from "../sim/terrain-core";
 import type { Drone } from "./drones";
 import { addKey, type KeyIndex, removeKey } from "./keyIndex";
+import { moveTowards } from "./movement";
 import { pickTargetKey } from "./targeting";
 import type { Outpost,WorldModel } from "./world/world";
-
-// Helper to avoid duplicate movement code
-const moveTowards = (
-  drone: Drone,
-  tx: number,
-  ty: number,
-  tz: number,
-  speed: number,
-  dt: number,
-) => {
-  const dx = tx - drone.x;
-  const dy = ty - drone.y;
-  const dz = tz - drone.z;
-  const dist = Math.hypot(dx, dy, dz);
-
-  if (dist > 0) {
-    const step = Math.min(dist, speed * dt);
-    const inv = step / dist;
-    drone.x += dx * inv;
-    drone.y += dy * inv;
-    drone.z += dz * inv;
-  }
-  return dist;
-};
 
 export const tickDrones = (options: {
   world: WorldModel;
