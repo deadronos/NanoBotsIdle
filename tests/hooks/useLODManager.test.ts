@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { act } from "react-dom/test-utils";
+import { act } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { chunkKey } from "../../src/components/world/chunkHelpers";

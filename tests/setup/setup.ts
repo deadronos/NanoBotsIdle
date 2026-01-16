@@ -22,3 +22,9 @@ if (typeof localStorage === "undefined") {
 
   global.localStorage = makeMockStorage();
 }
+
+// Ensure React's testing 'act' environment flag is set for jsdom tests.
+// React 18+ requires globalThis.IS_REACT_ACT_ENVIRONMENT = true for act() to work without errors.
+if (typeof (globalThis as any).IS_REACT_ACT_ENVIRONMENT === "undefined") {
+  (globalThis as any).IS_REACT_ACT_ENVIRONMENT = true;
+}
