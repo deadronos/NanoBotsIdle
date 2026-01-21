@@ -1,6 +1,6 @@
 import { describe, expect, test } from "vitest";
 
-import { type Moveable,moveTowards } from "../src/engine/movement";
+import { type Moveable, moveTowards } from "../src/engine/movement";
 
 describe("moveTowards", () => {
   test("returns 0 distance and does not move when already at target", () => {

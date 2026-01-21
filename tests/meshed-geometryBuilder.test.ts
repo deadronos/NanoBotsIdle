@@ -1,7 +1,10 @@
 import { BufferAttribute, Color } from "three";
 import { describe, expect, it } from "vitest";
 
-import { buildBufferGeometry, writeVertexColor } from "../src/components/world/mesh/geometryBuilder";
+import {
+  buildBufferGeometry,
+  writeVertexColor,
+} from "../src/components/world/mesh/geometryBuilder";
 import type { MeshResult } from "../src/shared/meshingProtocol";
 import { TERRAIN_COLORS, TERRAIN_THRESHOLDS } from "../src/sim/terrain-constants";
 
@@ -51,18 +54,18 @@ describe("geometryBuilder", () => {
       expect(buffer.boundingSphere?.radius).toBe(1);
     });
 
-     it("uses provided colors if available", () => {
-        const colors = new Float32Array([1, 0, 0, 0, 1, 0]);
-        const geometry: MeshResult["geometry"] = {
-            positions: new Float32Array([0, 0, 0, 1, 1, 1]),
-            normals: new Float32Array([0, 1, 0, 0, 1, 0]),
-            indices: new Uint32Array([0, 1]),
-            colors: colors,
-        };
+    it("uses provided colors if available", () => {
+      const colors = new Float32Array([1, 0, 0, 0, 1, 0]);
+      const geometry: MeshResult["geometry"] = {
+        positions: new Float32Array([0, 0, 0, 1, 1, 1]),
+        normals: new Float32Array([0, 1, 0, 0, 1, 0]),
+        indices: new Uint32Array([0, 1]),
+        colors: colors,
+      };
 
-        const buffer = buildBufferGeometry(geometry, 10);
-        const colorAttr = buffer.getAttribute("color") as BufferAttribute;
-        expect(colorAttr.array).toEqual(colors);
-     });
+      const buffer = buildBufferGeometry(geometry, 10);
+      const colorAttr = buffer.getAttribute("color") as BufferAttribute;
+      expect(colorAttr.array).toEqual(colors);
+    });
   });
 });

@@ -47,7 +47,6 @@ describe("src/utils.ts", () => {
     expect(getVoxelType(-11, -12)).toBe("solid");
   });
 
-
   it("getSmoothHeight is continuous (no quantization)", () => {
     noise2DMock.mockReturnValue(0.25);
     expect(getSmoothHeight(10, 20)).toBeCloseTo(0.5);

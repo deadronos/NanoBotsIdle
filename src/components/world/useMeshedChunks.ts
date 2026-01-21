@@ -18,8 +18,7 @@ export const useMeshedChunks = (options: {
   onSchedulerChange?: () => void;
   isChunkVisible?: (coord: { cx: number; cy: number; cz: number }) => boolean;
 }) => {
-  const { chunkSize, prestigeLevel, waterLevel, seed, onSchedulerChange, isChunkVisible } =
-    options;
+  const { chunkSize, prestigeLevel, waterLevel, seed, onSchedulerChange, isChunkVisible } = options;
 
   const focusChunkRef = useRef<{ cx: number; cy: number; cz: number }>({ cx: 0, cy: 0, cz: 0 });
   const reprioritizeTimeoutRef = useRef<number | null>(null);
@@ -83,15 +82,7 @@ export const useMeshedChunks = (options: {
       scheduler.dispose();
       meshManager.disposeAll();
     };
-  }, [
-    chunkSize,
-    isChunkVisible,
-    meshManager,
-    onSchedulerChange,
-    prestigeLevel,
-    seed,
-    waterLevel,
-  ]);
+  }, [chunkSize, isChunkVisible, meshManager, onSchedulerChange, prestigeLevel, seed, waterLevel]);
 
   useEffect(() => {
     return () => {

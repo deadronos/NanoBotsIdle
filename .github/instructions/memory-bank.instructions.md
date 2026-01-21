@@ -268,12 +268,7 @@ Each task file follows this format:
 - [Step 2]
 - [Step 3]
 
-For code-focused tasks, prefer structuring the plan explicitly around a TDD
-cycle:
-
-- **Red**: add one failing test for the next behavior.
-- **Green**: minimal implementation to pass.
-- **Refactor**: improve design/quality and keep tests green.
+For code-focused tasks, follow the Spec-Driven Workflow's TDD loop (Red → Green → Refactor). See `.github/instructions/spec-driven-workflow-v1.instructions.md` for full guidance on TDD, planning, and validation.
 
 ## Progress Tracking
 

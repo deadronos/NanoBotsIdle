@@ -9,7 +9,9 @@ let masterGain: GainNode | null = null;
 const initAudio = () => {
   if (audioContext) return;
   try {
-    const Ctx = window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
+    const Ctx =
+      window.AudioContext ||
+      (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
     if (!Ctx) return;
     audioContext = new Ctx();
     masterGain = audioContext.createGain();

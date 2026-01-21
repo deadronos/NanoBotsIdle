@@ -32,11 +32,13 @@ http://localhost:5173/?telemetry=true
 ```
 
 This will:
+
 - Enable real-time metric collection
 - Show a floating 📊 button in the bottom-right corner
 - Click the button to open the telemetry panel
 
 **Metrics Tracked:**
+
 - **FPS**: Current, average, min, max frames per second
 - **Frame Time**: Current, average, min, max milliseconds per frame
 - **DPR (Device Pixel Ratio)**: Current value and change history
@@ -300,6 +302,7 @@ The repository includes automated performance regression detection that runs in 
 ### Overview
 
 On every PR, the CI system:
+
 1. Runs a headless browser session with telemetry enabled
 2. Collects performance metrics for 30 seconds
 3. Compares against the baseline from the main branch
@@ -328,12 +331,12 @@ Edit `.github/performance-thresholds.json` to adjust acceptable regression limit
 {
   "thresholds": {
     "fps": {
-      "regressionPercent": 10,  // Max 10% FPS decrease
-      "avgMin": 55               // Minimum acceptable average FPS
+      "regressionPercent": 10, // Max 10% FPS decrease
+      "avgMin": 55 // Minimum acceptable average FPS
     },
     "frameTime": {
-      "regressionPercent": 15,  // Max 15% frame time increase
-      "avgMax": 18               // Maximum acceptable average frame time (ms)
+      "regressionPercent": 15, // Max 15% frame time increase
+      "avgMax": 18 // Maximum acceptable average frame time (ms)
     }
   }
 }
@@ -352,22 +355,26 @@ When a regression is detected, the CI output will show:
 ```
 
 **Status indicators:**
+
 - ✅ PASS: Within acceptable thresholds
-- ⚠️  WARN: Exceeds absolute limits but not regression threshold
+- ⚠️ WARN: Exceeds absolute limits but not regression threshold
 - ❌ FAIL: Exceeds regression threshold
 
 ### Troubleshooting CI Performance Failures
 
 **1. Check the regression report artifact**
+
 - Download the `regression-report.json` from the CI run
 - Contains detailed metrics and comparison data
 
 **2. Identify the cause**
+
 - Review recent changes that might affect performance
 - Check if new features added significant computational cost
 - Look for inefficient loops, allocations, or render operations
 
 **3. Common causes:**
+
 - Increased object allocation in hot paths (useFrame, workers)
 - New features without optimization
 - Inefficient data structures or algorithms
@@ -375,12 +382,14 @@ When a regression is detected, the CI output will show:
 - Blocking operations in render loop
 
 **4. Fixing regressions**
+
 - Profile locally with telemetry panel
 - Use browser DevTools Performance tab
 - Check worker backlog for task queueing issues
 - Optimize hot paths identified in telemetry
 
 **5. Adjusting thresholds (last resort)**
+
 - If the regression is intentional (e.g., new features with known cost)
 - Document why thresholds were adjusted in the commit message
 - Consider if optimization can reduce the impact
@@ -396,6 +405,7 @@ env:
 ```
 
 Or locally:
+
 ```bash
 node scripts/check-performance-regression.js \
   --current ./current.json \

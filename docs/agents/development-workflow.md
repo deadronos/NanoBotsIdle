@@ -3,7 +3,7 @@
 Quick summary of the repo's required workflow (see `.github/instructions/spec-driven-workflow-v1.instructions.md` for full details):
 
 - Follow the 6-phase loop: **Analyze → Design → Implement → Validate → Reflect → Handoff**.
-- Use TDD where practical (Red → Green → Refactor cycle).
+- Follow the Spec-Driven Workflow for process and TDD details (see `.github/instructions/spec-driven-workflow-v1.instructions.md`).
 - For medium/large changes: add requirements in `memory/requirements.md`, a short design in `memory/designs/`, and break work into `memory/tasks/`.
 - Update memory files during the work and attach the design/requirements/validation artifacts to the PR.
 - PRs should include a short executive summary, changed files, validation steps, and links to memory entries.

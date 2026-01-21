@@ -58,7 +58,7 @@ export const Player: React.FC<PlayerProps> = ({ viewMode }) => {
       temps: frameTemps.current,
     });
     if (isJumping.current && !wasJumping) {
-        playSound("jump");
+      playSound("jump");
     }
     playerPosition.copy(position);
   });

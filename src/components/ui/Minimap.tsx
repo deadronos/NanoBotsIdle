@@ -57,26 +57,26 @@ export const Minimap: React.FC = () => {
       // The `playerPosition` from `playerState` is mutable Vector3.
 
       import("../../engine/playerState").then(({ playerPosition }) => {
-         const pX = playerPosition.x;
-         const pZ = playerPosition.z;
+        const pX = playerPosition.x;
+        const pZ = playerPosition.z;
 
-         const range = 64; // blocks radius to show
-         const scale = size / (range * 2);
+        const range = 64; // blocks radius to show
+        const scale = size / (range * 2);
 
-         ctx.fillStyle = "#00ffff";
-         for (let i = 0; i < positions.length; i += 3) {
-            const x = positions[i];
-            const z = positions[i + 2];
+        ctx.fillStyle = "#00ffff";
+        for (let i = 0; i < positions.length; i += 3) {
+          const x = positions[i];
+          const z = positions[i + 2];
 
-            const dx = x - pX;
-            const dz = z - pZ;
+          const dx = x - pX;
+          const dz = z - pZ;
 
-            if (Math.abs(dx) < range && Math.abs(dz) < range) {
-               const mx = (size / 2) + dx * scale;
-               const my = (size / 2) + dz * scale;
-               ctx.fillRect(mx - 1, my - 1, 2, 2);
-            }
-         }
+          if (Math.abs(dx) < range && Math.abs(dz) < range) {
+            const mx = size / 2 + dx * scale;
+            const my = size / 2 + dz * scale;
+            ctx.fillRect(mx - 1, my - 1, 2, 2);
+          }
+        }
       });
     });
 

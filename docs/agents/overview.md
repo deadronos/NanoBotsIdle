@@ -26,6 +26,6 @@ Core docs to read for almost any task:
 
 Essential rules (apply to every task):
 
-- Keep changes small and test-backed (TDD where practical).
+- Keep changes small and test-backed; follow the Spec-Driven Workflow for TDD and process (see `.github/instructions/spec-driven-workflow-v1.instructions.md`).
 - Update the Memory Bank (`/memory`) for new tasks, designs, or decisions.
 - Follow pre-existing patterns in the codebase (see `docs/ARCHITECTURE.md` and `src/`).

@@ -220,6 +220,7 @@ When you need to make breaking changes to the save format, follow this checklist
   - Test edge cases in `tests/save-migration-edge-cases.test.ts`
 
 - [ ] **7. Test Migration Path**
+
   ```bash
   npm test -- save
   ```
@@ -260,12 +261,14 @@ export const migrateV2ToV3: Migration = {
 ### Forward Compatibility
 
 The system handles future version saves gracefully:
+
 - Warns when importing saves from newer app versions
 - Detects and warns about unknown fields
 - Sanitizes data to known schema, filtering incompatible fields
 - Preserves as much data as possible
 
 For detailed migration documentation, see:
+
 - `src/utils/migrations/README.md` - Developer guide
 - `docs/ARCHITECTURE/TECH004-save-migration-framework.md` - Architecture overview
 

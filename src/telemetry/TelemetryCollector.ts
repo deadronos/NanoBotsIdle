@@ -55,8 +55,6 @@ export type TelemetrySnapshot = {
   };
 };
 
-
-
 type Sample = {
   value: number;
   timestamp: number;

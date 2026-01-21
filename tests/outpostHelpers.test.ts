@@ -1,7 +1,12 @@
 import { describe, expect, test, vi } from "vitest";
 
 import type { Drone, DroneState } from "../src/engine/drones";
-import { handleDeposit, handleDockRequest, QUEUE_THRESHOLD, REROUTE_COOLDOWN_MS } from "../src/engine/outpostHelpers";
+import {
+  handleDeposit,
+  handleDockRequest,
+  QUEUE_THRESHOLD,
+  REROUTE_COOLDOWN_MS,
+} from "../src/engine/outpostHelpers";
 import type { Outpost, WorldModel } from "../src/engine/world/world";
 import type { UiSnapshot } from "../src/shared/protocol";
 
@@ -106,8 +111,7 @@ describe("handleDeposit", () => {
     const world = {} as unknown as WorldModel;
     const drone = createMockDrone("DEPOSITING");
     drone.miningTimer = 0;
-    const depositEvents: { x: number; y: number; z: number; amount: number }[] =
-      [];
+    const depositEvents: { x: number; y: number; z: number; amount: number }[] = [];
     const uiSnapshot = { credits: 0 } as UiSnapshot;
 
     handleDeposit(world, drone, depositEvents, uiSnapshot, 0.4, "SEEKING");
@@ -127,8 +131,7 @@ describe("handleDeposit", () => {
     const drone = createMockDrone("DEPOSITING");
     drone.miningTimer = 0.4;
     drone.payload = 50;
-    const depositEvents: { x: number; y: number; z: number; amount: number }[] =
-      [];
+    const depositEvents: { x: number; y: number; z: number; amount: number }[] = [];
     const uiSnapshot = { credits: 0 } as UiSnapshot;
 
     handleDeposit(world, drone, depositEvents, uiSnapshot, 0.2, "SEEKING"); // 0.4 + 0.2 = 0.6

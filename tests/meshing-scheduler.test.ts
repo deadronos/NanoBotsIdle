@@ -473,7 +473,9 @@ describe("MeshingScheduler (TDD)", () => {
         },
         transfer: [],
       }),
-      onApply: () => { /* noop */ },
+      onApply: () => {
+        /* noop */
+      },
       // Same priority for all
       getPriority: () => 0,
     });
