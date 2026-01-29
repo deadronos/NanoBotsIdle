@@ -95,9 +95,7 @@ export const TelemetryPanel: React.FC<TelemetryPanelProps> = ({ isOpen, onClose 
   if (!isOpen) return null;
 
   return (
-    <div
-      className="fixed top-2 right-2 w-96 max-h-[90vh] overflow-y-auto bg-gray-900/95 text-white text-xs font-mono rounded-lg shadow-2xl border border-gray-700 z-50 pointer-events-auto backdrop-blur-md"
-    >
+    <div className="fixed top-2 right-2 w-96 max-h-[90vh] overflow-y-auto bg-gray-900/95 text-white text-xs font-mono rounded-lg shadow-2xl border border-gray-700 z-50 pointer-events-auto backdrop-blur-md">
       {/* Header */}
       <div className="flex items-center justify-between p-3 border-b border-gray-700 sticky top-0 bg-gray-900">
         <h3 className="font-bold text-sm">📊 Telemetry</h3>
@@ -108,7 +106,11 @@ export const TelemetryPanel: React.FC<TelemetryPanelProps> = ({ isOpen, onClose 
             title="Copy JSON"
             disabled={copying}
           >
-            {copying ? "Copying…" : copySuccess ? "✓ Copied" : "Copy JSON"}
+            {copying ?
+              "Copying…"
+            : copySuccess ?
+              "✓ Copied"
+            : "Copy JSON"}
           </button>
           <button
             onClick={onClose}
@@ -121,10 +123,9 @@ export const TelemetryPanel: React.FC<TelemetryPanelProps> = ({ isOpen, onClose 
 
       {/* Content */}
       <div className="p-3 space-y-3">
-        {!snapshot ? (
+        {!snapshot ?
           <div className="text-gray-400">Collecting metrics...</div>
-        ) : (
-          <>
+        : <>
             {/* FPS Section */}
             <Section title="FPS">
               <MetricRow label="Current" value={snapshot.fps.current.toFixed(1)} unit="fps" />
@@ -138,11 +139,7 @@ export const TelemetryPanel: React.FC<TelemetryPanelProps> = ({ isOpen, onClose 
 
             {/* Frame Time Section */}
             <Section title="Frame Time">
-              <MetricRow
-                label="Current"
-                value={snapshot.frameTime.current.toFixed(2)}
-                unit="ms"
-              />
+              <MetricRow label="Current" value={snapshot.frameTime.current.toFixed(2)} unit="ms" />
               <MetricRow label="Average" value={snapshot.frameTime.avg.toFixed(2)} unit="ms" />
               <MetricRow
                 label="Min/Max"
@@ -157,7 +154,11 @@ export const TelemetryPanel: React.FC<TelemetryPanelProps> = ({ isOpen, onClose 
               <MetricRow label="Changes" value={snapshot.dpr.changes.toString()} />
               {snapshot.dpr.history.length > 0 && (
                 <div className="text-[10px] text-gray-400 mt-1">
-                  Recent: {snapshot.dpr.history.slice(-5).map((h) => h.value.toFixed(2)).join(" → ")}
+                  Recent:{" "}
+                  {snapshot.dpr.history
+                    .slice(-5)
+                    .map((h) => h.value.toFixed(2))
+                    .join(" → ")}
                 </div>
               )}
             </Section>
@@ -213,7 +214,7 @@ export const TelemetryPanel: React.FC<TelemetryPanelProps> = ({ isOpen, onClose 
               Last update: {new Date(snapshot.timestamp).toLocaleTimeString()}
             </div>
           </>
-        )}
+        }
       </div>
     </div>
   );

@@ -183,7 +183,7 @@ export const Drones: React.FC = () => {
     }
 
     if (depositEventsRef.current && depositEventsRef.current.length > 0) {
-        playSound("deposit");
+      playSound("deposit");
     }
 
     // Always clear deposit events after frame

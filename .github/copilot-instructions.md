@@ -124,10 +124,7 @@ Also look at `memory/` folder and `memory/designs` for spec/design docs and `mem
 
 - Use the architecture docs + Memory Bank to keep work spec-driven (Analyze →
   Design → Implement → Validate → Reflect → Handoff).
-- During **Implement**, prefer a strict TDD cycle:
-  - Red: write one failing test for the next behavior
-  - Green: minimal code to pass
-  - Refactor: improve design/quality while keeping tests green
+- During **Implement**, follow the Spec-Driven Workflow's TDD loop (Red → Green → Refactor). See `.github/instructions/spec-driven-workflow-v1.instructions.md` for the canonical guidance.
 - Record the plan and progress in `memory/tasks/` so work is resumable.
 
 ## Change guidelines (how to make PR-sized edits)

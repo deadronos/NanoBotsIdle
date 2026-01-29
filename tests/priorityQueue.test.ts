@@ -72,10 +72,10 @@ describe("PriorityQueue", () => {
     expect(pq.findMax()).toBe(10);
 
     // Find max that is even (should be 10)
-    expect(pq.findMax(x => x % 2 === 0)).toBe(10);
+    expect(pq.findMax((x) => x % 2 === 0)).toBe(10);
 
     // Find max that is < 10 (should be 5)
-    expect(pq.findMax(x => x < 10)).toBe(5);
+    expect(pq.findMax((x) => x < 10)).toBe(5);
   });
 
   it("should handle peek, size, isEmpty, clear", () => {

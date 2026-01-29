@@ -14,9 +14,9 @@ export class OutpostManager {
   private readonly outposts: Outpost[] = [];
 
   constructor() {
-     // Initialize default outpost?
-     // In WorldModel it was done in constructor:
-     // this.addOutpost(0, 10, 0);
+    // Initialize default outpost?
+    // In WorldModel it was done in constructor:
+    // this.addOutpost(0, 10, 0);
   }
 
   addOutpost(x: number, y: number, z: number) {

@@ -5,8 +5,16 @@ import { Quaternion, Vector3 } from "three";
 import { useConfig } from "../../config/useConfig";
 import { playerChunk, playerPosition } from "../../engine/playerState";
 import { applyLodGeometry } from "../../render/lodGeometry";
-import { applyChunkVisibility, createLodThresholds, isChunkVisible as isChunkVisibleFn } from "../../render/lodUtils";
-import { applyOcclusionVisibility, createOcclusionCuller, defaultOcclusionConfig } from "../../render/occlusionCuller";
+import {
+  applyChunkVisibility,
+  createLodThresholds,
+  isChunkVisible as isChunkVisibleFn,
+} from "../../render/lodUtils";
+import {
+  applyOcclusionVisibility,
+  createOcclusionCuller,
+  defaultOcclusionConfig,
+} from "../../render/occlusionCuller";
 import { applyVoxelEdits, resetVoxelEdits } from "../../sim/collision";
 import { getSurfaceHeightCore } from "../../sim/terrain-core";
 import { getSimBridge } from "../../simBridge/simBridge";
@@ -119,10 +127,7 @@ export const VoxelLayerMeshed: React.FC<{
       culler.dispose();
       occlusionRef.current = null;
     };
-  }, [
-    gl,
-    occlusionConfig,
-  ]);
+  }, [gl, occlusionConfig]);
 
   useEffect(() => {
     return bridge.onFrame((frame) => {

@@ -83,16 +83,16 @@ describe("FrontierManager", () => {
   });
 
   it("ensureFrontierInChunk adds frontier columns", () => {
-     resetConfig();
-     const seed = getSeed(1);
-     const manager = new FrontierManager(seed, -50, -12);
+    resetConfig();
+    const seed = getSeed(1);
+    const manager = new FrontierManager(seed, -50, -12);
 
-     const added = manager.ensureFrontierInChunk(0, 0);
-     expect(added).not.toBeNull();
-     expect(added?.length).toBeGreaterThan(0);
+    const added = manager.ensureFrontierInChunk(0, 0);
+    expect(added).not.toBeNull();
+    expect(added?.length).toBeGreaterThan(0);
 
-     // calling again returns null (visited)
-     const added2 = manager.ensureFrontierInChunk(0, 0);
-     expect(added2).toBeNull();
+    // calling again returns null (visited)
+    const added2 = manager.ensureFrontierInChunk(0, 0);
+    expect(added2).toBeNull();
   });
 });

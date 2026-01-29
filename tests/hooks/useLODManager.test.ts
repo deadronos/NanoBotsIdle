@@ -26,7 +26,9 @@ describe("useLODManager", () => {
         return vi.fn();
       }),
     };
-    (getSimBridge as unknown as { mockReturnValue: (v: unknown) => void }).mockReturnValue(mockBridge);
+    (getSimBridge as unknown as { mockReturnValue: (v: unknown) => void }).mockReturnValue(
+      mockBridge,
+    );
     playerPosition.set(0, 0, 0);
   });
 
