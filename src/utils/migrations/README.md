@@ -150,22 +150,26 @@ The migration system has three levels of tests:
 Located in `tests/fixtures/saves/`:
 
 **Valid Saves:**
+
 - `valid-v1.json`: Valid version 1 save with typical data
 - `valid-v2.json`: Valid version 2 save with all current fields
 - `minimal-v1.json`: Minimal v1 save with only required fields
 
 **Edge Cases:**
+
 - `edge-case-empty-v1.json`: Completely empty data object (tests defaults)
 - `edge-case-extreme-values-v2.json`: Very large numbers (tests value preservation)
 - `edge-case-negative-values-v1.json`: Negative/invalid values (tests sanitization)
 - `backward-compat-v2-missing-optional.json`: Missing optional fields (tests defaults)
 
 **Invalid Saves:**
+
 - `invalid-no-version.json`: Missing version field
 - `invalid-no-data.json`: Missing data field
 - `invalid-bad-types.json`: Wrong types for numeric fields
 
 **Future Compatibility:**
+
 - `future-version.json`: Simple future version (v99)
 - `future-v3-with-unknown-fields.json`: Future version with new fields
 - `future-v10-minimal.json`: Far future version with minimal data
@@ -200,6 +204,7 @@ The migration system includes forward compatibility handling:
 4. **User Guidance**: Clear messages encourage users to update the app for full compatibility
 
 Example warning:
+
 ```
 Save contains unknown fields that may be from a future version: newFeatureInV3, quantumState.
 These fields will be ignored. Consider updating the app to preserve all data.

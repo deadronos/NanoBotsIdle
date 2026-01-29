@@ -10,11 +10,7 @@ export const REROUTE_COOLDOWN_MS = 5000;
  * - If granted, transitions to DEPOSITING.
  * - If denied, checks queue length and cooldown to decide whether to queue or reroute (RETURNING).
  */
-export const handleDockRequest = (
-  world: WorldModel,
-  drone: Drone,
-  outpost: Outpost,
-) => {
+export const handleDockRequest = (world: WorldModel, drone: Drone, outpost: Outpost) => {
   const result = world.requestDock(outpost, drone.id);
   if (result === "GRANTED") {
     drone.state = "DEPOSITING";

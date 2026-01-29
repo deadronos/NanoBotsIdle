@@ -30,16 +30,15 @@ const hasFlag = (name) => args.includes(name);
 
 const CURRENT_PATH = getArg("--current", null);
 const BASELINE_PATH = getArg("--baseline", null);
-const THRESHOLDS_PATH = getArg(
-  "--thresholds",
-  ".github/performance-thresholds.json",
-);
+const THRESHOLDS_PATH = getArg("--thresholds", ".github/performance-thresholds.json");
 const WARNING_ONLY = hasFlag("--warning-only") || process.env.PERF_WARNING_ONLY === "true";
 const OUTPUT_PATH = getArg("--output", null);
 
 if (!CURRENT_PATH || !BASELINE_PATH) {
   console.error("Error: --current and --baseline paths are required");
-  console.error("Usage: node scripts/check-performance-regression.js --current <path> --baseline <path>");
+  console.error(
+    "Usage: node scripts/check-performance-regression.js --current <path> --baseline <path>",
+  );
   process.exit(1);
 }
 
@@ -82,11 +81,16 @@ results.push({
   current: current.fps.avg.toFixed(2),
   change: formatPercent(fpsChange),
   threshold: `±${thresholds.fps.regressionPercent}%`,
-  status: fpsRegression ? "❌ FAIL" : current.fps.avg < thresholds.fps.avgMin ? "⚠️  WARN" : "✅ PASS",
+  status:
+    fpsRegression ? "❌ FAIL"
+    : current.fps.avg < thresholds.fps.avgMin ? "⚠️  WARN"
+    : "✅ PASS",
 });
 if (fpsRegression) {
   hasFailure = true;
-  console.log(`\n❌ FPS regression detected: ${fpsChange.toFixed(2)}% (threshold: ${thresholds.fps.regressionPercent}%)`);
+  console.log(
+    `\n❌ FPS regression detected: ${fpsChange.toFixed(2)}% (threshold: ${thresholds.fps.regressionPercent}%)`,
+  );
 }
 
 // Frame Time Check (higher is worse)
@@ -98,11 +102,16 @@ results.push({
   current: `${current.frameTime.avg.toFixed(2)}ms`,
   change: formatPercent(frameTimeChange),
   threshold: `±${thresholds.frameTime.regressionPercent}%`,
-  status: frameTimeRegression ? "❌ FAIL" : current.frameTime.avg > thresholds.frameTime.avgMax ? "⚠️  WARN" : "✅ PASS",
+  status:
+    frameTimeRegression ? "❌ FAIL"
+    : current.frameTime.avg > thresholds.frameTime.avgMax ? "⚠️  WARN"
+    : "✅ PASS",
 });
 if (frameTimeRegression) {
   hasFailure = true;
-  console.log(`\n❌ Frame time regression detected: ${frameTimeChange.toFixed(2)}% (threshold: ${thresholds.frameTime.regressionPercent}%)`);
+  console.log(
+    `\n❌ Frame time regression detected: ${frameTimeChange.toFixed(2)}% (threshold: ${thresholds.frameTime.regressionPercent}%)`,
+  );
 }
 
 // Meshing Time Check (higher is worse)
@@ -114,11 +123,16 @@ results.push({
   current: `${current.meshingTime.avg.toFixed(2)}ms`,
   change: formatPercent(meshingChange),
   threshold: `±${thresholds.meshingTime.regressionPercent}%`,
-  status: meshingRegression ? "❌ FAIL" : current.meshingTime.avg > thresholds.meshingTime.avgMax ? "⚠️  WARN" : "✅ PASS",
+  status:
+    meshingRegression ? "❌ FAIL"
+    : current.meshingTime.avg > thresholds.meshingTime.avgMax ? "⚠️  WARN"
+    : "✅ PASS",
 });
 if (meshingRegression) {
   hasFailure = true;
-  console.log(`\n❌ Meshing time regression detected: ${meshingChange.toFixed(2)}% (threshold: ${thresholds.meshingTime.regressionPercent}%)`);
+  console.log(
+    `\n❌ Meshing time regression detected: ${meshingChange.toFixed(2)}% (threshold: ${thresholds.meshingTime.regressionPercent}%)`,
+  );
 }
 
 // Worker Sim Time Check (higher is worse)
@@ -130,11 +144,16 @@ results.push({
   current: `${current.workerSimMs.avg.toFixed(2)}ms`,
   change: formatPercent(workerChange),
   threshold: `±${thresholds.workerSimMs.regressionPercent}%`,
-  status: workerRegression ? "❌ FAIL" : current.workerSimMs.avg > thresholds.workerSimMs.avgMax ? "⚠️  WARN" : "✅ PASS",
+  status:
+    workerRegression ? "❌ FAIL"
+    : current.workerSimMs.avg > thresholds.workerSimMs.avgMax ? "⚠️  WARN"
+    : "✅ PASS",
 });
 if (workerRegression) {
   hasFailure = true;
-  console.log(`\n❌ Worker sim time regression detected: ${workerChange.toFixed(2)}% (threshold: ${thresholds.workerSimMs.regressionPercent}%)`);
+  console.log(
+    `\n❌ Worker sim time regression detected: ${workerChange.toFixed(2)}% (threshold: ${thresholds.workerSimMs.regressionPercent}%)`,
+  );
 }
 
 // Generate report
@@ -156,7 +175,9 @@ console.log("\n📊 Performance Regression Check Results\n");
 console.log("| Metric | Baseline | Current | Change | Threshold | Status |");
 console.log("|--------|----------|---------|--------|-----------|--------|");
 results.forEach((r) => {
-  console.log(`| ${r.metric} | ${r.baseline} | ${r.current} | ${r.change} | ${r.threshold} | ${r.status} |`);
+  console.log(
+    `| ${r.metric} | ${r.baseline} | ${r.current} | ${r.change} | ${r.threshold} | ${r.status} |`,
+  );
 });
 
 // Write detailed report if requested

@@ -55,25 +55,25 @@ describe("OutpostManager", () => {
   });
 
   it("getBestOutpost balances distance and load", () => {
-      const manager = new OutpostManager();
-      manager.addOutpost(0, 0, 0);   // Close but busy
-      manager.addOutpost(100, 0, 0); // Far but empty
+    const manager = new OutpostManager();
+    manager.addOutpost(0, 0, 0); // Close but busy
+    manager.addOutpost(100, 0, 0); // Far but empty
 
-      const busyOp = manager.getOutposts()[0];
-      const emptyOp = manager.getOutposts()[1];
+    const busyOp = manager.getOutposts()[0];
+    const emptyOp = manager.getOutposts()[1];
 
-      // Make busyOp busy
-      // Add 20 drones to queue/docked
-      for(let i=0; i<20; i++) {
-          busyOp.docked.add(i);
-      }
+    // Make busyOp busy
+    // Add 20 drones to queue/docked
+    for (let i = 0; i < 20; i++) {
+      busyOp.docked.add(i);
+    }
 
-      // At 10,0,0
-      // Dist to busy = 10. Load score = 20 * 10 = 200. Total = 210.
-      // Dist to empty = 90. Load score = 0. Total = 90.
-      // Should pick empty.
+    // At 10,0,0
+    // Dist to busy = 10. Load score = 20 * 10 = 200. Total = 210.
+    // Dist to empty = 90. Load score = 0. Total = 90.
+    // Should pick empty.
 
-      const best = manager.getBestOutpost(10, 0, 0);
-      expect(best).toBe(emptyOp);
+    const best = manager.getBestOutpost(10, 0, 0);
+    expect(best).toBe(emptyOp);
   });
 });

@@ -25,7 +25,7 @@ describe("pickTargetKey", () => {
     expect(
       pickTargetKey({
         world: { coordsFromKey: () => ({ x: 0, y: 0, z: 0 }) } as never,
-      frontierKeys: [],
+        frontierKeys: [],
         minedKeys: mined,
         reservedKeys: reserved,
         waterLevel: 0,

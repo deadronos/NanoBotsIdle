@@ -2,7 +2,10 @@
 import { act } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import { useFrontierHandler, type UseFrontierHandlerProps } from "../../src/components/world/hooks/useFrontierHandler";
+import {
+  useFrontierHandler,
+  type UseFrontierHandlerProps,
+} from "../../src/components/world/hooks/useFrontierHandler";
 import { playerChunk } from "../../src/engine/playerState";
 import { resetVoxelEdits } from "../../src/sim/collision";
 import { getSimBridge } from "../../src/simBridge/simBridge";
@@ -32,7 +35,9 @@ describe("useFrontierHandler", () => {
       }),
       enqueue: vi.fn(),
     };
-    (getSimBridge as unknown as { mockReturnValue: (v: unknown) => void }).mockReturnValue(mockBridge);
+    (getSimBridge as unknown as { mockReturnValue: (v: unknown) => void }).mockReturnValue(
+      mockBridge,
+    );
     playerChunk.cx = 0;
     playerChunk.cy = 0;
     playerChunk.cz = 0;

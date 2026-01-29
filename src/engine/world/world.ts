@@ -14,7 +14,7 @@ import { FrontierManager, type VoxelReader } from "./FrontierManager";
 import { type DockResult, type Outpost, OutpostManager } from "./OutpostManager";
 
 export { MATERIAL_AIR, MATERIAL_BEDROCK, MATERIAL_SOLID };
-export type { DockResult,Outpost };
+export type { DockResult, Outpost };
 
 const NEIGHBOR_OFFSETS = [
   [1, 0, 0],

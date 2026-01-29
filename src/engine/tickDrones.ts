@@ -3,11 +3,7 @@ import type { UiSnapshot, VoxelEdit } from "../shared/protocol";
 import type { VoxelKey } from "../shared/voxel";
 import type { Drone } from "./drones";
 import type { KeyIndex } from "./keyIndex";
-import {
-  handleHaulerState,
-  handleMinerState,
-  type TickDronesContext,
-} from "./tickDrones.handlers";
+import { handleHaulerState, handleMinerState, type TickDronesContext } from "./tickDrones.handlers";
 import type { Outpost, WorldModel } from "./world/world";
 
 export const tickDrones = (options: {

@@ -11,7 +11,12 @@ vi.mock("@react-three/fiber", () => ({
   useFrame: (cb: () => void) => {
     frameCallbacks.push(cb);
   },
-  useThree: (selector?: (s: { setDpr: (d: number) => void; gl: { info: { render: { calls: number } } } }) => unknown) => {
+  useThree: (
+    selector?: (s: {
+      setDpr: (d: number) => void;
+      gl: { info: { render: { calls: number } } };
+    }) => unknown,
+  ) => {
     const state = { setDpr: setDprMock, gl: { info: { render: { calls: 0 } } } };
     return typeof selector === "function" ? selector(state) : state;
   },

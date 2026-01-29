@@ -29,7 +29,9 @@ const createMockContext = (overrides: Partial<TickDronesContext> = {}): TickDron
       countFrontierAboveWater: () => 0,
       requestDock: () => "GRANTED",
       getQueueLength: () => 0,
-      undock: () => { /* noop */ },
+      undock: () => {
+        /* noop */
+      },
       getNearestOutpost: () => ({ x: 0, y: 0, z: 0, id: "outpost-1", level: 1 }),
     } as unknown as WorldModel,
     drones: [],
@@ -59,7 +61,7 @@ const createMockContext = (overrides: Partial<TickDronesContext> = {}): TickDron
     frontierAdded: [],
     frontierRemoved: [],
     depositEvents: [],
-    pickOutpost: () => ({ x: 0, y: 0, z: 0, id: "outpost-1", level: 1 } as Outpost),
+    pickOutpost: () => ({ x: 0, y: 0, z: 0, id: "outpost-1", level: 1 }) as Outpost,
     ...overrides,
   };
 };
@@ -170,11 +172,11 @@ describe("handleMinerState", () => {
     if (drone.payload >= drone.maxPayload) {
       expect(drone.state).toBe("RETURNING");
     } else {
-       // Just to be safe if mock value is low
-       drone.payload = 100;
-       // We need to re-run or manually check logic?
-       // The handler runs logic in one go.
-       // Let's ensure payload fills up.
+      // Just to be safe if mock value is low
+      drone.payload = 100;
+      // We need to re-run or manually check logic?
+      // The handler runs logic in one go.
+      // Let's ensure payload fills up.
     }
   });
 
@@ -263,27 +265,37 @@ describe("handleMinerState", () => {
 describe("handleHaulerState", () => {
   test("IDLE -> FETCHING when target miner found", () => {
     const miner: Drone = {
-        id: 2,
-        role: "MINER",
-        state: "MINING",
-        x: 10, y: 10, z: 10,
-        payload: 50,
-        maxPayload: 100,
-        miningTimer: 0,
-        targetKey: 123, targetX: 10, targetY: 10, targetZ: 10
+      id: 2,
+      role: "MINER",
+      state: "MINING",
+      x: 10,
+      y: 10,
+      z: 10,
+      payload: 50,
+      maxPayload: 100,
+      miningTimer: 0,
+      targetKey: 123,
+      targetX: 10,
+      targetY: 10,
+      targetZ: 10,
     };
     const context = createMockContext({
-        drones: [miner]
+      drones: [miner],
     });
     const hauler: Drone = {
-        id: 1,
-        role: "HAULER",
-        state: "IDLE",
-        x: 0, y: 0, z: 0,
-        payload: 0,
-        maxPayload: 100,
-        miningTimer: 0,
-        targetKey: null, targetX: 0, targetY: 0, targetZ: 0
+      id: 1,
+      role: "HAULER",
+      state: "IDLE",
+      x: 0,
+      y: 0,
+      z: 0,
+      payload: 0,
+      maxPayload: 100,
+      miningTimer: 0,
+      targetKey: null,
+      targetX: 0,
+      targetY: 0,
+      targetZ: 0,
     };
     // Miner needs payload > 0 and not DEPOSITING.
     // To score well, miner should be "RETURNING" or close?
@@ -297,34 +309,44 @@ describe("handleHaulerState", () => {
   });
 
   test("FETCHING -> RETURNING after taking payload", () => {
-      const miner: Drone = {
-          id: 2,
-          role: "MINER",
-          state: "MINING",
-          x: 10, y: 10, z: 10,
-          payload: 100,
-          maxPayload: 100,
-          miningTimer: 0,
-          targetKey: 123, targetX: 10, targetY: 10, targetZ: 10
-      };
-      const hauler: Drone = {
-          id: 1,
-          role: "HAULER",
-          state: "FETCHING",
-          x: 10, y: 12, z: 10, // Close to miner
-          payload: 0,
-          maxPayload: 100,
-          miningTimer: 0,
-          targetKey: "miner-2", targetX: 10, targetY: 10, targetZ: 10
-      };
-      const context = createMockContext({
-          drones: [hauler, miner]
-      });
+    const miner: Drone = {
+      id: 2,
+      role: "MINER",
+      state: "MINING",
+      x: 10,
+      y: 10,
+      z: 10,
+      payload: 100,
+      maxPayload: 100,
+      miningTimer: 0,
+      targetKey: 123,
+      targetX: 10,
+      targetY: 10,
+      targetZ: 10,
+    };
+    const hauler: Drone = {
+      id: 1,
+      role: "HAULER",
+      state: "FETCHING",
+      x: 10,
+      y: 12,
+      z: 10, // Close to miner
+      payload: 0,
+      maxPayload: 100,
+      miningTimer: 0,
+      targetKey: "miner-2",
+      targetX: 10,
+      targetY: 10,
+      targetZ: 10,
+    };
+    const context = createMockContext({
+      drones: [hauler, miner],
+    });
 
-      handleHaulerState(hauler, context);
+    handleHaulerState(hauler, context);
 
-      expect(hauler.state).toBe("RETURNING");
-      expect(hauler.payload).toBe(100);
-      expect(miner.payload).toBe(0);
+    expect(hauler.state).toBe("RETURNING");
+    expect(hauler.payload).toBe(100);
+    expect(miner.payload).toBe(0);
   });
 });

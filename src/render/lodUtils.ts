@@ -146,8 +146,9 @@ export const applyChunkVisibility = (
     const frustumVisible = isSphereVisible(frustum, boundingSphere.center, boundingSphere.radius);
     const distanceSq = distanceSqToPoint(camera.position, boundingSphere.center);
     const desiredLod = selectLodLevel(distanceSq, thresholds);
-    const lod = options?.progressive
-      ? resolveProgressiveLod(mesh, desiredLod, options.progressive)
+    const lod =
+      options?.progressive ?
+        resolveProgressiveLod(mesh, desiredLod, options.progressive)
       : desiredLod;
 
     const prevLod: LodLevel | undefined = mesh.userData.lod;
