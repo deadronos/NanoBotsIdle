@@ -6,8 +6,41 @@ import * as simBridge from "../src/simBridge/simBridge";
 import * as logger from "../src/utils/logger";
 import { resetGame } from "../src/utils/saveUtils";
 
+const ensureMockStorage = () => {
+  if (
+    typeof globalThis.localStorage !== "undefined" &&
+    typeof globalThis.localStorage.setItem === "function" &&
+    typeof globalThis.localStorage.getItem === "function" &&
+    typeof globalThis.localStorage.removeItem === "function"
+  ) {
+    return;
+  }
+
+  const map = new Map<string, string>();
+  Object.defineProperty(globalThis, "localStorage", {
+    configurable: true,
+    value: {
+      getItem: (k: string) => (map.has(k) ? (map.get(k) ?? null) : null),
+      setItem: (k: string, v: string) => {
+        map.set(String(k), String(v));
+      },
+      removeItem: (k: string) => {
+        map.delete(String(k));
+      },
+      clear: () => {
+        map.clear();
+      },
+      key: (i: number) => Array.from(map.keys())[i] ?? null,
+      get length() {
+        return map.size;
+      },
+    } as Storage,
+  });
+};
+
 describe("resetGame", () => {
   beforeEach(() => {
+    ensureMockStorage();
     // Setup a storage key to be removed
     localStorage.setItem("voxel-walker-storage", JSON.stringify({ credits: 123 }));
   });

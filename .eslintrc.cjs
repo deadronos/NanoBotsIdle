@@ -16,9 +16,6 @@ module.exports = {
     },
   },
   settings: {
-    react: {
-      version: "detect",
-    },
     "import/resolver": {
       typescript: {
         project: "./tsconfig.json",
@@ -29,9 +26,7 @@ module.exports = {
     "@typescript-eslint",
     "import",
     "jsx-a11y",
-    "react",
     "react-hooks",
-    "react-refresh",
     "simple-import-sort",
     "testing-library",
     "jest-dom",
@@ -43,7 +38,6 @@ module.exports = {
     "plugin:@typescript-eslint/recommended",
     "plugin:@typescript-eslint/stylistic",
 
-    "plugin:react/recommended",
     "plugin:react-hooks/recommended",
     "plugin:jsx-a11y/recommended",
 
@@ -93,16 +87,6 @@ module.exports = {
     // React Three Fiber/Three.js patterns intentionally mutate scene/refs.
     "react-hooks/immutability": "off",
 
-    // React 17+ / Vite SWC JSX transform
-    "react/react-in-jsx-scope": "off",
-    "react/jsx-uses-react": "off",
-
-    // We use TypeScript for props typing
-    "react/prop-types": "off",
-
-    // Vite fast refresh: prefer component-only exports
-    "react-refresh/only-export-components": ["warn", { allowConstantExport: true }],
-
     // Prefer type imports where possible (keeps runtime lean)
     "@typescript-eslint/consistent-type-imports": [
       "error",
@@ -111,6 +95,7 @@ module.exports = {
 
     // Both `type` and `interface` are acceptable; avoid forcing refactors.
     "@typescript-eslint/consistent-type-definitions": "off",
+    "@typescript-eslint/consistent-generic-constructors": "off",
 
     // Handled by unused-imports for autofix
     "@typescript-eslint/no-unused-vars": "off",
@@ -137,9 +122,6 @@ module.exports = {
 
     // Avoid Node-only builtins in browser code (still allow in config/scripts)
     "import/no-nodejs-modules": "off",
-
-    // R3F
-    "react/no-unknown-property": "off",
 
     // Enforce using logger utility instead of direct console calls in src/
     // Exceptions: logger.ts itself, worker files, tests, and config files (handled by overrides above)
