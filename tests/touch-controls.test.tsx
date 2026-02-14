@@ -1,12 +1,23 @@
 // @vitest-environment jsdom
-import { render, screen } from "@testing-library/react";
-import React from "react";
+import React, { act } from "react";
+import { createRoot, type Root } from "react-dom/client";
 import { afterEach, describe, expect, test } from "vitest";
 
 import { TouchControls } from "../src/components/ui/TouchControls";
 
 const noop = () => undefined;
 const originalMatchMedia = typeof window !== "undefined" ? window.matchMedia : undefined;
+let root: Root | null = null;
+let container: HTMLDivElement | null = null;
+
+const renderTouchControls = () => {
+  container = document.createElement("div");
+  document.body.appendChild(container);
+  root = createRoot(container);
+  act(() => {
+    root!.render(<TouchControls />);
+  });
+};
 
 afterEach(() => {
   // reset nav
@@ -19,6 +30,15 @@ afterEach(() => {
   if (originalMatchMedia) {
     window.matchMedia = originalMatchMedia;
   }
+
+  if (root && container) {
+    act(() => {
+      root!.unmount();
+    });
+    container.remove();
+  }
+  root = null;
+  container = null;
 });
 
 describe("TouchControls", () => {
@@ -42,8 +62,8 @@ describe("TouchControls", () => {
         removeEventListener: noop,
       }) as unknown as MediaQueryList;
 
-    render(<TouchControls />);
-    const buttons = screen.queryAllByRole("button");
+    renderTouchControls();
+    const buttons = container?.querySelectorAll("button") ?? [];
     expect(buttons.length).toBe(0);
   });
 
@@ -60,8 +80,8 @@ describe("TouchControls", () => {
         removeEventListener: noop,
       }) as unknown as MediaQueryList;
 
-    render(<TouchControls />);
-    const buttons = screen.getAllByRole("button");
+    renderTouchControls();
+    const buttons = container?.querySelectorAll("button") ?? [];
     expect(buttons.length).toBeGreaterThanOrEqual(4);
   });
 });
