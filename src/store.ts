@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import { persist } from "zustand/middleware";
+import { persist, type PersistStorage } from "zustand/middleware";
 
 import { getConfig } from "./config/index";
 import { getUpgradeCost } from "./economy/upgrades";
@@ -31,10 +31,52 @@ export interface GameState {
 
 // Legacy defaults remain in config (see src/config/economy.ts)
 
+let pendingPersistWrite: ReturnType<typeof setTimeout> | undefined;
+
+const clearPendingPersistWrite = () => {
+  if (!pendingPersistWrite) return;
+  clearTimeout(pendingPersistWrite);
+  pendingPersistWrite = undefined;
+};
+
 // Toggle used to temporarily suppress persistence during critical operations (e.g., reset)
 export let allowPersist = true;
 export const setAllowPersist = (v: boolean) => {
   allowPersist = v;
+  if (!v) {
+    clearPendingPersistWrite();
+  }
+};
+
+interface DebouncedStorage extends PersistStorage<GameState> {
+  _timeout?: ReturnType<typeof setTimeout>;
+}
+
+const debouncedStorage: DebouncedStorage = {
+  getItem: (name) => {
+    const str = localStorage.getItem(name);
+    if (!str) return null;
+    try {
+      return JSON.parse(str);
+    } catch {
+      return null;
+    }
+  },
+  setItem: (name, value) => {
+    if (!allowPersist) {
+      clearPendingPersistWrite();
+      return;
+    }
+    clearPendingPersistWrite();
+    pendingPersistWrite = setTimeout(() => {
+      localStorage.setItem(name, JSON.stringify(value));
+      pendingPersistWrite = undefined;
+    }, 1000);
+  },
+  removeItem: (name) => {
+    clearPendingPersistWrite();
+    localStorage.removeItem(name);
+  },
 };
 
 export const useGameStore = create<GameState>()(
@@ -93,10 +135,11 @@ export const useGameStore = create<GameState>()(
     }),
     {
       name: "voxel-walker-storage",
+      storage: debouncedStorage as unknown as PersistStorage<Partial<GameState>>,
       version: 2,
-      // Suppress persistence when `allowPersist` is false. This protects against races where
-      // the app writes to storage while a reset/remove is in progress.
-      partialize: (state) => (allowPersist ? state : ({} as Partial<GameState>)),
+      // Persistence suppression is handled by the storage adapter, which also clears queued
+      // writes when `allowPersist` is disabled during reset.
+      partialize: (state) => state,
     },
   ),
 );

@@ -113,15 +113,21 @@ Clear, actionable error messages:
 - `Field 'credits' must be a finite number, got: string`
 - `Warning: Save file version (v99) is newer than this app (v2)`
 
+The reset flow also clears any queued debounced persistence write before it
+removes `voxel-walker-storage`, so a stale write cannot repopulate storage
+after the user requests a reset.
+
 ## Testing
 
 Comprehensive test coverage in:
+
 - `tests/save-migrations.test.ts` — migration logic and transformations
 - `tests/save-validation.test.ts` — validation rules and error messages
 - `tests/save-roundtrip.test.ts` — full import/export cycles with fixtures
 - `tests/save-migration-edge-cases.test.ts` — edge cases, forward/backward compatibility
 
 Fixtures in `tests/fixtures/saves/`:
+
 - **Valid saves**: `valid-v1.json`, `valid-v2.json`, `minimal-v1.json`
 - **Edge cases**: `edge-case-empty-v1.json`, `edge-case-extreme-values-v2.json`, `edge-case-negative-values-v1.json`
 - **Invalid saves**: `invalid-no-version.json`, `invalid-no-data.json`, `invalid-bad-types.json`

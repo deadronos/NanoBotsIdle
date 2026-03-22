@@ -96,8 +96,8 @@ re-evaluated for frontier membership.
 World generation must guarantee a minimum number of above-water mineable voxels
 to avoid soft locks.
 
-- Target requirement: `prestige.minAboveWaterBlocks > 50` (exact number is a
-  config value; see `src/config/economy.ts`).
+- Target requirement: `prestige.minAboveWaterBlocks` is configurable; the
+  current default is `1000` in `src/config/economy.ts`.
 - On world init (implementation):
   - `initWorldForPrestige(prestigeLevel, cfg)` computes the initial frontier set using a candidate seed derived from `getSeed(prestigeLevel)`.
   - If the computed above-water frontier count is below the configured minimum (`cfg.economy.prestigeMinMinedBlocks`), the function will iterate up to `cfg.terrain.genRetries` (default 5), deriving a new candidate seed for each attempt (current algo: `candidateSeed = baseSeed + attempt * 101`) and regenerating the world.
