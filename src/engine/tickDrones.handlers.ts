@@ -194,7 +194,7 @@ export const handleHaulerState = (drone: Drone, context: TickDronesContext) => {
           const dist = Math.hypot(dx, dy, dz);
           // Score = payload / (dist + 50)
           let score = other.payload / (dist + 50);
-          if (other.state === "RETURNING") score *= 1.5;
+          if (other.state === "RETURNING") score *= 3.0; const payloadRatio = other.payload / other.maxPayload; if (payloadRatio > 0.8) score *= 2.0;
 
           if (score > bestScore) {
             bestScore = score;

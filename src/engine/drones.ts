@@ -45,70 +45,54 @@ export const syncDroneCount = (
   let miners = drones.filter((d) => d.role === "MINER");
   let haulers = drones.filter((d) => d.role === "HAULER");
 
-  // Sync Miners
-  if (miners.length < minerCount) {
-    const needed = minerCount - miners.length;
-    let nextId = drones.length > 0 ? Math.max(...drones.map((d) => d.id)) + 1 : 0;
-    for (let i = 0; i < needed; i++) {
-      miners.push({
-        id: nextId++,
-        x: 0,
-        y: cfg.drones.startHeightBase + Math.random() * cfg.drones.startHeightRandom,
-        z: 0,
-        targetKey: null,
-        targetX: Number.NaN,
-        targetY: Number.NaN,
-        targetZ: Number.NaN,
-        state: "SEEKING",
-        miningTimer: 0,
-        role: "MINER",
-        payload: 0,
-        maxPayload: getDroneCargo(0, cfg),
-      });
-    }
-  } else if (miners.length > minerCount) {
+  // Remove excess drones if counts decreased
+  if (miners.length > minerCount) {
     miners = miners.slice(0, minerCount);
   }
-
-  // Sync Haulers
-  if (haulers.length < haulerCount) {
-    const _needed = haulerCount - haulers.length;
-    const _nextId = drones.length > 0 ? Math.max(...drones.map((d) => d.id)) + 1 : 0;
-    // Ensure we don't collide with new miners logic (re-calculating nextId risk? No, I separated logic.)
-    // Actually nextId logic checks 'drones', which is the OLD list.
-    // If I added miners above, they are not in 'drones' yet.
-    // I should calculate maxId dynamically or track it.
-    // Better: Helper function.
-  } else if (haulers.length > haulerCount) {
+  if (haulers.length > haulerCount) {
     haulers = haulers.slice(0, haulerCount);
   }
 
-  // Correct implementation merging both
-  const nextDrones = [...miners, ...haulers];
+  // Find the highest ID currently in use to avoid collisions
+  let nextId = drones.reduce((max, d) => Math.max(max, d.id), -1) + 1;
 
-  // Fill Haulers
-  while (nextDrones.filter((d) => d.role === "HAULER").length < haulerCount) {
-    const maxId = nextDrones.length > 0 ? Math.max(...nextDrones.map((d) => d.id)) : -1;
-    nextDrones.push({
-      id: maxId + 1,
+  // Add Miners if needed
+  while (miners.length < minerCount) {
+    miners.push({
+      id: nextId++,
       x: 0,
-      y: 20, // Fly higher?
+      y: cfg.drones.startHeightBase + Math.random() * cfg.drones.startHeightRandom,
       z: 0,
       targetKey: null,
       targetX: Number.NaN,
       targetY: Number.NaN,
       targetZ: Number.NaN,
-      state: "IDLE" as DroneState, // Default state for Hauler
+      state: "SEEKING",
       miningTimer: 0,
-      role: "HAULER",
+      role: "MINER",
       payload: 0,
-      maxPayload: cfg.drones.haulers.baseCargo, // Use config
+      maxPayload: getDroneCargo(0, cfg),
     });
   }
 
-  // Remove Haulers if too many
-  // (Filter approach above was cleaner but I need to handle IDs sequentially)
+  // Add Haulers if needed
+  while (haulers.length < haulerCount) {
+    haulers.push({
+      id: nextId++,
+      x: 0,
+      y: 20, // Haulers fly slightly higher by default
+      z: 0,
+      targetKey: null,
+      targetX: Number.NaN,
+      targetY: Number.NaN,
+      targetZ: Number.NaN,
+      state: "IDLE",
+      miningTimer: 0,
+      role: "HAULER",
+      payload: 0,
+      maxPayload: cfg.drones.haulers.baseCargo,
+    });
+  }
 
-  // Let's rely on the final array method.
-  return nextDrones;
+  return [...miners, ...haulers];
 };

@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import { persist } from "zustand/middleware";
+import { persist, type PersistStorage } from "zustand/middleware";
 
 import { getConfig } from "./config/index";
 import { getUpgradeCost } from "./economy/upgrades";
@@ -35,6 +35,38 @@ export interface GameState {
 export let allowPersist = true;
 export const setAllowPersist = (v: boolean) => {
   allowPersist = v;
+};
+
+interface DebouncedStorage extends PersistStorage<GameState> {
+  _timeout?: ReturnType<typeof setTimeout>;
+}
+
+const debouncedStorage: DebouncedStorage = {
+  getItem: (name) => {
+    const str = localStorage.getItem(name);
+    if (!str) return null;
+    try {
+      return JSON.parse(str);
+    } catch {
+      return null;
+    }
+  },
+  setItem: (name, value) => {
+    if (debouncedStorage._timeout) {
+      clearTimeout(debouncedStorage._timeout);
+    }
+    debouncedStorage._timeout = setTimeout(() => {
+      localStorage.setItem(name, JSON.stringify(value));
+      debouncedStorage._timeout = undefined;
+    }, 1000);
+  },
+  removeItem: (name) => {
+    if (debouncedStorage._timeout) {
+      clearTimeout(debouncedStorage._timeout);
+      debouncedStorage._timeout = undefined;
+    }
+    localStorage.removeItem(name);
+  },
 };
 
 export const useGameStore = create<GameState>()(
@@ -93,6 +125,7 @@ export const useGameStore = create<GameState>()(
     }),
     {
       name: "voxel-walker-storage",
+      storage: debouncedStorage as unknown as PersistStorage<Partial<GameState>>,
       version: 2,
       // Suppress persistence when `allowPersist` is false. This protects against races where
       // the app writes to storage while a reset/remove is in progress.

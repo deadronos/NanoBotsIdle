@@ -69,7 +69,7 @@ export const handleCommand = (ctx: EngineContext, cmd: Cmd) => {
       const w = ctx.world;
       if (!w) return;
       // Cost check?
-      const cost = 1000; // Config later
+      const cost = ctx.cfg.economy.baseCosts.outpost;
       if (ctx.uiSnapshot.credits >= cost) {
         ctx.uiSnapshot.credits -= cost;
         w.addOutpost(cmd.x, cmd.y, cmd.z);
