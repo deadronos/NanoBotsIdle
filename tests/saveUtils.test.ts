@@ -3,6 +3,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import * as simBridge from "../src/simBridge/simBridge";
+import { setAllowPersist, useGameStore } from "../src/store";
 import * as logger from "../src/utils/logger";
 import { resetGame } from "../src/utils/saveUtils";
 
@@ -41,11 +42,14 @@ const ensureMockStorage = () => {
 describe("resetGame", () => {
   beforeEach(() => {
     ensureMockStorage();
+    setAllowPersist(true);
     // Setup a storage key to be removed
     localStorage.setItem("voxel-walker-storage", JSON.stringify({ credits: 123 }));
   });
 
   afterEach(() => {
+    setAllowPersist(true);
+    vi.clearAllTimers();
     localStorage.removeItem("voxel-walker-storage");
   });
 
@@ -62,6 +66,23 @@ describe("resetGame", () => {
     expect(localStorage.getItem("voxel-walker-storage")).toBeNull();
     expect(stopSpy).toHaveBeenCalled();
     stopSpy.mockRestore();
+  });
+
+  it("cancels any queued persist write so reset does not repopulate storage", () => {
+    vi.useFakeTimers();
+
+    useGameStore.getState().addCredits(1);
+
+    expect(localStorage.getItem("voxel-walker-storage")).not.toBeNull();
+
+    expect(() => resetGame()).not.toThrow();
+    expect(localStorage.getItem("voxel-walker-storage")).toBeNull();
+
+    vi.advanceTimersByTime(1000);
+
+    expect(localStorage.getItem("voxel-walker-storage")).toBeNull();
+
+    vi.useRealTimers();
   });
 
   it("best-effort: warns if sim bridge stop fails", () => {

@@ -31,10 +31,21 @@ export interface GameState {
 
 // Legacy defaults remain in config (see src/config/economy.ts)
 
+let pendingPersistWrite: ReturnType<typeof setTimeout> | undefined;
+
+const clearPendingPersistWrite = () => {
+  if (!pendingPersistWrite) return;
+  clearTimeout(pendingPersistWrite);
+  pendingPersistWrite = undefined;
+};
+
 // Toggle used to temporarily suppress persistence during critical operations (e.g., reset)
 export let allowPersist = true;
 export const setAllowPersist = (v: boolean) => {
   allowPersist = v;
+  if (!v) {
+    clearPendingPersistWrite();
+  }
 };
 
 interface DebouncedStorage extends PersistStorage<GameState> {
@@ -52,19 +63,18 @@ const debouncedStorage: DebouncedStorage = {
     }
   },
   setItem: (name, value) => {
-    if (debouncedStorage._timeout) {
-      clearTimeout(debouncedStorage._timeout);
+    if (!allowPersist) {
+      clearPendingPersistWrite();
+      return;
     }
-    debouncedStorage._timeout = setTimeout(() => {
+    clearPendingPersistWrite();
+    pendingPersistWrite = setTimeout(() => {
       localStorage.setItem(name, JSON.stringify(value));
-      debouncedStorage._timeout = undefined;
+      pendingPersistWrite = undefined;
     }, 1000);
   },
   removeItem: (name) => {
-    if (debouncedStorage._timeout) {
-      clearTimeout(debouncedStorage._timeout);
-      debouncedStorage._timeout = undefined;
-    }
+    clearPendingPersistWrite();
     localStorage.removeItem(name);
   },
 };
@@ -127,9 +137,9 @@ export const useGameStore = create<GameState>()(
       name: "voxel-walker-storage",
       storage: debouncedStorage as unknown as PersistStorage<Partial<GameState>>,
       version: 2,
-      // Suppress persistence when `allowPersist` is false. This protects against races where
-      // the app writes to storage while a reset/remove is in progress.
-      partialize: (state) => (allowPersist ? state : ({} as Partial<GameState>)),
+      // Persistence suppression is handled by the storage adapter, which also clears queued
+      // writes when `allowPersist` is disabled during reset.
+      partialize: (state) => state,
     },
   ),
 );
