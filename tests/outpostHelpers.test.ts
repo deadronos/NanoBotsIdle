@@ -5,7 +5,7 @@ import {
   handleDeposit,
   handleDockRequest,
   QUEUE_THRESHOLD,
-  REROUTE_COOLDOWN_MS,
+  REROUTE_COOLDOWN_SECONDS,
 } from "../src/engine/outpostHelpers";
 import type { Outpost, WorldModel } from "../src/engine/world/world";
 import type { UiSnapshot } from "../src/shared/protocol";
@@ -45,7 +45,7 @@ describe("handleDockRequest", () => {
     const drone = createMockDrone("RETURNING");
     const outpost = createMockOutpost();
 
-    handleDockRequest(world, drone, outpost);
+    handleDockRequest(world, drone, outpost, 0);
 
     expect(world.requestDock).toHaveBeenCalledWith(outpost, drone.id);
     expect(drone.state).toBe("DEPOSITING");
@@ -60,7 +60,7 @@ describe("handleDockRequest", () => {
     const drone = createMockDrone("RETURNING");
     const outpost = createMockOutpost();
 
-    handleDockRequest(world, drone, outpost);
+    handleDockRequest(world, drone, outpost, 0);
 
     expect(drone.state).toBe("QUEUING");
   });
@@ -74,16 +74,11 @@ describe("handleDockRequest", () => {
     drone.lastRerouteAt = 0; // Expired
     const outpost = createMockOutpost();
 
-    // Mock Date.now to be > REROUTE_COOLDOWN_MS
-    const now = REROUTE_COOLDOWN_MS + 100;
-    vi.spyOn(Date, "now").mockReturnValue(now);
-
-    handleDockRequest(world, drone, outpost);
+    const elapsedSeconds = REROUTE_COOLDOWN_SECONDS + 1;
+    handleDockRequest(world, drone, outpost, elapsedSeconds);
 
     expect(drone.state).toBe("RETURNING");
-    expect(drone.lastRerouteAt).toBe(now);
-
-    vi.restoreAllMocks();
+    expect(drone.lastRerouteAt).toBe(elapsedSeconds);
   });
 
   test("stays QUEUING if queue threshold exceeded but cooldown active", () => {
@@ -91,18 +86,14 @@ describe("handleDockRequest", () => {
       requestDock: vi.fn(() => "QUEUED"),
       getQueueLength: vi.fn(() => QUEUE_THRESHOLD + 1),
     } as unknown as WorldModel;
-    const now = 10000;
     const drone = createMockDrone("RETURNING");
-    drone.lastRerouteAt = now - 100; // Active
+    drone.lastRerouteAt = 100;
     const outpost = createMockOutpost();
 
-    vi.spyOn(Date, "now").mockReturnValue(now);
-
-    handleDockRequest(world, drone, outpost);
+    // Cooldown is active because 100 + 5 > 102
+    handleDockRequest(world, drone, outpost, 102);
 
     expect(drone.state).toBe("QUEUING");
-
-    vi.restoreAllMocks();
   });
 });
 

@@ -1,4 +1,4 @@
-import { computeNextUpgradeCosts, tryBuyUpgrade, type UpgradeType } from "../economy/upgrades";
+import { computeNextUpgradeCosts, getPrestigeRequirement, tryBuyUpgrade, type UpgradeType } from "../economy/upgrades";
 import type { Cmd } from "../shared/protocol";
 import { debug } from "../utils/logger";
 import type { EngineContext } from "./context";
@@ -39,7 +39,8 @@ export const handleCommand = (ctx: EngineContext, cmd: Cmd) => {
       return;
     }
     case "PRESTIGE": {
-      if (ctx.uiSnapshot.minedBlocks < ctx.cfg.economy.prestigeMinMinedBlocks) return;
+      const requirement = getPrestigeRequirement(ctx.uiSnapshot.prestigeLevel, ctx.cfg);
+      if (ctx.uiSnapshot.minedBlocks < requirement) return;
       ctx.uiSnapshot.credits = 0;
       ctx.uiSnapshot.minedBlocks = 0;
       ctx.uiSnapshot.totalBlocks = 0;
