@@ -1,60 +1,69 @@
-import type { InstancedMesh } from "three";
-import { Color, Object3D, Quaternion, Vector3 } from "three";
+import { Color, InstancedMesh, Object3D, Quaternion, Vector3 } from "three";
 
 import type { Config } from "../../config/index";
-import { applyInstanceUpdates } from "../../render/instanced";
 import { DRONE_STATE_ID } from "../../shared/droneState";
 
-// Cache role→color mapping to avoid repeated conversions
-const ROLE_COLORS = {
-  MINER: 0x00ffcc,
-  HAULER: 0xffaa00,
-  QUEUING: 0xffff00,
-} as const;
-
-// Cache target box state colors
-const TARGET_BOX_COLORS = {
-  MINING: 0xff3333,
-  MOVING: 0x00ffff,
-} as const;
-
-// Pre-computed Color objects to avoid repeated setHex calls
-const _colorMiner = new Color(ROLE_COLORS.MINER);
-const _colorHauler = new Color(ROLE_COLORS.HAULER);
-const _colorQueuing = new Color(ROLE_COLORS.QUEUING);
-const _colorMining = new Color(TARGET_BOX_COLORS.MINING);
-const _colorMoving = new Color(TARGET_BOX_COLORS.MOVING);
-
 const _tmp = new Object3D();
-const _tmpColor = new Color();
 const _pos = new Vector3();
 const _target = new Vector3();
 const _dir = new Vector3();
 const _quat = new Quaternion();
 const _unitY = new Vector3(0, 1, 0);
 
-// Pre-allocated arrays for per-frame animation values to avoid repeated Math operations
+const _colorMiner = new Color(0x66ccff);
+const _colorHauler = new Color(0xffaa00);
+const _colorQueuing = new Color(0xff6600);
+const _colorMining = new Color(0xff4444);
+const _colorMoving = new Color(0x44ff44);
+
+let _cachedCapacity = 0;
 let _bobbingCache: Float32Array | null = null;
 let _pulseCache: Float32Array | null = null;
 let _jitterCache: Float32Array | null = null;
-let _cachedCapacity = 0;
 
-const ensureUint8Cache = (mesh: InstancedMesh, key: string, len: number, fillValue: number) => {
-  const existing = mesh.userData[key] as Uint8Array | undefined;
-  if (existing && existing.length >= len) return existing;
-  const next = new Uint8Array(len);
-  next.fill(fillValue);
-  mesh.userData[key] = next;
-  return next;
+const applyInstanceUpdates = (
+  mesh: InstancedMesh,
+  options: {
+    matrix?: boolean;
+    color?: boolean;
+    matrixRange?: { start: number; end: number };
+    colorRange?: { start: number; end: number };
+  },
+) => {
+  if (options.matrix) mesh.instanceMatrix.needsUpdate = true;
+  if (options.color && mesh.instanceColor) mesh.instanceColor.needsUpdate = true;
+  if (options.matrixRange) {
+    mesh.instanceMatrix.addUpdateRange(
+      options.matrixRange.start * 16,
+      (options.matrixRange.end - options.matrixRange.start + 1) * 16,
+    );
+    mesh.instanceMatrix.needsUpdate = true;
+  }
+  if (options.colorRange && mesh.instanceColor) {
+    mesh.instanceColor.addUpdateRange(
+      options.colorRange.start * 3,
+      (options.colorRange.end - options.colorRange.start + 1) * 3,
+    );
+    mesh.instanceColor.needsUpdate = true;
+  }
 };
 
-const ensureInt8Cache = (mesh: InstancedMesh, key: string, len: number, fillValue: number) => {
-  const existing = mesh.userData[key] as Int8Array | undefined;
-  if (existing && existing.length >= len) return existing;
-  const next = new Int8Array(len);
-  next.fill(fillValue);
-  mesh.userData[key] = next;
-  return next;
+const ensureUint8Cache = (mesh: InstancedMesh, key: string, capacity: number, fillValue: number) => {
+  if (!mesh.userData[key] || (mesh.userData[key] as Uint8Array).length < capacity) {
+    const arr = new Uint8Array(capacity);
+    arr.fill(fillValue);
+    mesh.userData[key] = arr;
+  }
+  return mesh.userData[key] as Uint8Array;
+};
+
+const ensureInt8Cache = (mesh: InstancedMesh, key: string, capacity: number, fillValue: number) => {
+  if (!mesh.userData[key] || (mesh.userData[key] as Int8Array).length < capacity) {
+    const arr = new Int8Array(capacity);
+    arr.fill(fillValue);
+    mesh.userData[key] = arr;
+  }
+  return mesh.userData[key] as Int8Array;
 };
 
 const hideInstanceAt = (mesh: InstancedMesh, index: number) => {
@@ -71,6 +80,7 @@ export const updateDroneInstancedVisuals = (
   positions: Float32Array,
   targets: Float32Array,
   states: Uint8Array,
+  scales: Float32Array | null,
   roles: Uint8Array | null,
   bodyMesh: InstancedMesh,
   miningLaserMesh: InstancedMesh,
@@ -107,7 +117,6 @@ export const updateDroneInstancedVisuals = (
   const count = Math.min(droneCount, Math.floor(positions.length / 3));
 
   // Pre-compute animation values once per frame instead of per-instance
-  // This avoids calling Math.sin() hundreds of times per frame
   if (count > _cachedCapacity) {
     _cachedCapacity = Math.max(count, Math.ceil(_cachedCapacity * 1.5));
     _bobbingCache = new Float32Array(_cachedCapacity);
@@ -115,7 +124,6 @@ export const updateDroneInstancedVisuals = (
     _jitterCache = new Float32Array(_cachedCapacity);
   }
 
-  // Compute all animation values in batches for better cache locality
   const bobbingSpeed = cfg.drones.visual.bobbing.speed;
   const bobbingAmp = cfg.drones.visual.bobbing.amplitude;
   const pulseFreq = cfg.drones.visual.targetBox.pulseFreq;
@@ -123,6 +131,7 @@ export const updateDroneInstancedVisuals = (
   const pulseBase = cfg.drones.visual.targetBox.baseScale;
   const jitterBase = cfg.drones.visual.miningLaser.baseWidth;
   const jitterAmp = cfg.drones.visual.miningLaser.jitterAmplitude;
+  const payloadScaleAmp = cfg.drones.visual.payloadScaleAmplitude;
 
   for (let i = 0; i < count; i += 1) {
     _bobbingCache![i] = Math.sin(elapsedTime * bobbingSpeed + i) * bobbingAmp;
@@ -150,9 +159,7 @@ export const updateDroneInstancedVisuals = (
     const y = positions[base + 1];
     const z = positions[base + 2];
 
-    // Use pre-computed bobbing value from cache
     const bob = _bobbingCache![i];
-
     _pos.set(x, y + bob, z);
 
     const targetX = targets[base];
@@ -164,6 +171,10 @@ export const updateDroneInstancedVisuals = (
     const droneState = states[i] ?? DRONE_STATE_ID.SEEKING;
     const isMining = droneState === DRONE_STATE_ID.MINING && hasTarget;
     const isMoving = droneState === DRONE_STATE_ID.MOVING && hasTarget;
+
+    // Payload-based scale
+    const payloadRatio = scales ? scales[i] : 0;
+    const s = 1.0 + payloadRatio * payloadScaleAmp;
 
     if (hasTarget) {
       _target.set(targetX, targetY, targetZ);
@@ -180,19 +191,15 @@ export const updateDroneInstancedVisuals = (
       // --- body ---
       _tmp.position.copy(_pos);
       _tmp.quaternion.copy(_quat);
-      _tmp.scale.set(1, 1, 1);
+      _tmp.scale.set(s, s, s);
       _tmp.updateMatrix();
       bodyMesh.setMatrixAt(i, _tmp.matrix);
 
       if (hasBodyColors) {
         const role = roles ? roles[i] : 0;
         if (roleCache[i] !== role || droneState === DRONE_STATE_ID.QUEUING) {
-          roleCache[i] = role; // Note: Cache might be flaky if state changes but role doesn't
-          // Actually, we need to cache state too if we use it for color.
-          // Simplified: Just always update color if state is queuing?
-          // Better: use a combined cache key or just force update.
+          roleCache[i] = role;
           const isHauler = role === 1;
-          // Use pre-computed Color objects instead of setHex
           const colorObj =
             droneState === DRONE_STATE_ID.QUEUING ? _colorQueuing
             : isHauler ? _colorHauler
@@ -207,9 +214,7 @@ export const updateDroneInstancedVisuals = (
 
       // --- target box ---
       {
-        // Use pre-computed pulse value from cache
         const scale = _pulseCache![i];
-
         _tmp.position.copy(_target);
         _tmp.quaternion.identity();
         _tmp.rotation.set(0, elapsedTime * 0.5 + i * 0.1, 0);
@@ -221,7 +226,6 @@ export const updateDroneInstancedVisuals = (
           const stateCode = isMining ? 1 : 0;
           if (targetStateCache[i] !== stateCode) {
             targetStateCache[i] = stateCode;
-            // Use pre-computed Color objects instead of setHex
             const colorObj = isMining ? _colorMining : _colorMoving;
             targetBoxMesh.setColorAt(i, colorObj);
             targetBoxColorsDirty = true;
@@ -233,7 +237,6 @@ export const updateDroneInstancedVisuals = (
 
       // --- lasers ---
       if (isMining && dist > 1e-4) {
-        // Use pre-computed jitter value from cache
         const jitter = _jitterCache![i];
         _tmp.position.copy(_pos).addScaledVector(_dir, dist * 0.5);
         _tmp.quaternion.copy(_quat);
@@ -257,10 +260,10 @@ export const updateDroneInstancedVisuals = (
       continue;
     }
 
-    // No target: hide lasers + target box, keep body visible.
+    // No target
     _tmp.position.copy(_pos);
     _tmp.quaternion.identity();
-    _tmp.scale.set(1, 1, 1);
+    _tmp.scale.set(s, s, s);
     _tmp.updateMatrix();
     bodyMesh.setMatrixAt(i, _tmp.matrix);
 
@@ -269,7 +272,6 @@ export const updateDroneInstancedVisuals = (
       if (roleCache[i] !== role) {
         roleCache[i] = role;
         const isHauler = role === 1;
-        // Use pre-computed Color objects instead of setHex
         const colorObj = isHauler ? _colorHauler : _colorMiner;
         bodyMesh.setColorAt(i, colorObj);
         bodyColorsDirty = true;

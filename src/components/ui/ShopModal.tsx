@@ -1,6 +1,7 @@
 import React from "react";
 
 import { getConfig } from "../../config/index";
+import { getPrestigeRequirement } from "../../economy/upgrades";
 import { getSimBridge } from "../../simBridge/simBridge";
 import { useUiStore } from "../../ui/store";
 import { ModalShell } from "./ModalShell";
@@ -14,7 +15,7 @@ export const ShopModal: React.FC<ShopModalProps> = ({ onClose }) => {
   const snapshot = useUiStore((state) => state.snapshot);
   const cfg = getConfig();
   const nextCosts = snapshot.nextCosts ?? {};
-  const minPrestigeBlocks = cfg.economy.prestigeMinMinedBlocks;
+  const minPrestigeBlocks = getPrestigeRequirement(snapshot.prestigeLevel, cfg);
   const bridge = getSimBridge();
 
   return (

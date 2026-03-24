@@ -8,6 +8,7 @@ export type EconomyConfig = {
     outpost: number;
   };
   prestigeMinMinedBlocks: number;
+  prestigeScalingFactor: number;
 };
 
 export const defaultEconomyConfig: EconomyConfig = {
@@ -20,4 +21,5 @@ export const defaultEconomyConfig: EconomyConfig = {
     outpost: 1000,
   },
   prestigeMinMinedBlocks: 1000,
+  prestigeScalingFactor: 1.5,
 };

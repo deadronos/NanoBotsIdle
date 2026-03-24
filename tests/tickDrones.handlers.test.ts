@@ -56,6 +56,7 @@ const createMockContext = (overrides: Partial<TickDronesContext> = {}): TickDron
       upgrades: {},
       outposts: [],
     } as UiSnapshot,
+    elapsedSeconds: 0,
     minedPositions: [],
     editsThisTick: [],
     frontierAdded: [],

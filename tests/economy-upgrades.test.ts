@@ -1,7 +1,12 @@
 import { describe, expect, it } from "vitest";
 
 import { getConfig } from "../src/config";
-import { computeNextUpgradeCosts, getUpgradeCost, tryBuyUpgrade } from "../src/economy/upgrades";
+import {
+  computeNextUpgradeCosts,
+  getPrestigeRequirement,
+  getUpgradeCost,
+  tryBuyUpgrade,
+} from "../src/economy/upgrades";
 import type { UiSnapshot } from "../src/shared/protocol";
 
 // Helper to create a basic snapshot
@@ -157,6 +162,15 @@ describe("economy/upgrades", () => {
 
       // Basic check
       expect(costs.drone).toBeGreaterThan(0);
+    });
+  });
+
+  describe("getPrestigeRequirement", () => {
+    it("should scale prestige requirement by level", () => {
+      expect(getPrestigeRequirement(1, config)).toBe(config.economy.prestigeMinMinedBlocks);
+      expect(getPrestigeRequirement(2, config)).toBe(
+        Math.floor(config.economy.prestigeMinMinedBlocks * config.economy.prestigeScalingFactor),
+      );
     });
   });
 });

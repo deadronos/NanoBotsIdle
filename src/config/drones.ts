@@ -14,6 +14,17 @@ export type DronesConfig = {
     baseCargo: number;
     cargoPerLevel: number;
   };
+  ai: {
+    maxTargetAttempts: number;
+    orbitRadiusMiner: number;
+    orbitRadiusHauler: number;
+    haulerScoring: {
+      distBias: number;
+      returningMultiplier: number;
+      highPayloadMultiplier: number;
+      highPayloadThreshold: number;
+    };
+  };
   particle: {
     maxParticles: number;
     spread: number;
@@ -51,6 +62,7 @@ export type DronesConfig = {
       baseIntensity: number;
       randomIntensity: number;
     };
+    payloadScaleAmplitude: number;
   };
   useGLBMesh: boolean;
   glbPath: string;
@@ -71,6 +83,17 @@ export const defaultDronesConfig: DronesConfig = {
     speedPerLevel: 2,
     baseCargo: 50,
     cargoPerLevel: 10,
+  },
+  ai: {
+    maxTargetAttempts: 20,
+    orbitRadiusMiner: 6,
+    orbitRadiusHauler: 8,
+    haulerScoring: {
+      distBias: 50,
+      returningMultiplier: 3.0,
+      highPayloadMultiplier: 2.0,
+      highPayloadThreshold: 0.8,
+    },
   },
   particle: {
     maxParticles: 400,
@@ -109,6 +132,7 @@ export const defaultDronesConfig: DronesConfig = {
       baseIntensity: 2,
       randomIntensity: 3,
     },
+    payloadScaleAmplitude: 0.2,
   },
   useGLBMesh: true,
   glbPath: `${import.meta.env.BASE_URL}assets/glb/drone/drone_compressed.glb`.replace(/\/\//g, "/"),

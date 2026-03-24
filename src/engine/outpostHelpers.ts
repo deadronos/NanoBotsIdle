@@ -3,26 +3,30 @@ import type { Drone, DroneState } from "./drones";
 import type { Outpost, WorldModel } from "./world/world";
 
 export const QUEUE_THRESHOLD = 5;
-export const REROUTE_COOLDOWN_MS = 5000;
+export const REROUTE_COOLDOWN_SECONDS = 5; // 5 seconds in simulation time
 
 /**
  * Handles logic for a drone requesting to dock at an outpost.
  * - If granted, transitions to DEPOSITING.
  * - If denied, checks queue length and cooldown to decide whether to queue or reroute (RETURNING).
  */
-export const handleDockRequest = (world: WorldModel, drone: Drone, outpost: Outpost) => {
+export const handleDockRequest = (
+  world: WorldModel,
+  drone: Drone,
+  outpost: Outpost,
+  elapsedSeconds: number,
+) => {
   const result = world.requestDock(outpost, drone.id);
   if (result === "GRANTED") {
     drone.state = "DEPOSITING";
     drone.miningTimer = 0;
   } else {
-    // Reroute check with cooldown
-    const now = Date.now();
+    // Reroute check with cooldown (using simulation time)
     if (
       world.getQueueLength(outpost) > QUEUE_THRESHOLD &&
-      (drone.lastRerouteAt ?? 0) + REROUTE_COOLDOWN_MS < now
+      (drone.lastRerouteAt ?? 0) + REROUTE_COOLDOWN_SECONDS < elapsedSeconds
     ) {
-      drone.lastRerouteAt = now;
+      drone.lastRerouteAt = elapsedSeconds;
       drone.state = "RETURNING";
     } else {
       drone.state = "QUEUING";

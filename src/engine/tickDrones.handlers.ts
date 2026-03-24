@@ -13,6 +13,7 @@ export type TickDronesContext = {
   world: WorldModel;
   drones: Drone[];
   dtSeconds: number;
+  elapsedSeconds: number;
   cfg: Config;
   frontier: KeyIndex<VoxelKey>;
   minedKeys: Set<VoxelKey>;
@@ -33,6 +34,7 @@ export const handleMinerState = (drone: Drone, context: TickDronesContext) => {
   const {
     world,
     dtSeconds,
+    elapsedSeconds,
     cfg,
     frontier,
     minedKeys,
@@ -138,7 +140,7 @@ export const handleMinerState = (drone: Drone, context: TickDronesContext) => {
       const dist = moveTowards(drone, outpost.x, outpost.y + 2, outpost.z, moveSpeed, dtSeconds);
 
       if (dist < 1.0) {
-        handleDockRequest(world, drone, outpost);
+        handleDockRequest(world, drone, outpost, elapsedSeconds);
       }
       break;
     }
@@ -150,12 +152,12 @@ export const handleMinerState = (drone: Drone, context: TickDronesContext) => {
       }
 
       const oldState = drone.state;
-      handleDockRequest(world, drone, outpost);
+      handleDockRequest(world, drone, outpost, elapsedSeconds);
       if (drone.state !== oldState) break;
 
-      // Orbit behavior: Circle around center at y + 5
-      const angle = Date.now() / 1000 + drone.id;
-      const orbitRadius = 6;
+      // Orbit behavior: Circle around center using simulation time
+      const angle = elapsedSeconds + drone.id;
+      const orbitRadius = cfg.drones.ai.orbitRadiusMiner;
       const targetX = outpost.x + Math.sin(angle) * orbitRadius;
       const targetZ = outpost.z + Math.cos(angle) * orbitRadius;
       const targetY = outpost.y + 5;
@@ -174,7 +176,7 @@ export const handleMinerState = (drone: Drone, context: TickDronesContext) => {
 };
 
 export const handleHaulerState = (drone: Drone, context: TickDronesContext) => {
-  const { world, drones, dtSeconds, cfg, uiSnapshot, depositEvents, pickOutpost } = context;
+  const { world, drones, dtSeconds, elapsedSeconds, cfg, uiSnapshot, depositEvents, pickOutpost } = context;
 
   const hSpeed =
     cfg.drones.haulers.baseSpeed +
@@ -182,24 +184,28 @@ export const handleHaulerState = (drone: Drone, context: TickDronesContext) => {
 
   switch (drone.state) {
     case "IDLE": {
-      // Find target
       let bestTarget: Drone | null = null;
       let bestScore = -Infinity;
 
       for (const other of drones) {
-        if (other.role === "MINER" && other.payload > 0 && other.state !== "DEPOSITING") {
-          const dx = other.x - drone.x;
-          const dy = other.y - drone.y;
-          const dz = other.z - drone.z;
-          const dist = Math.hypot(dx, dy, dz);
-          // Score = payload / (dist + 50)
-          let score = other.payload / (dist + 50);
-          if (other.state === "RETURNING") score *= 3.0; const payloadRatio = other.payload / other.maxPayload; if (payloadRatio > 0.8) score *= 2.0;
+        if (other.role !== "MINER" || other.payload <= 0 || other.state === "DEPOSITING") {
+          continue;
+        }
 
-          if (score > bestScore) {
-            bestScore = score;
-            bestTarget = other;
-          }
+        const dx = other.x - drone.x;
+        const dy = other.y - drone.y;
+        const dz = other.z - drone.z;
+        const dist = Math.hypot(dx, dy, dz);
+
+        const scoring = cfg.drones.ai.haulerScoring;
+        let score = other.payload / (dist + scoring.distBias);
+        if (other.state === "RETURNING") score *= scoring.returningMultiplier;
+        const payloadRatio = other.payload / other.maxPayload;
+        if (payloadRatio > scoring.highPayloadThreshold) score *= scoring.highPayloadMultiplier;
+
+        if (score > bestScore) {
+          bestScore = score;
+          bestTarget = other;
         }
       }
 
@@ -259,13 +265,11 @@ export const handleHaulerState = (drone: Drone, context: TickDronesContext) => {
       const dist = moveTowards(drone, outpost.x, outpost.y + 4, outpost.z, hSpeed, dtSeconds);
 
       if (dist < 1.5) {
-        handleDockRequest(world, drone, outpost);
+        handleDockRequest(world, drone, outpost, elapsedSeconds);
       }
       break;
     }
     case "QUEUING": {
-      // Hauler Queue logic (copy/paste similar to Miner for now)
-      // Haulers might have VIP priority in future?
       const outpost = pickOutpost(drone.x, drone.y, drone.z);
       if (!outpost) {
         drone.state = "RETURNING";
@@ -273,16 +277,17 @@ export const handleHaulerState = (drone: Drone, context: TickDronesContext) => {
       }
 
       const oldState = drone.state;
-      handleDockRequest(world, drone, outpost);
+      handleDockRequest(world, drone, outpost, elapsedSeconds);
       if (drone.state !== oldState) break;
 
-      // Orbit
-      const angle = Date.now() / 1000 + drone.id;
+      // Orbit using simulation time
+      const angle = elapsedSeconds + drone.id;
+      const orbitRadius = cfg.drones.ai.orbitRadiusHauler;
       moveTowards(
         drone,
-        outpost.x + Math.sin(angle) * 8,
+        outpost.x + Math.sin(angle) * orbitRadius,
         outpost.y + 8,
-        outpost.z + Math.cos(angle) * 8,
+        outpost.z + Math.cos(angle) * orbitRadius,
         hSpeed,
         dtSeconds,
       );

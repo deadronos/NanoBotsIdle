@@ -59,3 +59,9 @@ export const tryBuyUpgrade = (type: UpgradeType, snapshot: UiSnapshot, cfg: Conf
       return true;
   }
 };
+
+export const getPrestigeRequirement = (prestigeLevel: number, cfg: Config) => {
+  return Math.floor(
+    cfg.economy.prestigeMinMinedBlocks * Math.pow(cfg.economy.prestigeScalingFactor, prestigeLevel - 1),
+  );
+};
