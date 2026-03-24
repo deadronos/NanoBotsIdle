@@ -184,21 +184,19 @@ export const handleHaulerState = (drone: Drone, context: TickDronesContext) => {
 
   switch (drone.state) {
     case "IDLE": {
-      // Find target
       let bestTarget: Drone | null = null;
       let bestScore = -Infinity;
 
-      // Pre-filter miners that have payload and are not already depositing
-      const potentialTargets = drones.filter(
-        (other) => other.role === "MINER" && other.payload > 0 && other.state !== "DEPOSITING",
-      );
+      for (const other of drones) {
+        if (other.role !== "MINER" || other.payload <= 0 || other.state === "DEPOSITING") {
+          continue;
+        }
 
-      for (const other of potentialTargets) {
         const dx = other.x - drone.x;
         const dy = other.y - drone.y;
         const dz = other.z - drone.z;
         const dist = Math.hypot(dx, dy, dz);
-        // Score = payload / (dist + distBias)
+
         const scoring = cfg.drones.ai.haulerScoring;
         let score = other.payload / (dist + scoring.distBias);
         if (other.state === "RETURNING") score *= scoring.returningMultiplier;

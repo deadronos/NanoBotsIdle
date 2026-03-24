@@ -22,6 +22,7 @@ export const createEngine = (_seed?: number, saveState?: Partial<UiSnapshot>): E
 
   const ctx: EngineContext = {
     tick: 0,
+    elapsedSeconds: 0,
     cfg,
     minedKeys: new Set<VoxelKey>(),
     reservedKeys: new Set<VoxelKey>(),

@@ -10,6 +10,7 @@ export const tickDrones = (options: {
   world: WorldModel;
   drones: Drone[];
   dtSeconds: number;
+  elapsedSeconds?: number;
   cfg: Config;
   frontier: KeyIndex<VoxelKey>;
   minedKeys: Set<VoxelKey>;
@@ -37,6 +38,7 @@ export const tickDrones = (options: {
 
   const context: TickDronesContext = {
     ...options,
+    elapsedSeconds: options.elapsedSeconds ?? 0,
     pickOutpost,
   };
 

@@ -15,6 +15,7 @@ export const tickEngine = (
   _maxSubsteps: number,
 ): { delta: RenderDelta; ui: UiSnapshot; backlog: number } => {
   ctx.tick += 1;
+  ctx.elapsedSeconds += dtSeconds;
   ctx.drones = syncDroneCount(
     ctx.drones,
     ctx.uiSnapshot.droneCount,
@@ -72,6 +73,7 @@ export const tickEngine = (
       frontierAdded,
       frontierRemoved,
       depositEvents,
+      elapsedSeconds: ctx.elapsedSeconds,
     });
   }
 

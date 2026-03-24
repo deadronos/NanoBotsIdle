@@ -11,6 +11,7 @@ export const updateDronesFrame = (options: {
   positions: Float32Array;
   targets: Float32Array;
   states: Uint8Array;
+  scales?: Float32Array | null;
   roles: Uint8Array | null;
   refs: DroneVisualRefs;
   effects: DroneEffectRefs;
@@ -31,6 +32,7 @@ export const updateDronesFrame = (options: {
       options.positions,
       options.targets,
       options.states,
+      options.scales ?? null,
       options.roles,
       bodyMesh,
       miningLaserMesh,

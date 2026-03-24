@@ -7,6 +7,7 @@ import type { WorldModel } from "./world/world";
 
 export interface EngineContext {
   tick: number;
+  elapsedSeconds: number;
   cfg: Config;
   minedKeys: Set<VoxelKey>;
   reservedKeys: Set<VoxelKey>;
