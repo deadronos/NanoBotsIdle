@@ -167,4 +167,16 @@ describe("useGameStore", () => {
     // droneCount is 3, so cost is baseCost * 1.5^(3-3) = baseCost * 1 = 999
     expect(newCost).toBe(999);
   });
+
+  it("should not buy an upgrade past the configured max level", () => {
+    updateConfig({ economy: { maxLevels: { drone: 3 } } });
+
+    const state = useGameStore.getState();
+    state.addCredits(10_000);
+    state.buyUpgrade("drone");
+
+    const newState = useGameStore.getState();
+    expect(newState.credits).toBe(10_000);
+    expect(newState.droneCount).toBe(3);
+  });
 });

@@ -108,6 +108,17 @@ describe("economy/upgrades", () => {
       expect(snapshot.droneCount).toBe(3);
     });
 
+    it("should not buy upgrade once it reaches the configured max level", () => {
+      const snapshot = createSnapshot();
+      snapshot.droneCount = config.economy.maxLevels.drone;
+      snapshot.credits = 1_000_000;
+
+      const success = tryBuyUpgrade("drone", snapshot, config);
+      expect(success).toBe(false);
+      expect(snapshot.credits).toBe(1_000_000);
+      expect(snapshot.droneCount).toBe(config.economy.maxLevels.drone);
+    });
+
     it("should buy hauler upgrade", () => {
       const snapshot = createSnapshot();
       const cost = getUpgradeCost("hauler", snapshot, config);

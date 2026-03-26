@@ -8,6 +8,29 @@ type UpgradeLevels = Pick<
   "droneCount" | "haulerCount" | "miningSpeedLevel" | "moveSpeedLevel" | "laserPowerLevel"
 >;
 
+const getUpgradeLevel = (type: UpgradeType, levels: UpgradeLevels) => {
+  switch (type) {
+    case "drone":
+      return levels.droneCount;
+    case "hauler":
+      return levels.haulerCount;
+    case "speed":
+      return levels.miningSpeedLevel;
+    case "move":
+      return levels.moveSpeedLevel;
+    case "laser":
+      return levels.laserPowerLevel;
+  }
+};
+
+export const getUpgradeMaxLevel = (type: UpgradeType, cfg: Config) => {
+  return cfg.economy.maxLevels[type];
+};
+
+export const isUpgradeMaxed = (type: UpgradeType, levels: UpgradeLevels, cfg: Config) => {
+  return getUpgradeLevel(type, levels) >= getUpgradeMaxLevel(type, cfg);
+};
+
 export const getUpgradeCost = (type: UpgradeType, levels: UpgradeLevels, cfg: Config) => {
   const baseCosts = cfg.economy.baseCosts;
 
@@ -36,6 +59,8 @@ export const computeNextUpgradeCosts = (levels: UpgradeLevels, cfg: Config) => {
 };
 
 export const tryBuyUpgrade = (type: UpgradeType, snapshot: UiSnapshot, cfg: Config) => {
+  if (isUpgradeMaxed(type, snapshot, cfg)) return false;
+
   const cost = getUpgradeCost(type, snapshot, cfg);
   if (snapshot.credits < cost) return false;
 
