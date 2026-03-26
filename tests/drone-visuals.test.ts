@@ -1,5 +1,6 @@
-import { describe, expect, it, vi } from "vitest";
 import type { InstancedMesh } from "three";
+import { describe, expect, it, vi } from "vitest";
+
 import { updateDroneInstancedVisuals } from "../src/components/drones/droneInstancedVisuals";
 import { getConfig } from "../src/config/index";
 import { DRONE_STATE_ID } from "../src/shared/droneState";

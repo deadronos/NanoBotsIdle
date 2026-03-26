@@ -1,4 +1,5 @@
-import { Color, InstancedMesh, Object3D, Quaternion, Vector3 } from "three";
+import type { InstancedMesh } from "three";
+import { Color, Object3D, Quaternion, Vector3 } from "three";
 
 import type { Config } from "../../config/index";
 import { DRONE_STATE_ID } from "../../shared/droneState";
