@@ -17,6 +17,7 @@ export const ShopModal: React.FC<ShopModalProps> = ({ onClose }) => {
   const nextCosts = snapshot.nextCosts ?? {};
   const minPrestigeBlocks = getPrestigeRequirement(snapshot.prestigeLevel, cfg);
   const bridge = getSimBridge();
+  const maxLevels = cfg.economy.maxLevels;
 
   return (
     <ModalShell
@@ -38,6 +39,7 @@ export const ShopModal: React.FC<ShopModalProps> = ({ onClose }) => {
           cost={nextCosts.drone ?? 0}
           onClick={() => bridge.enqueue({ t: "BUY_UPGRADE", id: "drone", n: 1 })}
           canAfford={snapshot.credits >= (nextCosts.drone ?? Number.POSITIVE_INFINITY)}
+          isMaxLevel={snapshot.droneCount >= maxLevels.drone}
           desc="Add another autonomous mining unit."
         />
         <UpgradeCard
@@ -46,6 +48,7 @@ export const ShopModal: React.FC<ShopModalProps> = ({ onClose }) => {
           cost={nextCosts.hauler ?? 0}
           onClick={() => bridge.enqueue({ t: "BUY_UPGRADE", id: "hauler", n: 1 })}
           canAfford={snapshot.credits >= (nextCosts.hauler ?? Number.POSITIVE_INFINITY)}
+          isMaxLevel={snapshot.haulerCount >= maxLevels.hauler}
           desc="Transports resources from miners to base, improving efficiency."
         />
         <UpgradeCard
@@ -54,6 +57,7 @@ export const ShopModal: React.FC<ShopModalProps> = ({ onClose }) => {
           cost={nextCosts.speed ?? 0}
           onClick={() => bridge.enqueue({ t: "BUY_UPGRADE", id: "speed", n: 1 })}
           canAfford={snapshot.credits >= (nextCosts.speed ?? Number.POSITIVE_INFINITY)}
+          isMaxLevel={snapshot.miningSpeedLevel >= maxLevels.speed}
           desc="Decreases time required to mine a block."
         />
         <UpgradeCard
@@ -62,6 +66,7 @@ export const ShopModal: React.FC<ShopModalProps> = ({ onClose }) => {
           cost={nextCosts.move ?? 0}
           onClick={() => bridge.enqueue({ t: "BUY_UPGRADE", id: "move", n: 1 })}
           canAfford={snapshot.credits >= (nextCosts.move ?? Number.POSITIVE_INFINITY)}
+          isMaxLevel={snapshot.moveSpeedLevel >= maxLevels.move}
           desc="Drones fly faster between targets."
         />
         <UpgradeCard
@@ -70,6 +75,7 @@ export const ShopModal: React.FC<ShopModalProps> = ({ onClose }) => {
           cost={nextCosts.laser ?? 0}
           onClick={() => bridge.enqueue({ t: "BUY_UPGRADE", id: "laser", n: 1 })}
           canAfford={snapshot.credits >= (nextCosts.laser ?? Number.POSITIVE_INFINITY)}
+          isMaxLevel={snapshot.laserPowerLevel >= maxLevels.laser}
           desc="Increases beam intensity (visual)."
         />
       </div>
