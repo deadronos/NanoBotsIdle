@@ -7,6 +7,13 @@ export type EconomyConfig = {
     hauler: number;
     outpost: number;
   };
+  maxLevels: {
+    drone: number;
+    hauler: number;
+    speed: number;
+    move: number;
+    laser: number;
+  };
   prestigeMinMinedBlocks: number;
   prestigeScalingFactor: number;
 };
@@ -19,6 +26,13 @@ export const defaultEconomyConfig: EconomyConfig = {
     laser: 200,
     hauler: 500,
     outpost: 1000,
+  },
+  maxLevels: {
+    drone: 50,
+    hauler: 20,
+    speed: 20,
+    move: 20,
+    laser: 20,
   },
   prestigeMinMinedBlocks: 1000,
   prestigeScalingFactor: 1.5,

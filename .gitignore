@@ -25,3 +25,4 @@ dev/profiling/snapshots/
 *.njsproj
 *.sln
 *.sw?
+dev_server.pid

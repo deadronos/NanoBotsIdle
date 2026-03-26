@@ -2,7 +2,7 @@ import { create } from "zustand";
 import { persist, type PersistStorage } from "zustand/middleware";
 
 import { getConfig } from "./config/index";
-import { getUpgradeCost } from "./economy/upgrades";
+import { getUpgradeCost, isUpgradeMaxed } from "./economy/upgrades";
 
 export interface GameState {
   credits: number;
@@ -118,6 +118,8 @@ export const useGameStore = create<GameState>()(
 
       buyUpgrade: (type) => {
         const state = get();
+        const cfg = getConfig();
+        if (isUpgradeMaxed(type, state, cfg)) return;
         const cost = state.getUpgradeCost(type);
 
         if (state.credits >= cost) {
