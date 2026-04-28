@@ -9,6 +9,7 @@
 - **Performance:** Progressive LOD and occlusion-culling are now available for meshed chunks, with benchmark presets for profiling.
 - **Reliability:** Integrated Zod-typed bridge for robust Worker <-> Main thread communication.
 - **Logistics:** Smart Queuing for Outposts to manage drone traffic with visual feedback.
+- **Dependencies:** Ongoing package upgrade to the latest stable npm releases on branch `chore/dependency-upgrade-latest`.
 
 ## Recent changes
 
@@ -36,3 +37,4 @@
 - Complete config extraction work (`TASK003`) so balance knobs live in `src/config/*`.
 - Execute the sim/render separation refactor in phases (see `memory/tasks/_index.md`): `TASK004` → `TASK005` → `TASK006`.
 - Keep an eye on bundle size warnings; revisit code-splitting later if it becomes annoying.
+- Finish the dependency upgrade task, then validate lint/typecheck/build/tests once the shell issue is resolved.
