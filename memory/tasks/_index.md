@@ -4,6 +4,7 @@
 
 - [TASK002] Centralize terrain & shared constants — Deterministic terrain API shared by World + Player (In Progress)
 - [TASK003] Config-driven constants extraction — Scan and extract magic values into `/src/config` (In Progress)
+- [TASK018] Dependency upgrade to latest stable packages — Update repo dependencies, fix fallout, and prepare a PR (Blocked)
 
 ## Pending
 

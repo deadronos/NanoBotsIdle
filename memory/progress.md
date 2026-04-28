@@ -8,6 +8,8 @@
 
 ## In progress / next
 
+- Dependency upgrade to latest stable npm packages (branch: `chore/dependency-upgrade-latest`).
+- Upgrade is currently blocked from full validation because the shell wrapper cannot spawn npm/git commands in this environment.
 - Expand test coverage (store + utility functions).
 - Tune performance as drone counts increase (avoid allocations in `useFrame()`).
 - Plan/execute worker-authoritative engine refactor (protocol + engine + deltas), per `docs/ARCHITECTURE.md`.
@@ -18,6 +20,11 @@
 - Vite build warns about large chunks (>500kB) after minification; not currently blocking.
 
 ## Recent updates
+
+### 2026-04-29
+
+- Started the dependency upgrade task and moved the repo onto `chore/dependency-upgrade-latest`.
+- Bumped the top-level toolchain and runtime package declarations to current stable npm versions where available.
 
 ### 2026-01-13
 
