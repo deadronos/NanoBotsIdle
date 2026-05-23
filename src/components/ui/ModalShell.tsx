@@ -25,7 +25,7 @@ export const ModalShell: React.FC<ModalShellProps> = ({
     <div
       className={
         overlayClassName ??
-        "fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 pointer-events-auto relative"
+        "fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 pointer-events-auto"
       }
     >
       <button
