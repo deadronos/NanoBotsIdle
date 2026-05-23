@@ -39,33 +39,18 @@ export const FloatingTextSystem = forwardRef<FloatingTextHandle>((_, ref) => {
     },
   }));
 
-  useFrame((state, delta) => {
+  useFrame((_, delta) => {
     if (texts.length === 0) return;
 
-    setTexts((prev) => {
-      const next: TextInstance[] = [];
-      let changed = false;
-      for (const t of prev) {
-        t.life -= delta;
-        t.y += delta * 1.5; // Float up speed
-        if (t.life > 0) {
-          next.push(t);
-        } else {
-          changed = true;
-        }
-      }
-
-      // If we only updated positions (mutation), we usually need to force re-render or let React handle state update.
-      // Since we are mutating 't.y' inside the loop on the previous state objects (which is bad practice in React strict mode but fast here),
-      // we should be careful. Better to return new objects if we rely on React re-render.
-      // However, for high frequency updates, we might want to avoid React state for position and use Refs,
-      // but Html component needs React state or props to move unless we target its div ref.
-
-      // For simplicity/correctness, let's map to new objects if we want smooth updates via React state, but this might be lagging.
-      // Actually, standard HTML overlay component from Drei tracks the 3D position automatically if we wrap it in a group or mesh.
-      // So we just need to update the list of active texts.
-      return changed ? next : prev;
-    });
+    setTexts((prev) =>
+      prev
+        .map((t) => ({
+          ...t,
+          life: t.life - delta,
+          y: t.y + delta * 1.5,
+        }))
+        .filter((t) => t.life > 0),
+    );
   });
 
   return (
