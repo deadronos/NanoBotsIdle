@@ -1,8 +1,8 @@
 import { useFrame } from "@react-three/fiber";
-import React, { useRef } from "react";
-import * as THREE from "three";
+import { type FC, useRef } from "react";
+import type * as THREE from "three";
 
-export const PlayerVisuals: React.FC = () => {
+export const PlayerVisuals: FC = () => {
   const leftExhaustRef = useRef<THREE.Mesh>(null);
   const rightExhaustRef = useRef<THREE.Mesh>(null);
 
