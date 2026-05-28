@@ -1,6 +1,6 @@
 import { useFrame } from "@react-three/fiber";
-import React, { useRef, useState } from "react";
-import * as THREE from "three";
+import { type FC, useRef, useState } from "react";
+import type * as THREE from "three";
 
 import { getSimBridge } from "../simBridge/simBridge";
 
@@ -11,7 +11,7 @@ interface OutpostItem {
   z: number;
 }
 
-const OutpostComponent: React.FC<OutpostItem> = ({ x, y, z }) => {
+const OutpostComponent: FC<OutpostItem> = ({ x, y, z }) => {
   const beaconRef = useRef<THREE.Mesh>(null);
 
   useFrame((state) => {
@@ -69,7 +69,7 @@ const OutpostComponent: React.FC<OutpostItem> = ({ x, y, z }) => {
   );
 };
 
-export const Outposts: React.FC = () => {
+export const Outposts: FC = () => {
   const [outpostList, setOutpostList] = useState<OutpostItem[]>([]);
   const bridge = getSimBridge();
   const lastLengthRef = useRef(-1);
