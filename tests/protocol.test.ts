@@ -56,7 +56,7 @@ describe("protocol payloads", () => {
         laserPowerLevel: 1,
         minedBlocks: 0,
         totalBlocks: 0,
-        upgrades: {},
+
         outposts: [],
         nextCosts: { drone: 100 },
       },

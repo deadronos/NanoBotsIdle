@@ -42,7 +42,6 @@ export const createEngine = (_seed?: number, saveState?: Partial<UiSnapshot>): E
       laserPowerLevel: saveState?.laserPowerLevel ?? 1,
       minedBlocks: saveState?.minedBlocks ?? 0,
       totalBlocks: 0,
-      upgrades: saveState?.upgrades ?? {},
       outposts: [],
       nextCosts: undefined,
     },

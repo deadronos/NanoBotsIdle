@@ -8,7 +8,7 @@
 
 ## In progress / next
 
-- Dependency upgrade to latest stable npm packages (branch: `chore/dependency-upgrade-latest-2026-06-23`, see `TASK019`).
+- Code review follow-ups (branch: `fix/code-review-improvements-2026-06-23`, see `TASK020`): dead-code cleanup, per-frame diff helper for persistent store, shared outpost beacon material, `pausePersist`/`resumePersist` API, CI `audit:prod` step, jsdom warning filter.
 - Expand test coverage (store + utility functions).
 - Tune performance as drone counts increase (avoid allocations in `useFrame()`).
 - Plan/execute worker-authoritative engine refactor (protocol + engine + deltas), per `docs/ARCHITECTURE.md`.
@@ -19,6 +19,18 @@
 - Vite build warns about large chunks (>500kB) after minification; not currently blocking.
 
 ## Recent updates
+
+### 2026-06-23 (later)
+
+- Started `TASK020` on `fix/code-review-improvements-2026-06-23` after merging `TASK019` via PR #211.
+- Removed dead `upgrades: Record<string, number>` field across the worker protocol, schema, UI store, engine, and bridge init payload; cleaned up dev-stream comments in `createSimBridge.ts`.
+- Extracted `simFramePersist` helper so `App.tsx` only writes persistent-store fields that actually changed each sim frame; reduced hot-path churn on idle frames.
+- Shared a single `MeshBasicMaterial` across all outpost beacons and moved the pulse animation to the parent `useFrame` callback (removed per-outpost `useFrame` + unsafe `as MeshBasicMaterial` cast).
+- Replaced module-level `setAllowPersist` with explicit `pausePersist`/`resumePersist` helpers in `store.ts`; updated `saveUtils.resetGame` and three test files.
+- Added `npm run audit:prod` (fails on high-severity prod CVE) and wired `typecheck` + `lint` + `audit:prod` into `.github/workflows/ci.yml`.
+- Tightened `useDroneMeshInit` `reinitKey` contract to `string | null`; updated the call site to compose a stable key from geometry/material UUIDs.
+- Suppressed jsdom `Not implemented: navigation` warnings via a focused `process.stderr.write` filter in `tests/setup/setup.ts`.
+- Test count grew from 398 → 415; all validation green (typecheck, lint, tests, lifecycle, build).
 
 ### 2026-06-23
 

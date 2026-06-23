@@ -58,7 +58,7 @@ describe("sim bridge gating", () => {
         laserPowerLevel: 1,
         minedBlocks: 0,
         totalBlocks: 0,
-        upgrades: {},
+
         outposts: [],
       },
       stats: { simMs: 0, backlog: 0 },

@@ -59,7 +59,10 @@ export const Drones: React.FC = () => {
     targetBoxMeshRef,
     miningLaserMeshRef,
     scanningLaserMeshRef,
-    reinitKey: droneGeo ?? droneMat,
+    // Use a stable key composed of the loaded geometry and material so the
+    // init effect re-runs only when both have actually been produced by the
+    // GLB loader (either may legitimately be null on the first frame).
+    reinitKey: droneGeo && droneMat ? `${droneGeo.uuid}|${droneMat.uuid}` : null,
   });
 
   const frameOptionsRef = useRef<Parameters<typeof updateDronesFrame>[0]>({

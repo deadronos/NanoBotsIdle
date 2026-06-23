@@ -82,7 +82,6 @@ export const UiSnapshotSchema = z.object({
   laserPowerLevel: z.number(),
   minedBlocks: z.number(),
   totalBlocks: z.number(),
-  upgrades: z.record(z.string(), z.number()),
   outposts: z.array(
     z.object({
       id: z.string(),

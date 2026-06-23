@@ -56,7 +56,6 @@ export type UiSnapshot = {
   laserPowerLevel: number;
   minedBlocks: number;
   totalBlocks: number;
-  upgrades: Record<string, number>;
   outposts: { id: string; x: number; y: number; z: number; level: number }[];
   nextCosts?: Record<string, number>;
   actualSeed?: number;

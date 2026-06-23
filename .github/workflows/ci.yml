@@ -30,5 +30,17 @@ jobs:
         # Do not overwrite baselines in CI by default; this step is available for maintainers
         run: echo "Skipping baseline generation in CI"
 
+      - name: Run typecheck
+        run: npm run typecheck --silent
+
+      - name: Run lint
+        run: npm run lint --silent
+
+      - name: Audit production dependencies (fails on high+)
+        # Fails the build if a new high-severity CVE lands in the runtime
+        # dependency tree. Dev-only advisories are intentionally ignored here;
+        # see `npm run audit` (no flag) for the full report.
+        run: npm run audit:prod --silent
+
       - name: Run tests
         run: npm test --silent

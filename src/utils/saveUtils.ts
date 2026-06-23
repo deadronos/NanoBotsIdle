@@ -1,4 +1,4 @@
-import { setAllowPersist, useGameStore } from "../store";
+import { pausePersist, useGameStore } from "../store";
 import { error, warn } from "./logger";
 import { applyMigrations, getMigrationsPath } from "./migrations/registry";
 import type { SaveData } from "./migrations/types";
@@ -135,7 +135,7 @@ export const resetGame = () => {
 
   // Temporarily disable persistence so any subsequent setState doesn't write to storage
   try {
-    setAllowPersist(false);
+    pausePersist();
   } catch (e) {
     warn("Failed to disable persistence during reset", e);
   }

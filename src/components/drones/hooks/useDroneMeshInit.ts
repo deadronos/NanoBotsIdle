@@ -9,8 +9,12 @@ export const useDroneMeshInit = (args: {
   targetBoxMeshRef: RefObject<InstancedMesh | null>;
   miningLaserMeshRef: RefObject<InstancedMesh | null>;
   scanningLaserMeshRef: RefObject<InstancedMesh | null>;
-  // Re-init when geometry/material swaps (GLB load)
-  reinitKey?: unknown;
+  /**
+   * Re-init trigger for the body mesh; pass a stable value that changes when
+   * the GLB-derived geometry/material is replaced. Use `null` while either is
+   * still loading so the effect does not fire on intermediate frames.
+   */
+  reinitKey?: string | null;
 }) => {
   const {
     maxDrones,
