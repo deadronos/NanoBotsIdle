@@ -4,7 +4,7 @@
 
 - [TASK002] Centralize terrain & shared constants — Deterministic terrain API shared by World + Player (In Progress)
 - [TASK003] Config-driven constants extraction — Scan and extract magic values into `/src/config` (In Progress)
-- [TASK018] Dependency upgrade to latest stable packages — Update repo dependencies, fix fallout, and prepare a PR (Blocked)
+- [TASK019] Dependency upgrade to latest stable packages (2026-06-23) — Refresh React/Vite/ESLint/Tailwind/Three/Playwright patch trail and open PR (In Progress)
 
 ## Pending
 
@@ -12,6 +12,7 @@
 
 ## Completed
 
+- [TASK018] Dependency upgrade to latest stable packages — Update repo dependencies, fix fallout, and prepare a PR (Completed, merged via PR #210)
 - [TASK017] Persistence reset safety and prestige docs — Prevent stale debounced save writes after reset and align docs with current prestige defaults (Completed)
 - [TASK016] Occlusion proxy rendering — Proxy volume rendering for occlusion queries to avoid false culling (Completed)
 - [TASK015] BVX-Kit voxel integration — Replace voxel keying/edit storage with BVX-backed helpers (Completed)

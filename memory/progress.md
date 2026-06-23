@@ -8,8 +8,7 @@
 
 ## In progress / next
 
-- Dependency upgrade to latest stable npm packages (branch: `chore/dependency-upgrade-latest`).
-- Upgrade is currently blocked from full validation because the shell wrapper cannot spawn npm/git commands in this environment.
+- Dependency upgrade to latest stable npm packages (branch: `chore/dependency-upgrade-latest-2026-06-23`, see `TASK019`).
 - Expand test coverage (store + utility functions).
 - Tune performance as drone counts increase (avoid allocations in `useFrame()`).
 - Plan/execute worker-authoritative engine refactor (protocol + engine + deltas), per `docs/ARCHITECTURE.md`.
@@ -20,6 +19,11 @@
 - Vite build warns about large chunks (>500kB) after minification; not currently blocking.
 
 ## Recent updates
+
+### 2026-06-23
+
+- Started a new dependency upgrade cycle on `chore/dependency-upgrade-latest-2026-06-23` (see `TASK019`).
+- Refreshed React 19.2.7, Vite 8.0.16, ESLint 10.5.0, Tailwind 4.3.1, TypeScript-ESLint 8.62.0, Vitest 4.1.9, and related toolchain patches; `npm run typecheck`, `npm run lint`, `npm test`, `npm run test:lifecycle`, and `npm run build` are all green.
 
 ### 2026-04-29
 
