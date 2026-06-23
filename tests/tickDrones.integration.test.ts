@@ -22,7 +22,7 @@ describe("tickDrones integration: hauler pickup and deposit", () => {
       laserPowerLevel: 1,
       minedBlocks: 0,
       totalBlocks: 0,
-      upgrades: {},
+
       outposts: [{ id: "o1", x: 10, y: 0, z: 10, level: 1 }],
     };
 

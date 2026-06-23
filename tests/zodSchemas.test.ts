@@ -17,7 +17,6 @@ describe("Zod Bridge Schemas", () => {
         laserPowerLevel: 1,
         minedBlocks: 0,
         totalBlocks: 0,
-        upgrades: { speed: 1 },
         outposts: [],
       },
     };
@@ -69,7 +68,7 @@ describe("Zod Bridge Schemas", () => {
         laserPowerLevel: 1,
         minedBlocks: 0,
         totalBlocks: 0,
-        upgrades: {},
+
         outposts: [],
       },
     };

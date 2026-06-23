@@ -1,4 +1,4 @@
-import type { Cmd, FromWorker, ToWorker } from "../shared/protocol";
+import type { Cmd, FromWorker, ToWorker, UiSnapshot } from "../shared/protocol";
 import { FromWorkerSchema } from "../shared/schemas";
 import { useGameStore } from "../store";
 import { getTelemetryCollector } from "../telemetry";
@@ -134,8 +134,10 @@ export const createSimBridge = (options: SimBridgeOptions = {}): SimBridge => {
     worker.addEventListener("message", handleMessage);
     if (!initSent) {
       const state = useGameStore.getState();
-      // Only pass data fields, strip functions to plain object for messaging
-      const saveState = {
+      // Project the persistent store into a plain data-only object so the
+      // worker can rehydrate its UiSnapshot. Only the fields the engine reads
+      // are forwarded; no functions are included.
+      const saveState: Partial<UiSnapshot> = {
         credits: state.credits,
         prestigeLevel: state.prestigeLevel,
         droneCount: state.droneCount,
@@ -145,25 +147,6 @@ export const createSimBridge = (options: SimBridgeOptions = {}): SimBridge => {
         laserPowerLevel: state.laserPowerLevel,
         minedBlocks: state.minedBlocks,
         totalBlocks: state.totalBlocks,
-        // upgrades: ??? GameState doesn't have upgrades object?
-        // Wait, store.ts defines upgrades as flat fields (miningSpeedLevel etc).
-        // But UiSnapshot has upgrades: Record<string, number>.
-        // engine.ts expects upgrades: {}.
-        // We need to MAP flat fields -> upgrades map if engine expects it.
-        // engine.ts: uiSnapshot.upgrades = saveState?.upgrades ?? {}.
-        // But store.ts: miningSpeedLevel, etc.
-        // Does engine USE `upgrades` object?
-        // engine.ts: case "BUY_UPGRADE": checks `cmd.id`.
-        // `tryBuyUpgrade` reads `uiSnapshot`.
-        // `uiSnapshot` properties match store.ts properties?
-        // Let's check `UiSnapshot` definition in `protocol.ts` (Step 79).
-        // `upgrades: Record<string, number>`.
-        // `miningSpeedLevel` etc are ALSO in `UiSnapshot`.
-        // So `upgrades` might be redundant or legacy?
-        // `engine.ts` initializes `upgrades: {}`.
-        // Let's pass what we have. If `upgrades` object is needed for UI cost calc, we should reconstruct it.
-        // But `store.ts` manages it.
-        // Let's just pass `outposts`.
         outposts: state.outposts,
       };
 

@@ -22,7 +22,7 @@ describe("tickDrones minedBlocks tracking", () => {
       laserPowerLevel: 1,
       minedBlocks: 0,
       totalBlocks: 0,
-      upgrades: {},
+
       outposts: [],
     };
 

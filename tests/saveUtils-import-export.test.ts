@@ -7,7 +7,8 @@ import { CURRENT_SAVE_VERSION } from "../src/utils/migrations/types";
 const {
   storeGetStateMock,
   storeSetStateMock,
-  setAllowPersistMock,
+  pausePersistMock,
+  resumePersistMock,
   loggerErrorMock,
   loggerWarnMock,
   applyMigrationsMock,
@@ -19,7 +20,8 @@ const {
   return {
     storeGetStateMock: vi.fn(),
     storeSetStateMock: vi.fn(),
-    setAllowPersistMock: vi.fn(),
+    pausePersistMock: vi.fn(),
+    resumePersistMock: vi.fn(),
     loggerErrorMock: vi.fn(),
     loggerWarnMock: vi.fn(),
     applyMigrationsMock: vi.fn(),
@@ -32,7 +34,8 @@ const {
 
 vi.mock("../src/store", () => {
   return {
-    setAllowPersist: setAllowPersistMock,
+    pausePersist: pausePersistMock,
+    resumePersist: resumePersistMock,
     useGameStore: {
       getState: storeGetStateMock,
       setState: storeSetStateMock,
@@ -105,7 +108,8 @@ describe("saveUtils: exportSave/importSave", () => {
 
     storeGetStateMock.mockReset();
     storeSetStateMock.mockReset();
-    setAllowPersistMock.mockReset();
+    pausePersistMock.mockReset();
+    resumePersistMock.mockReset();
     loggerErrorMock.mockReset();
     loggerWarnMock.mockReset();
     applyMigrationsMock.mockReset();

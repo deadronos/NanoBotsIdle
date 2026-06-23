@@ -1,6 +1,6 @@
 import { useFrame } from "@react-three/fiber";
 import { type FC, useRef, useState } from "react";
-import type * as THREE from "three";
+import { MeshBasicMaterial } from "three";
 
 import { getSimBridge } from "../simBridge/simBridge";
 
@@ -11,17 +11,17 @@ interface OutpostItem {
   z: number;
 }
 
+// One beacon material is shared across every outpost. All beacons pulse in
+// lockstep with the global clock, so per-instance materials would mean
+// duplicate uniform writes for no visual benefit. Sharing also lets us drop
+// the per-outpost useFrame and the unsafe `as MeshBasicMaterial` cast.
+const sharedBeaconMaterial = new MeshBasicMaterial({
+  color: "#00ffcc",
+  transparent: true,
+  opacity: 0.4,
+});
+
 const OutpostComponent: FC<OutpostItem> = ({ x, y, z }) => {
-  const beaconRef = useRef<THREE.Mesh>(null);
-
-  useFrame((state) => {
-    if (beaconRef.current) {
-      // Pulsing glow effect for the beacon light
-      const intensity = 0.4 + Math.sin(state.clock.elapsedTime * 4) * 0.4;
-      (beaconRef.current.material as THREE.MeshBasicMaterial).opacity = intensity;
-    }
-  });
-
   return (
     <group position={[x, y, z]}>
       {/* Base metal platform */}
@@ -60,10 +60,9 @@ const OutpostComponent: FC<OutpostItem> = ({ x, y, z }) => {
         <meshStandardMaterial color="#718096" metalness={0.8} roughness={0.2} />
       </mesh>
 
-      {/* Beacon Light Ball */}
-      <mesh position={[0, 2.35, 0]} ref={beaconRef}>
+      {/* Beacon Light Ball - shares the pulsing material with all outposts */}
+      <mesh position={[0, 2.35, 0]} material={sharedBeaconMaterial}>
         <sphereGeometry args={[0.12, 8, 8]} />
-        <meshBasicMaterial color="#00ffcc" transparent />
       </mesh>
     </group>
   );
@@ -74,7 +73,11 @@ export const Outposts: FC = () => {
   const bridge = getSimBridge();
   const lastLengthRef = useRef(-1);
 
-  useFrame(() => {
+  useFrame((state) => {
+    // Pulse the shared beacon material once per frame, regardless of how many
+    // outposts are currently rendered.
+    sharedBeaconMaterial.opacity = 0.4 + Math.sin(state.clock.elapsedTime * 4) * 0.4;
+
     const frame = bridge.getLastFrame();
     if (!frame || !frame.delta.outposts) return;
 

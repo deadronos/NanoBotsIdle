@@ -18,6 +18,7 @@ import { getTelemetryCollector } from "./telemetry";
 import type { ViewMode } from "./types";
 import { useUiStore } from "./ui/store";
 import { debug } from "./utils/logger";
+import { buildPersistedPatch } from "./utils/simFramePersist";
 
 function App() {
   const [viewMode, setViewMode] = useState<ViewMode>("THIRD_PERSON");
@@ -35,20 +36,15 @@ function App() {
     const unsubscribe = bridge.onFrame((frame) => {
       setSnapshot(frame.ui);
 
-      // Sync to persistent store
-      // Note: frame.delta.outposts always contains full list from world
-      useGameStore.setState({
-        credits: frame.ui.credits,
-        prestigeLevel: frame.ui.prestigeLevel,
-        minedBlocks: frame.ui.minedBlocks,
-        droneCount: frame.ui.droneCount,
-        haulerCount: frame.ui.haulerCount,
-        miningSpeedLevel: frame.ui.miningSpeedLevel,
-        moveSpeedLevel: frame.ui.moveSpeedLevel,
-        laserPowerLevel: frame.ui.laserPowerLevel,
-        totalBlocks: frame.ui.totalBlocks,
-        outposts: frame.delta.outposts || [],
-      });
+      // Sync to persistent store, but only write fields that actually changed.
+      // Skipping the write avoids (a) Zustand subscriber notifications every
+      // frame and (b) the persist middleware re-evaluating its write queue.
+      const outposts = frame.delta.outposts ?? [];
+      const prev = useGameStore.getState();
+      const patch = buildPersistedPatch(prev, frame.ui, outposts);
+      if (Object.keys(patch).length > 0) {
+        useGameStore.setState(patch);
+      }
 
       if (!frame.stats) return;
 

@@ -31,6 +31,17 @@ export interface GameState {
 
 // Legacy defaults remain in config (see src/config/economy.ts)
 
+/**
+ * Persistence suppression is used to short-circuit storage writes during
+ * critical operations like `resetGame`, where a queued debounced write could
+ * resurrect cleared state immediately before the page reloads. The flag is
+ * intentionally not part of `GameState` so it cannot leak through persistence
+ * or React subscriptions - consumers must go through the explicit
+ * `pausePersist`/`resumePersist` API below.
+ */
+type PersistGuard = { paused: boolean };
+const persistGuard: PersistGuard = { paused: false };
+
 let pendingPersistWrite: ReturnType<typeof setTimeout> | undefined;
 
 const clearPendingPersistWrite = () => {
@@ -39,14 +50,23 @@ const clearPendingPersistWrite = () => {
   pendingPersistWrite = undefined;
 };
 
-// Toggle used to temporarily suppress persistence during critical operations (e.g., reset)
-export let allowPersist = true;
-export const setAllowPersist = (v: boolean) => {
-  allowPersist = v;
-  if (!v) {
-    clearPendingPersistWrite();
-  }
+/**
+ * Temporarily suspend writes to localStorage and discard any in-flight
+ * debounced write. Calls to `pausePersist`/`resumePersist` must be paired by
+ * the caller; the storage adapter does not auto-resume.
+ */
+export const pausePersist = (): void => {
+  persistGuard.paused = true;
+  clearPendingPersistWrite();
 };
+
+/** Re-enable persistence writes after a `pausePersist`. */
+export const resumePersist = (): void => {
+  persistGuard.paused = false;
+};
+
+/** @internal Test-only helper. Not intended for production callers. */
+export const isPersistPaused = (): boolean => persistGuard.paused;
 
 interface DebouncedStorage extends PersistStorage<GameState> {
   _timeout?: ReturnType<typeof setTimeout>;
@@ -63,7 +83,7 @@ const debouncedStorage: DebouncedStorage = {
     }
   },
   setItem: (name, value) => {
-    if (!allowPersist) {
+    if (persistGuard.paused) {
       clearPendingPersistWrite();
       return;
     }
@@ -139,8 +159,8 @@ export const useGameStore = create<GameState>()(
       name: "voxel-walker-storage",
       storage: debouncedStorage as unknown as PersistStorage<Partial<GameState>>,
       version: 2,
-      // Persistence suppression is handled by the storage adapter, which also clears queued
-      // writes when `allowPersist` is disabled during reset.
+      // Persistence suppression is handled by the storage adapter via
+      // `pausePersist`/`resumePersist`, which also clears any queued write.
       partialize: (state) => state,
     },
   ),

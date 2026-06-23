@@ -53,7 +53,7 @@ const createMockContext = (overrides: Partial<TickDronesContext> = {}): TickDron
       miningSpeedLevel: 1,
       laserPowerLevel: 1,
       totalBlocks: 0,
-      upgrades: {},
+
       outposts: [],
     } as UiSnapshot,
     elapsedSeconds: 0,

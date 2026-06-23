@@ -1,7 +1,7 @@
-import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { resetConfig, updateConfig } from "../src/config";
-import { useGameStore } from "../src/store";
+import { isPersistPaused, pausePersist, resumePersist, useGameStore } from "../src/store";
 
 // Helper to reset the store state
 const resetStore = () => {
@@ -178,5 +178,48 @@ describe("useGameStore", () => {
     const newState = useGameStore.getState();
     expect(newState.credits).toBe(10_000);
     expect(newState.droneCount).toBe(3);
+  });
+});
+
+describe("persistence pause/resume", () => {
+  beforeEach(() => {
+    localStorage.removeItem("voxel-walker-storage");
+    resumePersist();
+  });
+
+  afterEach(() => {
+    localStorage.removeItem("voxel-walker-storage");
+    resumePersist();
+  });
+
+  it("starts in the unpaused state", () => {
+    expect(isPersistPaused()).toBe(false);
+  });
+
+  it("toggles the guard when pausePersist/resumePersist are called", () => {
+    pausePersist();
+    expect(isPersistPaused()).toBe(true);
+    resumePersist();
+    expect(isPersistPaused()).toBe(false);
+  });
+
+  it("suppresses writes to localStorage while paused", () => {
+    vi.useFakeTimers();
+
+    pausePersist();
+    useGameStore.getState().addCredits(99);
+    vi.advanceTimersByTime(2000);
+    expect(localStorage.getItem("voxel-walker-storage")).toBeNull();
+
+    resumePersist();
+    useGameStore.getState().addCredits(1);
+    vi.advanceTimersByTime(2000);
+    const stored = JSON.parse(localStorage.getItem("voxel-walker-storage") ?? "{}");
+    // State accumulates both credits (99 + 1 = 100); the only assertion here
+    // is that the paused write was suppressed and a new debounced write
+    // completed after resume.
+    expect(stored.state?.credits ?? stored.credits).toBe(100);
+
+    vi.useRealTimers();
   });
 });

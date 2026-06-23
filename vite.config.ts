@@ -40,6 +40,16 @@ export default defineConfig(() => {
     test: {
       include: ["tests/**/*.{test,spec}.{ts,tsx,js,jsx}"],
       setupFiles: ["tests/setup/setup.ts"],
+      // Force vitest to wire jsdom's VirtualConsole to `globalThis.console`.
+      // Without this, vitest's jsdom env leaves `console` unset, which causes
+      // jsdom to fall back to its own default VirtualConsole that prints to
+      // Node's built-in console (bypassing any overrides installed in
+      // setupFiles).
+      environmentOptions: {
+        jsdom: {
+          console: true,
+        },
+      },
     },
     resolve: {
       alias: {

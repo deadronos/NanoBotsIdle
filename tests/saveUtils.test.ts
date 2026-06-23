@@ -3,7 +3,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import * as simBridge from "../src/simBridge/simBridge";
-import { setAllowPersist, useGameStore } from "../src/store";
+import { resumePersist, useGameStore } from "../src/store";
 import * as logger from "../src/utils/logger";
 import { resetGame } from "../src/utils/saveUtils";
 
@@ -42,13 +42,13 @@ const ensureMockStorage = () => {
 describe("resetGame", () => {
   beforeEach(() => {
     ensureMockStorage();
-    setAllowPersist(true);
+    resumePersist();
     // Setup a storage key to be removed
     localStorage.setItem("voxel-walker-storage", JSON.stringify({ credits: 123 }));
   });
 
   afterEach(() => {
-    setAllowPersist(true);
+    resumePersist();
     vi.clearAllTimers();
     localStorage.removeItem("voxel-walker-storage");
   });
