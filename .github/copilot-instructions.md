@@ -3,8 +3,11 @@
 This repository is a small React + React Three Fiber game prototype: a voxel-ish world with an autonomous mining-drone loop and an overlay UI. These instructions tell Copilot how to make changes that match the existing architecture, tooling, and performance constraints.
 
 ## Agent guidance
-also cross-reference root folder `AGENTS.md`
-Consider updating this file if the architecture or coding style changes significantly.
+
+- Entry point: `AGENTS.md` — purpose, npm commands, hard rules, and the `docs/agents/` routing table.
+- Task guides: `docs/agents/` — open only the file matching the task.
+- This file is the canonical long-form source for architecture and conventions. `docs/agents/*` summarize it and link back; do not restate the same rule in both places.
+- Update this file when architecture or coding style changes significantly.
 
 Architecture docs:
 

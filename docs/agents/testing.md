@@ -1,26 +1,23 @@
+Canonical long-form: `.github/instructions/nodejs-javascript-vitest.instructions.md`; Playwright specifics: `.github/instructions/playwright-typescript.instructions.md`
+
 # Testing: Patterns & Commands
 
-Canonical test stack in this repo:
+Canonical test stack: **Vitest** + Testing Library (`@testing-library/react`, `@testing-library/jest-dom`) for units; **Playwright** for E2E and browser flows.
 
-- Unit tests: **Vitest** + Testing Library (React Testing Library), `@testing-library/jest-dom`
-- E2E / browser: Playwright (see `.github/instructions/playwright-typescript.instructions.md`)
+## Commands
 
-Useful commands:
+| Command | Purpose |
+| --- | --- |
+| `npm test` | full Vitest run |
+| `npm run test:watch` | watch mode |
+| `npm run test:coverage` | coverage run |
+| `npm run test:lifecycle` | lifecycle tests |
 
-- `npm test` — run test suite
-- `npm run test:watch` — watch mode
-- `npm run test:coverage` — coverage run
-- `npm run test:lifecycle` — lifecycle tests
-
-Guidelines:
+## Guidelines
 
 - Prefer small, deterministic unit tests for store and pure helpers.
-- Use role-based locators for Playwright (`page.getByRole`) and Playwright's auto-retrying assertions (e.g., `await expect(locator).toHaveText()`).
-- Avoid hard-coded timeouts; prefer auto-wait or injected clocks/fake timers for timing-sensitive tests.
-- Keep tests independent and fast; mock external integrations where appropriate.
-- Keep test files in `tests/` and name them `<feature>.test.ts` or `<feature>.spec.tsx`.
-
-Status: Resolved
-
-- Unit tests: **Vitest** is the canonical unit test runner for this repository.
-- E2E tests: **Playwright** is the canonical E2E / browser testing tool.
+- Test the pure helper, not the `useFrame` body: extract math into a function first.
+- Use role-based Playwright locators (`page.getByRole`) and auto-retrying assertions (`await expect(locator).toHaveText()`).
+- No hard-coded timeouts; use auto-wait, or fake timers for timing-sensitive tests.
+- Keep tests independent and fast; mock external integrations.
+- Files live in `tests/` and are named `<feature>.test.ts` or `<feature>.test.tsx`.
