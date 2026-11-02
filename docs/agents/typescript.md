@@ -1,20 +1,20 @@
-# TypeScript: Key Conventions
+Canonical long-form: `.github/instructions/typescript-5-es2022.instructions.md` (filename is stale; this repo is TS 6 on `target: esnext` — see `package.json` and `tsconfig.json`)
 
-Summary of the most actionable, repo-relevant TypeScript rules (derived from `.github/instructions`):
+# TypeScript
 
-- Target: TypeScript 5.x, compile to ES2022.
-- Types at boundaries: prefer **explicit types** for public APIs, props, and public helpers.
-- Avoid `any`; prefer `unknown` + narrowing. Use discriminated unions for state/events.
+- Target: **TypeScript 6.x** (`^6.0.3`), `target: esnext`, `strict: true`, `moduleResolution: bundler`, `noEmit`.
+- Types at boundaries: explicit types for public APIs, props, and exported helpers.
+- Avoid `any`; prefer `unknown` + narrowing. Use discriminated unions for state and events.
+- Import types with `import type`; path alias `@/*` maps to `./src/*`.
+- Naming: PascalCase for classes/interfaces/enums; camelCase for variables and functions.
 - Keep functions short and single responsibility; extract testable helpers.
-- Naming: PascalCase for classes/interfaces/enums; camelCase for variables/functions.
-- Import types with `import type` when appropriate.
-- Use `tsc --noEmit` (npm run typecheck) in CI and locally before PRs.
-- Document public APIs with JSDoc (include `@example` / `@remarks` when helpful).
 - Guard edge cases early and surface meaningful errors.
+- Document public APIs with JSDoc (`@example` / `@remarks` when helpful).
+- `tsc --noEmit` (`npm run typecheck`) runs locally before every PR.
 
-Performance/security notes:
+## Hot paths and secrets
 
-- Avoid allocations in hot paths (e.g., `useFrame` in R3F). Cache objects in `useRef`.
-- Never hardcode secrets; validate and sanitize external inputs.
+- Allocations in `useFrame`, object reuse, and profiling: see `performance.md`.
+- Never hardcode secrets; validate and sanitize external input.
 
-When in doubt: follow existing patterns in `src/` and add tests for new behaviors.
+When in doubt: follow existing patterns in `src/` and add a test for new behavior.

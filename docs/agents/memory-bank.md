@@ -1,8 +1,30 @@
-# Memory Bank (summary)
+Canonical long-form: `.github/instructions/memory-bank.instructions.md`
 
-Short summary of `.github/instructions/memory-bank.instructions.md` (how to use `memory/`):
+# Memory Bank
 
-- Keep project context in `/memory` core files: `projectbrief.md`, `productContext.md`, `activeContext.md`, `systemPatterns.md`, `techContext.md`, `progress.md`.
-- Create per-task files under `memory/tasks/TASK###-*.md` and update `memory/tasks/_index.md`.
-- Record analysis, designs, decisions, and progress updates; use the bank to resume work after context loss.
-- Follow the Plan/Act flows in the instructions when adding or updating memory entries.
+Read the "Plan/Act" and "Task structure" sections of the canonical file; the rest restates generic memory-bank theory.
+
+## Core files (all exist in `memory/`)
+
+`projectbrief.md`, `productContext.md`, `activeContext.md`, `systemPatterns.md`, `techContext.md`, `progress.md`, plus `requirements.md`.
+
+## Tasks and designs
+
+- Task file: `memory/tasks/TASK###-kebab-title.md`.
+- Every task gets a row in `memory/tasks/_index.md` under exactly `In Progress | Pending | Completed | Abandoned`.
+- Design doc: `memory/designs/DESIGN###-*.md`.
+- `memory/design/` is legacy — do not add files there (see `decisions.md`).
+
+## Resume protocol
+
+1. `memory/tasks/_index.md` → pick the open task.
+2. Latest `memory/activeContext.md`.
+3. The `TASK###` file itself.
+
+Before ending a session, append "where I stopped / next step" to `activeContext.md`.
+
+## Rules
+
+- Append, never rewrite history. Completed tasks stay.
+- Non-trivial work (more than one file or ~30 minutes): requirements + design before code, per `development-workflow.md`.
+- Don't paste code into memory; link paths and decisions (`docs/ARCHITECTURE/`).

@@ -1,8 +1,19 @@
-# Markdown & Docs (summary)
+Canonical long-form: `.github/instructions/markdown.instructions.md`
 
-From `.github/instructions/markdown.instructions.md`:
+# Markdown & Docs
 
-- Keep sentences short and unambiguous; use blank lines to separate sections.
-- Use headings for structure, code blocks for examples, and lists for steps.
-- Prefer links to authoritative docs instead of duplicating large sections.
-- Keep documentation up-to-date with design or API changes; update READMEs and memory entries when adding features.
+- One H1 per file; sentence-case headings.
+- Blank line before and after every heading, list, and fence.
+- Every fence carries a language (`bash`, `ts`, `json`); no bare fences.
+- Link the authoritative source and state only this repo's delta. A duplicated rule is a review defect.
+- Relative links resolve from repo root; every `docs/...` target must exist before you commit.
+- Tables for command and reference lists; prose paragraphs stay at three sentences or fewer.
+
+## Update triggers
+
+- Command or feature change → `README.md`.
+- Architecture decision → `docs/ARCHITECTURE/DEC###-*.md`.
+- Task work → `memory/tasks/TASK###-*.md`.
+- Rule that looks stale → `docs/agents/decisions.md`.
+
+Prettier ignores `docs/`, `memory/`, and `.github/` (see `.prettierignore`); root files such as `AGENTS.md`, `README.md`, and `GEMINI.md` are formatted. Format a single file with `npx prettier --write <file>`. Never run repo-wide `npm run format` in a docs-only PR — it rewrites 15 already-unformatted `src/`/`tests/` files on `main`.

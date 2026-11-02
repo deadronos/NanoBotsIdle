@@ -1,16 +1,17 @@
+Canonical long-form: `.github/instructions/spec-driven-workflow-v1.instructions.md`
+
 # Development Workflow (spec-driven)
 
-Quick summary of the repo's required workflow (see `.github/instructions/spec-driven-workflow-v1.instructions.md` for full details):
-
 - Follow the 6-phase loop: **Analyze → Design → Implement → Validate → Reflect → Handoff**.
-- Follow the Spec-Driven Workflow for process and TDD details (see `.github/instructions/spec-driven-workflow-v1.instructions.md`).
-- For medium/large changes: add requirements in `memory/requirements.md`, a short design in `memory/designs/`, and break work into `memory/tasks/`.
-- Update memory files during the work and attach the design/requirements/validation artifacts to the PR.
-- PRs should include a short executive summary, changed files, validation steps, and links to memory entries.
+- For medium/large changes: requirements in `memory/requirements.md`, a short design in `memory/designs/`, work broken into `memory/tasks/`.
+- Update memory files during the work; attach the design/requirements/validation artifacts to the PR.
+- PRs include a short executive summary, changed files, validation steps, and links to memory entries.
+- TDD detail (red → green → refactor) lives in the canonical file — do not restate it here.
 
-Acceptance checklist (minimal before merge):
+## Acceptance checklist (minimal before merge)
+
 - 2–5 testable requirements written
-- Design doc linked in PR (if non-trivial)
-- Tests for each requirement
-- Performance baseline if applicable
-- Decision records for non-trivial trade-offs
+- Design doc linked in the PR (if non-trivial)
+- A test per requirement
+- Performance baseline if the change touches a hot path
+- Decision record for non-trivial trade-offs (`docs/ARCHITECTURE/DEC###-*.md`)

@@ -12,6 +12,9 @@ dist
 dist-ssr
 *.local
 
+# Agent worktrees
+.worktrees/
+
 # Profiling snapshots
 dev/profiling/snapshots/
 

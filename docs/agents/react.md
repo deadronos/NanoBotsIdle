@@ -1,13 +1,17 @@
-# React (summary)
+Canonical long-form: `.github/instructions/reactjs.instructions.md`
 
-Core actionable points from `.github/instructions/reactjs.instructions.md`:
+# React
 
-- Use functional components and hooks; prefer composition over inheritance.
-- Use TypeScript types for props, state; prefer explicit types at public boundaries.
-- Use `useEffect` with correct deps and cleanups; use `useMemo` / `useCallback` judiciously.
-- Use `React.memo` for memoization when appropriate.
+- Functional components and hooks; composition over inheritance.
+- TypeScript types for props and state; explicit types at public boundaries.
+- `useEffect` with correct deps and cleanups; `useMemo` / `useCallback` only where a measurement or a dependency rule needs them.
+- `React.memo` where a component re-renders from an unchanged parent, not by default.
+- Zustand state lives in `src/store.ts`; read slices with selectors, never the whole store.
 
-Notes & decision points:
+## Export style
 
-- The instructions mention `React.FC`. This repository will **keep** `React.FC` guidance; document recommended usage to avoid mixed styles or typing surprises.
-- Unit tests: **Vitest** is the project's unit test runner. E2E tests default to **Playwright** as the canonical browser automation tool.
+- Components are `const` arrow functions typed `React.FC` with named exports, e.g. `export const World: React.FC = () => {` (`src/components/World.tsx:10`; same pattern in `Drones.tsx`, `UI.tsx`, `ui/ShopModal.tsx`); `App` is the only default-exported component (`src/App.tsx`).
+- `React.FC` is kept and used 33 times in `src/` — follow the surrounding file rather than migrating it.
+- One component per file; colocate hooks with the feature that owns them.
+
+Unit tests: **Vitest**. E2E: **Playwright**. See `testing.md`.
