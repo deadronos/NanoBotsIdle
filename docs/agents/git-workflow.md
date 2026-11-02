@@ -1,3 +1,5 @@
+Canonical long-form: `.github/instructions/spec-driven-workflow-v1.instructions.md` (PR summary and handoff); branch naming and Conventional Commits are this repo's local convention.
+
 # Git & PR Workflow
 
 Recommended conventions for branches, commits, and PRs used by agents and humans:

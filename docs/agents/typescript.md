@@ -14,7 +14,7 @@ Canonical long-form: `.github/instructions/typescript-5-es2022.instructions.md` 
 
 ## Hot paths and secrets
 
-- No allocations in hot paths (e.g. `useFrame` in R3F); cache objects in `useRef`.
+- Allocations in `useFrame`, object reuse, and profiling: see `performance.md`.
 - Never hardcode secrets; validate and sanitize external input.
 
 When in doubt: follow existing patterns in `src/` and add a test for new behavior.

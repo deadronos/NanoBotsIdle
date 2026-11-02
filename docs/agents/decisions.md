@@ -28,6 +28,8 @@ Retired filenames, kept here as plain text so the reverse link check stays clean
 | Item | Why | Action |
 | --- | --- | --- |
 | Generic "write clean code" lines in `.github/instructions/*` | non-actionable | flag only — instructions stay (referenced from 4 places) |
+| Broad "follow React's official style guide" statements without repo-specific rules | too vague to act on | flag only — `react.md` carries this repo's deltas |
+| "Document `React.FC` usage patterns rather than deleting" note | dropping the guidance would lose typing advice | closed by `react.md` §Export style; nothing deleted |
 | `memory/design/` (2 ad-hoc files) | duplicates `memory/designs/` | flag; migrate on next design task |
 | `powershell.md` | no `.ps1` in repo | keep, scoped; delete if still unused in 6 months |
 | `.github/ALIGN-INSTRUCTIONS.md` | historical changelog, reads as current | flag; add a "historical" banner in a follow-up |

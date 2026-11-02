@@ -6,7 +6,7 @@ This repository is a small React + React Three Fiber game prototype: a voxel-ish
 
 - Entry point: `AGENTS.md` — purpose, npm commands, hard rules, and the `docs/agents/` routing table.
 - Task guides: `docs/agents/` — open only the file matching the task.
-- This file is the canonical long-form source for architecture and conventions. `docs/agents/*` summarize it and link back; do not restate the same rule in both places.
+- This file is the canonical long-form source for architecture and conventions. `docs/agents/*` summarize it and link back; do not restate the same rule beyond the hard-rule summary in `AGENTS.md` and the per-task deltas in `docs/agents/`.
 - Update this file when architecture or coding style changes significantly.
 
 Architecture docs:

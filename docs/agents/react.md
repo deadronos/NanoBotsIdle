@@ -10,7 +10,7 @@ Canonical long-form: `.github/instructions/reactjs.instructions.md`
 
 ## Export style
 
-- Components are function declarations with named exports; `App` is the single default export (`src/App.tsx`).
+- Components are `const` arrow functions typed `React.FC` with named exports, e.g. `export const World: React.FC = () => {` (`src/components/World.tsx:10`; same pattern in `Drones.tsx`, `UI.tsx`, `ui/ShopModal.tsx`); `App` is the only default-exported component (`src/App.tsx`).
 - `React.FC` is kept and used 33 times in `src/` — follow the surrounding file rather than migrating it.
 - One component per file; colocate hooks with the feature that owns them.
 

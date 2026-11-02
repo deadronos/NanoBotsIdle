@@ -16,4 +16,4 @@ Canonical long-form: `.github/instructions/markdown.instructions.md`
 - Task work → `memory/tasks/TASK###-*.md`.
 - Rule that looks stale → `docs/agents/decisions.md`.
 
-`npm run format` rewrites Markdown. Run it before committing; never hand-align tables.
+Prettier ignores `docs/`, `memory/`, and `.github/` (see `.prettierignore`); root files such as `AGENTS.md`, `README.md`, and `GEMINI.md` are formatted. Format a single file with `npx prettier --write <file>`. Never run repo-wide `npm run format` in a docs-only PR — it rewrites 15 already-unformatted `src/`/`tests/` files on `main`.
