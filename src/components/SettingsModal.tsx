@@ -36,7 +36,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ onClose }) => {
   return (
     <ModalShell
       onClose={onClose}
-      contentClassName="bg-gray-900 border border-white/10 p-8 rounded-2xl max-w-md w-full shadow-2xl relative"
+      contentClassName="bg-gray-900 border border-white/10 p-4 md:p-8 rounded-2xl max-w-md w-full shadow-2xl relative"
     >
       <button onClick={onClose} className="absolute top-4 right-4 text-white/50 hover:text-white">
         ✕

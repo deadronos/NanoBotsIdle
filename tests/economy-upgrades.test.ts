@@ -12,6 +12,8 @@ import type { UiSnapshot } from "../src/shared/protocol";
 // Helper to create a basic snapshot
 const createSnapshot = (): UiSnapshot => ({
   credits: 10000,
+  creditsPerMinute: 0,
+  cargoInTransit: 0,
   prestigeLevel: 1,
   droneCount: 3,
   haulerCount: 0,

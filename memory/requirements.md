@@ -12,3 +12,10 @@
 1. WHEN a voxel is mined, THE SYSTEM SHALL record the edit in the BVX-backed edit store so material lookups return air for that coordinate. [Acceptance: unit tests verify edited coordinates report air and can be cleared.]
 2. WHEN the engine needs a voxel key or coordinates, THE SYSTEM SHALL use BVX-backed key encoding/decoding that preserves negative coordinates via a stable offset. [Acceptance: unit tests round-trip coordinates through the key encoding.]
 3. WHEN render/debug systems compare frontier data, THE SYSTEM SHALL use BVX-backed keys consistently across world and debug tracking. [Acceptance: integration tests for frontier targeting/updates continue to pass.]
+
+## Gameplay polish
+
+1. A new or prestiged world places the starter outpost on terrain and spawns the player beside it. Loading a legacy save replaces its generated outpost and preserves built outposts.
+2. The HUD shows deposits over the last 60 simulation seconds, cargo value aboard drones, and the cheapest uncapped upgrade with its affordability.
+3. Terrain materials and face shading match in the worker and fallback, including low LOD. The shoreline is visually distinct.
+4. The production scene loads with external requests blocked. Performance verification records worker bundle size, frame time and chunk meshing on hardware WebGL.

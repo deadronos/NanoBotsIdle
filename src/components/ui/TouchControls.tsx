@@ -35,6 +35,7 @@ const ArrowButton: React.FC<{
       } ${className}`}
       onPointerDown={handlePointerDown}
       onPointerUp={handlePointerUp}
+      onPointerCancel={handlePointerUp}
       onPointerLeave={handlePointerLeave}
       data-no-orbit="true"
     >
@@ -119,7 +120,7 @@ export const TouchControls: React.FC<{ className?: string }> = ({ className = ""
 
   return (
     <div
-      className={`fixed bottom-8 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 pointer-events-auto z-50 ${className}`}
+      className={`fixed bottom-8 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 pointer-events-auto z-20 ${className}`}
     >
       <div className="flex gap-2">
         <ArrowButton rotation={0} code="KeyW" />

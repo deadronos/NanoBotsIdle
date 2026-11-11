@@ -18,4 +18,9 @@ export interface EngineContext {
   drones: Drone[];
   playerChunksToScan: { cx: number; cy: number; cz: number }[];
   uiSnapshot: UiSnapshot;
+  depositIncome: {
+    prestigeLevel: number;
+    samples: { at: number; amount: number }[];
+    total: number;
+  };
 }

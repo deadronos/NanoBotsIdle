@@ -1,9 +1,15 @@
 import { getConfig } from "../config/index";
 import { getGroundHeightWithEdits } from "./collision";
 
-export const getPlayerGroundHeight = (x: number, z: number, prestigeLevel = 1): number => {
-  // Player logic historically quantized positions to the nearest voxel grid
-  const surface = getGroundHeightWithEdits(x, z, prestigeLevel);
+export const getPlayerGroundHeight = (
+  x: number,
+  z: number,
+  prestigeLevel = 1,
+  seed?: number,
+): number => {
   const cfg = getConfig();
-  return surface + 1.0 + cfg.player.playerHeight;
+  const meshed = cfg.render.voxels.mode === "meshed";
+  const voxel = meshed ? Math.floor : Math.round;
+  const surface = getGroundHeightWithEdits(voxel(x), voxel(z), prestigeLevel, seed);
+  return surface + (meshed ? 1 : 0.5) + cfg.player.playerHeight;
 };

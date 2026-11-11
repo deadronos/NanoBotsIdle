@@ -19,7 +19,7 @@ export const PlayerVisuals: FC = () => {
       {/* Head - Sci-Fi Helmet */}
       <mesh position={[0, 0.4, 0]} castShadow>
         <boxGeometry args={[0.45, 0.45, 0.45]} />
-        <meshStandardMaterial color="#1a202c" metalness={0.85} roughness={0.15} />
+        <meshStandardMaterial color="#566c7a" metalness={0.25} roughness={0.45} />
       </mesh>
 
       {/* Glowing Visor */}
@@ -31,7 +31,7 @@ export const PlayerVisuals: FC = () => {
       {/* Torso - Robot Body */}
       <mesh position={[0, -0.3, 0]} castShadow receiveShadow>
         <boxGeometry args={[0.65, 0.8, 0.45]} />
-        <meshStandardMaterial color="#2d3748" metalness={0.7} roughness={0.3} />
+        <meshStandardMaterial color="#516879" metalness={0.2} roughness={0.5} />
       </mesh>
 
       {/* Core Emitter on Chest */}
@@ -44,7 +44,7 @@ export const PlayerVisuals: FC = () => {
       <group position={[-0.45, -0.1, 0]}>
         <mesh castShadow>
           <boxGeometry args={[0.2, 0.7, 0.25]} />
-          <meshStandardMaterial color="#4a5568" metalness={0.8} roughness={0.2} />
+          <meshStandardMaterial color="#a0acac" metalness={0.25} roughness={0.48} />
         </mesh>
         {/* Arm attachment */}
         <mesh position={[0, -0.35, 0]} castShadow>
@@ -57,7 +57,7 @@ export const PlayerVisuals: FC = () => {
       <group position={[0.45, -0.1, 0]}>
         <mesh castShadow>
           <boxGeometry args={[0.2, 0.7, 0.25]} />
-          <meshStandardMaterial color="#4a5568" metalness={0.8} roughness={0.2} />
+          <meshStandardMaterial color="#a0acac" metalness={0.25} roughness={0.48} />
         </mesh>
         {/* Arm attachment */}
         <mesh position={[0, -0.35, 0]} castShadow>
@@ -69,12 +69,12 @@ export const PlayerVisuals: FC = () => {
       {/* Left Leg */}
       <mesh position={[-0.2, -0.9, 0]} castShadow>
         <boxGeometry args={[0.22, 0.5, 0.3]} />
-        <meshStandardMaterial color="#1a202c" metalness={0.8} roughness={0.2} />
+        <meshStandardMaterial color="#394a58" metalness={0.2} roughness={0.55} />
       </mesh>
       {/* Right Leg */}
       <mesh position={[0.2, -0.9, 0]} castShadow>
         <boxGeometry args={[0.22, 0.5, 0.3]} />
-        <meshStandardMaterial color="#1a202c" metalness={0.8} roughness={0.2} />
+        <meshStandardMaterial color="#394a58" metalness={0.2} roughness={0.55} />
       </mesh>
 
       {/* Back Jetpack Thrusters */}

@@ -5,6 +5,7 @@ import { expect, test } from "vitest";
 import { getConfig } from "../src/config/index";
 import { getSeed } from "../src/sim/seed";
 import { generateInstances, getSurfaceHeight } from "../src/sim/terrain";
+import { TERRAIN_COLORS } from "../src/sim/terrain-constants";
 import { getVoxelColor } from "../src/sim/terrain-core";
 
 const noiseTypes: ("sincos" | "open-simplex")[] = ["sincos", "open-simplex"];
@@ -40,25 +41,25 @@ noiseTypes.forEach((noiseType) => {
 
       const hexColor = getVoxelColor(y, cfg.terrain.waterLevel);
       switch (hexColor) {
-        case 0x1a4d8c:
+        case TERRAIN_COLORS.DEEP_WATER:
           counts.deepWater++;
           break;
-        case 0x2d73bf:
+        case TERRAIN_COLORS.WATER:
           counts.water++;
           break;
-        case 0xe3dba3:
+        case TERRAIN_COLORS.SAND:
           counts.sand++;
           break;
-        case 0x59a848:
+        case TERRAIN_COLORS.GRASS:
           counts.grass++;
           break;
-        case 0x3b7032:
+        case TERRAIN_COLORS.DARK_GRASS:
           counts.darkGrass++;
           break;
-        case 0x6e6e6e:
+        case TERRAIN_COLORS.ROCK:
           counts.rock++;
           break;
-        case 0xffffff:
+        case TERRAIN_COLORS.SNOW:
           counts.snow++;
           break;
         default:

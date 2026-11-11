@@ -14,6 +14,8 @@ describe("tickDrones minedBlocks tracking", () => {
 
     const uiSnapshot: UiSnapshot = {
       credits: 0,
+      creditsPerMinute: 0,
+      cargoInTransit: 0,
       prestigeLevel: 1,
       droneCount: 1,
       haulerCount: 0,

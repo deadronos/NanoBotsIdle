@@ -20,6 +20,8 @@ export const updatePlayerFrame = (options: {
   deltaSeconds: number;
   viewMode: ViewMode;
   prestigeLevel: number;
+  seed?: number;
+  spawn: Vector3;
   keys: Record<string, boolean>;
   cameraAngle: { yaw: number; pitch: number };
   position: Vector3;
@@ -35,6 +37,8 @@ export const updatePlayerFrame = (options: {
     deltaSeconds,
     viewMode,
     prestigeLevel,
+    seed,
+    spawn,
     keys,
     cameraAngle,
     position,
@@ -100,7 +104,7 @@ export const updatePlayerFrame = (options: {
 
   position.y += velocity.y * dt;
 
-  const groundHeight = getPlayerGroundHeight(position.x, position.z, prestigeLevel);
+  const groundHeight = getPlayerGroundHeight(position.x, position.z, prestigeLevel, seed);
   if (position.y < groundHeight) {
     position.y = groundHeight;
     velocity.y = Math.max(0, velocity.y);
@@ -109,7 +113,7 @@ export const updatePlayerFrame = (options: {
 
   const killPlaneY = cfg.player.killPlaneY ?? Number.NEGATIVE_INFINITY;
   if (position.y < killPlaneY) {
-    position.set(cfg.player.spawnX ?? 0, cfg.player.respawnY ?? 10, cfg.player.spawnZ ?? 0);
+    position.copy(spawn);
     velocity.set(0, 0, 0);
   }
 
@@ -128,7 +132,7 @@ export const updatePlayerFrame = (options: {
     return;
   }
 
-  const cameraOffsetDist = 5;
+  const cameraOffsetDist = 7;
   const targetCamPos = camPos
     .copy(position)
     .sub(camOffset.copy(lookDir).multiplyScalar(cameraOffsetDist));
@@ -140,15 +144,17 @@ export const updatePlayerFrame = (options: {
   headPos.y += 1.0;
 
   let finalDist = cameraOffsetDist;
-  const steps = 10;
+  const steps = 14;
+  const voxel = cfg.render.voxels.mode === "meshed" ? Math.floor : Math.round;
   for (let i = 1; i <= steps; i++) {
     const t = i / steps;
     const checkPos = temps.direction.copy(headPos).lerp(targetCamPos, t);
     const mat = getVoxelMaterialAt(
-      Math.round(checkPos.x),
-      Math.round(checkPos.y),
-      Math.round(checkPos.z),
+      voxel(checkPos.x),
+      voxel(checkPos.y),
+      voxel(checkPos.z),
       prestigeLevel,
+      seed,
     );
 
     if (mat === MATERIAL_SOLID || mat === MATERIAL_BEDROCK) {

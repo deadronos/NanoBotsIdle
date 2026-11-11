@@ -34,6 +34,8 @@ import { type VoxelKey, voxelKey } from "../src/shared/voxel";
 const makeUiSnapshot = (overrides?: Partial<UiSnapshot>): UiSnapshot => {
   return {
     credits: 0,
+    creditsPerMinute: 0,
+    cargoInTransit: 0,
     prestigeLevel: 1,
     droneCount: 0,
     haulerCount: 0,

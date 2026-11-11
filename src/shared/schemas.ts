@@ -74,6 +74,8 @@ export const RenderDeltaSchema = z.object({
 
 export const UiSnapshotSchema = z.object({
   credits: z.number(),
+  creditsPerMinute: z.number().nonnegative(),
+  cargoInTransit: z.number().nonnegative(),
   prestigeLevel: z.number(),
   droneCount: z.number(),
   haulerCount: z.number(),
@@ -93,6 +95,7 @@ export const UiSnapshotSchema = z.object({
   ),
   nextCosts: z.record(z.string(), z.number()).optional(),
   actualSeed: z.number().optional(),
+  landingSpawn: z.object({ x: z.number(), y: z.number(), z: z.number() }).optional(),
 });
 
 // --- Worker Messages ---
@@ -107,6 +110,7 @@ export const ToWorkerSchema = z.union([
     t: z.literal("STEP"),
     frameId: z.number(),
     nowMs: z.number(),
+    resetClock: z.boolean().optional(),
     budgetMs: z.number(),
     maxSubsteps: z.number(),
     cmds: z.array(CmdSchema),

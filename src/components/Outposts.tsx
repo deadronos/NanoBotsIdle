@@ -1,8 +1,12 @@
 import { useFrame } from "@react-three/fiber";
-import { type FC, useRef, useState } from "react";
+import { type FC, useEffect, useRef, useState } from "react";
 import { MeshBasicMaterial } from "three";
 
+import { useConfig } from "../config/useConfig";
+import { STARTER_OUTPOST_ID } from "../engine/world/landingSite";
+import type { RenderDelta } from "../shared/protocol";
 import { getSimBridge } from "../simBridge/simBridge";
+import { outpostsUnchanged } from "../utils/simFramePersist";
 
 interface OutpostItem {
   id: string;
@@ -27,13 +31,13 @@ const OutpostComponent: FC<OutpostItem> = ({ x, y, z }) => {
       {/* Base metal platform */}
       <mesh position={[0, 0.2, 0]} castShadow receiveShadow>
         <cylinderGeometry args={[2.0, 2.0, 0.4, 16]} />
-        <meshStandardMaterial color="#2d3748" metalness={0.8} roughness={0.2} />
+        <meshStandardMaterial color="#485a69" metalness={0.25} roughness={0.55} />
       </mesh>
 
       {/* Main core tower structure */}
       <mesh position={[0, 1.0, 0]} castShadow receiveShadow>
         <cylinderGeometry args={[0.7, 1.0, 1.2, 16]} />
-        <meshStandardMaterial color="#4a5568" metalness={0.7} roughness={0.3} />
+        <meshStandardMaterial color="#e6b164" metalness={0.18} roughness={0.5} />
       </mesh>
 
       {/* Glowing orange central power core */}
@@ -45,19 +49,19 @@ const OutpostComponent: FC<OutpostItem> = ({ x, y, z }) => {
       {/* Solar Panel Wing Left */}
       <mesh position={[-1.2, 0.8, 0]} rotation={[0, 0, 0.4]} castShadow>
         <boxGeometry args={[1.2, 0.08, 0.9]} />
-        <meshStandardMaterial color="#1a202c" metalness={0.9} roughness={0.1} />
+        <meshStandardMaterial color="#3b647a" metalness={0.35} roughness={0.35} />
       </mesh>
 
       {/* Solar Panel Wing Right */}
       <mesh position={[1.2, 0.8, 0]} rotation={[0, 0, -0.4]} castShadow>
         <boxGeometry args={[1.2, 0.08, 0.9]} />
-        <meshStandardMaterial color="#1a202c" metalness={0.9} roughness={0.1} />
+        <meshStandardMaterial color="#3b647a" metalness={0.35} roughness={0.35} />
       </mesh>
 
       {/* Antenna mast */}
       <mesh position={[0, 1.9, 0]} castShadow>
         <cylinderGeometry args={[0.08, 0.08, 0.8, 8]} />
-        <meshStandardMaterial color="#718096" metalness={0.8} roughness={0.2} />
+        <meshStandardMaterial color="#91a4af" metalness={0.3} roughness={0.5} />
       </mesh>
 
       {/* Beacon Light Ball - shares the pulsing material with all outposts */}
@@ -69,36 +73,37 @@ const OutpostComponent: FC<OutpostItem> = ({ x, y, z }) => {
 };
 
 export const Outposts: FC = () => {
-  const [outpostList, setOutpostList] = useState<OutpostItem[]>([]);
   const bridge = getSimBridge();
-  const lastLengthRef = useRef(-1);
+  const meshed = useConfig().render.voxels.mode === "meshed";
+  const [outpostList, setOutpostList] = useState<NonNullable<RenderDelta["outposts"]>>(
+    () => bridge.getLastFrame()?.delta.outposts ?? [],
+  );
+
+  const previous = useRef(outpostList);
+
+  useEffect(() => {
+    return bridge.onFrame(({ delta }) => {
+      if (delta.outposts && !outpostsUnchanged(previous.current, delta.outposts)) {
+        previous.current = delta.outposts;
+        setOutpostList(delta.outposts);
+      }
+    });
+  }, [bridge]);
 
   useFrame((state) => {
-    // Pulse the shared beacon material once per frame, regardless of how many
-    // outposts are currently rendered.
     sharedBeaconMaterial.opacity = 0.4 + Math.sin(state.clock.elapsedTime * 4) * 0.4;
-
-    const frame = bridge.getLastFrame();
-    if (!frame || !frame.delta.outposts) return;
-
-    const outposts = frame.delta.outposts;
-    if (outposts.length !== lastLengthRef.current) {
-      lastLengthRef.current = outposts.length;
-      setOutpostList(
-        outposts.map((op) => ({
-          id: op.id,
-          x: op.x,
-          y: op.y,
-          z: op.z,
-        })),
-      );
-    }
   });
 
   return (
     <group>
       {outpostList.map((op) => (
-        <OutpostComponent key={op.id} id={op.id} x={op.x} y={op.y} z={op.z} />
+        <OutpostComponent
+          key={op.id}
+          id={op.id}
+          x={op.x}
+          y={op.y - (!meshed && op.id === STARTER_OUTPOST_ID ? 0.5 : 0)}
+          z={op.z}
+        />
       ))}
     </group>
   );

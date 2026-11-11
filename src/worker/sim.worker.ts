@@ -1,12 +1,12 @@
 /// <reference lib="webworker" />
 
-import { createEngine } from "../engine/engine";
+import { createEngine, type Engine } from "../engine/engine";
 import type { FromWorker, ToWorker } from "../shared/protocol";
 import { ToWorkerSchema } from "../shared/schemas";
 
 const scope = self as DedicatedWorkerGlobalScope;
 
-let engine = createEngine();
+let engine: Engine | undefined;
 let lastNowMs = 0;
 
 const send = (message: FromWorker) => {
@@ -68,11 +68,12 @@ scope.addEventListener("message", (event: MessageEvent<ToWorker>) => {
         return;
       }
       case "STEP": {
+        engine ??= createEngine();
         for (const cmd of msg.cmds) {
           engine.dispatch(cmd);
         }
 
-        const dtSeconds = lastNowMs > 0 ? (msg.nowMs - lastNowMs) / 1000 : 0;
+        const dtSeconds = lastNowMs > 0 && !msg.resetClock ? (msg.nowMs - lastNowMs) / 1000 : 0;
         lastNowMs = msg.nowMs;
 
         const start = performance.now();

@@ -41,6 +41,7 @@ export const syncDroneCount = (
   minerCount: number,
   haulerCount: number,
   cfg: Config,
+  home?: { x: number; y: number; z: number },
 ) => {
   let miners = drones.filter((d) => d.role === "MINER");
   let haulers = drones.filter((d) => d.role === "HAULER");
@@ -56,13 +57,17 @@ export const syncDroneCount = (
   // Find the highest ID currently in use to avoid collisions
   let nextId = drones.reduce((max, d) => Math.max(max, d.id), -1) + 1;
 
+  const homeX = home?.x ?? 0;
+  const homeZ = home?.z ?? 0;
+  const startHeight = Math.max(cfg.drones.startHeightBase, (home?.y ?? 0) + 6);
+
   // Add Miners if needed
   while (miners.length < minerCount) {
     miners.push({
       id: nextId++,
-      x: 0,
-      y: cfg.drones.startHeightBase + Math.random() * cfg.drones.startHeightRandom,
-      z: 0,
+      x: homeX + ((miners.length % 3) - 1) * 1.5,
+      y: startHeight + Math.random() * cfg.drones.startHeightRandom,
+      z: homeZ,
       targetKey: null,
       targetX: Number.NaN,
       targetY: Number.NaN,
@@ -79,9 +84,9 @@ export const syncDroneCount = (
   while (haulers.length < haulerCount) {
     haulers.push({
       id: nextId++,
-      x: 0,
-      y: 20, // Haulers fly slightly higher by default
-      z: 0,
+      x: homeX,
+      y: startHeight + 5,
+      z: homeZ,
       targetKey: null,
       targetX: Number.NaN,
       targetY: Number.NaN,

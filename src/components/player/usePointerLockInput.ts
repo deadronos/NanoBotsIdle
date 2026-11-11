@@ -7,7 +7,7 @@ export type PointerLockInput = {
 
 export const usePointerLockInput = (): PointerLockInput => {
   const keys = useRef<Record<string, boolean>>({});
-  const cameraAngle = useRef({ yaw: 0, pitch: 0 });
+  const cameraAngle = useRef({ yaw: 0, pitch: -0.25 });
   const isDragging = useRef(false);
   const lastPos = useRef<{ x: number; y: number } | null>(null);
 
@@ -45,7 +45,7 @@ export const usePointerLockInput = (): PointerLockInput => {
       // Don't drag if clicking UI
       if (
         e.target instanceof Element &&
-        (e.target.closest("button") ||
+        (e.target.closest("[data-ui-overlay], button") ||
           e.target.closest("[data-no-orbit]") ||
           e.target.closest("a, input, textarea, select"))
       ) {
@@ -72,7 +72,7 @@ export const usePointerLockInput = (): PointerLockInput => {
         const touch = e.touches[0];
         if (
           touch.target instanceof Element &&
-          (touch.target.closest("button") ||
+          (touch.target.closest("[data-ui-overlay], button") ||
             touch.target.closest("[data-no-orbit]") ||
             touch.target.closest("a, input, textarea, select"))
         ) {
@@ -95,6 +95,12 @@ export const usePointerLockInput = (): PointerLockInput => {
       lastPos.current = null;
     };
 
+    const resetInput = () => {
+      keys.current = {};
+      handleMouseUp();
+    };
+
+    window.addEventListener("blur", resetInput);
     window.addEventListener("keydown", handleKeyDown);
     window.addEventListener("keyup", handleKeyUp);
 
@@ -111,6 +117,7 @@ export const usePointerLockInput = (): PointerLockInput => {
     window.addEventListener("touchcancel", handleTouchEnd);
 
     return () => {
+      window.removeEventListener("blur", resetInput);
       window.removeEventListener("keydown", handleKeyDown);
       window.removeEventListener("keyup", handleKeyUp);
 

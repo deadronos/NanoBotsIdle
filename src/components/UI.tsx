@@ -8,11 +8,10 @@ import { TelemetryPanel } from "./TelemetryPanel";
 import { BuildingDrawer } from "./ui/BuildingDrawer";
 import { Hud } from "./ui/Hud";
 import { Minimap } from "./ui/Minimap";
+import { PauseButton } from "./ui/PauseButton";
 import { Reticle } from "./ui/Reticle";
 import { ShopModal } from "./ui/ShopModal";
-import { TitlePanel } from "./ui/TitlePanel";
 import { TouchControls } from "./ui/TouchControls";
-import { ViewControls } from "./ui/ViewControls";
 
 interface UIProps {
   viewMode: ViewMode;
@@ -20,93 +19,78 @@ interface UIProps {
 }
 
 export const UI: React.FC<UIProps> = ({ viewMode, onToggleView }) => {
-  const snapshot = useUiStore((state) => state.snapshot);
-  const credits = snapshot.credits;
-  const prestigeLevel = snapshot.prestigeLevel;
-  const minedBlocks = snapshot.minedBlocks;
-  const totalBlocks = snapshot.totalBlocks;
-  const [isShopOpen, setShopOpen] = useState(false);
-  const [isSettingsOpen, setSettingsOpen] = useState(false);
+  const [modal, setModal] = useState<"research" | "settings" | null>(null);
+  const [isMapOpen, setMapOpen] = useState(false);
   const [isTelemetryOpen, setTelemetryOpen] = useState(false);
   const config = useConfig();
-  const percentMined = totalBlocks > 0 ? (minedBlocks / totalBlocks) * 100 : 0;
+  const buildingMode = useUiStore((state) => state.buildingMode);
+  const setBuildingMode = useUiStore((state) => state.setBuildingMode);
+
+  React.useEffect(() => {
+    if (buildingMode === "NONE" || modal) return;
+    const cancelPlacement = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setBuildingMode("NONE");
+    };
+    window.addEventListener("keydown", cancelPlacement);
+    return () => window.removeEventListener("keydown", cancelPlacement);
+  }, [buildingMode, modal, setBuildingMode]);
 
   return (
-    <div
-      className="absolute top-0 left-0 w-full h-full pointer-events-none z-10 font-sans flex flex-col p-4 md:block md:p-0"
-      data-ui-overlay
-    >
-      {/* Mobile Layout (< md) */}
-      <div className="flex flex-row justify-between items-start w-full md:hidden pointer-events-none mb-4">
-        <TitlePanel
-          percentMined={percentMined}
-          onOpenSettings={() => setSettingsOpen(true)}
-          className="pointer-events-auto"
-        />
-        <ViewControls
-          viewMode={viewMode}
-          onToggleView={onToggleView}
-          onOpenShop={() => setShopOpen(true)}
-          className="pointer-events-auto scale-90 origin-top-right"
-        />
-      </div>
+    <div className="absolute inset-0 z-10 pointer-events-none font-sans" data-ui-overlay>
+      <header className="absolute inset-x-3 top-3 flex flex-col items-start justify-between gap-2 md:inset-x-5 md:top-5 md:flex-row">
+        <Hud />
+        <nav
+          aria-label="Game controls"
+          className="game-panel relative flex max-w-full flex-wrap items-center gap-0.5 p-1 pointer-events-auto"
+        >
+          <button
+            className="game-control game-control-primary"
+            onClick={() => setModal("research")}
+          >
+            Research
+          </button>
+          <BuildingDrawer />
+          <button
+            className="game-control"
+            aria-label="First-person camera"
+            aria-pressed={viewMode === "FIRST_PERSON"}
+            onClick={onToggleView}
+          >
+            {viewMode === "FIRST_PERSON" ? "1st person" : "3rd person"}
+          </button>
+          <button
+            className="game-control"
+            aria-pressed={isMapOpen}
+            onClick={() => setMapOpen(!isMapOpen)}
+          >
+            Map
+          </button>
+          <button className="game-control" onClick={() => setModal("settings")}>
+            Settings
+          </button>
+          <PauseButton />
+          {isMapOpen && <Minimap />}
+        </nav>
+      </header>
 
-      {/* Mobile: Drawer (below title?) */}
-      <div className="md:hidden absolute top-20 left-4 pointer-events-auto">
-        <BuildingDrawer className="" />
-      </div>
+      {viewMode === "FIRST_PERSON" && !modal && <Reticle />}
+      <TouchControls />
+      <p className="game-panel absolute bottom-3 left-3 hidden px-3 py-2 text-xs [@media(pointer:fine)]:md:block md:bottom-5 md:left-5">
+        <kbd>WASD</kbd> Move <span aria-hidden="true">·</span> <kbd>Shift</kbd> Run{" "}
+        <span aria-hidden="true">·</span> Drag to look
+      </p>
 
-      <div className="flex justify-center w-full md:hidden pointer-events-none">
-        <Hud
-          credits={credits}
-          prestigeLevel={prestigeLevel}
-          className="pointer-events-auto scale-90"
-        />
-      </div>
+      {modal === "research" && <ShopModal onClose={() => setModal(null)} />}
+      {modal === "settings" && <SettingsModal onClose={() => setModal(null)} />}
 
-      {/* Touch Controls (Mobile Only) */}
-      <TouchControls className="mb-8" />
-
-      {/* Desktop Layout (>= md) */}
-      <div className="hidden md:contents">
-        <BuildingDrawer />
-        <Minimap />
-        <Hud
-          credits={credits}
-          prestigeLevel={prestigeLevel}
-          className="absolute top-4 left-1/2 -translate-x-1/2"
-        />
-        <ViewControls
-          viewMode={viewMode}
-          onToggleView={onToggleView}
-          onOpenShop={() => setShopOpen(true)}
-          className="absolute top-4 right-4"
-        />
-        <TitlePanel
-          percentMined={percentMined}
-          onOpenSettings={() => setSettingsOpen(true)}
-          className="absolute top-4 left-4"
-        />
-      </div>
-
-      {/* Reticle */}
-      {viewMode === "FIRST_PERSON" && <Reticle />}
-
-      {/* Shop Modal */}
-      {isShopOpen && <ShopModal onClose={() => setShopOpen(false)} />}
-
-      {/* Settings Modal */}
-      {isSettingsOpen && <SettingsModal onClose={() => setSettingsOpen(false)} />}
-
-      {/* Telemetry Panel (dev mode only) */}
       {config.telemetry.enabled && (
         <>
           <button
             onClick={() => setTelemetryOpen(!isTelemetryOpen)}
-            className="fixed bottom-4 right-4 pointer-events-auto bg-blue-600 hover:bg-blue-700 text-white rounded-full w-12 h-12 flex items-center justify-center shadow-lg transition-colors z-40"
-            title="Toggle Telemetry"
+            className="game-panel game-control absolute bottom-3 right-3 pointer-events-auto md:bottom-5 md:right-5"
+            aria-pressed={isTelemetryOpen}
           >
-            📊
+            Telemetry
           </button>
           <TelemetryPanel isOpen={isTelemetryOpen} onClose={() => setTelemetryOpen(false)} />
         </>

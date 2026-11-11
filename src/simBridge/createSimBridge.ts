@@ -17,6 +17,7 @@ export const createSimBridge = (options: SimBridgeOptions = {}): SimBridge => {
 
   let worker: WorkerLike | null = null;
   let running = false;
+  let resetClock = false;
   let rafId: number | null = null;
   let initSent = false;
   let stepInFlight = false;
@@ -166,10 +167,12 @@ export const createSimBridge = (options: SimBridgeOptions = {}): SimBridge => {
       t: "STEP",
       frameId,
       nowMs,
+      ...(resetClock ? { resetClock } : {}),
       budgetMs,
       maxSubsteps,
       cmds,
     };
+    resetClock = false;
     frameId += 1;
     stepInFlight = true;
     worker.postMessage(message);
@@ -188,12 +191,18 @@ export const createSimBridge = (options: SimBridgeOptions = {}): SimBridge => {
     rafId = requestAnimationFrame(loop);
   };
 
-  const stop = () => {
+  const pause = () => {
     running = false;
+    resetClock = true;
     if (rafId !== null) {
       cancelAnimationFrame(rafId);
       rafId = null;
     }
+  };
+
+  const stop = () => {
+    pause();
+    resetClock = false;
     if (retryTimeout) {
       clearTimeout(retryTimeout);
       retryTimeout = null;
@@ -226,6 +235,7 @@ export const createSimBridge = (options: SimBridgeOptions = {}): SimBridge => {
 
   return {
     start,
+    pause,
     stop,
     step,
     enqueue,

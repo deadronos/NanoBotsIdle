@@ -46,17 +46,18 @@ export const handleDeposit = (
   uiSnapshot: UiSnapshot,
   dtSeconds: number,
   nextState: DroneState,
-) => {
+): number => {
   drone.miningTimer += dtSeconds;
   if (drone.miningTimer >= 0.5) {
-    uiSnapshot.credits += drone.payload;
+    const deposited = drone.payload;
+    uiSnapshot.credits += deposited;
     const outpost = world.getNearestOutpost(drone.x, drone.y, drone.z);
     if (outpost) {
       depositEvents.push({
         x: outpost.x,
         y: outpost.y,
         z: outpost.z,
-        amount: Math.floor(drone.payload),
+        amount: Math.floor(deposited),
       });
       world.undock(outpost, drone.id);
     }
@@ -64,5 +65,7 @@ export const handleDeposit = (
 
     drone.state = nextState;
     drone.miningTimer = 0;
+    return deposited;
   }
+  return 0;
 };

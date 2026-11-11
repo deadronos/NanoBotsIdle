@@ -1,4 +1,6 @@
-import { VoxelChunk0, VoxelWorld, type WorldIndex } from "@astrumforge/bvx-kit";
+import { VoxelChunk0 } from "@astrumforge/bvx-kit/out/lib/engine/chunks/voxel-chunk-0.js";
+import { VoxelWorld } from "@astrumforge/bvx-kit/out/lib/engine/voxel-world.js";
+import type { WorldIndex } from "@astrumforge/bvx-kit/out/lib/engine/world-index.js";
 
 import { MATERIAL_AIR, toWorldIndex } from "./voxel";
 

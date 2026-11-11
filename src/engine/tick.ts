@@ -8,6 +8,37 @@ import { encodeDrones, toFloat32ArrayOrUndefined } from "./encode";
 import { addKey } from "./keyIndex";
 import { tickDrones } from "./tickDrones";
 
+const INCOME_WINDOW_SECONDS = 60;
+
+const updateEconomyReadout = (ctx: EngineContext, deposited: number): void => {
+  const { depositIncome, elapsedSeconds, uiSnapshot } = ctx;
+  const { samples } = depositIncome;
+  if (depositIncome.prestigeLevel !== uiSnapshot.prestigeLevel) {
+    depositIncome.prestigeLevel = uiSnapshot.prestigeLevel;
+    samples.length = 0;
+    depositIncome.total = 0;
+  }
+
+  const cutoff = elapsedSeconds - INCOME_WINDOW_SECONDS;
+  let expired = 0;
+  while (expired < samples.length && samples[expired].at <= cutoff) {
+    depositIncome.total -= samples[expired].amount;
+    expired += 1;
+  }
+  if (expired > 0) samples.splice(0, expired);
+  if (samples.length === 0) depositIncome.total = 0;
+  if (deposited > 0) {
+    samples.push({ at: elapsedSeconds, amount: deposited });
+    depositIncome.total += deposited;
+  }
+
+  uiSnapshot.creditsPerMinute = depositIncome.total;
+  // Sum after every drone has updated so a miner-to-hauler transfer is counted once.
+  let cargo = 0;
+  for (const drone of ctx.drones) cargo += drone.payload;
+  uiSnapshot.cargoInTransit = cargo;
+};
+
 export const tickEngine = (
   ctx: EngineContext,
   dtSeconds: number,
@@ -21,6 +52,7 @@ export const tickEngine = (
     ctx.uiSnapshot.droneCount,
     ctx.uiSnapshot.haulerCount,
     ctx.cfg,
+    ctx.world?.getOutposts()[0],
   );
 
   const moveSpeed = getDroneMoveSpeed(ctx.uiSnapshot.moveSpeedLevel, ctx.cfg);
@@ -37,6 +69,7 @@ export const tickEngine = (
   const maxTargetAttempts = 20;
 
   const w = ctx.world;
+  let deposited = 0;
   if (w) {
     // Process player frontier expansion
     while (ctx.playerChunksToScan.length > 0) {
@@ -56,7 +89,7 @@ export const tickEngine = (
       }
     }
 
-    tickDrones({
+    deposited = tickDrones({
       world: w,
       drones: ctx.drones,
       dtSeconds,
@@ -77,6 +110,7 @@ export const tickEngine = (
     });
   }
 
+  updateEconomyReadout(ctx, deposited);
   const { entities, entityTargets, entityStates } = encodeDrones(ctx.drones);
 
   const delta: RenderDelta = {

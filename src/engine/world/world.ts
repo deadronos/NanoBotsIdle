@@ -11,6 +11,7 @@ import {
 import { VoxelEditStore } from "../../shared/voxelEdits";
 import { getBaseMaterialAt } from "../../sim/voxelBaseMaterial";
 import { FrontierManager, type VoxelReader } from "./FrontierManager";
+import { findLandingSite, STARTER_OUTPOST_ID } from "./landingSite";
 import { type DockResult, type Outpost, OutpostManager } from "./OutpostManager";
 
 export { MATERIAL_AIR, MATERIAL_BEDROCK, MATERIAL_SOLID };
@@ -36,6 +37,8 @@ export class WorldModel implements VoxelReader {
   private readonly edits = new VoxelEditStore();
   private readonly bedrockY: number;
 
+  private readonly starterFoundation: { x: number; z: number };
+  readonly landingSpawn: ReturnType<typeof findLandingSite>["spawn"];
   private readonly frontierManager: FrontierManager;
   private readonly outpostManager: OutpostManager;
 
@@ -48,12 +51,17 @@ export class WorldModel implements VoxelReader {
     this.frontierManager = new FrontierManager(this.seed, this.bedrockY, waterlineVoxelY);
     this.outpostManager = new OutpostManager();
 
-    // V1: Start with a default outpost at 0, 0, 0
-    this.outpostManager.addOutpost(0, 10, 0);
+    const { foundation, outpost, spawn } = findLandingSite(this.seed, cfg);
+    this.starterFoundation = foundation;
+    this.landingSpawn = spawn;
+    this.outpostManager.addOutpost(outpost.x, outpost.y, outpost.z, {
+      id: STARTER_OUTPOST_ID,
+      level: 1,
+    });
   }
 
-  addOutpost(x: number, y: number, z: number) {
-    this.outpostManager.addOutpost(x, y, z);
+  addOutpost(x: number, y: number, z: number, saved?: Pick<Outpost, "id" | "level">) {
+    this.outpostManager.addOutpost(x, y, z, saved);
   }
 
   getOutposts() {
@@ -118,7 +126,12 @@ export class WorldModel implements VoxelReader {
     return this.frontierManager.countFrontierAboveWater();
   }
 
+  isStarterFoundation(x: number, z: number): boolean {
+    return x === this.starterFoundation.x && z === this.starterFoundation.z;
+  }
+
   mineVoxel(x: number, y: number, z: number) {
+    if (this.isStarterFoundation(x, z)) return null;
     const current = this.materialAt(x, y, z);
     if (current !== MATERIAL_SOLID) return null;
     if (y <= this.bedrockY) return null;

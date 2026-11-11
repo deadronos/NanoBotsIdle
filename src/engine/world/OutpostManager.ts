@@ -13,19 +13,13 @@ export type DockResult = "GRANTED" | "QUEUED" | "DENIED";
 export class OutpostManager {
   private readonly outposts: Outpost[] = [];
 
-  constructor() {
-    // Initialize default outpost?
-    // In WorldModel it was done in constructor:
-    // this.addOutpost(0, 10, 0);
-  }
-
-  addOutpost(x: number, y: number, z: number) {
+  addOutpost(x: number, y: number, z: number, saved?: Pick<Outpost, "id" | "level">) {
     this.outposts.push({
-      id: `outpost-${Date.now()}-${Math.random()}`,
+      id: saved?.id ?? `outpost-${Date.now()}-${Math.random()}`,
       x,
       y,
       z,
-      level: 1,
+      level: saved?.level ?? 1,
       docked: new Set(),
       queue: [],
     });

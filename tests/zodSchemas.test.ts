@@ -60,6 +60,8 @@ describe("Zod Bridge Schemas", () => {
       },
       ui: {
         credits: 100,
+        creditsPerMinute: 0,
+        cargoInTransit: 0,
         prestigeLevel: 1,
         droneCount: 5,
         haulerCount: 2,

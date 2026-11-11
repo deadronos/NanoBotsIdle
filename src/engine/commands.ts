@@ -1,4 +1,9 @@
-import { computeNextUpgradeCosts, getPrestigeRequirement, tryBuyUpgrade, type UpgradeType } from "../economy/upgrades";
+import {
+  computeNextUpgradeCosts,
+  getPrestigeRequirement,
+  tryBuyUpgrade,
+  type UpgradeType,
+} from "../economy/upgrades";
 import type { Cmd } from "../shared/protocol";
 import { debug } from "../utils/logger";
 import type { EngineContext } from "./context";
@@ -20,8 +25,10 @@ export const ensureSeedWithMinAboveWater = (ctx: EngineContext, prestigeLevel: n
   resetKeyIndex(ctx.frontier, result.frontierKeys);
   ctx.uiSnapshot.totalBlocks = result.aboveWaterCount;
   ctx.uiSnapshot.actualSeed = result.actualSeed;
+  ctx.uiSnapshot.landingSpawn = result.world.landingSpawn;
   ctx.pendingFrontierSnapshot = result.frontierPositions;
   ctx.pendingFrontierReset = true;
+  return result.world;
 };
 
 const isUpgradeType = (id: string): id is UpgradeType =>
@@ -46,6 +53,8 @@ export const handleCommand = (ctx: EngineContext, cmd: Cmd) => {
       ctx.uiSnapshot.totalBlocks = 0;
       ctx.uiSnapshot.prestigeLevel += 1;
       resetTargets(ctx);
+      ctx.drones = [];
+      ctx.playerChunksToScan.length = 0;
       ensureSeedWithMinAboveWater(ctx, ctx.uiSnapshot.prestigeLevel);
       return;
     }

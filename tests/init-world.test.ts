@@ -32,3 +32,27 @@ test("initWorldForPrestige falls back to base seed if requirement cannot be met 
   // And clearly won't meet the impossibly high requirement
   expect(result.aboveWaterCount).toBeLessThan(localCfg.economy.prestigeMinMinedBlocks);
 });
+
+test("generates a deterministic above-water starter outpost and nearby player spawn", () => {
+  const cfg = getConfig();
+  const { world } = initWorldForPrestige(1, cfg);
+  const { world: repeated } = initWorldForPrestige(1, cfg);
+  const [outpost] = world.getOutposts();
+  const spawn = world.landingSpawn;
+
+  expect(outpost.id).toBe("starter-outpost");
+  expect(outpost.y).toBeGreaterThan(cfg.terrain.waterLevel);
+  expect(
+    world.baseMaterialAt(Math.floor(outpost.x), outpost.y - 1, Math.floor(outpost.z)),
+  ).not.toBe(0);
+  expect(Math.hypot(spawn.x - outpost.x, spawn.z - outpost.z)).toBeGreaterThan(4);
+  expect(spawn.y).toBeGreaterThan(cfg.terrain.waterLevel + cfg.player.playerHeight);
+  expect(repeated.landingSpawn).toEqual(spawn);
+
+  const foundation = world
+    .getFrontierKeys()
+    .map((key) => world.coordsFromKey(key))
+    .find(({ x, y, z }) => y === outpost.y - 1 && world.isStarterFoundation(x, z));
+  expect(foundation).toBeDefined();
+  expect(world.mineVoxel(foundation!.x, foundation!.y, foundation!.z)).toBeNull();
+});

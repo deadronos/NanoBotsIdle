@@ -1,65 +1,35 @@
-import { Cloud, Clouds, Sky, Stars } from "@react-three/drei";
-import { useFrame } from "@react-three/fiber";
-import React, { useRef } from "react";
-import type { DirectionalLight, Group } from "three";
-import * as THREE from "three";
+import { Sky } from "@react-three/drei";
+import React from "react";
 
-import { getConfig } from "../config/index";
+import { useConfig } from "../config/useConfig";
 
 export const Environment: React.FC = () => {
-  const lightRef = useRef<DirectionalLight>(null);
-  const cloudsRef = useRef<Group>(null);
-  const cfg = getConfig();
-
-  useFrame((state, delta) => {
-    // Animate clouds slowly
-    if (cloudsRef.current) {
-      cloudsRef.current.rotation.y += delta * cfg.render.clouds.rotationSpeed;
-    }
-  });
+  const { render } = useConfig();
+  const { sky, sun } = render;
 
   return (
-    <group>
-      {/* Sky */}
+    <>
       <Sky
-        distance={cfg.render.sky.distance}
-        sunPosition={cfg.render.sky.sunPosition}
-        inclination={cfg.render.sky.inclination}
-        azimuth={cfg.render.sky.azimuth}
-        turbidity={cfg.render.sky.turbidity}
-        rayleigh={cfg.render.sky.rayleigh}
+        distance={sky.distance}
+        sunPosition={sky.sunPosition}
+        turbidity={sky.turbidity}
+        rayleigh={sky.rayleigh}
       />
-
-      <Stars {...cfg.render.stars} />
-
-      {/* Clouds */}
-      <group ref={cloudsRef} position={[0, cfg.render.clouds.groupY, 0]}>
-        <Clouds material={THREE.MeshBasicMaterial}>
-          <Cloud {...cfg.render.clouds.cloud1} />
-          <Cloud {...cfg.render.clouds.cloud2} />
-        </Clouds>
-      </group>
-
-      {/* Ambient Light */}
-      <ambientLight intensity={cfg.render.ambientLightIntensity} />
-
-      {/* Fog to hide chunk loading boundaries */}
-      <fog attach="fog" args={["#d6dbdf", 30, 120]} />
-
-      {/* Sun / Directional Light */}
+      <hemisphereLight args={["#d3e8ff", "#a79780", render.ambientLightIntensity]} />
+      <fog attach="fog" args={["#b9cddd", 30, 120]} />
       <directionalLight
-        ref={lightRef}
-        position={cfg.render.sun.position}
-        intensity={cfg.render.sun.intensity}
+        position={sun.position}
+        color="#fff0d5"
+        intensity={sun.intensity}
         castShadow
-        shadow-mapSize={cfg.render.sun.shadowMapSize}
-        shadow-camera-left={cfg.render.sun.cameraBounds.left}
-        shadow-camera-right={cfg.render.sun.cameraBounds.right}
-        shadow-camera-top={cfg.render.sun.cameraBounds.top}
-        shadow-camera-bottom={cfg.render.sun.cameraBounds.bottom}
-        shadow-bias={cfg.render.sun.bias}
-        shadow-normalBias={cfg.render.sun.normalBias}
+        shadow-mapSize={sun.shadowMapSize}
+        shadow-camera-left={sun.cameraBounds.left}
+        shadow-camera-right={sun.cameraBounds.right}
+        shadow-camera-top={sun.cameraBounds.top}
+        shadow-camera-bottom={sun.cameraBounds.bottom}
+        shadow-bias={sun.bias}
+        shadow-normalBias={sun.normalBias}
       />
-    </group>
+    </>
   );
 };

@@ -1,7 +1,8 @@
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 
 import type { FromWorker, ToWorker } from "../src/shared/protocol";
 import { createSimBridge } from "../src/simBridge/simBridge";
+import { useUiStore } from "../src/ui/store";
 
 class FakeWorker {
   messages: ToWorker[] = [];
@@ -31,6 +32,8 @@ class FakeWorker {
 }
 
 describe("sim bridge gating", () => {
+  afterEach(() => vi.unstubAllGlobals());
+
   it("allows only one STEP in flight", () => {
     const worker = new FakeWorker();
     const bridge = createSimBridge({ workerFactory: () => worker, onError: () => undefined });
@@ -50,6 +53,8 @@ describe("sim bridge gating", () => {
       delta: { tick: 0 },
       ui: {
         credits: 0,
+        creditsPerMinute: 0,
+        cargoInTransit: 0,
         prestigeLevel: 1,
         droneCount: 0,
         haulerCount: 0,
@@ -67,6 +72,38 @@ describe("sim bridge gating", () => {
     bridge.step(1032);
     const stepCountAfterThird = worker.messages.filter((msg) => msg.t === "STEP").length;
     expect(stepCountAfterThird).toBe(2);
+  });
+
+  it("keeps the worker alive and resets the clock on the first step after pause", () => {
+    vi.stubGlobal(
+      "requestAnimationFrame",
+      vi.fn(() => 1),
+    );
+    vi.stubGlobal("cancelAnimationFrame", vi.fn());
+    const worker = new FakeWorker();
+    const bridge = createSimBridge({ workerFactory: () => worker, onError: () => undefined });
+    bridge.start();
+    bridge.step(1_000);
+    const frame = {
+      t: "FRAME",
+      frameId: 0,
+      delta: { tick: 1 },
+      ui: useUiStore.getInitialState().snapshot,
+    } satisfies FromWorker;
+    worker.emit(frame);
+    bridge.pause();
+
+    expect(bridge.isRunning()).toBe(false);
+    expect(worker.terminated).toBe(false);
+    expect(bridge.getLastFrame()).toBe(frame);
+    bridge.start();
+    bridge.step(65_000);
+
+    expect(worker.messages.map(({ t }) => t)).toEqual(["INIT", "STEP", "STEP"]);
+    expect(worker.messages.at(-1)).toMatchObject({ t: "STEP", resetClock: true });
+
+    bridge.stop();
+    expect(worker.terminated).toBe(true);
   });
 
   it("stops stepping after worker error", () => {

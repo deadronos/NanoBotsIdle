@@ -48,6 +48,8 @@ export type DepositEvent = {
 
 export type UiSnapshot = {
   credits: number;
+  creditsPerMinute: number;
+  cargoInTransit: number;
   prestigeLevel: number;
   droneCount: number;
   haulerCount: number;
@@ -59,6 +61,7 @@ export type UiSnapshot = {
   outposts: { id: string; x: number; y: number; z: number; level: number }[];
   nextCosts?: Record<string, number>;
   actualSeed?: number;
+  landingSpawn?: { x: number; y: number; z: number };
 };
 
 export type ToWorker =
@@ -67,6 +70,7 @@ export type ToWorker =
       t: "STEP";
       frameId: number;
       nowMs: number;
+      resetClock?: boolean;
       budgetMs: number;
       maxSubsteps: number;
       cmds: Cmd[];
