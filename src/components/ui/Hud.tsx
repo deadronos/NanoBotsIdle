@@ -1,31 +1,68 @@
 import React from "react";
+import { useShallow } from "zustand/react/shallow";
 
-export const Hud: React.FC<{
-  credits: number;
-  prestigeLevel: number;
-  className?: string;
-}> = ({ credits, prestigeLevel, className = "" }) => {
+import { useConfig } from "../../config/useConfig";
+import { getCheapestUpgrade, UPGRADE_NAMES } from "../../economy/upgrades";
+import { useUiStore } from "../../ui/store";
+
+const formatCredits = (amount: number): string => `$${amount.toLocaleString()}`;
+
+export const Hud: React.FC = () => {
+  const config = useConfig();
+  const { credits, creditsPerMinute, cargoInTransit, prestigeLevel, minedBlocks, totalBlocks } =
+    useUiStore(useShallow(({ snapshot }) => ({
+      credits: snapshot.credits,
+      creditsPerMinute: snapshot.creditsPerMinute,
+      cargoInTransit: snapshot.cargoInTransit,
+      prestigeLevel: snapshot.prestigeLevel,
+      minedBlocks: snapshot.minedBlocks,
+      totalBlocks: snapshot.totalBlocks,
+    })));
+  const progress = totalBlocks > 0 ? Math.min(minedBlocks / totalBlocks, 1) : 0;
+  const nextUpgrade = useUiStore(useShallow(({ snapshot }) => getCheapestUpgrade(snapshot, config)));
+  const shortfall = nextUpgrade ? Math.max(0, nextUpgrade.cost - credits) : 0;
+
   return (
-    <div className={`flex gap-4 pointer-events-auto select-none ${className}`}>
-      {/* Credits Card */}
-      <div className="group bg-slate-900/65 backdrop-blur-md px-6 py-2.5 rounded-full border border-yellow-500/20 shadow-[0_0_15px_rgba(234,179,8,0.06)] hover:shadow-[0_0_20px_rgba(234,179,8,0.15)] hover:border-yellow-400/40 transition-all duration-300 flex flex-col items-center cursor-default">
-        <span className="text-yellow-400 font-extrabold text-xl md:text-2xl tracking-wider drop-shadow-[0_0_8px_rgba(234,179,8,0.3)] group-hover:scale-105 transition-transform duration-300">
-          ${credits.toLocaleString()}
-        </span>
-        <span className="text-[10px] text-yellow-200/50 uppercase font-bold tracking-widest mt-0.5">
-          Credits
-        </span>
+    <dl className="game-panel grid max-w-full grid-cols-[minmax(0,.95fr)_minmax(0,1.3fr)_minmax(0,1.25fr)] gap-x-2 gap-y-2 px-3 py-2 tabular-nums">
+      <div>
+        <dt className="game-stat-label">Credits</dt>
+        <dd className="break-all text-sm font-semibold text-amber-300">{formatCredits(credits)}</dd>
       </div>
-
-      {/* Prestige Card */}
-      <div className="group bg-slate-900/65 backdrop-blur-md px-6 py-2.5 rounded-full border border-purple-500/20 shadow-[0_0_15px_rgba(168,85,247,0.06)] hover:shadow-[0_0_20px_rgba(168,85,247,0.15)] hover:border-purple-400/40 transition-all duration-300 flex flex-col items-center cursor-default">
-        <span className="text-purple-400 font-extrabold text-xl md:text-2xl tracking-wider drop-shadow-[0_0_8px_rgba(168,85,247,0.3)] group-hover:scale-105 transition-transform duration-300">
-          Lv. {prestigeLevel}
-        </span>
-        <span className="text-[10px] text-purple-200/50 uppercase font-bold tracking-widest mt-0.5">
-          Prestige
-        </span>
+      <div>
+        <dt className="game-stat-label">Prestige</dt>
+        <dd className="text-sm font-semibold">{prestigeLevel}</dd>
       </div>
-    </div>
+      <div>
+        <dt className="game-stat-label">Mined</dt>
+        <dd className="text-sm font-semibold">
+          {(progress * 100).toFixed(1)}%
+          <progress className="game-progress" aria-label="World mined" value={progress} max={1} />
+        </dd>
+      </div>
+      <div>
+        <dt className="game-stat-label">Credits/min</dt>
+        <dd className="break-all text-sm font-semibold">{formatCredits(creditsPerMinute)}</dd>
+      </div>
+      <div>
+        <dt className="game-stat-label">Cargo in transit</dt>
+        <dd className="break-all text-sm font-semibold">{formatCredits(cargoInTransit)}</dd>
+      </div>
+      <div>
+        <dt className="game-stat-label">Next upgrade</dt>
+        {nextUpgrade ? (
+          <dd className="text-xs font-semibold">
+            <span className="block">{UPGRADE_NAMES[nextUpgrade.type]}</span>
+            <span className="wrap-break-word text-[0.625rem] text-slate-300">
+              {formatCredits(nextUpgrade.cost)}{" · "}
+              {shortfall > 0 ?
+                `${formatCredits(shortfall)} short`
+              : <span className="text-emerald-300">Ready</span>}
+            </span>
+          </dd>
+        ) : (
+          <dd className="text-xs font-semibold">All maxed</dd>
+        )}
+      </div>
+    </dl>
   );
 };

@@ -40,6 +40,7 @@ describe("pickTargetKey", () => {
     const reserved = new Set<number>();
     const mined = new Set<number>();
     const world = {
+      isStarterFoundation: () => false,
       coordsFromKey: (_key: number) => ({ x: 0, y: -1, z: 0 }),
     } as never;
 
@@ -62,6 +63,7 @@ describe("pickTargetKey", () => {
     const reserved = new Set<number>();
     const mined = new Set<number>();
     const world = {
+      isStarterFoundation: () => false,
       coordsFromKey: (key: number) => ({ x: 0, y: key === 1 ? 0 : 10, z: 0 }),
     } as never;
 
@@ -78,6 +80,27 @@ describe("pickTargetKey", () => {
     expect(reserved.has(1)).toBe(true);
   });
 
+  it("never reserves the starter foundation", () => {
+    vi.spyOn(Math, "random").mockReturnValue(0);
+    const reservedKeys = new Set<number>();
+    const world = {
+      coordsFromKey: () => ({ x: 7, y: 1, z: 8 }),
+      isStarterFoundation: (x: number, z: number) => x === 7 && z === 8,
+    } as never;
+
+    expect(
+      pickTargetKey({
+        world,
+        frontierKeys: [1],
+        minedKeys: new Set(),
+        reservedKeys,
+        waterLevel: 0,
+        maxAttempts: 2,
+      }),
+    ).toBeNull();
+    expect(reservedKeys.size).toBe(0);
+  });
+
   it("skips mined/reserved keys and may return null after maxAttempts", () => {
     const randomSpy = vi.spyOn(Math, "random");
     // Always pick index 0
@@ -86,6 +109,7 @@ describe("pickTargetKey", () => {
     const reserved = new Set<number>([1]);
     const mined = new Set<number>([2]);
     const world = {
+      isStarterFoundation: () => false,
       coordsFromKey: (_key: number) => ({ x: 0, y: 10, z: 0 }),
     } as never;
 

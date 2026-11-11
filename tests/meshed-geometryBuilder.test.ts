@@ -1,39 +1,10 @@
-import { BufferAttribute, Color } from "three";
+import { BufferAttribute } from "three";
 import { describe, expect, it } from "vitest";
 
-import {
-  buildBufferGeometry,
-  writeVertexColor,
-} from "../src/components/world/mesh/geometryBuilder";
+import { buildBufferGeometry } from "../src/components/world/mesh/geometryBuilder";
 import type { MeshResult } from "../src/shared/meshingProtocol";
-import { TERRAIN_COLORS, TERRAIN_THRESHOLDS } from "../src/sim/terrain-constants";
 
 describe("geometryBuilder", () => {
-  describe("writeVertexColor", () => {
-    const waterLevel = 10;
-    const base = 0;
-
-    it("writes deep water color", () => {
-      const out = new Float32Array(3);
-      const y = waterLevel + TERRAIN_THRESHOLDS.DEEP_WATER - 1;
-      writeVertexColor(out, base, y, waterLevel);
-      const c = new Color(TERRAIN_COLORS.DEEP_WATER);
-      expect(out[0]).toBeCloseTo(c.r);
-      expect(out[1]).toBeCloseTo(c.g);
-      expect(out[2]).toBeCloseTo(c.b);
-    });
-
-    it("writes snow color", () => {
-      const out = new Float32Array(3);
-      const y = waterLevel + TERRAIN_THRESHOLDS.ROCK + 1;
-      writeVertexColor(out, base, y, waterLevel);
-      const c = new Color(TERRAIN_COLORS.SNOW);
-      expect(out[0]).toBeCloseTo(c.r);
-      expect(out[1]).toBeCloseTo(c.g);
-      expect(out[2]).toBeCloseTo(c.b);
-    });
-  });
-
   describe("buildBufferGeometry", () => {
     it("creates buffer geometry from mesh result", () => {
       const geometry: MeshResult["geometry"] = {

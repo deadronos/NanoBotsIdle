@@ -17,8 +17,8 @@ export const PauseButton: React.FC = () => {
         setRunning(isRunning());
       }}
       title={running ? "Pause simulation" : "Start simulation"}
-      className="text-white/50 hover:text-white transition-all"
-      aria-pressed={running ? "true" : "false"}
+      className="game-control flex items-center justify-center"
+      aria-label={running ? "Pause simulation" : "Resume simulation"}
     >
       {running ?
         <svg

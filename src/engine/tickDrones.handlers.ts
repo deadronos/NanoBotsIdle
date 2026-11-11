@@ -166,8 +166,7 @@ export const handleMinerState = (drone: Drone, context: TickDronesContext) => {
       break;
     }
     case "DEPOSITING": {
-      handleDeposit(world, drone, depositEvents, uiSnapshot, dtSeconds, "SEEKING");
-      break;
+      return handleDeposit(world, drone, depositEvents, uiSnapshot, dtSeconds, "SEEKING");
     }
     default:
       if (drone.payload <= 0) drone.state = "SEEKING";
@@ -294,8 +293,7 @@ export const handleHaulerState = (drone: Drone, context: TickDronesContext) => {
       break;
     }
     case "DEPOSITING": {
-      handleDeposit(world, drone, depositEvents, uiSnapshot, dtSeconds, "IDLE");
-      break;
+      return handleDeposit(world, drone, depositEvents, uiSnapshot, dtSeconds, "IDLE");
     }
     default:
       drone.state = "IDLE";

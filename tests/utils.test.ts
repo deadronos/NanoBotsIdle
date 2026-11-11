@@ -1,6 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
 
 import { getSmoothHeight } from "../src/sim/terrain";
+import { TERRAIN_COLORS } from "../src/sim/terrain-constants";
 import type * as TerrainCore from "../src/sim/terrain-core";
 import { getVoxelColor, getVoxelType, noise2D } from "../src/sim/terrain-core";
 import { random } from "../src/utils";
@@ -32,14 +33,14 @@ describe("src/utils.ts", () => {
 
   it("getVoxelColor maps height bands relative to water level", () => {
     const wl = -12;
-    expect(getVoxelColor(wl - 100, wl)).toBe(0x1a4d8c); // deep water
-    expect(getVoxelColor(wl - 2, wl)).toBe(0x2d73bf); // boundary: not deep water anymore
-    expect(getVoxelColor(wl, wl)).toBe(0x2d73bf); // water
-    expect(getVoxelColor(wl + 1, wl)).toBe(0xe3dba3); // sand
-    expect(getVoxelColor(wl + 3, wl)).toBe(0x59a848); // grass
-    expect(getVoxelColor(wl + 10, wl)).toBe(0x3b7032); // dark grass
-    expect(getVoxelColor(wl + 19, wl)).toBe(0x6e6e6e); // rock
-    expect(getVoxelColor(wl + 100, wl)).toBe(0xffffff); // snow
+    expect(getVoxelColor(wl - 100, wl)).toBe(TERRAIN_COLORS.DEEP_WATER); // deep water
+    expect(getVoxelColor(wl - 2, wl)).toBe(TERRAIN_COLORS.WATER); // boundary: not deep water anymore
+    expect(getVoxelColor(wl, wl)).toBe(TERRAIN_COLORS.WATER); // water
+    expect(getVoxelColor(wl + 1, wl)).toBe(TERRAIN_COLORS.SAND); // sand
+    expect(getVoxelColor(wl + 3, wl)).toBe(TERRAIN_COLORS.GRASS); // grass
+    expect(getVoxelColor(wl + 10, wl)).toBe(TERRAIN_COLORS.DARK_GRASS); // dark grass
+    expect(getVoxelColor(wl + 19, wl)).toBe(TERRAIN_COLORS.ROCK); // rock
+    expect(getVoxelColor(wl + 100, wl)).toBe(TERRAIN_COLORS.SNOW); // snow
   });
 
   it("getVoxelType treats waterLevel as inclusive", () => {

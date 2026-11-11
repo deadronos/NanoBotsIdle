@@ -3,6 +3,7 @@ import { expect, test } from "vitest";
 import { getConfig, updateConfig } from "../src/config/index";
 import { getSeed } from "../src/sim/seed";
 import { generateInstances } from "../src/sim/terrain";
+import { TERRAIN_COLORS } from "../src/sim/terrain-constants";
 import { getVoxelColor } from "../src/sim/terrain-core";
 
 const seeds = Array.from({ length: 10 }, (_, i) => i + 1);
@@ -25,7 +26,8 @@ const computeAboveWaterFraction = (
     totalVoxels += voxels.length;
     for (const v of voxels) {
       const hexColor = getVoxelColor(v.y, cfg.terrain.waterLevel);
-      if (hexColor === 0x59a848 || hexColor === 0x3b7032) totalAbove += 1;
+      if (hexColor === TERRAIN_COLORS.GRASS || hexColor === TERRAIN_COLORS.DARK_GRASS)
+        totalAbove += 1;
     }
   }
 

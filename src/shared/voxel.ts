@@ -1,4 +1,6 @@
-import { LinearKey, WorldIndex } from "@astrumforge/bvx-kit";
+// Import the storage primitives directly so workers skip the geometry lookup tables.
+import { WorldIndex } from "@astrumforge/bvx-kit/out/lib/engine/world-index.js";
+import { LinearKey } from "@astrumforge/bvx-kit/out/lib/math/linear-key.js";
 
 export const MATERIAL_AIR = 0 as const;
 export const MATERIAL_SOLID = 1 as const;

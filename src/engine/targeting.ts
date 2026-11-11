@@ -20,8 +20,8 @@ export const pickTargetKey = (options: {
   while (attempts < maxAttempts) {
     const idx = Math.floor(Math.random() * frontierKeys.length);
     const key = frontierKeys[idx];
-    const { y } = world.coordsFromKey(key);
-    if (y < waterline) {
+    const { x, y, z } = world.coordsFromKey(key);
+    if (y < waterline || world.isStarterFoundation(x, z)) {
       attempts += 1;
       continue;
     }

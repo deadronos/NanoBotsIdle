@@ -25,6 +25,7 @@ export type SimBridgeOptions = {
 
 export type SimBridge = {
   start: () => void;
+  pause: () => void;
   stop: () => void;
   step: (nowMs: number) => void;
   enqueue: (cmd: Cmd) => void;

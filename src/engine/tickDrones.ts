@@ -42,13 +42,15 @@ export const tickDrones = (options: {
     pickOutpost,
   };
 
+  let deposited = 0;
   for (const drone of drones) {
     if (drone.role === "MINER") {
-      handleMinerState(drone, context);
+      deposited += handleMinerState(drone, context) ?? 0;
     } else if (drone.role === "HAULER") {
-      handleHaulerState(drone, context);
+      deposited += handleHaulerState(drone, context) ?? 0;
     }
   }
 
   uiSnapshot.totalBlocks = world.countFrontierAboveWater();
+  return deposited;
 };

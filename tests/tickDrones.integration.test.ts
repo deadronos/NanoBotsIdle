@@ -14,6 +14,8 @@ describe("tickDrones integration: hauler pickup and deposit", () => {
 
     const uiSnapshot: UiSnapshot = {
       credits: 0,
+      creditsPerMinute: 0,
+      cargoInTransit: 0,
       prestigeLevel: 1,
       droneCount: 2,
       haulerCount: 1,

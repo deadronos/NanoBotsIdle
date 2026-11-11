@@ -42,8 +42,13 @@ export const getVoxelMaterialAt = (
   return materialAt(x, y, z, seed);
 };
 
-export const getGroundHeightWithEdits = (x: number, z: number, prestigeLevel = 1) => {
-  const seed = getSeed(prestigeLevel);
+export const getGroundHeightWithEdits = (
+  x: number,
+  z: number,
+  prestigeLevel = 1,
+  seedOverride?: number,
+) => {
+  const seed = seedOverride ?? getSeed(prestigeLevel);
   const cfg = getConfig();
   const bedrockY = cfg.terrain.bedrockY ?? -50;
   const surfaceY = getSurfaceHeightCore(

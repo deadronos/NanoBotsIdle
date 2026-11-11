@@ -142,6 +142,8 @@ describe("SimBridge worker error handling with retry", () => {
       delta: { tick: 0 },
       ui: {
         credits: 0,
+        creditsPerMinute: 0,
+        cargoInTransit: 0,
         prestigeLevel: 1,
         droneCount: 0,
         haulerCount: 0,

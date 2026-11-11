@@ -1,1 +1,69 @@
 @import "tailwindcss";
+
+.game-panel {
+  color: #e6eeef;
+  background: #111c23f5;
+  border: 1px solid #34454f;
+  border-radius: 0.625rem;
+  box-shadow: 0 3px 12px #080d1540;
+}
+
+.game-control {
+  min-height: 2.5rem;
+  padding-inline: clamp(0.4rem, 1.5vw, 0.75rem);
+  border-radius: 0.375rem;
+  font-size: 0.75rem;
+  font-weight: 650;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.game-control:hover,
+.game-control[aria-pressed="true"],
+.game-control[aria-expanded="true"] {
+  background: #2c424d;
+}
+
+.game-control:focus-visible {
+  outline: 2px solid #fdd38a;
+  outline-offset: -2px;
+}
+
+.game-control-primary {
+  color: #201804;
+  background: #f4bf66;
+}
+
+.game-control-primary:hover {
+  background: #ffd68c;
+}
+
+.game-stat-label {
+  color: #b1c2cb;
+  font-size: 0.625rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.game-progress {
+  display: block;
+  width: 100%;
+  height: 0.1875rem;
+  appearance: none;
+  margin-top: 0.125rem;
+  overflow: hidden;
+  border-radius: 999px;
+  background: #34454f;
+}
+
+.game-progress::-webkit-progress-bar {
+  background: #34454f;
+}
+
+.game-progress::-webkit-progress-value {
+  background: #88d1bb;
+}
+
+.game-progress::-moz-progress-bar {
+  background: #88d1bb;
+}

@@ -4,7 +4,6 @@ import { Canvas } from "@react-three/fiber";
 
 import { Drones } from "./components/Drones";
 import { DynamicResScaler } from "./components/DynamicResScaler";
-import { Effects } from "./components/effects/Effects";
 import { Environment } from "./components/Environment";
 import { Outposts } from "./components/Outposts";
 import { Player } from "./components/Player";
@@ -93,7 +92,6 @@ function App() {
           <Drones />
           <Outposts />
           <PlacementManager />
-          <Effects />
         </Suspense>
       </Canvas>
     </>

@@ -1,7 +1,17 @@
 import type { Config } from "../config/index";
 import type { UiSnapshot } from "../shared/protocol";
 
-export type UpgradeType = "drone" | "hauler" | "speed" | "move" | "laser";
+export const UPGRADE_NAMES = {
+  drone: "Drone Fleet",
+  hauler: "Logistics Hauler",
+  speed: "Mining Drill",
+  move: "Thrusters",
+  laser: "Laser Power",
+} as const;
+
+export type UpgradeType = keyof typeof UPGRADE_NAMES;
+
+const upgradeTypes = Object.keys(UPGRADE_NAMES) as UpgradeType[];
 
 type UpgradeLevels = Pick<
   UiSnapshot,
@@ -56,6 +66,20 @@ export const computeNextUpgradeCosts = (levels: UpgradeLevels, cfg: Config) => {
     move: getUpgradeCost("move", levels, cfg),
     laser: getUpgradeCost("laser", levels, cfg),
   };
+};
+
+export const getCheapestUpgrade = (
+  snapshot: UpgradeLevels & Pick<UiSnapshot, "nextCosts">,
+  cfg: Config,
+): { type: UpgradeType; cost: number } | undefined => {
+  const costs = snapshot.nextCosts ?? computeNextUpgradeCosts(snapshot, cfg);
+  let cheapest: { type: UpgradeType; cost: number } | undefined;
+  for (const type of upgradeTypes) {
+    const cost = costs[type];
+    if (cost === undefined || isUpgradeMaxed(type, snapshot, cfg)) continue;
+    if (!cheapest || cost < cheapest.cost) cheapest = { type, cost };
+  }
+  return cheapest;
 };
 
 export const tryBuyUpgrade = (type: UpgradeType, snapshot: UiSnapshot, cfg: Config) => {

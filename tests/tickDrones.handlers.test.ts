@@ -15,6 +15,7 @@ const createMockContext = (overrides: Partial<TickDronesContext> = {}): TickDron
   const cfg = getConfig();
   return {
     world: {
+      isStarterFoundation: () => false,
       coordsFromKey: (k: number) => {
         // Simple mock: assume key 123 => x=10, y=10, z=10
         if (k === 123) return { x: 10, y: 10, z: 10 };
@@ -45,6 +46,8 @@ const createMockContext = (overrides: Partial<TickDronesContext> = {}): TickDron
     maxTargetAttempts: 10,
     uiSnapshot: {
       credits: 0,
+      creditsPerMinute: 0,
+      cargoInTransit: 0,
       prestigeLevel: 1,
       minedBlocks: 0,
       moveSpeedLevel: 1,

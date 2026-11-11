@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import React, { act } from "react";
 import { createRoot, type Root } from "react-dom/client";
-import { afterEach, describe, expect, test } from "vitest";
+import { afterEach, describe, expect, test, vi } from "vitest";
 
 import { TouchControls } from "../src/components/ui/TouchControls";
 
@@ -83,5 +83,21 @@ describe("TouchControls", () => {
     renderTouchControls();
     const buttons = container?.querySelectorAll("button") ?? [];
     expect(buttons.length).toBeGreaterThanOrEqual(4);
+  });
+  test("releases movement when the browser cancels a touch", () => {
+    Object.defineProperty(navigator, "maxTouchPoints", { value: 1, configurable: true });
+    renderTouchControls();
+    const forward = container!.querySelector("button")!;
+    const release = vi.fn();
+    window.addEventListener("keyup", release);
+    try {
+      act(() => {
+        forward.dispatchEvent(new Event("pointerdown", { bubbles: true, cancelable: true }));
+        forward.dispatchEvent(new Event("pointercancel", { bubbles: true, cancelable: true }));
+      });
+      expect(release).toHaveBeenCalledWith(expect.objectContaining({ code: "KeyW" }));
+    } finally {
+      window.removeEventListener("keyup", release);
+    }
   });
 });

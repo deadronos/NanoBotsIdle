@@ -7,6 +7,7 @@ import { createKeyIndex } from "./keyIndex";
 import { handleCommand, ensureSeedWithMinAboveWater } from "./commands";
 import { tickEngine } from "./tick";
 import type { EngineContext } from "./context";
+import { STARTER_OUTPOST_ID } from "./world/landingSite";
 
 export type Engine = {
   dispatch: (cmd: Cmd) => void;
@@ -32,8 +33,11 @@ export const createEngine = (_seed?: number, saveState?: Partial<UiSnapshot>): E
     pendingFrontierReset: false,
     drones: [],
     playerChunksToScan: [],
+    depositIncome: { prestigeLevel: saveState?.prestigeLevel ?? 1, samples: [], total: 0 },
     uiSnapshot: {
       credits: saveState?.credits ?? 0,
+      creditsPerMinute: 0,
+      cargoInTransit: 0,
       prestigeLevel: saveState?.prestigeLevel ?? 1,
       droneCount: saveState?.droneCount ?? 3,
       haulerCount: saveState?.haulerCount ?? 0,
@@ -51,21 +55,21 @@ export const createEngine = (_seed?: number, saveState?: Partial<UiSnapshot>): E
   ctx.uiSnapshot.nextCosts = computeNextUpgradeCosts(ctx.uiSnapshot, cfg);
 
   // Initialize world
-  ensureSeedWithMinAboveWater(ctx, ctx.uiSnapshot.prestigeLevel);
+  const world = ensureSeedWithMinAboveWater(ctx, ctx.uiSnapshot.prestigeLevel);
 
-  // Hydrate outposts
-  if (saveState?.outposts) {
-    saveState.outposts.forEach((op) => {
-      // Check for duplicates if needed, or just add.
-      // We check if an outpost with same coords exists.
-      if (
-        ctx.world &&
-        !ctx.world.getOutposts().find((e) => e.x === op.x && e.y === op.y && e.z === op.z)
-      ) {
-        ctx.world.addOutpost(op.x, op.y, op.z);
-      }
-    });
-  }
+  // The generated starter was first in legacy saves and used fixed coordinates.
+  // Recreate it from the seed while retaining player-built outpost IDs and levels.
+  saveState?.outposts?.forEach((outpost, index) => {
+    const isLegacyStarter = index === 0 && outpost.x === 0 && outpost.y === 10 && outpost.z === 0;
+    if (outpost.id === STARTER_OUTPOST_ID || isLegacyStarter) return;
+    if (
+      world
+        .getOutposts()
+        .some(({ x, y, z }) => x === outpost.x && y === outpost.y && z === outpost.z)
+    )
+      return;
+    world.addOutpost(outpost.x, outpost.y, outpost.z, outpost);
+  });
 
   const dispatch = (cmd: Cmd) => handleCommand(ctx, cmd);
 

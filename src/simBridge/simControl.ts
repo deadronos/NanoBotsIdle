@@ -27,6 +27,13 @@ export const stop = () => {
 };
 
 export const toggle = () => {
-  if (isRunning()) stop();
-  else start();
+  if (!isRunning()) {
+    start();
+    return;
+  }
+  try {
+    getSimBridge().pause();
+  } catch (e) {
+    warn("Failed to pause sim", e);
+  }
 };

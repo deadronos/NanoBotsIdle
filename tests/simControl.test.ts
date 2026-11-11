@@ -4,10 +4,10 @@ import { getSimBridge } from "../src/simBridge/simBridge";
 import * as simControl from "../src/simBridge/simControl";
 
 describe("simControl", () => {
-  it("toggles running state by calling start/stop", () => {
+  it("toggles running state by calling start/pause", () => {
     const bridge = getSimBridge();
     const startSpy = vi.spyOn(bridge, "start");
-    const stopSpy = vi.spyOn(bridge, "stop");
+    const pauseSpy = vi.spyOn(bridge, "pause");
 
     // Ensure predictable starting state
     bridge.stop();
@@ -16,11 +16,12 @@ describe("simControl", () => {
     simControl.toggle();
     expect(startSpy).toHaveBeenCalled();
 
-    // Now ensure running and toggle calls stop
+    // Now ensure running and toggle calls pause
     simControl.toggle();
-    expect(stopSpy).toHaveBeenCalled();
+    expect(pauseSpy).toHaveBeenCalled();
 
     startSpy.mockRestore();
-    stopSpy.mockRestore();
+    pauseSpy.mockRestore();
+    bridge.stop();
   });
 });

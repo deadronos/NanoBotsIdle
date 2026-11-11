@@ -25,7 +25,7 @@ export const ModalShell: React.FC<ModalShellProps> = ({
     <div
       className={
         overlayClassName ??
-        "fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 pointer-events-auto"
+        "fixed inset-0 bg-black/70 flex items-center justify-center z-50 pointer-events-auto p-3"
       }
     >
       <button
@@ -37,10 +37,10 @@ export const ModalShell: React.FC<ModalShellProps> = ({
       <div
         role="dialog"
         aria-modal="true"
-        className={
+        className={`max-h-[calc(100dvh-1.5rem)] overflow-y-auto ${
           contentClassName ??
-          "bg-gray-900 border border-white/10 p-8 rounded-2xl max-w-2xl w-full shadow-2xl relative cursor-default z-10"
-        }
+          "bg-gray-900 border border-white/10 p-4 md:p-8 rounded-2xl max-w-2xl w-full shadow-2xl relative cursor-default z-10"
+        }`}
       >
         {children}
       </div>

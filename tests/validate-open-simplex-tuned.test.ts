@@ -5,6 +5,7 @@ import { expect, test } from "vitest";
 import { getConfig, updateConfig } from "../src/config/index";
 import { getSeed } from "../src/sim/seed";
 import { generateInstances } from "../src/sim/terrain";
+import { TERRAIN_COLORS } from "../src/sim/terrain-constants";
 import { getVoxelColor } from "../src/sim/terrain-core";
 
 test("validate open-simplex tuned params (bias=2, scale=3)", () => {
@@ -26,7 +27,7 @@ test("validate open-simplex tuned params (bias=2, scale=3)", () => {
       if (v.y < minY) minY = v.y;
       if (v.y > maxY) maxY = v.y;
       const hexColor = getVoxelColor(v.y, cfg.terrain.waterLevel);
-      if (hexColor === 0x59a848 || hexColor === 0x3b7032) above += 1;
+      if (hexColor === TERRAIN_COLORS.GRASS || hexColor === TERRAIN_COLORS.DARK_GRASS) above += 1;
     }
 
     // write one visual map for seed 1 only

@@ -3,7 +3,6 @@ import React from "react";
 import { useConfig } from "../config/useConfig";
 import { getSeed } from "../sim/seed";
 import { useUiStore } from "../ui/store";
-import { BlockHighlight } from "./world/BlockHighlight";
 import { VoxelLayerInstanced } from "./world/VoxelLayerInstanced";
 import { VoxelLayerMeshed } from "./world/VoxelLayerMeshed";
 
@@ -13,13 +12,16 @@ export const World: React.FC = () => {
   const actualSeed = useUiStore((state) => state.snapshot.actualSeed);
   const seed = actualSeed ?? getSeed(prestigeLevel); // Use actualSeed if available, fall back to computed
   const chunkSize = cfg.terrain.chunkSize ?? 16;
-  const spawnX = cfg.player.spawnX ?? 0;
-  const spawnZ = cfg.player.spawnZ ?? 0;
+  const spawnX = Math.floor(
+    useUiStore((state) => state.snapshot.landingSpawn?.x) ?? cfg.player.spawnX ?? 0,
+  );
+  const spawnZ = Math.floor(
+    useUiStore((state) => state.snapshot.landingSpawn?.z) ?? cfg.player.spawnZ ?? 0,
+  );
   const voxelRenderMode = cfg.render.voxels.mode;
 
   return (
     <group>
-      <BlockHighlight />
       {voxelRenderMode === "meshed" ?
         <VoxelLayerMeshed
           chunkSize={chunkSize}
@@ -38,17 +40,22 @@ export const World: React.FC = () => {
         />
       }
 
-      {/* Water Plane */}
-      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, cfg.terrain.waterLevel, 0]} receiveShadow>
+      {/* Lift the surface slightly above coplanar voxel tops. */}
+      <mesh
+        rotation={[-Math.PI / 2, 0, 0]}
+        position={[0, cfg.terrain.waterLevel + 0.02, 0]}
+        receiveShadow
+      >
         <planeGeometry
           args={[cfg.terrain.worldRadius * 2 + 20, cfg.terrain.worldRadius * 2 + 20]}
         />
         <meshStandardMaterial
-          color="#42a7ff"
+          color="#438caa"
           transparent
-          opacity={0.7}
-          roughness={0.0}
-          metalness={0.3}
+          opacity={0.66}
+          depthWrite={false}
+          roughness={0.24}
+          metalness={0.08}
         />
       </mesh>
 
