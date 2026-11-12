@@ -1,79 +1,94 @@
 import { useFrame } from "@react-three/fiber";
-import React, { forwardRef, useEffect, useRef } from "react";
-import type { PointLight, Vector3 } from "three";
+import React, { forwardRef, useImperativeHandle, useLayoutEffect, useRef, useState } from "react";
+import type { InstancedMesh, Vector3 } from "three";
+import { AdditiveBlending, Color, DynamicDrawUsage, Object3D } from "three";
+
+const CAPACITY = 10;
+const DURATION = 0.22;
+const WHITE = new Color(1, 1, 1);
 
 export interface FlashHandle {
-  trigger: (pos: Vector3) => void;
+  trigger: (pos: Vector3, color: Color) => void;
 }
 
-// eslint-disable-next-line @typescript-eslint/no-empty-object-type
-export interface FlashEffectProps {}
+export const FlashEffect = forwardRef<FlashHandle>((_, ref) => {
+  const meshRef = useRef<InstancedMesh>(null);
+  const [slots] = useState(() =>
+    Array.from({ length: CAPACITY }, () => ({
+      age: DURATION,
+      transform: new Object3D(),
+      color: new Color(),
+    })),
+  );
+  const cursor = useRef(0);
+  const [flashColor] = useState(() => new Color());
 
-export const FlashEffect = forwardRef<FlashHandle, FlashEffectProps>((props, ref) => {
-  const lightsRef = useRef<(PointLight | null)[]>([]);
+  useLayoutEffect(() => {
+    const mesh = meshRef.current;
+    if (!mesh) return;
+    mesh.count = 0;
+    mesh.instanceMatrix.setUsage(DynamicDrawUsage);
+    mesh.setColorAt(0, flashColor);
+    mesh.instanceColor?.setUsage(DynamicDrawUsage);
+  }, [flashColor]);
 
-  const statesRef = useRef<{ active: boolean; age: number }[]>(
-    new Array(10).fill(0).map(() => ({ active: false, age: 0 })),
+  useImperativeHandle(
+    ref,
+    () => ({
+      trigger(pos, color) {
+        const slot = slots[cursor.current];
+        cursor.current = (cursor.current + 1) % CAPACITY;
+        slot.age = 0;
+        slot.transform.position.copy(pos);
+        slot.color.copy(color);
+      },
+    }),
+    [slots],
   );
 
-  const cursor = useRef(0);
-  const poolSize = 10;
-
-  useEffect(() => {
-    const handle = ref as React.MutableRefObject<FlashHandle | null>;
-    handle.current = {
-      trigger: (pos: Vector3) => {
-        const idx = cursor.current;
-        cursor.current = (cursor.current + 1) % poolSize;
-
-        const light = lightsRef.current[idx];
-        if (light) {
-          light.position.copy(pos);
-          light.position.y += 0.5;
-          light.visible = true;
-          light.intensity = 10;
-          statesRef.current[idx] = { active: true, age: 0 };
-        }
-      },
-    };
-
-    return () => {
-      handle.current = null;
-    };
-  }, [ref]);
-
   useFrame((_, delta) => {
-    statesRef.current.forEach((state, i) => {
-      if (state.active) {
-        state.age += delta;
-        const duration = 0.4;
-
-        if (state.age >= duration) {
-          state.active = false;
-          if (lightsRef.current[i]) lightsRef.current[i]!.visible = false;
-        } else if (lightsRef.current[i]) {
-          const t = 1 - state.age / duration;
-          lightsRef.current[i]!.intensity = 10 * (t * t);
-        }
-      }
-    });
+    const mesh = meshRef.current;
+    if (!mesh) return;
+    let count = 0;
+    for (const slot of slots) {
+      if (slot.age >= DURATION) continue;
+      const fade = 1 - slot.age / DURATION;
+      slot.age += delta;
+      slot.transform.scale.setScalar(0.55 + (1 - fade) * 0.65);
+      slot.transform.updateMatrix();
+      mesh.setMatrixAt(count, slot.transform.matrix);
+      mesh.setColorAt(
+        count,
+        flashColor
+          .copy(slot.color)
+          .lerp(WHITE, 0.65)
+          .multiplyScalar(fade ** 2),
+      );
+      count++;
+    }
+    mesh.count = count;
+    mesh.visible = count > 0;
+    if (count > 0) {
+      mesh.instanceMatrix.needsUpdate = true;
+      if (mesh.instanceColor) mesh.instanceColor.needsUpdate = true;
+    }
   });
 
   return (
-    <group>
-      {Array.from({ length: poolSize }).map((_, i) => (
-        <pointLight
-          key={i}
-          ref={(el) => {
-            lightsRef.current[i] = el;
-          }}
-          visible={false}
-          color="#ffffaa"
-          distance={6}
-          decay={2}
-        />
-      ))}
-    </group>
+    <instancedMesh
+      ref={meshRef}
+      args={[undefined, undefined, CAPACITY]}
+      frustumCulled={false}
+      visible={false}
+    >
+      <icosahedronGeometry args={[0.75, 0]} />
+      <meshBasicMaterial
+        blending={AdditiveBlending}
+        depthWrite={false}
+        transparent
+        toneMapped={false}
+      />
+    </instancedMesh>
   );
 });
 FlashEffect.displayName = "FlashEffect";

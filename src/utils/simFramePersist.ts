@@ -1,3 +1,4 @@
+import type { OutpostSnapshot } from "../shared/protocol";
 import type { GameState } from "../store";
 
 /**
@@ -8,6 +9,7 @@ export type PersistableGameFields = Pick<
   GameState,
   | "credits"
   | "prestigeLevel"
+  | "landingProfile"
   | "droneCount"
   | "haulerCount"
   | "miningSpeedLevel"
@@ -24,6 +26,7 @@ export type PersistableUi = Pick<
   PersistableGameFields,
   | "credits"
   | "prestigeLevel"
+  | "landingProfile"
   | "droneCount"
   | "haulerCount"
   | "miningSpeedLevel"
@@ -63,11 +66,12 @@ export const outpostsUnchanged = (prev: OutpostLike[], next: OutpostLike[]): boo
 export const buildPersistedPatch = (
   prev: PersistableGameFields,
   ui: PersistableUi,
-  outposts: OutpostLike[],
+  outposts: OutpostSnapshot[],
 ): Partial<PersistableGameFields> => {
   const patch: Record<string, unknown> = {};
   if (prev.credits !== ui.credits) patch.credits = ui.credits;
   if (prev.prestigeLevel !== ui.prestigeLevel) patch.prestigeLevel = ui.prestigeLevel;
+  if (prev.landingProfile !== ui.landingProfile) patch.landingProfile = ui.landingProfile;
   if (prev.droneCount !== ui.droneCount) patch.droneCount = ui.droneCount;
   if (prev.haulerCount !== ui.haulerCount) patch.haulerCount = ui.haulerCount;
   if (prev.miningSpeedLevel !== ui.miningSpeedLevel) patch.miningSpeedLevel = ui.miningSpeedLevel;
@@ -75,6 +79,8 @@ export const buildPersistedPatch = (
   if (prev.laserPowerLevel !== ui.laserPowerLevel) patch.laserPowerLevel = ui.laserPowerLevel;
   if (prev.minedBlocks !== ui.minedBlocks) patch.minedBlocks = ui.minedBlocks;
   if (prev.totalBlocks !== ui.totalBlocks) patch.totalBlocks = ui.totalBlocks;
-  if (!outpostsUnchanged(prev.outposts, outposts)) patch.outposts = outposts;
+  if (!outpostsUnchanged(prev.outposts, outposts)) {
+    patch.outposts = outposts.map(({ id, x, y, z, level }) => ({ id, x, y, z, level }));
+  }
   return patch as Partial<PersistableGameFields>;
 };

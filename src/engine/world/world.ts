@@ -111,7 +111,9 @@ export class WorldModel implements VoxelReader {
   }
 
   ensureFrontierInChunk(cx: number, cz: number) {
-    return this.frontierManager.ensureFrontierInChunk(cx, cz);
+    return this.frontierManager.ensureFrontierInChunk(cx, cz, (x, y, z) =>
+      this.edits.hasAirEdit(x, y, z),
+    );
   }
 
   getFrontierKeys(): VoxelKey[] {

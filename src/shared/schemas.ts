@@ -1,10 +1,17 @@
 import { z } from "zod";
 
-// --- Primitives ---
+export const LandingProfileSchema = z.enum(["near", "rich"]);
+const MiningZoneSchema = z.object({
+  x: z.number().int().min(-500).max(500),
+  y: z.number().int(),
+  z: z.number().int().min(-500).max(500),
+});
 
 export const CmdSchema = z.union([
   z.object({ t: z.literal("BUY_UPGRADE"), id: z.string(), n: z.number() }),
-  z.object({ t: z.literal("PRESTIGE") }),
+  z.object({ t: z.literal("PRESTIGE"), landing: LandingProfileSchema.optional() }),
+  z.object({ t: z.literal("SET_MINING_ZONE"), zone: MiningZoneSchema }),
+  z.object({ t: z.literal("CLEAR_MINING_ZONE") }),
   z.object({ t: z.literal("CLICK_VOXEL"), x: z.number(), y: z.number(), z: z.number() }),
   z.object({ t: z.literal("SET_TOOL"), tool: z.union([z.literal("mine"), z.literal("build")]) }),
   z.object({
@@ -24,12 +31,24 @@ export const VoxelEditSchema = z.object({
   mat: z.number(),
 });
 
+const OutpostSnapshotSchema = z.object({
+  id: z.string(),
+  x: z.number(),
+  y: z.number(),
+  z: z.number(),
+  level: z.number(),
+  dockedCount: z.number().optional(),
+  queuedCount: z.number().optional(),
+});
+
 export const RenderDeltaSchema = z.object({
   tick: z.number(),
   entities: z.instanceof(Float32Array).optional(),
   entityTargets: z.instanceof(Float32Array).optional(),
   entityStates: z.instanceof(Uint8Array).optional(),
   entityRoles: z.instanceof(Uint8Array).optional(),
+  entityCargo: z.instanceof(Float32Array).optional(),
+  returnRoutes: z.instanceof(Float32Array).optional(),
   edits: z.array(VoxelEditSchema).optional(),
   minedPositions: z.instanceof(Float32Array).optional(),
   frontierAdd: z.instanceof(Float32Array).optional(),
@@ -49,17 +68,7 @@ export const RenderDeltaSchema = z.object({
       }),
     )
     .optional(),
-  outposts: z
-    .array(
-      z.object({
-        id: z.string(),
-        x: z.number(),
-        y: z.number(),
-        z: z.number(),
-        level: z.number(),
-      }),
-    )
-    .optional(),
+  outposts: z.array(OutpostSnapshotSchema).optional(),
   depositEvents: z
     .array(
       z.object({
@@ -84,17 +93,13 @@ export const UiSnapshotSchema = z.object({
   laserPowerLevel: z.number(),
   minedBlocks: z.number(),
   totalBlocks: z.number(),
-  outposts: z.array(
-    z.object({
-      id: z.string(),
-      x: z.number(),
-      y: z.number(),
-      z: z.number(),
-      level: z.number(),
-    }),
-  ),
+  outposts: z.array(OutpostSnapshotSchema),
   nextCosts: z.record(z.string(), z.number()).optional(),
   actualSeed: z.number().optional(),
+  landingProfile: LandingProfileSchema.optional(),
+  miningZone: MiningZoneSchema.optional(),
+  zoneTargets: z.number().optional(),
+  zoneAssigned: z.number().optional(),
   landingSpawn: z.object({ x: z.number(), y: z.number(), z: z.number() }).optional(),
 });
 

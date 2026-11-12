@@ -3,7 +3,6 @@ import { type FC, useEffect, useRef, useState } from "react";
 import { MeshBasicMaterial } from "three";
 
 import { useConfig } from "../config/useConfig";
-import { STARTER_OUTPOST_ID } from "../engine/world/landingSite";
 import type { RenderDelta } from "../shared/protocol";
 import { getSimBridge } from "../simBridge/simBridge";
 import { outpostsUnchanged } from "../utils/simFramePersist";
@@ -97,13 +96,7 @@ export const Outposts: FC = () => {
   return (
     <group>
       {outpostList.map((op) => (
-        <OutpostComponent
-          key={op.id}
-          id={op.id}
-          x={op.x}
-          y={op.y - (!meshed && op.id === STARTER_OUTPOST_ID ? 0.5 : 0)}
-          z={op.z}
-        />
+        <OutpostComponent key={op.id} id={op.id} x={op.x} y={op.y - (!meshed ? 0.5 : 0)} z={op.z} />
       ))}
     </group>
   );

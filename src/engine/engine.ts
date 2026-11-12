@@ -39,6 +39,7 @@ export const createEngine = (_seed?: number, saveState?: Partial<UiSnapshot>): E
       creditsPerMinute: 0,
       cargoInTransit: 0,
       prestigeLevel: saveState?.prestigeLevel ?? 1,
+      landingProfile: saveState?.landingProfile,
       droneCount: saveState?.droneCount ?? 3,
       haulerCount: saveState?.haulerCount ?? 0,
       miningSpeedLevel: saveState?.miningSpeedLevel ?? 1,

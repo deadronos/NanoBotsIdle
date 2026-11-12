@@ -1,3 +1,5 @@
+import { DOCK_CAPACITY, outpostRouteScore } from "../../shared/miningOperations";
+
 export type Outpost = {
   id: string;
   x: number;
@@ -55,10 +57,7 @@ export class OutpostManager {
 
     for (const op of this.outposts) {
       const dist = Math.hypot(op.x - x, op.y - y, op.z - z);
-      const load = op.docked.size + op.queue.length;
-      // Weight load relative to distance. Tune LOAD_WEIGHT as needed.
-      const LOAD_WEIGHT = 10;
-      const score = dist + load * LOAD_WEIGHT;
+      const score = outpostRouteScore(dist, op.docked.size, op.queue.length);
       if (score < bestScore) {
         bestScore = score;
         best = op;
@@ -68,13 +67,11 @@ export class OutpostManager {
   }
 
   requestDock(outpost: Outpost, droneId: number): DockResult {
-    const MAX_SLOTS = 4; // Start with 4 slots
-
     // If already docked, keep it
     if (outpost.docked.has(droneId)) return "GRANTED";
 
     // If slots available and queue empty (or at front), allow
-    if (outpost.docked.size < MAX_SLOTS) {
+    if (outpost.docked.size < DOCK_CAPACITY) {
       if (outpost.queue.length === 0 || outpost.queue[0] === droneId) {
         if (outpost.queue[0] === droneId) outpost.queue.shift();
         outpost.docked.add(droneId);

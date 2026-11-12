@@ -59,3 +59,9 @@ Prestige must not be able to soft-lock a run.
 - Underwater-capable drones (swim/fly hybrid or dedicated underwater type).
 - Buildings/factories, storage, refining chains, logistics.
 - Multiple materials/ores beyond basic value tiers.
+
+## Mining orders and landing profiles
+
+- One optional, six-block-radius mining zone filters eligible frontier targets. The order ends when cleared, on prestige, or on reload. Miners deliver remaining cargo if the zone has no available target.
+- An outpost preview uses distance and current dock load to project which drones would divert and how much flight distance would change. The simulation validates the site and purchase.
+- Prestige offers Sheltered Basin and Outer Ridge. The first favors short automatic routes at standard ore value. The second uses a different seed, favors longer routes and increases ore value by 25%. The selected profile is part of the save.

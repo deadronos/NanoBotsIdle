@@ -40,6 +40,8 @@ const send = (message: FromWorker) => {
     tryAdd(delta.entityTargets);
     tryAdd(delta.entityStates);
     tryAdd(delta.entityRoles);
+    tryAdd(delta.entityCargo);
+    tryAdd(delta.returnRoutes);
     tryAdd(delta.minedPositions);
     tryAdd(delta.frontierAdd);
     tryAdd(delta.frontierRemove);

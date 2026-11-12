@@ -18,9 +18,15 @@ export const consumeMinedEffects = (options: {
 
   for (let i = 0; i < minedPositions.length; i += 3) {
     tempWorldTarget.set(minedPositions[i], minedPositions[i + 1], minedPositions[i + 2]);
-    const blockColor = getVoxelColor(tempWorldTarget.y);
+    const blockColor = getVoxelColor(tempWorldTarget.y, cfg.terrain.waterLevel);
     _tmpColor.setHex(blockColor);
-    effects.flash?.trigger(tempWorldTarget);
+    const center = cfg.render.voxels.mode === "meshed" ? 0.5 : 0;
+    tempWorldTarget.set(
+      tempWorldTarget.x + center,
+      tempWorldTarget.y + center,
+      tempWorldTarget.z + center,
+    );
+    effects.flash?.trigger(tempWorldTarget, _tmpColor);
     if (effects.particles) {
       for (let j = 0; j < cfg.drones.particle.burstCount; j += 1) {
         effects.particles.spawn(tempWorldTarget, _tmpColor);

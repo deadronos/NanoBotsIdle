@@ -1,6 +1,7 @@
 import { getDroneCargo } from "../config/drones";
 import { type Config } from "../config/index";
 import type { VoxelKey } from "../shared/voxel";
+import type { Outpost } from "./world/world";
 
 export type DroneRole = "MINER" | "HAULER";
 
@@ -34,6 +35,7 @@ export type Drone = {
   maxPayload: number;
   // Timestamp (ms) of the last time this drone attempted a reroute to avoid thrashing
   lastRerouteAt?: number;
+  routeOutpost?: Outpost;
 };
 
 export const syncDroneCount = (

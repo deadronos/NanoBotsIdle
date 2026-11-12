@@ -22,23 +22,25 @@ export const World: React.FC = () => {
 
   return (
     <group>
-      {voxelRenderMode === "meshed" ?
-        <VoxelLayerMeshed
-          chunkSize={chunkSize}
-          prestigeLevel={prestigeLevel}
-          seed={seed}
-          spawnX={spawnX}
-          spawnZ={spawnZ}
-        />
-      : <VoxelLayerInstanced
-          chunkSize={chunkSize}
-          prestigeLevel={prestigeLevel}
-          seed={seed}
-          spawnX={spawnX}
-          spawnZ={spawnZ}
-          voxelRenderMode={voxelRenderMode}
-        />
-      }
+      <group name="voxel-terrain">
+        {voxelRenderMode === "meshed" ?
+          <VoxelLayerMeshed
+            chunkSize={chunkSize}
+            prestigeLevel={prestigeLevel}
+            seed={seed}
+            spawnX={spawnX}
+            spawnZ={spawnZ}
+          />
+        : <VoxelLayerInstanced
+            chunkSize={chunkSize}
+            prestigeLevel={prestigeLevel}
+            seed={seed}
+            spawnX={spawnX}
+            spawnZ={spawnZ}
+            voxelRenderMode={voxelRenderMode}
+          />
+        }
+      </group>
 
       {/* Lift the surface slightly above coplanar voxel tops. */}
       <mesh

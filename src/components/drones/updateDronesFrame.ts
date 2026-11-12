@@ -55,7 +55,7 @@ export const updateDronesFrame = (options: {
       options.tempWorldTarget.set(event.x, event.y, event.z);
       options.effects.floatingText.spawn(
         options.tempWorldTarget,
-        `+${event.amount}`,
+        `+${event.amount.toLocaleString()}`,
         "#ffaa00", // Gold/Orange color for credits
       );
     }

@@ -13,6 +13,7 @@ export const tickDrones = (options: {
   elapsedSeconds?: number;
   cfg: Config;
   frontier: KeyIndex<VoxelKey>;
+  zoneFrontier?: KeyIndex<VoxelKey>;
   minedKeys: Set<VoxelKey>;
   reservedKeys: Set<VoxelKey>;
   moveSpeed: number;

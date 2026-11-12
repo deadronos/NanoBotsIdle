@@ -141,6 +141,7 @@ export const createSimBridge = (options: SimBridgeOptions = {}): SimBridge => {
       const saveState: Partial<UiSnapshot> = {
         credits: state.credits,
         prestigeLevel: state.prestigeLevel,
+        landingProfile: state.landingProfile,
         droneCount: state.droneCount,
         haulerCount: state.haulerCount,
         miningSpeedLevel: state.miningSpeedLevel,

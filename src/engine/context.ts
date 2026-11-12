@@ -13,6 +13,7 @@ export interface EngineContext {
   reservedKeys: Set<VoxelKey>;
   world: WorldModel | null;
   frontier: KeyIndex<VoxelKey>;
+  zoneFrontier?: KeyIndex<VoxelKey>;
   pendingFrontierSnapshot: Float32Array | null;
   pendingFrontierReset: boolean;
   drones: Drone[];

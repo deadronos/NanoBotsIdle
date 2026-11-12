@@ -72,6 +72,7 @@ export class FrontierManager {
     z: number,
     cfg: Config,
     outAdded?: { x: number; y: number; z: number }[],
+    isMined?: (x: number, y: number, z: number) => boolean,
   ): number {
     // Get local height
     const y = getSurfaceHeightCore(
@@ -87,7 +88,7 @@ export class FrontierManager {
 
     // Always add the surface voxel (it is exposed from above)
     const topKey = this.key(x, y, z);
-    if (!this.frontierSolid.has(topKey)) {
+    if (!this.frontierSolid.has(topKey) && !isMined?.(x, y, z)) {
       this.frontierSolid.add(topKey);
       if (outAdded) outAdded.push({ x, y, z });
       if (y >= this.waterlineVoxelY) {
@@ -123,7 +124,7 @@ export class FrontierManager {
 
     for (let vy = y - 1; vy >= bottomY; vy--) {
       const vKey = this.key(x, vy, z);
-      if (this.frontierSolid.has(vKey)) continue;
+      if (this.frontierSolid.has(vKey) || isMined?.(x, vy, z)) continue;
 
       this.frontierSolid.add(vKey);
       if (outAdded) outAdded.push({ x, y: vy, z });
@@ -161,7 +162,11 @@ export class FrontierManager {
     return aboveWaterCount;
   }
 
-  ensureFrontierInChunk(cx: number, cz: number) {
+  ensureFrontierInChunk(
+    cx: number,
+    cz: number,
+    isMined?: (x: number, y: number, z: number) => boolean,
+  ) {
     const key = `${cx},${cz}`;
     if (this.visitedChunks.has(key)) return null;
     this.visitedChunks.add(key);
@@ -183,7 +188,7 @@ export class FrontierManager {
 
     for (let x = startX; x < endX; x++) {
       for (let z = startZ; z < endZ; z++) {
-        this.addFrontierColumn(x, z, cfg, added);
+        this.addFrontierColumn(x, z, cfg, added, isMined);
       }
     }
 

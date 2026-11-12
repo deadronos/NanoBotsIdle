@@ -19,3 +19,10 @@
 2. The HUD shows deposits over the last 60 simulation seconds, cargo value aboard drones, and the cheapest uncapped upgrade with its affordability.
 3. Terrain materials and face shading match in the worker and fallback, including low LOD. The shoreline is visually distinct.
 4. The production scene loads with external requests blocked. Performance verification records worker bundle size, frame time and chunk meshing on hardware WebGL.
+
+## Mining operations
+
+1. Players can set, move, or clear one mining zone on desktop and touch screens. The world and map show the zone, and only eligible targets inside it are assigned while it is active.
+2. Outpost placement shows projected return routes and travel distance before purchase. The build menu reports current dock occupancy and queues.
+3. Prestige offers a short-route landing and a higher-yield landing with longer automatic routes. The selected profile survives save and reload.
+4. Mining, hauling and unloading have distinct visual feedback. A repeatable busy-colony profile measures the game with 50 drones, multiple outposts and new chunk requests.

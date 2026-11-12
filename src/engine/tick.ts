@@ -1,6 +1,7 @@
 import { getDroneMoveSpeed, getMineDuration } from "../config/drones";
+import { inMiningZone } from "../shared/miningOperations";
 import type { RenderDelta, UiSnapshot, VoxelEdit } from "../shared/protocol";
-import { voxelKey } from "../shared/voxel";
+import { VOXEL_COORD_MAX, VOXEL_COORD_MIN, voxelKey } from "../shared/voxel";
 import { forEachRadialChunk } from "../utils";
 import type { EngineContext } from "./context";
 import { syncDroneCount } from "./drones";
@@ -76,12 +77,30 @@ export const tickEngine = (
       const pc = ctx.playerChunksToScan.shift();
       if (pc) {
         const r = 2; // radius of chunks to auto-frontier
+        const size = ctx.cfg.terrain.chunkSize ?? 16;
         forEachRadialChunk({ cx: pc.cx, cy: pc.cy, cz: pc.cz }, r, 2, (c) => {
+          if (
+            c.cx * size < VOXEL_COORD_MIN ||
+            (c.cx + 1) * size - 1 > VOXEL_COORD_MAX ||
+            c.cz * size < VOXEL_COORD_MIN ||
+            (c.cz + 1) * size - 1 > VOXEL_COORD_MAX
+          )
+            return;
           const added = w.ensureFrontierInChunk(c.cx, c.cz);
           debugChunksProcessed.push(`${c.cx},${c.cz}:${added ? added.length : "skip"}`);
           if (added && added.length > 0) {
             for (const pos of added) {
-              addKey(ctx.frontier, voxelKey(pos.x, pos.y, pos.z));
+              const key = voxelKey(pos.x, pos.y, pos.z);
+              addKey(ctx.frontier, key);
+              if (
+                ctx.zoneFrontier &&
+                ctx.uiSnapshot.miningZone &&
+                inMiningZone(ctx.uiSnapshot.miningZone, pos.x, pos.z) &&
+                pos.y >= Math.floor(ctx.cfg.terrain.waterLevel) &&
+                !w.isStarterFoundation(pos.x, pos.z)
+              ) {
+                addKey(ctx.zoneFrontier, key);
+              }
               frontierAdded.push(pos.x, pos.y, pos.z);
             }
           }
@@ -95,6 +114,7 @@ export const tickEngine = (
       dtSeconds,
       cfg: ctx.cfg,
       frontier: ctx.frontier,
+      zoneFrontier: ctx.zoneFrontier,
       minedKeys: ctx.minedKeys,
       reservedKeys: ctx.reservedKeys,
       moveSpeed,
@@ -111,22 +131,46 @@ export const tickEngine = (
   }
 
   updateEconomyReadout(ctx, deposited);
-  const { entities, entityTargets, entityStates } = encodeDrones(ctx.drones);
+  const encoded = encodeDrones(ctx.drones);
+  if (ctx.zoneFrontier) {
+    ctx.uiSnapshot.zoneTargets = ctx.zoneFrontier.keys.length;
+    let assigned = 0;
+    for (const drone of ctx.drones) {
+      if (
+        drone.role === "MINER" &&
+        typeof drone.targetKey === "number" &&
+        ctx.zoneFrontier.index.has(drone.targetKey)
+      )
+        assigned++;
+    }
+    ctx.uiSnapshot.zoneAssigned = assigned;
+  } else {
+    ctx.uiSnapshot.zoneTargets = undefined;
+    ctx.uiSnapshot.zoneAssigned = undefined;
+  }
 
   const delta: RenderDelta = {
     tick: ctx.tick,
-    entities,
-    entityTargets,
-    entityStates,
+    ...encoded,
     edits: editsThisTick.length > 0 ? editsThisTick : undefined,
     minedPositions: toFloat32ArrayOrUndefined(minedPositions),
     frontierAdd: toFloat32ArrayOrUndefined(frontierAdded),
     frontierRemove: toFloat32ArrayOrUndefined(frontierRemoved),
     debugChunksProcessed: debugChunksProcessed.length > 0 ? debugChunksProcessed : undefined,
     debugQueueLengthAtTickStart,
-    outposts: w?.getOutposts(),
+    outposts: w?.getOutposts().map(({ id, x, y, z, level, docked, queue }) => ({
+      id,
+      x,
+      y,
+      z,
+      level,
+      dockedCount: docked?.size ?? 0,
+      queuedCount: queue?.length ?? 0,
+    })),
     depositEvents: depositEvents.length > 0 ? depositEvents : undefined,
   };
+
+  ctx.uiSnapshot.outposts = delta.outposts ?? [];
 
   if (ctx.pendingFrontierSnapshot) {
     // Merge pendingFrontierSnapshot with any incremental frontierAdded (don't discard incremental updates!)

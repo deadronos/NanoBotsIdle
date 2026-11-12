@@ -1,4 +1,5 @@
 import type { Config } from "../../config/index";
+import { LANDING_PROFILES, type LandingProfile } from "../../shared/miningOperations";
 import type { VoxelKey } from "../../shared/voxel";
 import { getSeed } from "../../sim/seed";
 import { WorldModel } from "./world";
@@ -11,8 +12,12 @@ export type WorldInitResult = {
   aboveWaterCount: number;
 };
 
-export const initWorldForPrestige = (prestigeLevel: number, cfg: Config): WorldInitResult => {
-  const baseSeed = getSeed(prestigeLevel);
+export const initWorldForPrestige = (
+  prestigeLevel: number,
+  cfg: Config,
+  profile?: LandingProfile,
+): WorldInitResult => {
+  const baseSeed = getSeed(prestigeLevel) + (profile ? LANDING_PROFILES[profile].seedOffset : 0);
   const retryLimit = cfg.terrain.genRetries ?? 5;
   const minBlocks = cfg.economy.prestigeMinMinedBlocks;
 

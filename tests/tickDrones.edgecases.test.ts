@@ -266,8 +266,7 @@ describe("tickDrones edge cases", () => {
     expect(mineSpy).not.toHaveBeenCalled();
     expect(miner.state).toBe("SEEKING");
     expect(miner.targetKey).toBeNull();
-    // reservedKeys is only cleared on successful mine
-    expect(reservedKeys.has(1)).toBe(true);
+    expect(reservedKeys.has(1)).toBe(false);
   });
 
   it("MINER MINING -> RETURNING when payload reaches maxPayload and tracks frontier changes", () => {

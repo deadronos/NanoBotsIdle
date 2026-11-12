@@ -1,12 +1,18 @@
 import { create } from "zustand";
 
+import type { MiningZone } from "../shared/miningOperations";
 import type { UiSnapshot } from "../shared/protocol";
+import type { estimateOutpost } from "./outpostPreview";
 
 type UiState = {
   snapshot: UiSnapshot;
   setSnapshot: (snapshot: UiSnapshot) => void;
-  buildingMode: "NONE" | "OUTPOST";
-  setBuildingMode: (mode: "NONE" | "OUTPOST") => void;
+  buildingMode: "NONE" | "OUTPOST" | "MINING_ZONE";
+  setBuildingMode: (mode: UiState["buildingMode"]) => void;
+  placement?: MiningZone;
+  outpostPreview?: ReturnType<typeof estimateOutpost>;
+  setOutpostPreview: (preview?: ReturnType<typeof estimateOutpost>) => void;
+  setPlacement: (placement: MiningZone) => void;
 };
 
 const defaultSnapshot: UiSnapshot = {
@@ -27,6 +33,19 @@ const defaultSnapshot: UiSnapshot = {
 export const useUiStore = create<UiState>((set) => ({
   snapshot: defaultSnapshot,
   buildingMode: "NONE",
-  setSnapshot: (snapshot) => set({ snapshot }),
-  setBuildingMode: (mode) => set({ buildingMode: mode }),
+  setSnapshot: (snapshot) =>
+    set((state) =>
+      snapshot.prestigeLevel === state.snapshot.prestigeLevel ?
+        { snapshot }
+      : {
+          snapshot,
+          buildingMode: "NONE",
+          placement: undefined,
+          outpostPreview: undefined,
+        },
+    ),
+  setBuildingMode: (mode) =>
+    set({ buildingMode: mode, placement: undefined, outpostPreview: undefined }),
+  setPlacement: (placement) => set({ placement, outpostPreview: undefined }),
+  setOutpostPreview: (outpostPreview) => set({ outpostPreview }),
 }));

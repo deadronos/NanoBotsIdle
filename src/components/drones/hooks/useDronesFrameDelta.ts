@@ -7,6 +7,7 @@ export const useDronesFrameDelta = (bridge: SimBridge) => {
   const positionsRef = useRef<Float32Array | null>(null);
   const targetsRef = useRef<Float32Array | null>(null);
   const statesRef = useRef<Uint8Array | null>(null);
+  const cargoRef = useRef<Float32Array | null>(null);
   const rolesRef = useRef<Uint8Array | null>(null);
   const minedPositionsRef = useRef<Float32Array | null>(null);
   const depositEventsRef = useRef<DepositEvent[] | null>(null);
@@ -16,6 +17,7 @@ export const useDronesFrameDelta = (bridge: SimBridge) => {
       positionsRef.current = frame.delta.entities ?? null;
       targetsRef.current = frame.delta.entityTargets ?? null;
       statesRef.current = frame.delta.entityStates ?? null;
+      cargoRef.current = frame.delta.entityCargo ?? null;
       rolesRef.current = frame.delta.entityRoles ?? null;
       minedPositionsRef.current = frame.delta.minedPositions ?? null;
       depositEventsRef.current = frame.delta.depositEvents ?? null;
@@ -27,6 +29,7 @@ export const useDronesFrameDelta = (bridge: SimBridge) => {
     targetsRef,
     statesRef,
     rolesRef,
+    cargoRef,
     minedPositionsRef,
     depositEventsRef,
   };

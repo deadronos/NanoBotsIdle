@@ -1,4 +1,5 @@
 import type { Config } from "../config/index";
+import { inMiningZone, LANDING_PROFILES } from "../shared/miningOperations";
 import type { UiSnapshot, VoxelEdit } from "../shared/protocol";
 import type { VoxelKey } from "../shared/voxel";
 import { getVoxelValueFromHeight } from "../sim/terrain-core";
@@ -16,6 +17,7 @@ export type TickDronesContext = {
   elapsedSeconds: number;
   cfg: Config;
   frontier: KeyIndex<VoxelKey>;
+  zoneFrontier?: KeyIndex<VoxelKey>;
   minedKeys: Set<VoxelKey>;
   reservedKeys: Set<VoxelKey>;
   moveSpeed: number;
@@ -37,6 +39,7 @@ export const handleMinerState = (drone: Drone, context: TickDronesContext) => {
     elapsedSeconds,
     cfg,
     frontier,
+    zoneFrontier,
     minedKeys,
     reservedKeys,
     moveSpeed,
@@ -55,7 +58,9 @@ export const handleMinerState = (drone: Drone, context: TickDronesContext) => {
     case "SEEKING": {
       const targetKey = pickTargetKey({
         world,
-        frontierKeys: frontier.keys,
+        frontierKeys: zoneFrontier?.keys ?? frontier.keys,
+        exhaustSearch: !!zoneFrontier,
+        landing: zoneFrontier ? undefined : uiSnapshot.landingProfile,
         minedKeys,
         reservedKeys,
         waterLevel: cfg.terrain.waterLevel,
@@ -68,6 +73,8 @@ export const handleMinerState = (drone: Drone, context: TickDronesContext) => {
         drone.targetY = coords.y;
         drone.targetZ = coords.z;
         drone.state = "MOVING";
+      } else if (zoneFrontier && drone.payload > 0) {
+        drone.state = "RETURNING";
       }
       break;
     }
@@ -100,23 +107,38 @@ export const handleMinerState = (drone: Drone, context: TickDronesContext) => {
           editResult.frontierAdded.forEach((pos) => {
             const k = world.key(pos.x, pos.y, pos.z);
             addKey(frontier, k);
+            if (
+              zoneFrontier &&
+              uiSnapshot.miningZone &&
+              inMiningZone(uiSnapshot.miningZone, pos.x, pos.z) &&
+              pos.y >= Math.floor(cfg.terrain.waterLevel) &&
+              !world.isStarterFoundation(pos.x, pos.z)
+            ) {
+              addKey(zoneFrontier, k);
+            }
             frontierAdded.push(pos.x, pos.y, pos.z);
           });
 
           editResult.frontierRemoved.forEach((pos) => {
             const k = world.key(pos.x, pos.y, pos.z);
             removeKey(frontier, k);
+            if (zoneFrontier) removeKey(zoneFrontier, k);
             frontierRemoved.push(pos.x, pos.y, pos.z);
           });
 
           const value = getVoxelValueFromHeight(drone.targetY, cfg.terrain.waterLevel);
-          drone.payload += value * uiSnapshot.prestigeLevel;
+          const multiplier =
+            uiSnapshot.landingProfile ?
+              LANDING_PROFILES[uiSnapshot.landingProfile].yieldMultiplier
+            : 1;
+          drone.payload += value * uiSnapshot.prestigeLevel * multiplier;
 
           // Track mined block count for prestige unlocking.
           uiSnapshot.minedBlocks += 1;
         }
       }
 
+      if (typeof key === "number") reservedKeys.delete(key);
       if (drone.payload >= drone.maxPayload) {
         drone.state = "RETURNING";
         drone.targetKey = null;
@@ -130,12 +152,14 @@ export const handleMinerState = (drone: Drone, context: TickDronesContext) => {
     case "RETURNING": {
       // Hauler Intercept Check: If payload is gone, go back to seeking!
       if (drone.payload <= 0.1) {
+        drone.routeOutpost = undefined;
         drone.state = "SEEKING";
         break;
       }
 
       const outpost = pickOutpost(drone.x, drone.y, drone.z);
       if (!outpost) break;
+      drone.routeOutpost = outpost;
 
       const dist = moveTowards(drone, outpost.x, outpost.y + 2, outpost.z, moveSpeed, dtSeconds);
 
@@ -145,7 +169,13 @@ export const handleMinerState = (drone: Drone, context: TickDronesContext) => {
       break;
     }
     case "QUEUING": {
-      const outpost = pickOutpost(drone.x, drone.y, drone.z);
+      if (drone.routeOutpost && drone.payload <= 0) {
+        world.undock(drone.routeOutpost, drone.id);
+        drone.routeOutpost = undefined;
+        drone.state = "SEEKING";
+        break;
+      }
+      const outpost = drone.routeOutpost ?? pickOutpost(drone.x, drone.y, drone.z);
       if (!outpost) {
         drone.state = "RETURNING";
         break;
@@ -166,6 +196,12 @@ export const handleMinerState = (drone: Drone, context: TickDronesContext) => {
       break;
     }
     case "DEPOSITING": {
+      const outpost = drone.routeOutpost;
+      if (
+        outpost &&
+        moveTowards(drone, outpost.x, outpost.y + 2, outpost.z, moveSpeed, dtSeconds) > 0.75
+      )
+        break;
       return handleDeposit(world, drone, depositEvents, uiSnapshot, dtSeconds, "SEEKING");
     }
     default:
@@ -175,7 +211,8 @@ export const handleMinerState = (drone: Drone, context: TickDronesContext) => {
 };
 
 export const handleHaulerState = (drone: Drone, context: TickDronesContext) => {
-  const { world, drones, dtSeconds, elapsedSeconds, cfg, uiSnapshot, depositEvents, pickOutpost } = context;
+  const { world, drones, dtSeconds, elapsedSeconds, cfg, uiSnapshot, depositEvents, pickOutpost } =
+    context;
 
   const hSpeed =
     cfg.drones.haulers.baseSpeed +
@@ -260,6 +297,7 @@ export const handleHaulerState = (drone: Drone, context: TickDronesContext) => {
     case "RETURNING": {
       const outpost = pickOutpost(drone.x, drone.y, drone.z);
       if (!outpost) break;
+      drone.routeOutpost = outpost;
 
       const dist = moveTowards(drone, outpost.x, outpost.y + 4, outpost.z, hSpeed, dtSeconds);
 
@@ -269,7 +307,7 @@ export const handleHaulerState = (drone: Drone, context: TickDronesContext) => {
       break;
     }
     case "QUEUING": {
-      const outpost = pickOutpost(drone.x, drone.y, drone.z);
+      const outpost = drone.routeOutpost ?? pickOutpost(drone.x, drone.y, drone.z);
       if (!outpost) {
         drone.state = "RETURNING";
         break;
@@ -293,6 +331,12 @@ export const handleHaulerState = (drone: Drone, context: TickDronesContext) => {
       break;
     }
     case "DEPOSITING": {
+      const outpost = drone.routeOutpost;
+      if (
+        outpost &&
+        moveTowards(drone, outpost.x, outpost.y + 4, outpost.z, hSpeed, dtSeconds) > 0.75
+      )
+        break;
       return handleDeposit(world, drone, depositEvents, uiSnapshot, dtSeconds, "IDLE");
     }
     default:
