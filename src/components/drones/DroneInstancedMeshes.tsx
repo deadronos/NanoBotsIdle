@@ -24,6 +24,7 @@ export const DroneInstancedMeshes: React.FC<{
         <instancedMesh
           ref={bodyMeshRef}
           args={[droneGeo, droneMat, maxDrones]}
+          userData-noseAxisSign={-1}
           castShadow
           receiveShadow
           frustumCulled={false}
@@ -46,9 +47,19 @@ export const DroneInstancedMeshes: React.FC<{
         </instancedMesh>
       }
 
-      <instancedMesh ref={miningLaserMeshRef} args={[undefined, undefined, maxDrones]} frustumCulled={false}>
+      <instancedMesh
+        ref={miningLaserMeshRef}
+        args={[undefined, undefined, maxDrones]}
+        frustumCulled={false}
+      >
         <cylinderGeometry args={[0.05, 0.05, 1, 8, 1, true]} />
-        <meshBasicMaterial color="#ff3333" transparent opacity={0.7} blending={2} depthWrite={false} />
+        <meshBasicMaterial
+          color="#ff3333"
+          transparent
+          opacity={0.7}
+          blending={2}
+          depthWrite={false}
+        />
       </instancedMesh>
 
       <instancedMesh
@@ -57,10 +68,20 @@ export const DroneInstancedMeshes: React.FC<{
         frustumCulled={false}
       >
         <cylinderGeometry args={[0.015, 0.015, 1, 4, 1, true]} />
-        <meshBasicMaterial color="#00ffff" transparent opacity={0.3} blending={2} depthWrite={false} />
+        <meshBasicMaterial
+          color="#00ffff"
+          transparent
+          opacity={0.3}
+          blending={2}
+          depthWrite={false}
+        />
       </instancedMesh>
 
-      <instancedMesh ref={targetBoxMeshRef} args={[undefined, undefined, maxDrones]} frustumCulled={false}>
+      <instancedMesh
+        ref={targetBoxMeshRef}
+        args={[undefined, undefined, maxDrones]}
+        frustumCulled={false}
+      >
         <boxGeometry args={[1, 1, 1]} />
         <meshBasicMaterial
           wireframe

@@ -1,5 +1,5 @@
 import type { InstancedMesh } from "three";
-import { Color, Object3D, Quaternion, Vector3 } from "three";
+import { Color, Matrix4, Object3D, Quaternion, Vector3 } from "three";
 
 import type { Config } from "../../config/index";
 import { DRONE_STATE_ID } from "../../shared/droneState";
@@ -10,6 +10,22 @@ const _target = new Vector3();
 const _dir = new Vector3();
 const _quat = new Quaternion();
 const _unitY = new Vector3(0, 1, 0);
+const _forward = new Vector3();
+const _right = new Vector3();
+const _up = new Vector3();
+const _bodyBasis = new Matrix4();
+
+// Limit pitch during steep climbs and descents so the body stays readable.
+const MAX_FLIGHT_SLOPE = Math.tan(Math.PI / 6);
+
+const getFlightHistory = (mesh: InstancedMesh, capacity: number) => {
+  const cached = mesh.userData.flightHistory as Float32Array | undefined;
+  if (cached && cached.length >= capacity * 6) return cached;
+  const history = new Float32Array(capacity * 6).fill(NaN);
+  if (cached) history.set(cached);
+  mesh.userData.flightHistory = history;
+  return history;
+};
 
 const _colorMiner = new Color(0x66ccff);
 const _colorHauler = new Color(0xffaa00);
@@ -118,6 +134,9 @@ export const updateDroneInstancedVisuals = (
   }
 
   const capacity = bodyMesh.instanceMatrix?.count ?? bodyMesh.instanceColor?.count ?? 0;
+  // The bundled cockpit points along -Y. The fallback cone points along +Y.
+  const noseSign = bodyMesh.userData.noseAxisSign === -1 ? -1 : 1;
+  const flightHistory = getFlightHistory(bodyMesh, capacity);
   const roleCache = ensureUint8Cache(bodyMesh, "roleCache", capacity, 255);
   const targetStateCache = ensureInt8Cache(targetBoxMesh, "targetStateCache", capacity, -1);
 
@@ -203,6 +222,36 @@ export const updateDroneInstancedVisuals = (
       }
     }
 
+    const history = i * 6;
+    const dx = x - flightHistory[history];
+    const dy = y - flightHistory[history + 1];
+    const dz = z - flightHistory[history + 2];
+    flightHistory[history] = x;
+    flightHistory[history + 1] = y;
+    flightHistory[history + 2] = z;
+
+    const horizontal = Math.hypot(dx, dz);
+    if (horizontal > 1e-4) {
+      const limit = horizontal * MAX_FLIGHT_SLOPE;
+      _forward.set(dx, Math.max(-limit, Math.min(limit, dy)), dz).normalize();
+    } else if (Number.isFinite(flightHistory[history + 3])) {
+      _forward.fromArray(flightHistory, history + 3);
+      if (Math.abs(dy) > 1e-4) _forward.setY(0).normalize();
+    } else {
+      _forward.set(0, 0, 1);
+    }
+    _forward.toArray(flightHistory, history + 3);
+
+    _right.crossVectors(_forward, _unitY).normalize();
+    _up.crossVectors(_right, _forward);
+    _right.multiplyScalar(noseSign);
+    _forward.multiplyScalar(noseSign);
+    _tmp.position.copy(_pos);
+    _tmp.quaternion.setFromRotationMatrix(_bodyBasis.makeBasis(_right, _forward, _up));
+    _tmp.scale.setScalar(s);
+    _tmp.updateMatrix();
+    bodyMesh.setMatrixAt(i, _tmp.matrix);
+
     if (hasTarget) {
       _target.set(targetX, targetY, targetZ);
       _dir.subVectors(_target, _pos);
@@ -214,13 +263,6 @@ export const updateDroneInstancedVisuals = (
       } else {
         _quat.identity();
       }
-
-      // --- body ---
-      _tmp.position.copy(_pos);
-      _tmp.quaternion.copy(_quat);
-      _tmp.scale.set(s, s, s);
-      _tmp.updateMatrix();
-      bodyMesh.setMatrixAt(i, _tmp.matrix);
 
       // --- target box ---
       {
@@ -269,13 +311,6 @@ export const updateDroneInstancedVisuals = (
 
       continue;
     }
-
-    // No target
-    _tmp.position.copy(_pos);
-    _tmp.quaternion.identity();
-    _tmp.scale.set(s, s, s);
-    _tmp.updateMatrix();
-    bodyMesh.setMatrixAt(i, _tmp.matrix);
 
     hideInstanceAt(miningLaserMesh, i);
     hideInstanceAt(scanningLaserMesh, i);

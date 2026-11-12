@@ -1,4 +1,4 @@
-import type { InstancedMesh } from "three";
+import { type InstancedMesh, type Matrix4, Vector3 } from "three";
 import { describe, expect, it, vi } from "vitest";
 
 import { updateDroneInstancedVisuals } from "../src/components/drones/droneInstancedVisuals";
@@ -13,7 +13,11 @@ class MockInstancedMesh {
   public count = 0;
   public userData: Record<string, unknown> = {};
   public instanceMatrix = { count: 32, needsUpdate: false, addUpdateRange: vi.fn() };
-  public instanceColor: { count?: number; needsUpdate: boolean; addUpdateRange: (s: number, c: number) => void } | null = { count: 32, needsUpdate: false, addUpdateRange: vi.fn() };
+  public instanceColor: {
+    count?: number;
+    needsUpdate: boolean;
+    addUpdateRange: (s: number, c: number) => void;
+  } | null = { count: 32, needsUpdate: false, addUpdateRange: vi.fn() };
   public material = new MockMaterial();
 
   public setMatrixAt = vi.fn();
@@ -21,6 +25,49 @@ class MockInstancedMesh {
 }
 
 describe("droneVisuals performance optimization", () => {
+  it.each([1, -1])(
+    "faces the direction of flight and holds its heading at the dock (nose sign %i)",
+    (noseSign) => {
+      const body = new MockInstancedMesh();
+      body.userData.noseAxisSign = noseSign;
+      let bodyMatrix: Matrix4;
+      body.setMatrixAt.mockImplementation((_index: number, matrix: Matrix4) => {
+        bodyMatrix = matrix.clone();
+      });
+      const beam = new MockInstancedMesh();
+      const scan = new MockInstancedMesh();
+      const box = new MockInstancedMesh();
+      const positions = new Float32Array([0, 10, 0]);
+      const targets = new Float32Array([NaN, NaN, NaN]);
+      const states = new Uint8Array([DRONE_STATE_ID.RETURNING]);
+      const render = () =>
+        updateDroneInstancedVisuals(
+          getConfig(),
+          1,
+          positions,
+          targets,
+          states,
+          null,
+          null,
+          body as unknown as InstancedMesh,
+          beam as unknown as InstancedMesh,
+          scan as unknown as InstancedMesh,
+          box as unknown as InstancedMesh,
+          0,
+        );
+      const nose = () => new Vector3(0, noseSign, 0).transformDirection(bodyMatrix);
+
+      render();
+      expect(nose().y).toBeCloseTo(0);
+      positions[0] = -2;
+      render();
+      expect(nose().x).toBeCloseTo(-1);
+      states[0] = DRONE_STATE_ID.DEPOSITING;
+      render();
+      expect(nose().x).toBeCloseTo(-1);
+    },
+  );
+
   it("keeps body colors stable until roles change", () => {
     const cfg = getConfig();
     const droneCount = 2;
