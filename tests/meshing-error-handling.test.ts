@@ -80,6 +80,7 @@ describe("MeshingScheduler error handling with retry", () => {
     // Should retry automatically
     expect(worker.posted.length).toBe(2);
     expect(applied.length).toBe(0);
+    expect(scheduler.getFailedKeys()).toEqual([]);
 
     const job2 = worker.posted[1]!.msg;
     if (job2.t !== "MESH_CHUNK") throw new Error("expected MESH_CHUNK");
@@ -111,6 +112,7 @@ describe("MeshingScheduler error handling with retry", () => {
     // Should not retry after max attempts
     expect(worker.posted.length).toBe(3);
     expect(applied.length).toBe(0);
+    expect(scheduler.getFailedKeys()).toEqual(["0,0,0"]);
 
     // Telemetry should track errors and retries
     const snapshot = telemetry.getSnapshot();

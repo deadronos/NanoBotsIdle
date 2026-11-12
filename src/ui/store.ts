@@ -6,6 +6,8 @@ import type { estimateOutpost } from "./outpostPreview";
 
 type UiState = {
   snapshot: UiSnapshot;
+  chunkDiagnostics?: Record<string, number>;
+  setChunkDiagnostics: (status?: Record<string, number>) => void;
   setSnapshot: (snapshot: UiSnapshot) => void;
   buildingMode: "NONE" | "OUTPOST" | "MINING_ZONE";
   setBuildingMode: (mode: UiState["buildingMode"]) => void;
@@ -32,6 +34,7 @@ const defaultSnapshot: UiSnapshot = {
 
 export const useUiStore = create<UiState>((set) => ({
   snapshot: defaultSnapshot,
+  setChunkDiagnostics: (chunkDiagnostics) => set({ chunkDiagnostics }),
   buildingMode: "NONE",
   setSnapshot: (snapshot) =>
     set((state) =>

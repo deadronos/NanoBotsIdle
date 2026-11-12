@@ -33,12 +33,12 @@ export class MeshManager {
     const group = this.group;
     if (!group || this.pendingResults.size === 0) return;
 
-    const pending = Array.from(this.pendingResults.entries()).slice(0, maxPerFrame);
-
-    pending.forEach(([key, res]) => {
+    let remaining = maxPerFrame;
+    for (const [key, result] of this.pendingResults) {
+      if (remaining-- <= 0) break;
       this.pendingResults.delete(key);
-      this.applyMeshResult(res, waterLevel);
-    });
+      this.applyMeshResult(result, waterLevel);
+    }
   }
 
   applyMeshResult(result: MeshResult, waterLevel: number) {
@@ -95,6 +95,22 @@ export class MeshManager {
     disposeLodGeometries(previous);
   }
 
+  hasChunk(key: string) {
+    return this.processedChunkKeys.has(key) || this.pendingResults.has(key);
+  }
+
+  removeChunk(key: string) {
+    const mesh = this.meshes.get(key);
+    if (mesh) {
+      this.group?.remove(mesh);
+      disposeLodGeometries(mesh.userData.lodGeometries as LodGeometries | undefined);
+      this.meshes.delete(key);
+    }
+    this.processedChunkKeys.delete(key);
+    this.emptyChunkKeys.delete(key);
+    this.pendingResults.delete(key);
+  }
+
   disposeAll() {
     const group = this.group;
     for (const mesh of this.meshes.values()) {
@@ -112,6 +128,7 @@ export class MeshManager {
       meshChunkKeys: Array.from(this.meshes.keys()),
       processedChunkKeys: Array.from(this.processedChunkKeys.keys()),
       emptyChunkKeys: Array.from(this.emptyChunkKeys.keys()),
+      pendingResultKeys: Array.from(this.pendingResults.keys()),
       pendingResultCount: this.pendingResults.size,
     };
   }

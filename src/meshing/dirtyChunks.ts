@@ -9,6 +9,7 @@ export const getDirtyChunksForVoxelEdit = (options: {
   y: number;
   z: number;
   chunkSize: number;
+  includeCorners?: boolean;
 }): ChunkCoord3[] => {
   const { x, y, z, chunkSize } = options;
 
@@ -40,5 +41,17 @@ export const getDirtyChunksForVoxelEdit = (options: {
   if (lz === 0) push({ cx, cy, cz: cz - 1 });
   if (lz === chunkSize - 1) push({ cx, cy, cz: cz + 1 });
 
+  if (options.includeCorners) {
+    const axes = [
+      [0, ...(lx === 0 ? [-1] : []), ...(lx === chunkSize - 1 ? [1] : [])],
+      [0, ...(ly === 0 ? [-1] : []), ...(ly === chunkSize - 1 ? [1] : [])],
+      [0, ...(lz === 0 ? [-1] : []), ...(lz === chunkSize - 1 ? [1] : [])],
+    ];
+    for (const dx of axes[0]) {
+      for (const dy of axes[1]) {
+        for (const dz of axes[2]) push({ cx: cx + dx, cy: cy + dy, cz: cz + dz });
+      }
+    }
+  }
   return out;
 };

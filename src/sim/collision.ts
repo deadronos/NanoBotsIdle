@@ -42,6 +42,29 @@ export const getVoxelMaterialAt = (
   return materialAt(x, y, z, seed);
 };
 
+/** Read one column repeatedly without resampling procedural terrain for every voxel. */
+export const createVoxelColumnSampler = (
+  x: number,
+  z: number,
+  prestigeLevel: number,
+  seedOverride?: number,
+) => {
+  const cfg = getConfig();
+  const bedrockY = cfg.terrain.bedrockY ?? -50;
+  const surfaceY = getSurfaceHeightCore(
+    x,
+    z,
+    seedOverride ?? getSeed(prestigeLevel),
+    cfg.terrain.surfaceBias,
+    cfg.terrain.quantizeScale,
+  );
+  return (y: number) => {
+    if (y > surfaceY && y > bedrockY) return MATERIAL_AIR;
+    if (edits.hasAirEdit(x, y, z)) return MATERIAL_AIR;
+    return y <= bedrockY ? MATERIAL_BEDROCK : MATERIAL_SOLID;
+  };
+};
+
 export const getGroundHeightWithEdits = (
   x: number,
   z: number,

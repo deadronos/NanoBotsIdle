@@ -67,3 +67,11 @@ occlusion: {
 - Low LOD geometry is coarser (2× downsampled voxels) — acceptable for distant chunks
 - Occlusion queries are async — may show chunks for 2-3 frames before hiding
 - Config-driven thresholds allow tuning without code changes
+
+## Surface coverage and shared boundaries
+
+The meshed renderer keeps a three-chunk surface radius by default and prefetches two additional rows in the camera and movement directions. Surface columns use the height range of their footprint and apron. Eviction leaves a three-chunk buffer and invalidates outstanding results for evicted chunks. Meshes stay visible while replacements are built. Fog ends inside the coverage radius, and the visibility pass skips meshes whose bounding spheres lie entirely beyond the fog in camera space.
+
+Coarse LOD simplifies interior cells and retains the original boundary shell and apron. Both levels therefore agree on which faces belong on the shared plane. If simplification yields no triangle savings, the chunk uses its full mesh. Corner shading samples the original apron at both levels. Boundary edits invalidate neighboring chunks that use those samples, including edge and corner neighbors.
+
+The chunk diagnostics setting shows ready, empty, queued, meshing, awaiting display, failed and local missing counts. The browser route in `scripts/verify-voxel-rendering.mjs` exercises a boundary edit, a stationary turn and a traverse with a nearer LOD transition.

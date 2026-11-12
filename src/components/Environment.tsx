@@ -2,9 +2,12 @@ import { Sky } from "@react-three/drei";
 import React from "react";
 
 import { useConfig } from "../config/useConfig";
+import { getMeshedTerrainFogEnd } from "../render/terrainFog";
 
 export const Environment: React.FC = () => {
-  const { render } = useConfig();
+  const { render, terrain } = useConfig();
+  const fogEnd =
+    render.voxels.mode === "meshed" ? getMeshedTerrainFogEnd(terrain.chunkSize ?? 16) : 120;
   const { sky, sun } = render;
 
   return (
@@ -16,7 +19,7 @@ export const Environment: React.FC = () => {
         rayleigh={sky.rayleigh}
       />
       <hemisphereLight args={["#d3e8ff", "#a79780", render.ambientLightIntensity]} />
-      <fog attach="fog" args={["#b9cddd", 30, 120]} />
+      <fog attach="fog" args={["#dce6ec", fogEnd * 0.55, fogEnd]} />
       <directionalLight
         position={sun.position}
         color="#fff0d5"

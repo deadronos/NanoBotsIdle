@@ -1,16 +1,19 @@
 import type { MutableRefObject } from "react";
 import { useCallback, useEffect, useRef } from "react";
+import { type Camera, Vector3 } from "three";
 
 import { playerChunk, playerPosition } from "../../../engine/playerState";
 import type { VoxelEdit } from "../../../shared/protocol";
 import { applyVoxelEdits, resetVoxelEdits } from "../../../sim/collision";
 import { getSurfaceHeightCore } from "../../../sim/terrain-core";
 import type { SimBridge } from "../../../simBridge/simBridge";
+import { useUiStore } from "../../../ui/store";
 import { forEachRadialChunk } from "../../../utils";
 import { debug, groupCollapsed, groupEnd } from "../../../utils/logger";
 import { chunkKey } from "../chunkHelpers";
 import type { ChunkLoadConfig } from "../chunkLoadConfig";
 import { countDenseSolidsInChunk } from "../renderDebugCompare";
+import { forEachForwardChunkColumn } from "./forwardChunkColumns";
 
 type ChunkCoord3 = { cx: number; cy: number; cz: number };
 
@@ -24,8 +27,11 @@ export type MeshedDebugState = {
   meshChunkKeys: string[];
   processedChunkKeys: string[];
   emptyChunkKeys: string[];
+  pendingResultKeys: string[];
   pendingResultCount: number;
   dirtyKeys: string[];
+  inFlightKeys: string[];
+  failedKeys: string[];
   inFlight: number;
 };
 
@@ -37,6 +43,7 @@ export type MeshedChunkTrackingRefs = {
 
 export const useMeshedSimStream = (args: {
   bridge: SimBridge;
+  camera: Camera;
   tracking: MeshedChunkTrackingRefs;
 
   chunkSize: number;
@@ -53,6 +60,9 @@ export const useMeshedSimStream = (args: {
   chunkLoadConfig: ChunkLoadConfig;
 
   ensureChunk: (cx: number, cy: number, cz: number) => void;
+  removeChunk: (key: string) => void;
+  retryDroppedChunks: () => void;
+  hasChunkWork: (key: string) => boolean;
   setFocusChunk: (cx: number, cy: number, cz: number) => void;
   reset: () => void;
   markDirtyForEdits: (edits: VoxelEdit[]) => void;
@@ -62,6 +72,7 @@ export const useMeshedSimStream = (args: {
 }) => {
   const {
     bridge,
+    camera,
     tracking,
     chunkSize,
     prestigeLevel,
@@ -71,6 +82,9 @@ export const useMeshedSimStream = (args: {
     terrain,
     chunkLoadConfig,
     ensureChunk,
+    removeChunk,
+    retryDroppedChunks,
+    hasChunkWork,
     setFocusChunk,
     reset,
     markDirtyForEdits,
@@ -79,15 +93,16 @@ export const useMeshedSimStream = (args: {
   } = args;
 
   const debugLastLogAtMsRef = useRef(0);
+  const worldRef = useRef<string | undefined>(undefined);
 
   const addChunk = useCallback(
     (cx: number, cy: number, cz: number) => {
       const key = chunkKey(cx, cy, cz);
-      if (tracking.activeChunks.current.has(key)) return;
+      if (tracking.activeChunks.current.has(key) && hasChunkWork(key)) return;
       tracking.activeChunks.current.add(key);
       ensureChunk(cx, cy, cz);
     },
-    [ensureChunk, tracking.activeChunks],
+    [ensureChunk, hasChunkWork, tracking.activeChunks],
   );
 
   const ensureInitialChunk = useCallback(() => {
@@ -131,12 +146,56 @@ export const useMeshedSimStream = (args: {
   ]);
 
   useEffect(() => {
+    if (!debugCompare.enabled) return;
+    return () => useUiStore.getState().setChunkDiagnostics(undefined);
+  }, [debugCompare.enabled]);
+
+  useEffect(() => {
+    const direction = new Vector3();
+    let lastPrefetchAt = -Infinity;
+    let lastHeading = Infinity;
+    let lastColumnX = Infinity;
+    let lastColumnZ = Infinity;
+
+    const coverageRadius = Math.max(3, chunkLoadConfig.activeRadius);
+    const evictionRadius = coverageRadius + 3;
+    const surfaceRanges = new Map<string, { minY: number; maxY: number }>();
+    const prefetchSurfaceColumn = (cx: number, cz: number) => {
+      const key = `${cx},${cz}`;
+      let range = surfaceRanges.get(key);
+      if (!range) {
+        let low = Infinity;
+        let high = -Infinity;
+        for (let dz = -1; dz <= chunkSize; dz++) {
+          for (let dx = -1; dx <= chunkSize; dx++) {
+            const height = getSurfaceHeightCore(
+              cx * chunkSize + dx,
+              cz * chunkSize + dz,
+              seed,
+              terrain.surfaceBias,
+              terrain.quantizeScale,
+            );
+            low = Math.min(low, height);
+            high = Math.max(high, height);
+          }
+        }
+        range = { minY: Math.floor(low / chunkSize), maxY: Math.floor(high / chunkSize) };
+        surfaceRanges.set(key, range);
+      }
+      for (let cy = range.maxY; cy >= range.minY; cy--) addChunk(cx, cy, cz);
+    };
+
     return bridge.onFrame((frame) => {
-      if (frame.delta.frontierReset) {
+      const world = `${frame.ui.prestigeLevel}:${frame.ui.actualSeed ?? seed}`;
+      if (worldRef.current !== undefined && worldRef.current !== world) {
         tracking.activeChunks.current.clear();
+        tracking.lastRequestedPlayerChunkRef.current = null;
+        lastHeading = Infinity;
+        lastPrefetchAt = -Infinity;
         reset();
         resetVoxelEdits();
       }
+      worldRef.current = world;
 
       if (frame.delta.edits && frame.delta.edits.length > 0) {
         applyVoxelEdits(frame.delta.edits);
@@ -174,6 +233,64 @@ export const useMeshedSimStream = (args: {
         );
       }
 
+      if (shouldRequest) {
+        const moveX = lastReq ? Math.sign(pcx - lastReq.cx) : 0;
+        const moveZ = lastReq ? Math.sign(pcz - lastReq.cz) : 0;
+        if (moveX || moveZ) {
+          forEachForwardChunkColumn(pcx, pcz, moveX, moveZ, coverageRadius, prefetchSurfaceColumn);
+        }
+        forEachRadialChunk({ cx: pcx, cy: 0, cz: pcz }, coverageRadius, 2, ({ cx, cz }) =>
+          prefetchSurfaceColumn(cx, cz),
+        );
+        for (const key of tracking.activeChunks.current) {
+          const [cx, cy, cz] = key.split(",").map(Number);
+          const range = surfaceRanges.get(`${cx},${cz}`);
+          const closeToSurface = range && cy >= range.minY && cy <= range.maxY;
+          if (
+            Math.max(Math.abs(cx - pcx), Math.abs(cz - pcz)) <= evictionRadius &&
+            (closeToSurface || Math.abs(cy - pcy) <= evictionRadius)
+          )
+            continue;
+          removeChunk(key);
+          tracking.activeChunks.current.delete(key);
+        }
+        for (const key of surfaceRanges.keys()) {
+          const [cx, cz] = key.split(",").map(Number);
+          if (Math.max(Math.abs(cx - pcx), Math.abs(cz - pcz)) > evictionRadius)
+            surfaceRanges.delete(key);
+        }
+      }
+
+      const now = performance.now();
+      if (now - lastPrefetchAt >= 125) {
+        lastPrefetchAt = now;
+        retryDroppedChunks();
+        camera.getWorldDirection(direction);
+        if (direction.x * direction.x + direction.z * direction.z > 0.01) {
+          const heading = Math.round(Math.atan2(direction.z, direction.x) / (Math.PI / 4));
+          if (
+            heading !== lastHeading ||
+            pcx !== lastColumnX ||
+            pcz !== lastColumnZ ||
+            shouldRequest
+          ) {
+            if (heading !== lastHeading && !shouldRequest) setFocusChunk(pcx, pcy, pcz);
+            lastHeading = heading;
+            lastColumnX = pcx;
+            lastColumnZ = pcz;
+            const angle = (heading * Math.PI) / 4;
+            forEachForwardChunkColumn(
+              pcx,
+              pcz,
+              Math.round(Math.cos(angle)),
+              Math.round(Math.sin(angle)),
+              coverageRadius,
+              prefetchSurfaceColumn,
+            );
+          }
+        }
+      }
+
       if (debugCompare.enabled) {
         const now = performance.now();
         if (now - debugLastLogAtMsRef.current >= debugCompare.logIntervalMs) {
@@ -198,7 +315,10 @@ export const useMeshedSimStream = (args: {
 
           const dbg = getDebugState();
           const meshKeySet = new Set(dbg.meshChunkKeys);
-          const processedKeySet = new Set(dbg.processedChunkKeys);
+          const queued = new Set(dbg.dirtyKeys);
+          const inFlight = new Set(dbg.inFlightKeys);
+          const pendingApply = new Set(dbg.pendingResultKeys);
+          const failed = new Set(dbg.failedKeys);
           const emptyKeySet = new Set(dbg.emptyChunkKeys);
 
           const missingMeshes = expectedChunkKeys.filter((k) => !meshKeySet.has(k));
@@ -206,7 +326,17 @@ export const useMeshedSimStream = (args: {
             (k) => !tracking.activeChunks.current.has(k),
           );
           const missingRequestedPending = missingMeshes.filter(
-            (k) => tracking.activeChunks.current.has(k) && !processedKeySet.has(k),
+            (k) => queued.has(k) || inFlight.has(k) || pendingApply.has(k),
+          );
+          const missingRequestedFailed = missingMeshes.filter((k) => failed.has(k));
+          const missingRequestedWithoutWork = missingMeshes.filter(
+            (k) =>
+              tracking.activeChunks.current.has(k) &&
+              !queued.has(k) &&
+              !inFlight.has(k) &&
+              !pendingApply.has(k) &&
+              !failed.has(k) &&
+              !emptyKeySet.has(k),
           );
           const missingRequestedEmpty = missingMeshes.filter(
             (k) => tracking.activeChunks.current.has(k) && emptyKeySet.has(k),
@@ -215,6 +345,17 @@ export const useMeshedSimStream = (args: {
           const requestedChunkCount = expectedChunkKeys.filter((k) =>
             tracking.activeChunks.current.has(k),
           ).length;
+
+          useUiStore.getState().setChunkDiagnostics({
+            Ready: dbg.meshChunkKeys.length,
+            Empty: dbg.emptyChunkKeys.length,
+            Queued: queued.size,
+            Meshing: inFlight.size,
+            "Awaiting display": pendingApply.size,
+            Failed: failed.size,
+            "Local unrequested": missingNotRequested.length,
+            "Local unscheduled": missingRequestedWithoutWork.length,
+          });
 
           // Only emit verbose render-debug output in development to avoid noisy production logs
           if (process.env.NODE_ENV === "development") {
@@ -230,6 +371,10 @@ export const useMeshedSimStream = (args: {
               meshedEmptyChunkCount: dbg.emptyChunkKeys.length,
               meshingDirtyCount: dbg.dirtyKeys.length,
               meshingInFlight: dbg.inFlight,
+              queuedChunkKeys: dbg.dirtyKeys.slice(0, 20),
+              inFlightChunkKeys: dbg.inFlightKeys.slice(0, 20),
+              missingRequestedFailed: missingRequestedFailed.slice(0, 20),
+              missingRequestedWithoutWork: missingRequestedWithoutWork.slice(0, 20),
               surfaceChunk: tracking.initialSurfaceChunkRef.current,
               missingNotRequested: missingNotRequested.slice(0, 20),
               missingNotRequestedCount: missingNotRequested.length,
@@ -246,6 +391,7 @@ export const useMeshedSimStream = (args: {
   }, [
     addChunk,
     bridge,
+    camera,
     chunkLoadConfig.activeDims,
     chunkLoadConfig.activeRadius,
     chunkSize,
@@ -255,7 +401,12 @@ export const useMeshedSimStream = (args: {
     ensureInitialChunk,
     getDebugState,
     markDirtyForEdits,
+    removeChunk,
+    retryDroppedChunks,
     prestigeLevel,
+    seed,
+    terrain.surfaceBias,
+    terrain.quantizeScale,
     reset,
     setFocusChunk,
     tracking.activeChunks,

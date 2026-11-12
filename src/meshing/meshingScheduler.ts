@@ -58,6 +58,9 @@ export class MeshingScheduler {
     number,
     { key: string; rev: number; queuedAt: number; retryCount: number }
   >();
+  private readonly dropped = new Set<string>();
+  private nextDirtyToken = 1;
+  private readonly failed = new Set<string>();
   private readonly retryByKey = new Map<string, number>();
   private nextJobId = 1;
   private droppedTasksCount = 0;
@@ -70,6 +73,10 @@ export class MeshingScheduler {
       const currentRev = this.revByChunk.get(key) ?? 0;
       const inFlightData = this.inFlightByJob.get(msg.jobId);
       this.inFlightByJob.delete(msg.jobId);
+      if (!inFlightData || msg.rev !== inFlightData.rev) {
+        this.pump();
+        return;
+      }
 
       // Track telemetry if timing data is available
       const telemetry = getTelemetryCollector();
@@ -102,7 +109,11 @@ export class MeshingScheduler {
       const telemetry = getTelemetryCollector();
       telemetry.recordMeshingError();
 
-      if (inFlightData) {
+      if (
+        inFlightData &&
+        msg.rev === inFlightData.rev &&
+        inFlightData.rev === this.revByChunk.get(inFlightData.key)
+      ) {
         const key = inFlightData.key;
         const retryCount = inFlightData.retryCount;
 
@@ -126,6 +137,7 @@ export class MeshingScheduler {
             `Meshing failed after ${this.maxRetries} attempts for chunk ` +
               `${msg.chunk.cx},${msg.chunk.cy},${msg.chunk.cz}: ${msg.message}`,
           );
+          this.failed.add(key);
           // Clear retry count as we're giving up
           this.retryByKey.delete(key);
         }
@@ -195,6 +207,8 @@ export class MeshingScheduler {
 
   markDirty(coord: ChunkCoord3) {
     const key = chunkKey(coord.cx, coord.cy, coord.cz);
+    this.failed.delete(key);
+    this.dropped.delete(key);
     const nextRev = (this.revByChunk.get(key) ?? 0) + 1;
     this.revByChunk.set(key, nextRev);
 
@@ -202,29 +216,33 @@ export class MeshingScheduler {
     if (!this.dirty.has(key) && this.dirty.size >= this.maxQueueSize) {
       // Queue is full - drop the lowest priority task or reject this one
       // We only consider tasks that are currently valid (present in this.dirty)
-      const worstEntry = this.priorityQueue.findMax((entry) => this.dirty.has(entry.key));
+      const worstEntry = this.priorityQueue.findMax(
+        (entry) => this.dirty.has(entry.key) && this.dirtyTokenByKey.get(entry.key) === entry.token,
+      );
       const newPriority = this.computePriority(coord);
 
       if (worstEntry && newPriority < worstEntry.priority) {
         // New task has higher priority - drop the worst one
         this.dirty.delete(worstEntry.key);
         this.dirtyTokenByKey.delete(worstEntry.key);
+        this.dropped.add(worstEntry.key);
         this.droppedTasksCount++;
 
         // Add the new task
         this.dirty.add(key);
-        const token = (this.dirtyTokenByKey.get(key) ?? 0) + 1;
+        const token = this.nextDirtyToken++;
         this.dirtyTokenByKey.set(key, token);
         this.priorityQueue.push({ key, coord, token, priority: newPriority });
       } else {
         // New task has lower priority - drop it
+        this.dropped.add(key);
         this.droppedTasksCount++;
         return;
       }
     } else {
       // Queue has space or chunk already in queue - add/update normally
       this.dirty.add(key);
-      const token = (this.dirtyTokenByKey.get(key) ?? 0) + 1;
+      const token = this.nextDirtyToken++;
       this.dirtyTokenByKey.set(key, token);
       const priority = this.computePriority(coord);
       this.priorityQueue.push({ key, coord, token, priority });
@@ -252,6 +270,8 @@ export class MeshingScheduler {
     this.inFlightByJob.clear();
     this.droppedTasksCount = 0;
     this.retryByKey.clear();
+    this.failed.clear();
+    this.dropped.clear();
   }
 
   private popNextDirty(): DirtyEntry | null {
@@ -297,6 +317,44 @@ export class MeshingScheduler {
 
   getChunkRevision(coord: ChunkCoord3) {
     return this.revByChunk.get(chunkKey(coord.cx, coord.cy, coord.cz)) ?? 0;
+  }
+
+  forgetChunk(key: string) {
+    this.dirty.delete(key);
+    this.dirtyTokenByKey.delete(key);
+    this.dropped.delete(key);
+    this.revByChunk.delete(key);
+    this.retryByKey.delete(key);
+    this.failed.delete(key);
+    for (const job of this.inFlightByJob.values()) {
+      if (job.key === key) job.rev = -1;
+    }
+  }
+
+  retryDroppedChunks() {
+    if (this.dropped.size === 0 || this.dirty.size >= this.maxQueueSize) return;
+    let remaining = Math.min(8, this.maxQueueSize - this.dirty.size);
+    for (const key of this.dropped) {
+      this.markDirty(parseChunkKey(key));
+      if (--remaining === 0) break;
+    }
+    this.pump();
+  }
+
+  hasPendingChunk(key: string) {
+    if (this.dirty.has(key) || this.failed.has(key)) return true;
+    for (const job of this.inFlightByJob.values()) {
+      if (job.key === key && job.rev !== -1) return true;
+    }
+    return false;
+  }
+
+  getInFlightKeys() {
+    return Array.from(this.inFlightByJob.values(), ({ key }) => key);
+  }
+
+  getFailedKeys() {
+    return Array.from(this.failed);
   }
 
   getInFlightCount() {

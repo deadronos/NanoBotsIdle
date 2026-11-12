@@ -6,6 +6,7 @@ import { useUiStore } from "../ui/store";
 import { SettingsModal } from "./SettingsModal";
 import { TelemetryPanel } from "./TelemetryPanel";
 import { BuildingDrawer } from "./ui/BuildingDrawer";
+import { ChunkDiagnostics } from "./ui/ChunkDiagnostics";
 import { Hud } from "./ui/Hud";
 import { Minimap } from "./ui/Minimap";
 import { MiningOrders } from "./ui/MiningOrders";
@@ -88,6 +89,9 @@ export const UI: React.FC<UIProps> = ({ viewMode, onToggleView }) => {
 
       {viewMode === "FIRST_PERSON" && !modal && <Reticle />}
       <TouchControls />
+      {config.render.voxels.mode === "meshed" && config.render.voxels.debugCompare.enabled && (
+        <ChunkDiagnostics />
+      )}
       <p className="game-panel absolute bottom-3 left-3 hidden px-3 py-2 text-xs [@media(pointer:fine)]:md:block md:bottom-5 md:left-5">
         <kbd>WASD</kbd> Move <span aria-hidden="true">·</span> <kbd>Shift</kbd> Run{" "}
         <span aria-hidden="true">·</span> Drag to look
