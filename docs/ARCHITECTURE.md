@@ -18,6 +18,7 @@ The previous architecture notes are preserved in `docs/ARCHITECTURE_LEGACY.md`.
 - True 3D voxel model: `docs/ARCHITECTURE/TECH002-voxel-world-model.md`
 - Save migration framework: `docs/ARCHITECTURE/TECH004-save-migration-framework.md`
 - Performance optimizations: `docs/ARCHITECTURE/TECH005-performance-optimizations.md`
+- Fleet audio mix: [DEC009-fleet-audio-mix.md](ARCHITECTURE/DEC009-fleet-audio-mix.md)
 - Progression loop + soft-lock rules: `docs/ARCHITECTURE/GAME001-progression-loop.md`
 
 ## Product summary

@@ -5,6 +5,7 @@ import { type VoxelRenderMode, voxelRenderModes } from "../config/render";
 import { useConfig } from "../config/useConfig";
 import { error } from "../utils/logger";
 import { exportSave, importSave, resetGame } from "../utils/saveUtils";
+import { AudioSettings } from "./ui/AudioSettings";
 import { ModalShell } from "./ui/ModalShell";
 
 interface SettingsModalProps {
@@ -47,6 +48,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ onClose }) => {
       </h2>
 
       <div className="space-y-4">
+        <AudioSettings />
         <div className="bg-white/5 p-4 rounded-xl">
           <h3 className="text-white font-bold mb-2">Rendering</h3>
           <p className="text-xs text-gray-400 mb-4">
