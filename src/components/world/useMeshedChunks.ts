@@ -8,9 +8,11 @@ import type { MeshingScheduler } from "../../meshing/meshingScheduler";
 import { createMeshingScheduler } from "../../meshing/schedulerFactory";
 import type { VoxelEdit } from "../../shared/protocol";
 import { chunkDistanceSq3 } from "../../utils";
+import { chunkKey } from "./chunkHelpers";
 import { MeshManager } from "./mesh/MeshManager";
 
 export const useMeshedChunks = (options: {
+  isResident?: (key: string) => boolean;
   chunkSize: number;
   prestigeLevel: number;
   waterLevel: number;
@@ -18,23 +20,52 @@ export const useMeshedChunks = (options: {
   onSchedulerChange?: () => void;
   isChunkVisible?: (coord: { cx: number; cy: number; cz: number }) => boolean;
 }) => {
-  const { chunkSize, prestigeLevel, waterLevel, seed, onSchedulerChange, isChunkVisible } = options;
+  const {
+    chunkSize,
+    prestigeLevel,
+    waterLevel,
+    seed,
+    onSchedulerChange,
+    isChunkVisible,
+    isResident,
+  } = options;
 
   const focusChunkRef = useRef<{ cx: number; cy: number; cz: number }>({ cx: 0, cy: 0, cz: 0 });
   const reprioritizeTimeoutRef = useRef<number | null>(null);
 
   const groupRef = useRef<Group>(null);
   const schedulerRef = useRef<MeshingScheduler | null>(null);
+  const visibilityProvider = useRef(isChunkVisible);
 
-  const material = useMemo(
-    () =>
-      new MeshStandardMaterial({
-        roughness: 0.85,
-        metalness: 0.05,
-        vertexColors: true,
-      }),
-    [],
-  );
+  useEffect(() => {
+    visibilityProvider.current = isChunkVisible;
+    schedulerRef.current?.reprioritizeDirty();
+  }, [isChunkVisible]);
+
+  const material = useMemo(() => {
+    const material = new MeshStandardMaterial({
+      roughness: 0.85,
+      metalness: 0.05,
+      vertexColors: true,
+    });
+    material.onBeforeCompile = (shader) => {
+      shader.vertexShader = `varying vec3 vTerrainPosition;
+${shader.vertexShader}`.replace(
+        "#include <begin_vertex>",
+        `#include <begin_vertex>
+vTerrainPosition = position;`,
+      );
+      shader.fragmentShader = `varying vec3 vTerrainPosition;
+${shader.fragmentShader}`.replace(
+        "#include <color_fragment>",
+        `#include <color_fragment>
+          vec3 voxel = floor(vTerrainPosition + 0.001);
+          float grain = fract(sin(dot(voxel, vec3(17.31, 59.72, 91.63))) * 14375.47);
+          diffuseColor.rgb *= mix(0.94, 1.06, grain);`,
+      );
+    };
+    return material;
+  }, []);
 
   const meshManager = useMemo(() => new MeshManager(material), [material]);
 
@@ -62,7 +93,7 @@ export const useMeshedChunks = (options: {
       prestigeLevel,
       waterLevel,
       seed,
-      isChunkVisible,
+      isChunkVisible: (coord) => visibilityProvider.current?.(coord) ?? false,
       onApply: (res) => meshManager.queueResult(res),
       getPriority: priorityFromFocus,
       maxInFlight: config.meshing.maxInFlight,
@@ -82,7 +113,7 @@ export const useMeshedChunks = (options: {
       scheduler.dispose();
       meshManager.disposeAll();
     };
-  }, [chunkSize, isChunkVisible, meshManager, onSchedulerChange, prestigeLevel, seed, waterLevel]);
+  }, [chunkSize, meshManager, onSchedulerChange, prestigeLevel, seed, waterLevel]);
 
   useEffect(() => {
     return () => {
@@ -97,6 +128,21 @@ export const useMeshedChunks = (options: {
     scheduler.pump();
   }, []);
 
+  const retryDroppedChunks = useCallback(() => schedulerRef.current?.retryDroppedChunks(), []);
+
+  const removeChunk = useCallback(
+    (key: string) => {
+      schedulerRef.current?.forgetChunk(key);
+      meshManager.removeChunk(key);
+    },
+    [meshManager],
+  );
+
+  const hasChunkWork = useCallback(
+    (key: string) => meshManager.hasChunk(key) || !!schedulerRef.current?.hasPendingChunk(key),
+    [meshManager],
+  );
+
   const markDirtyForEdits = useCallback(
     (edits: VoxelEdit[]) => {
       const scheduler = schedulerRef.current;
@@ -107,12 +153,15 @@ export const useMeshedChunks = (options: {
           y: edit.y,
           z: edit.z,
           chunkSize,
+          includeCorners: true,
         });
-        scheduler.markDirtyMany(dirty);
+        scheduler.markDirtyMany(
+          isResident ? dirty.filter(({ cx, cy, cz }) => isResident(chunkKey(cx, cy, cz))) : dirty,
+        );
       }
       scheduler.pump();
     },
-    [chunkSize],
+    [chunkSize, isResident],
   );
 
   const reset = useCallback(() => {
@@ -159,6 +208,9 @@ export const useMeshedChunks = (options: {
   return {
     groupRef,
     ensureChunk,
+    removeChunk,
+    retryDroppedChunks,
+    hasChunkWork,
     markDirtyForEdits,
     setFocusChunk,
     getDebugState,

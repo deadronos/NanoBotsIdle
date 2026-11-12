@@ -67,14 +67,13 @@ describe("meshing worker handler (TDD)", () => {
     },
   );
 
-  it("matches fallback vertex colors at both levels of detail", () => {
+  it("matches fallback vertex colors for an isolated voxel", () => {
     const out = meshVoxel(2, 0);
-    expect(out.lods).toHaveLength(1);
-    for (const geometry of [out.geometry, out.lods![0].geometry]) {
-      const buffer = buildBufferGeometry({ ...geometry, colors: undefined }, 0);
-      expect(buffer.getAttribute("color").array).toEqual(geometry.colors);
-      buffer.dispose();
-    }
+    expect(out.lods).toBeUndefined();
+    const geometry = out.geometry;
+    const buffer = buildBufferGeometry({ ...geometry, colors: undefined }, 0);
+    expect(buffer.getAttribute("color").array).toEqual(geometry.colors);
+    buffer.dispose();
   });
 
   it("should return a typed-array MeshResult for a valid job", () => {

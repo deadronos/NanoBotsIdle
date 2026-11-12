@@ -5,6 +5,7 @@ import { useConfig } from "../../config/useConfig";
 import { applyLodGeometry } from "../../render/lodGeometry";
 import { createLodThresholds, isChunkVisible as isChunkVisibleFn } from "../../render/lodUtils";
 import { defaultOcclusionConfig } from "../../render/occlusionCuller";
+import { getMeshedTerrainFogEnd } from "../../render/terrainFog";
 import { getSimBridge } from "../../simBridge/simBridge";
 import { normalizeChunkLoadConfig } from "./chunkLoadConfig";
 import { useMeshedChunks } from "./useMeshedChunks";
@@ -26,7 +27,15 @@ export const VoxelLayerMeshed: React.FC<{
   const bridge = getSimBridge();
   const { camera, gl } = useThree();
 
-  const lodThresholds = useMemo(() => createLodThresholds(chunkSize), [chunkSize]);
+  const { lowDistanceMultiplier, hideDistanceMultiplier } = cfg.render.voxels.lod;
+  const lodThresholds = useMemo(
+    () =>
+      createLodThresholds(chunkSize, {
+        lowDistanceMultiplier,
+        hideDistanceMultiplier,
+      }),
+    [chunkSize, lowDistanceMultiplier, hideDistanceMultiplier],
+  );
 
   const chunkLoadConfig = useMemo(
     () => normalizeChunkLoadConfig(cfg.render.voxels.chunkLoad),
@@ -53,15 +62,26 @@ export const VoxelLayerMeshed: React.FC<{
     [chunkSize, camera, lodThresholds],
   );
 
-  const { ensureChunk, getDebugState, groupRef, markDirtyForEdits, reset, setFocusChunk } =
-    useMeshedChunks({
-      chunkSize,
-      prestigeLevel,
-      waterLevel: cfg.terrain.waterLevel,
-      seed,
-      onSchedulerChange: handleSchedulerChange,
-      isChunkVisible,
-    });
+  const isResident = useCallback((key: string) => activeChunks.current.has(key), []);
+  const {
+    ensureChunk,
+    removeChunk,
+    retryDroppedChunks,
+    hasChunkWork,
+    getDebugState,
+    groupRef,
+    markDirtyForEdits,
+    reset,
+    setFocusChunk,
+  } = useMeshedChunks({
+    chunkSize,
+    isResident,
+    prestigeLevel,
+    waterLevel: cfg.terrain.waterLevel,
+    seed,
+    onSchedulerChange: handleSchedulerChange,
+    isChunkVisible,
+  });
 
   useMeshedSimStream({
     bridge,
@@ -82,6 +102,9 @@ export const VoxelLayerMeshed: React.FC<{
     },
     chunkLoadConfig,
     ensureChunk,
+    removeChunk,
+    retryDroppedChunks,
+    hasChunkWork,
     setFocusChunk,
     reset,
     markDirtyForEdits,
@@ -92,9 +115,10 @@ export const VoxelLayerMeshed: React.FC<{
   const lodVisibilityOptions = useMemo(
     () => ({
       onLodChange: applyLodGeometry,
+      fogEnd: getMeshedTerrainFogEnd(chunkSize),
       progressive: cfg.render.voxels.lod.progressive,
     }),
-    [cfg.render.voxels.lod.progressive],
+    [cfg.render.voxels.lod.progressive, chunkSize],
   );
 
   useMeshedVisibilityPass({

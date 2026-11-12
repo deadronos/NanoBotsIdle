@@ -3,6 +3,7 @@ import React from "react";
 import { useConfig } from "../config/useConfig";
 import { getSeed } from "../sim/seed";
 import { useUiStore } from "../ui/store";
+import { TerrainWater } from "./world/TerrainWater";
 import { VoxelLayerInstanced } from "./world/VoxelLayerInstanced";
 import { VoxelLayerMeshed } from "./world/VoxelLayerMeshed";
 
@@ -42,24 +43,13 @@ export const World: React.FC = () => {
         }
       </group>
 
-      {/* Lift the surface slightly above coplanar voxel tops. */}
-      <mesh
-        rotation={[-Math.PI / 2, 0, 0]}
-        position={[0, cfg.terrain.waterLevel + 0.02, 0]}
-        receiveShadow
-      >
-        <planeGeometry
-          args={[cfg.terrain.worldRadius * 2 + 20, cfg.terrain.worldRadius * 2 + 20]}
-        />
-        <meshStandardMaterial
-          color="#438caa"
-          transparent
-          opacity={0.66}
-          depthWrite={false}
-          roughness={0.24}
-          metalness={0.08}
-        />
-      </mesh>
+      <TerrainWater
+        waterLevel={cfg.terrain.waterLevel}
+        worldRadius={cfg.terrain.worldRadius}
+        seed={seed}
+        prestigeLevel={prestigeLevel}
+        meshed={voxelRenderMode === "meshed"}
+      />
 
       {/* Bedrock plane for world bounds */}
       <mesh

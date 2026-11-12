@@ -7,6 +7,7 @@ import type { VoxelEdit } from "../../../shared/protocol";
 import { applyVoxelEdits, resetVoxelEdits } from "../../../sim/collision";
 import { getSurfaceHeightCore } from "../../../sim/terrain-core";
 import type { SimBridge } from "../../../simBridge/simBridge";
+import { useUiStore } from "../../../ui/store";
 import { forEachRadialChunk } from "../../../utils";
 import { debug, groupCollapsed, groupEnd } from "../../../utils/logger";
 import { chunkKey } from "../chunkHelpers";
@@ -59,6 +60,9 @@ export const useMeshedSimStream = (args: {
   chunkLoadConfig: ChunkLoadConfig;
 
   ensureChunk: (cx: number, cy: number, cz: number) => void;
+  removeChunk: (key: string) => void;
+  retryDroppedChunks: () => void;
+  hasChunkWork: (key: string) => boolean;
   setFocusChunk: (cx: number, cy: number, cz: number) => void;
   reset: () => void;
   markDirtyForEdits: (edits: VoxelEdit[]) => void;
@@ -78,6 +82,9 @@ export const useMeshedSimStream = (args: {
     terrain,
     chunkLoadConfig,
     ensureChunk,
+    removeChunk,
+    retryDroppedChunks,
+    hasChunkWork,
     setFocusChunk,
     reset,
     markDirtyForEdits,
@@ -86,15 +93,16 @@ export const useMeshedSimStream = (args: {
   } = args;
 
   const debugLastLogAtMsRef = useRef(0);
+  const worldRef = useRef<string | undefined>(undefined);
 
   const addChunk = useCallback(
     (cx: number, cy: number, cz: number) => {
       const key = chunkKey(cx, cy, cz);
-      if (tracking.activeChunks.current.has(key)) return;
+      if (tracking.activeChunks.current.has(key) && hasChunkWork(key)) return;
       tracking.activeChunks.current.add(key);
       ensureChunk(cx, cy, cz);
     },
-    [ensureChunk, tracking.activeChunks],
+    [ensureChunk, hasChunkWork, tracking.activeChunks],
   );
 
   const ensureInitialChunk = useCallback(() => {
@@ -138,32 +146,48 @@ export const useMeshedSimStream = (args: {
   ]);
 
   useEffect(() => {
+    if (!debugCompare.enabled) return;
+    return () => useUiStore.getState().setChunkDiagnostics(undefined);
+  }, [debugCompare.enabled]);
+
+  useEffect(() => {
     const direction = new Vector3();
     let lastPrefetchAt = -Infinity;
     let lastHeading = Infinity;
     let lastColumnX = Infinity;
     let lastColumnZ = Infinity;
+
+    const coverageRadius = Math.max(3, chunkLoadConfig.activeRadius);
+    const evictionRadius = coverageRadius + 3;
+    const surfaceRanges = new Map<string, { minY: number; maxY: number }>();
     const prefetchSurfaceColumn = (cx: number, cz: number) => {
-      const x = cx * chunkSize;
-      const z = cz * chunkSize;
-      const far = chunkSize - 1;
-      const middle = Math.floor(chunkSize / 2);
-      const heightAt = (dx: number, dz: number) =>
-        getSurfaceHeightCore(x + dx, z + dz, seed, terrain.surfaceBias, terrain.quantizeScale);
-      const heights = [
-        heightAt(0, 0),
-        heightAt(far, 0),
-        heightAt(0, far),
-        heightAt(far, far),
-        heightAt(middle, middle),
-      ];
-      const minY = Math.floor((Math.min(...heights) - 1) / chunkSize);
-      const maxY = Math.floor(Math.max(...heights) / chunkSize);
-      for (let cy = maxY; cy >= minY; cy--) addChunk(cx, cy, cz);
+      const key = `${cx},${cz}`;
+      let range = surfaceRanges.get(key);
+      if (!range) {
+        let low = Infinity;
+        let high = -Infinity;
+        for (let dz = -1; dz <= chunkSize; dz++) {
+          for (let dx = -1; dx <= chunkSize; dx++) {
+            const height = getSurfaceHeightCore(
+              cx * chunkSize + dx,
+              cz * chunkSize + dz,
+              seed,
+              terrain.surfaceBias,
+              terrain.quantizeScale,
+            );
+            low = Math.min(low, height);
+            high = Math.max(high, height);
+          }
+        }
+        range = { minY: Math.floor(low / chunkSize), maxY: Math.floor(high / chunkSize) };
+        surfaceRanges.set(key, range);
+      }
+      for (let cy = range.maxY; cy >= range.minY; cy--) addChunk(cx, cy, cz);
     };
 
     return bridge.onFrame((frame) => {
-      if (frame.delta.frontierReset) {
+      const world = `${frame.ui.prestigeLevel}:${frame.ui.actualSeed ?? seed}`;
+      if (worldRef.current !== undefined && worldRef.current !== world) {
         tracking.activeChunks.current.clear();
         tracking.lastRequestedPlayerChunkRef.current = null;
         lastHeading = Infinity;
@@ -171,6 +195,7 @@ export const useMeshedSimStream = (args: {
         reset();
         resetVoxelEdits();
       }
+      worldRef.current = world;
 
       if (frame.delta.edits && frame.delta.edits.length > 0) {
         applyVoxelEdits(frame.delta.edits);
@@ -208,9 +233,38 @@ export const useMeshedSimStream = (args: {
         );
       }
 
+      if (shouldRequest) {
+        const moveX = lastReq ? Math.sign(pcx - lastReq.cx) : 0;
+        const moveZ = lastReq ? Math.sign(pcz - lastReq.cz) : 0;
+        if (moveX || moveZ) {
+          forEachForwardChunkColumn(pcx, pcz, moveX, moveZ, coverageRadius, prefetchSurfaceColumn);
+        }
+        forEachRadialChunk({ cx: pcx, cy: 0, cz: pcz }, coverageRadius, 2, ({ cx, cz }) =>
+          prefetchSurfaceColumn(cx, cz),
+        );
+        for (const key of tracking.activeChunks.current) {
+          const [cx, cy, cz] = key.split(",").map(Number);
+          const range = surfaceRanges.get(`${cx},${cz}`);
+          const closeToSurface = range && cy >= range.minY && cy <= range.maxY;
+          if (
+            Math.max(Math.abs(cx - pcx), Math.abs(cz - pcz)) <= evictionRadius &&
+            (closeToSurface || Math.abs(cy - pcy) <= evictionRadius)
+          )
+            continue;
+          removeChunk(key);
+          tracking.activeChunks.current.delete(key);
+        }
+        for (const key of surfaceRanges.keys()) {
+          const [cx, cz] = key.split(",").map(Number);
+          if (Math.max(Math.abs(cx - pcx), Math.abs(cz - pcz)) > evictionRadius)
+            surfaceRanges.delete(key);
+        }
+      }
+
       const now = performance.now();
       if (now - lastPrefetchAt >= 125) {
         lastPrefetchAt = now;
+        retryDroppedChunks();
         camera.getWorldDirection(direction);
         if (direction.x * direction.x + direction.z * direction.z > 0.01) {
           const heading = Math.round(Math.atan2(direction.z, direction.x) / (Math.PI / 4));
@@ -230,7 +284,7 @@ export const useMeshedSimStream = (args: {
               pcz,
               Math.round(Math.cos(angle)),
               Math.round(Math.sin(angle)),
-              chunkLoadConfig.activeRadius,
+              coverageRadius,
               prefetchSurfaceColumn,
             );
           }
@@ -292,6 +346,17 @@ export const useMeshedSimStream = (args: {
             tracking.activeChunks.current.has(k),
           ).length;
 
+          useUiStore.getState().setChunkDiagnostics({
+            Ready: dbg.meshChunkKeys.length,
+            Empty: dbg.emptyChunkKeys.length,
+            Queued: queued.size,
+            Meshing: inFlight.size,
+            "Awaiting display": pendingApply.size,
+            Failed: failed.size,
+            "Local unrequested": missingNotRequested.length,
+            "Local unscheduled": missingRequestedWithoutWork.length,
+          });
+
           // Only emit verbose render-debug output in development to avoid noisy production logs
           if (process.env.NODE_ENV === "development") {
             groupCollapsed(
@@ -336,6 +401,8 @@ export const useMeshedSimStream = (args: {
     ensureInitialChunk,
     getDebugState,
     markDirtyForEdits,
+    removeChunk,
+    retryDroppedChunks,
     prestigeLevel,
     seed,
     terrain.surfaceBias,

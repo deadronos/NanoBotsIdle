@@ -1,6 +1,7 @@
 import { defaultTerrainConfig } from "../config/terrain";
 import type { FromMeshingWorker, ToMeshingWorker } from "../shared/meshingProtocol";
-import { downsampleMaterials, greedyMeshChunk } from "./greedyMesher";
+import { coarsenInterior } from "./coarsenInterior";
+import { greedyMeshChunk } from "./greedyMesher";
 import type { MeshGeometry } from "./meshTypes";
 import { buildTerrainVertexColors } from "./terrainVertexColors";
 
@@ -72,26 +73,25 @@ export const handleMeshingJob = (job: ToMeshingWorker): FromMeshingWorker => {
       materials: job.materials,
     });
     const waterLevel = job.waterLevel ?? defaultTerrainConfig.waterLevel;
-    const colors = buildTerrainVertexColors(geometry, waterLevel);
+    const colors = buildTerrainVertexColors(geometry, waterLevel, job);
 
     // Compute bounding sphere in worker thread to offload from main thread
     const boundingSphere = computeBoundingSphere(geometry.positions);
 
     const lods = [] as { level: "low"; geometry: MeshGeometry }[];
-    if (job.chunk.size >= 2) {
-      const downsampled = downsampleMaterials(job.materials, job.chunk.size, 2);
+    if (job.chunk.size >= 4) {
       const low = greedyMeshChunk({
-        size: downsampled.size,
+        size: job.chunk.size,
         origin: job.origin,
-        voxelSize: downsampled.voxelSize,
-        materials: downsampled.materials,
+        materials: coarsenInterior(job.materials, job.chunk.size),
       });
-      const lowColors = buildTerrainVertexColors(low, waterLevel);
+      const lowColors = buildTerrainVertexColors(low, waterLevel, job);
       const lowBoundingSphere = computeBoundingSphere(low.positions);
-      lods.push({
-        level: "low",
-        geometry: { ...low, colors: lowColors, boundingSphere: lowBoundingSphere },
-      });
+      if (low.indices.length < geometry.indices.length)
+        lods.push({
+          level: "low",
+          geometry: { ...low, colors: lowColors, boundingSphere: lowBoundingSphere },
+        });
     }
 
     return {

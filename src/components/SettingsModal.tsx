@@ -83,7 +83,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ onClose }) => {
                 });
               }}
             />
-            Debug compare (logs dense baseline vs current renderer)
+            Show chunk diagnostics
           </label>
 
           <label className="mt-2 flex items-center gap-2 text-xs text-gray-300">

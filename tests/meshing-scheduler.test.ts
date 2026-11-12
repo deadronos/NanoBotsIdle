@@ -33,6 +33,52 @@ describe("MeshingScheduler (TDD)", () => {
     resetTelemetryCollector();
   });
 
+  it("discards results for an evicted chunk even when it is requested again before the worker replies", () => {
+    const worker = new FakeMeshingWorker();
+    const applied: number[] = [];
+    const coord = { cx: -1, cy: 0, cz: 0 };
+    const scheduler = new MeshingScheduler({
+      worker,
+      chunkSize: 16,
+      buildJob: (chunk, rev, jobId) => ({
+        msg: {
+          t: "MESH_CHUNK",
+          jobId,
+          rev,
+          chunk: { ...chunk, size: 16 },
+          origin: { x: -16, y: 0, z: 0 },
+          materials: new Uint8Array(),
+        },
+        transfer: [],
+      }),
+      onApply: (result) => applied.push(result.jobId),
+    });
+    const finish = (index: number) => {
+      const { msg } = worker.posted[index];
+      worker.emit({
+        t: "MESH_RESULT",
+        jobId: msg.jobId,
+        rev: msg.rev,
+        chunk: msg.chunk,
+        geometry: {
+          positions: new Float32Array(),
+          normals: new Float32Array(),
+          indices: new Uint16Array(),
+        },
+      });
+    };
+
+    scheduler.markDirty(coord);
+    scheduler.pump();
+    scheduler.forgetChunk("-1,0,0");
+    scheduler.markDirty(coord);
+    finish(0);
+    expect(applied).toEqual([]);
+    expect(worker.posted).toHaveLength(2);
+    finish(1);
+    expect(applied).toEqual([worker.posted[1].msg.jobId]);
+  });
+
   it("should drop stale results using per-chunk revision", () => {
     const worker = new FakeMeshingWorker();
     const applied: MeshResult[] = [];

@@ -125,9 +125,12 @@ export const applyChunkVisibility = (
   options?: {
     onLodChange?: (mesh: Mesh, lod: LodLevel) => void;
     progressive?: LodProgressiveConfig;
+    fogEnd?: number;
   },
 ) => {
   const frustum = getFrustumFromCamera(camera);
+  const view = camera.matrixWorldInverse.elements;
+  const fogEnd = options?.fogEnd ?? Infinity;
 
   for (const node of meshes) {
     if (!(node as Mesh).isMesh) continue;
@@ -145,7 +148,11 @@ export const applyChunkVisibility = (
 
     const frustumVisible = isSphereVisible(frustum, boundingSphere.center, boundingSphere.radius);
     const distanceSq = distanceSqToPoint(camera.position, boundingSphere.center);
-    const desiredLod = selectLodLevel(distanceSq, thresholds);
+    const { x, y, z } = boundingSphere.center;
+    // Three's linear fog uses camera-space depth rather than distance from the camera.
+    const nearestDepth =
+      -(view[2] * x + view[6] * y + view[10] * z + view[14]) - boundingSphere.radius;
+    const desiredLod = nearestDepth >= fogEnd ? "hidden" : selectLodLevel(distanceSq, thresholds);
     const lod =
       options?.progressive ?
         resolveProgressiveLod(mesh, desiredLod, options.progressive)

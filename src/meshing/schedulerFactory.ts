@@ -1,6 +1,6 @@
 import type { MeshResult } from "../shared/meshingProtocol";
-import { getVoxelMaterialAt } from "../sim/collision";
-import { createApronField, fillApronField } from "./apronField";
+import { createVoxelColumnSampler } from "../sim/collision";
+import { createApronField, index3D } from "./apronField";
 import type { MeshingWorkerLike } from "./meshingScheduler";
 import { MeshingScheduler } from "./meshingScheduler";
 import { defaultMeshingWorkerFactory } from "./meshingWorkerFactory";
@@ -43,11 +43,20 @@ export const createMeshingScheduler = (options: SchedulerOptions): MeshingSchedu
       };
 
       const materials = createApronField(chunkSize);
-      fillApronField(materials, {
-        size: chunkSize,
-        origin,
-        materialAt: (x, y, z) => getVoxelMaterialAt(x, y, z, prestigeLevel, seed),
-      });
+      const dim = chunkSize + 2;
+      for (let z = 0; z < dim; z++) {
+        for (let x = 0; x < dim; x++) {
+          const sample = createVoxelColumnSampler(
+            origin.x + x - 1,
+            origin.z + z - 1,
+            prestigeLevel,
+            seed,
+          );
+          for (let y = 0; y < dim; y++) {
+            materials[index3D(x, y, z, dim)] = sample(origin.y + y - 1);
+          }
+        }
+      }
 
       return {
         msg: {
