@@ -4,6 +4,7 @@ import { Canvas } from "@react-three/fiber";
 
 import { Drones } from "./components/Drones";
 import { DynamicResScaler } from "./components/DynamicResScaler";
+import { FleetAudio } from "./components/FleetAudio";
 import { Environment } from "./components/Environment";
 import { Outposts } from "./components/Outposts";
 import { Player } from "./components/Player";
@@ -83,6 +84,7 @@ function App() {
 
   return (
     <>
+      <FleetAudio />
       <UI viewMode={viewMode} onToggleView={toggleView} />
       <Canvas shadows camera={{ fov: 60 }}>
         <Suspense fallback={null}>

@@ -7,7 +7,7 @@ import { useConfig } from "../config/useConfig";
 import { playerPosition } from "../engine/playerState";
 import type { ViewMode } from "../types";
 import { useUiStore } from "../ui/store";
-import { playSound } from "../utils/audio";
+import { playJumpSound } from "../utils/audio";
 import { PlayerVisuals } from "./player/PlayerVisuals";
 import { updatePlayerFrame } from "./player/updatePlayerFrame";
 import { usePointerLockInput } from "./player/usePointerLockInput";
@@ -83,7 +83,7 @@ export const Player: React.FC<PlayerProps> = ({ viewMode }) => {
     frameOptions.playerVisuals = playerVisualsRef.current;
     updatePlayerFrame(frameOptions);
     if (isJumping.current && !wasJumping) {
-      playSound("jump");
+      queueMicrotask(playJumpSound);
     }
     playerPosition.copy(position);
   });

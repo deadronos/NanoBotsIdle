@@ -6,7 +6,6 @@ import { Vector3 } from "three";
 import { getConfig } from "../config/index";
 import { getSimBridge } from "../simBridge/simBridge";
 import { useUiStore } from "../ui/store";
-import { playSound } from "../utils/audio";
 import { DroneCargo } from "./drones/DroneCargo";
 import { DroneInstancedMeshes } from "./drones/DroneInstancedMeshes";
 import { DroneMeshLoader } from "./drones/DroneMeshLoader";
@@ -126,11 +125,6 @@ export const Drones: React.FC = () => {
 
     if (didConsumeMined && minedPositionsRef.current && minedPositionsRef.current.length > 0) {
       minedPositionsRef.current = null;
-      playSound("mine");
-    }
-
-    if (depositEventsRef.current && depositEventsRef.current.length > 0) {
-      playSound("deposit");
     }
 
     // Always clear deposit events after frame
