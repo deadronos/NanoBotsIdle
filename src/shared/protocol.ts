@@ -1,6 +1,10 @@
+import type { LandingProfile, MiningZone } from "./miningOperations";
+
 export type Cmd =
   | { t: "BUY_UPGRADE"; id: string; n: number }
-  | { t: "PRESTIGE" }
+  | { t: "PRESTIGE"; landing?: LandingProfile }
+  | { t: "SET_MINING_ZONE"; zone: MiningZone }
+  | { t: "CLEAR_MINING_ZONE" }
   | { t: "CLICK_VOXEL"; x: number; y: number; z: number }
   | { t: "SET_TOOL"; tool: "mine" | "build" }
   | { t: "SET_PLAYER_CHUNK"; cx: number; cy: number; cz: number }
@@ -14,12 +18,24 @@ export type VoxelEdit = {
   mat: number;
 };
 
+export type OutpostSnapshot = {
+  id: string;
+  x: number;
+  y: number;
+  z: number;
+  level: number;
+  dockedCount?: number;
+  queuedCount?: number;
+};
+
 export type RenderDelta = {
   tick: number;
   entities?: Float32Array;
   entityTargets?: Float32Array;
   entityStates?: Uint8Array;
   entityRoles?: Uint8Array;
+  entityCargo?: Float32Array;
+  returnRoutes?: Float32Array;
   edits?: VoxelEdit[];
   minedPositions?: Float32Array;
   frontierAdd?: Float32Array;
@@ -36,7 +52,7 @@ export type RenderDelta = {
     ttl: number;
   }[];
   depositEvents?: DepositEvent[];
-  outposts?: { id: string; x: number; y: number; z: number; level: number }[];
+  outposts?: OutpostSnapshot[];
 };
 
 export type DepositEvent = {
@@ -58,9 +74,13 @@ export type UiSnapshot = {
   laserPowerLevel: number;
   minedBlocks: number;
   totalBlocks: number;
-  outposts: { id: string; x: number; y: number; z: number; level: number }[];
+  outposts: OutpostSnapshot[];
   nextCosts?: Record<string, number>;
   actualSeed?: number;
+  landingProfile?: LandingProfile;
+  miningZone?: MiningZone;
+  zoneTargets?: number;
+  zoneAssigned?: number;
   landingSpawn?: { x: number; y: number; z: number };
 };
 

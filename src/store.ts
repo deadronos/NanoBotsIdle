@@ -3,10 +3,12 @@ import { persist, type PersistStorage } from "zustand/middleware";
 
 import { getConfig } from "./config/index";
 import { getUpgradeCost, isUpgradeMaxed } from "./economy/upgrades";
+import type { LandingProfile } from "./shared/miningOperations";
 
 export interface GameState {
   credits: number;
   prestigeLevel: number;
+  landingProfile?: LandingProfile;
 
   // Upgrades
   droneCount: number;

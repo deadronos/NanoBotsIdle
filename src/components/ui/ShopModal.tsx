@@ -2,6 +2,7 @@ import React from "react";
 
 import { getConfig } from "../../config/index";
 import { getPrestigeRequirement, UPGRADE_NAMES } from "../../economy/upgrades";
+import { LANDING_PROFILES } from "../../shared/miningOperations";
 import { getSimBridge } from "../../simBridge/simBridge";
 import { useUiStore } from "../../ui/store";
 import { ModalShell } from "./ModalShell";
@@ -80,27 +81,30 @@ export const ShopModal: React.FC<ShopModalProps> = ({ onClose }) => {
         />
       </div>
 
-      <div className="bg-purple-900/20 border border-purple-500/30 p-4 rounded-xl flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-        <div>
-          <h3 className="text-xl font-bold text-purple-400">Planetary Jump (Prestige)</h3>
-          <p className="text-sm text-purple-200/60 mt-1">
-            Reset world generation. Keep upgrades. +1 Prestige Level.
-          </p>
-          <p className="text-xs text-purple-200/40 mt-1">Increases resource value multiplier.</p>
+      <section className="rounded-xl border border-purple-500/30 bg-purple-900/20 p-4">
+        <h3 className="text-xl font-bold text-purple-300">Choose your next landing site</h3>
+        <p className="mt-1 text-sm text-purple-100/80">
+          Prestige regenerates the world, keeps upgrades, and raises the ore multiplier.
+          {snapshot.minedBlocks < minPrestigeBlocks &&
+            ` Mine ${minPrestigeBlocks.toLocaleString()} blocks to unlock.`}
+        </p>
+        <div className="mt-3 grid gap-2 sm:grid-cols-2">
+          {(["near", "rich"] as const).map((landing) => (
+            <button
+              key={landing}
+              className="rounded-lg border border-purple-400/40 bg-purple-700/50 px-3 py-2 text-left text-white hover:bg-purple-700 disabled:opacity-50"
+              disabled={snapshot.minedBlocks < minPrestigeBlocks}
+              onClick={() => {
+                bridge.enqueue({ t: "PRESTIGE", landing });
+                onClose();
+              }}
+            >
+              <span className="block font-semibold">{LANDING_PROFILES[landing].name}</span>
+              <span className="text-xs">{LANDING_PROFILES[landing].description}</span>
+            </button>
+          ))}
         </div>
-        <button
-          onClick={() => {
-            bridge.enqueue({ t: "PRESTIGE" });
-            onClose();
-          }}
-          disabled={snapshot.minedBlocks < minPrestigeBlocks}
-          className="bg-purple-600 hover:bg-purple-500 disabled:opacity-50 disabled:cursor-not-allowed text-white px-6 py-3 rounded-lg font-bold transition-colors"
-        >
-          {snapshot.minedBlocks < minPrestigeBlocks ?
-            `Mine ${minPrestigeBlocks} Blocks first`
-          : "WARP JUMP"}
-        </button>
-      </div>
+      </section>
     </ModalShell>
   );
 };

@@ -1,9 +1,9 @@
 #!/usr/bin/env node
 
 /**
- * Headless profiling script for NanoBotsIdle
+ * Browser profiling script for NanoBotsIdle
  *
- * Runs the game in a headless browser and collects telemetry metrics
+ * Runs the game in a browser and collects telemetry metrics
  * for performance profiling and regression detection.
  *
  * Usage:
@@ -13,7 +13,9 @@
  *   --duration <seconds>  How long to run the profile (default: 30)
  *   --output <path>       Where to save the metrics JSON (default: ./profile-metrics.json)
  *   --url <url>           URL to profile (default: http://localhost:5173)
- *   --scene <preset>      Scene preset: default | meshed-heavy | meshed-heavy-occlusion
+ *   --scene <preset>      Scene preset: default | meshed-heavy | meshed-heavy-occlusion | busy-colony
+ *   --mobile              Use a 390×844 touch viewport
+ *   --chrome              Use headed system Chrome (Metal on macOS)
  */
 
 import { writeFileSync } from "fs";
@@ -31,8 +33,10 @@ const DURATION_SECONDS = parseInt(getArg("--duration", "30"), 10);
 const OUTPUT_PATH = resolve(getArg("--output", "./profile-metrics.json"));
 const URL = getArg("--url", "http://localhost:5173");
 const SCENE = getArg("--scene", "default");
+const MOBILE = args.includes("--mobile");
+const CHROME = args.includes("--chrome");
 
-console.log(`[profile] Starting headless profile...`);
+console.log(`[profile] Starting ${CHROME ? "headed Chrome" : "headless Chromium"} profile...`);
 console.log(`[profile] URL: ${URL}`);
 console.log(`[profile] Duration: ${DURATION_SECONDS}s`);
 console.log(`[profile] Output: ${OUTPUT_PATH}`);
@@ -69,21 +73,49 @@ const getScenePresetConfig = (preset) => {
 
 async function runProfile() {
   const browser = await chromium.launch({
-    headless: true,
-    args: ["--disable-web-security", "--disable-features=IsolateOrigins,site-per-process"],
+    channel: CHROME ? "chrome" : undefined,
+    headless: !CHROME,
+    args: CHROME && process.platform === "darwin" ? ["--use-angle=metal"] : [],
   });
 
   const context = await browser.newContext({
-    viewport: { width: 1280, height: 720 },
+    viewport: MOBILE ? { width: 390, height: 844 } : { width: 1280, height: 720 },
+    hasTouch: MOBILE,
+    isMobile: MOBILE,
   });
 
   const page = await context.newPage();
+  if (SCENE === "busy-colony") {
+    await page.addInitScript(() => {
+      const outposts = [
+        { id: "bench-a", x: 10, y: 8, z: 5, level: 1 },
+        { id: "bench-b", x: -12, y: 6, z: -9, level: 1 },
+        { id: "bench-c", x: 15, y: 5, z: -15, level: 1 },
+      ];
+      localStorage.setItem(
+        "voxel-walker-storage",
+        JSON.stringify({
+          version: 2,
+          state: { droneCount: 45, haulerCount: 5, outposts },
+        }),
+      );
+    });
+  }
 
   // Enable telemetry via URL parameter
   const urlWithTelemetry = `${URL}?telemetry=true`;
 
   console.log(`[profile] Navigating to ${urlWithTelemetry}...`);
-  await page.goto(urlWithTelemetry, { waitUntil: "networkidle" });
+  await page.goto(urlWithTelemetry, { waitUntil: "domcontentloaded" });
+  await page.waitForFunction(() => typeof window.getTelemetrySnapshot === "function");
+  await page.locator("canvas").first().waitFor();
+
+  const renderer = await page.evaluate(() => {
+    const gl = document.querySelector("canvas")?.getContext("webgl2");
+    const info = gl?.getExtension("WEBGL_debug_renderer_info");
+    return gl && info ? gl.getParameter(info.UNMASKED_RENDERER_WEBGL) : null;
+  });
+  console.log(`[profile] Renderer: ${renderer ?? "unavailable"}`);
 
   // Enable telemetry in the config
   await page.evaluate(() => {
@@ -104,6 +136,7 @@ async function runProfile() {
   }
 
   console.log(`[profile] Running for ${DURATION_SECONDS}s...`);
+  if (SCENE === "busy-colony") await page.keyboard.down("KeyW");
 
   // Collect metrics periodically
   const metricsHistory = [];
@@ -133,6 +166,7 @@ async function runProfile() {
     }
   }
 
+  if (SCENE === "busy-colony") await page.keyboard.up("KeyW");
   console.log(`[profile] Collected ${metricsHistory.length} snapshots`);
 
   // Compute aggregate statistics
@@ -143,6 +177,9 @@ async function runProfile() {
     meta: {
       url: urlWithTelemetry,
       duration: DURATION_SECONDS,
+      scene: SCENE,
+      mobile: MOBILE,
+      renderer,
       samplesCollected: metricsHistory.length,
       timestamp: new Date().toISOString(),
     },

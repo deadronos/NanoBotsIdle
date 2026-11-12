@@ -68,6 +68,7 @@ const KNOWN_GAME_STATE_FIELDS = new Set<string>([
   "minedBlocks",
   "totalBlocks",
   "outposts",
+  "landingProfile",
 ]);
 
 /**
@@ -144,6 +145,10 @@ export function sanitizeGameState(data: Partial<GameState>): Partial<GameState> 
   const sanitized: Partial<GameState> = {
     credits: Math.max(0, data.credits ?? 0),
     prestigeLevel: Math.max(1, data.prestigeLevel ?? 1),
+    landingProfile:
+      data.landingProfile === "near" || data.landingProfile === "rich" ?
+        data.landingProfile
+      : undefined,
     droneCount: Math.max(1, data.droneCount ?? 3),
     miningSpeedLevel: Math.max(1, data.miningSpeedLevel ?? 1),
     moveSpeedLevel: Math.max(1, data.moveSpeedLevel ?? 1),

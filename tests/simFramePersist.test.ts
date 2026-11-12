@@ -72,10 +72,12 @@ describe("buildPersistedPatch", () => {
     });
   });
 
-  it("emits a fresh outposts array when contents differ", () => {
-    const outposts = [{ id: "x", x: 1, y: 2, z: 3, level: 1 }];
-    const patch = buildPersistedPatch(basePrev, baseUi, outposts);
-    expect(patch.outposts).toBe(outposts);
+  it("persists built outposts without their transient dock occupancy", () => {
+    const outpost = { id: "x", x: 1, y: 2, z: 3, level: 1 };
+    const patch = buildPersistedPatch(basePrev, baseUi, [
+      { ...outpost, dockedCount: 4, queuedCount: 2 },
+    ]);
+    expect(patch.outposts).toEqual([outpost]);
   });
 
   it("does not emit outposts when structurally equal", () => {

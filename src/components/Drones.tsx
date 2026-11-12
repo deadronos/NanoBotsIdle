@@ -7,6 +7,7 @@ import { getConfig } from "../config/index";
 import { getSimBridge } from "../simBridge/simBridge";
 import { useUiStore } from "../ui/store";
 import { playSound } from "../utils/audio";
+import { DroneCargo } from "./drones/DroneCargo";
 import { DroneInstancedMeshes } from "./drones/DroneInstancedMeshes";
 import { DroneMeshLoader } from "./drones/DroneMeshLoader";
 import type { FlashHandle } from "./drones/FlashEffect";
@@ -40,6 +41,7 @@ export const Drones: React.FC = () => {
     targetsRef,
     statesRef,
     rolesRef,
+    cargoRef,
     minedPositionsRef,
     depositEventsRef,
   } = useDronesFrameDelta(bridge);
@@ -72,6 +74,7 @@ export const Drones: React.FC = () => {
     targets: new Float32Array(0),
     states: new Uint8Array(0),
     roles: null,
+    scales: null,
     refs: {
       bodyMesh: null,
       miningLaserMesh: null,
@@ -114,6 +117,7 @@ export const Drones: React.FC = () => {
     frameOptions.targets = targets;
     frameOptions.states = states;
     frameOptions.roles = rolesRef.current;
+    frameOptions.scales = cargoRef.current;
     frameOptions.elapsedTime = state.clock.elapsedTime;
     frameOptions.minedPositions = minedPositionsRef.current;
     frameOptions.depositEvents = depositEventsRef.current;
@@ -136,6 +140,7 @@ export const Drones: React.FC = () => {
   return (
     <group>
       <Particles ref={particlesRef} />
+      <DroneCargo capacity={MAX_DRONES} positionsRef={positionsRef} cargoRef={cargoRef} />
       <FlashEffect ref={flashRef} />
       <FloatingTextSystem ref={floatingTextRef} />
 

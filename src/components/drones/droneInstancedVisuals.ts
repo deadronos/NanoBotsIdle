@@ -13,6 +13,7 @@ const _unitY = new Vector3(0, 1, 0);
 
 const _colorMiner = new Color(0x66ccff);
 const _colorHauler = new Color(0xffaa00);
+const _colorCargo = new Color(0xfad577);
 const _colorQueuing = new Color(0xff6600);
 const _colorMining = new Color(0xff4444);
 const _colorMoving = new Color(0x44ff44);
@@ -49,7 +50,12 @@ const applyInstanceUpdates = (
   }
 };
 
-const ensureUint8Cache = (mesh: InstancedMesh, key: string, capacity: number, fillValue: number) => {
+const ensureUint8Cache = (
+  mesh: InstancedMesh,
+  key: string,
+  capacity: number,
+  fillValue: number,
+) => {
   if (!mesh.userData[key] || (mesh.userData[key] as Uint8Array).length < capacity) {
     const arr = new Uint8Array(capacity);
     arr.fill(fillValue);
@@ -177,6 +183,26 @@ export const updateDroneInstancedVisuals = (
     const payloadRatio = scales ? scales[i] : 0;
     const s = 1.0 + payloadRatio * payloadScaleAmp;
 
+    if (hasBodyColors) {
+      const role = roles?.[i] ?? 0;
+      const colorCode =
+        droneState === DRONE_STATE_ID.QUEUING ? 3
+        : payloadRatio > 0 ? 2
+        : role;
+      if (roleCache[i] !== colorCode) {
+        roleCache[i] = colorCode;
+        const color =
+          colorCode === 3 ? _colorQueuing
+          : colorCode === 2 ? _colorCargo
+          : role === 1 ? _colorHauler
+          : _colorMiner;
+        bodyMesh.setColorAt(i, color);
+        bodyColorsDirty = true;
+        if (i < bodyColorMin) bodyColorMin = i;
+        if (i > bodyColorMax) bodyColorMax = i;
+      }
+    }
+
     if (hasTarget) {
       _target.set(targetX, targetY, targetZ);
       _dir.subVectors(_target, _pos);
@@ -195,23 +221,6 @@ export const updateDroneInstancedVisuals = (
       _tmp.scale.set(s, s, s);
       _tmp.updateMatrix();
       bodyMesh.setMatrixAt(i, _tmp.matrix);
-
-      if (hasBodyColors) {
-        const role = roles ? roles[i] : 0;
-        if (roleCache[i] !== role || droneState === DRONE_STATE_ID.QUEUING) {
-          roleCache[i] = role;
-          const isHauler = role === 1;
-          const colorObj =
-            droneState === DRONE_STATE_ID.QUEUING ? _colorQueuing
-            : isHauler ? _colorHauler
-            : _colorMiner;
-
-          bodyMesh.setColorAt(i, colorObj);
-          bodyColorsDirty = true;
-          if (i < bodyColorMin) bodyColorMin = i;
-          if (i > bodyColorMax) bodyColorMax = i;
-        }
-      }
 
       // --- target box ---
       {
@@ -267,23 +276,6 @@ export const updateDroneInstancedVisuals = (
     _tmp.scale.set(s, s, s);
     _tmp.updateMatrix();
     bodyMesh.setMatrixAt(i, _tmp.matrix);
-
-    if (hasBodyColors) {
-      const role = roles ? roles[i] : 0;
-      if (roleCache[i] !== role) {
-        roleCache[i] = role;
-        const isHauler = role === 1;
-        const colorObj = isHauler ? _colorHauler : _colorMiner;
-        bodyMesh.setColorAt(i, colorObj);
-        bodyColorsDirty = true;
-        if (i < bodyColorMin) bodyColorMin = i;
-        if (i > bodyColorMax) bodyColorMax = i;
-      }
-    }
-
-    if (targetStateCache[i] !== -1) {
-      targetStateCache[i] = -1;
-    }
 
     hideInstanceAt(miningLaserMesh, i);
     hideInstanceAt(scanningLaserMesh, i);

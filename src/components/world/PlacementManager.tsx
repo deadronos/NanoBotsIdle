@@ -1,127 +1,131 @@
-import { useFrame, useThree } from "@react-three/fiber";
-import React, { useRef, useState } from "react";
-import * as THREE from "three";
+import { useThree } from "@react-three/fiber";
+import React, { useLayoutEffect, useMemo } from "react";
+import { DoubleSide, Raycaster, Vector2, Vector3 } from "three";
 
 import { useConfig } from "../../config/useConfig";
-import { getSimBridge } from "../../simBridge/simBridge";
+import { MINING_ZONE_RADIUS, type MiningZone } from "../../shared/miningOperations";
+import { getGroundHeightWithEdits } from "../../sim/collision";
 import { useUiStore } from "../../ui/store";
 
 export const PlacementManager: React.FC = () => {
-  const buildingMode = useUiStore((state) => state.buildingMode);
-  const setBuildingMode = useUiStore((state) => state.setBuildingMode);
+  const mode = useUiStore((state) => state.buildingMode);
+  const placement = useUiStore((state) => state.placement);
+  const zoneX = useUiStore((state) => state.snapshot.miningZone?.x);
+  const zoneY = useUiStore((state) => state.snapshot.miningZone?.y);
+  const zoneZ = useUiStore((state) => state.snapshot.miningZone?.z);
   const cfg = useConfig();
-  const bridge = getSimBridge();
-  const { raycaster, camera, scene } = useThree();
+  const { gl, camera, scene } = useThree();
+  const meshed = cfg.render.voxels.mode === "meshed";
 
-  const ghostRef = useRef<THREE.Group>(null);
-  const [isValid, setIsValid] = useState(false);
-  const [position, setPosition] = useState<THREE.Vector3 | null>(null);
-
-  useFrame((state) => {
-    if (buildingMode === "NONE") return;
-
-    // Raycast from mouse to finding ground
-    raycaster.setFromCamera(state.pointer, camera);
-    const intersects = raycaster.intersectObjects(scene.children, true);
-
-    // Filter for voxel meshes? For now just take first hit that isn't the ghost itself.
-    // We might hit drones or player, but usually terrain is big.
-    const hit = intersects.find((i) => {
-      // Ignore ghost
-      let obj: THREE.Object3D | null = i.object;
-      while (obj) {
-        if (obj === ghostRef.current) return false;
-        if (obj.userData?.ignoreRaycast) return false; // Future proofing
-        obj = obj.parent;
+  useLayoutEffect(() => {
+    const canvas = gl.domElement;
+    const pointer = new Vector2();
+    const normal = new Vector3();
+    const raycaster = new Raycaster(undefined, undefined, 0, 80);
+    let down: { x: number; y: number; id: number } | undefined;
+    const start = (event: PointerEvent) => {
+      if (event.button === 0 && useUiStore.getState().buildingMode !== "NONE")
+        down = { x: event.clientX, y: event.clientY, id: event.pointerId };
+    };
+    const cancel = () => {
+      down = undefined;
+    };
+    const select = (event: PointerEvent) => {
+      const origin = down;
+      cancel();
+      if (useUiStore.getState().buildingMode === "NONE") return;
+      if (
+        !origin ||
+        origin.id !== event.pointerId ||
+        Math.hypot(origin.x - event.clientX, origin.y - event.clientY) > 7
+      )
+        return;
+      const terrain = scene.getObjectByName("voxel-terrain");
+      if (!terrain) return;
+      const rect = canvas.getBoundingClientRect();
+      pointer.set(
+        ((event.clientX - rect.left) / rect.width) * 2 - 1,
+        1 - ((event.clientY - rect.top) / rect.height) * 2,
+      );
+      raycaster.setFromCamera(pointer, camera);
+      const hit = raycaster.intersectObject(terrain, true).find((entry) => entry.object.visible);
+      if (!hit) return;
+      if (meshed && hit.face) {
+        normal.copy(hit.face.normal).transformDirection(hit.object.matrixWorld);
+        hit.point.addScaledVector(normal, -0.001);
       }
-      return true;
-    });
+      const cell = meshed ? Math.floor : Math.round;
+      const x = cell(hit.point.x);
+      const z = cell(hit.point.z);
+      if (Math.abs(x) > 500 || Math.abs(z) > 500) return;
+      const { snapshot, setPlacement } = useUiStore.getState();
+      const y = getGroundHeightWithEdits(x, z, snapshot.prestigeLevel, snapshot.actualSeed) + 1;
+      setPlacement({ x, y, z });
+    };
+    canvas.addEventListener("pointerdown", start);
+    canvas.addEventListener("pointerup", select);
+    canvas.addEventListener("pointercancel", cancel);
+    return () => {
+      canvas.removeEventListener("pointerdown", start);
+      canvas.removeEventListener("pointerup", select);
+      canvas.removeEventListener("pointercancel", cancel);
+    };
+  }, [camera, gl, meshed, scene]);
 
-    if (hit) {
-      // Snap to integer grid
-      const x = Math.round(hit.point.x);
-      const z = Math.round(hit.point.z);
-      const y = Math.round(hit.point.y);
-
-      // Validate: 4x4 area Flatness check?
-      // For V1, just check if y > waterLevel.
-      const waterLevel = cfg.terrain.waterLevel;
-      const valid = y > waterLevel;
-
-      setIsValid(valid);
-      setPosition(new THREE.Vector3(x, y, z));
-    } else {
-      setPosition(null);
-    }
-  });
-
-  const handleClick = () => {
-    if (buildingMode === "OUTPOST" && isValid && position) {
-      bridge.enqueue({
-        t: "BUILD_OUTPOST",
-        x: position.x,
-        y: position.y,
-        z: position.z,
-      });
-      setBuildingMode("NONE");
-    }
-  };
-
-  // Bind click event globally or transparent plane?
-  // R3F events on <mesh> are easier.
-  // We can treat the Ghost as the click target if we want, OR use a global event listener.
-  // But wait, the Ghost moves with the mouse. If we click, we click the Ghost?
-  // No, the raycaster finds the position.
-  // Let's use a global window click listener for "Build" when mode is active,
-  // OR just listen to pointer events on the Canvas via useThree domElement if possible,
-  // BUT R3F handles events.
-  // Best way: A fullscreen transparent plane `onPointerUp`?
-  // Actually, we can just use the `useFrame` logic for position, and a specialized "ClickCatcher" plane.
-
-  if (buildingMode === "NONE") return null;
+  const active = useMemo<MiningZone | undefined>(
+    () =>
+      zoneX === undefined || zoneY === undefined || zoneZ === undefined ?
+        undefined
+      : { x: zoneX, y: zoneY, z: zoneZ },
+    [zoneX, zoneY, zoneZ],
+  );
 
   return (
     <group>
-      {/* Invisible plane to catch clicks everywhere? No, that blocks orbit controls?
-          OrbitControls usually handles drag. Click is short.
-          Let's try a simple mesh that follows the cursor? No.
-          Let's use a global event hook for simplicity in v1.
-       */}
-      <ClickHandler onClick={handleClick} />
-
-      {position && (
-        <group position={position} ref={ghostRef}>
-          {/* 4x4 footprint */}
-          <mesh position={[0, 1, 0]}>
-            <boxGeometry args={[4, 2, 4]} />
-            <meshBasicMaterial
-              color={isValid ? "#00ff00" : "#ff0000"}
-              transparent
-              opacity={0.5}
-              wireframe
-            />
-          </mesh>
-        </group>
+      {active && <ZoneMarker point={active} color="#6ce4c4" meshed={meshed} />}
+      {placement && mode === "MINING_ZONE" && (
+        <ZoneMarker point={placement} color="#f4bf66" meshed={meshed} />
+      )}
+      {placement && mode === "OUTPOST" && (
+        <mesh
+          position={[placement.x, placement.y + (meshed ? 1 : 0.5), placement.z]}
+          renderOrder={5}
+        >
+          <boxGeometry args={[4, 2, 4]} />
+          <meshBasicMaterial
+            color="#f4bf66"
+            wireframe
+            depthTest={false}
+            depthWrite={false}
+            transparent
+            opacity={0.85}
+          />
+        </mesh>
       )}
     </group>
   );
 };
 
-// Helper to catch clicks in the canvas
-const ClickHandler: React.FC<{ onClick: () => void }> = ({ onClick }) => {
-  const { gl } = useThree();
-  React.useEffect(() => {
-    const canvas = gl.domElement;
-    const handler = (e: PointerEvent) => {
-      // Only main button
-      if (e.button === 0) {
-        onClick();
-      }
-    };
-    canvas.addEventListener("pointerup", handler);
-    return () => {
-      canvas.removeEventListener("pointerup", handler);
-    };
-  }, [gl, onClick]);
-  return null;
-};
+const ZoneMarker: React.FC<{ point: MiningZone; color: string; meshed: boolean }> = ({
+  point,
+  color,
+  meshed,
+}) => (
+  <group position={[point.x, point.y + (meshed ? 0.12 : -0.38), point.z]}>
+    <mesh rotation={[-Math.PI / 2, 0, 0]} renderOrder={5}>
+      <ringGeometry args={[MINING_ZONE_RADIUS - 0.11, MINING_ZONE_RADIUS, 48]} />
+      <meshBasicMaterial
+        color={color}
+        side={DoubleSide}
+        transparent
+        opacity={0.7}
+        depthWrite={false}
+        depthTest={false}
+      />
+    </mesh>
+    <mesh position={[0, 1.1, 0]}>
+      <cylinderGeometry args={[0.12, 0.12, 2.2, 6]} />
+      <meshBasicMaterial color={color} />
+    </mesh>
+  </group>
+);

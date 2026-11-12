@@ -1,7 +1,11 @@
 import React, { useEffect, useRef } from "react";
 
 import { playerPosition } from "../../engine/playerState";
+import { DRONE_STATE_ID } from "../../shared/droneState";
+import { MINING_ZONE_RADIUS } from "../../shared/miningOperations";
 import { getSimBridge } from "../../simBridge/simBridge";
+import type { FrameMessage } from "../../simBridge/types";
+import { useUiStore } from "../../ui/store";
 
 const SIZE = 150;
 const CENTER = SIZE / 2;
@@ -10,7 +14,7 @@ const SCALE = CENTER / RANGE;
 const UPDATE_INTERVAL_MS = 100;
 const RINGS = [22, 44, 66];
 
-export const Minimap: React.FC = () => {
+export const Minimap: React.FC<{ belowMenus: boolean }> = ({ belowMenus }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
   useEffect(() => {
@@ -18,7 +22,7 @@ export const Minimap: React.FC = () => {
     if (!ctx) return;
 
     let lastDraw = -Infinity;
-    const draw = (positions?: Float32Array) => {
+    const draw = (frame?: FrameMessage) => {
       ctx.clearRect(0, 0, SIZE, SIZE);
       ctx.strokeStyle = "#34454f";
       for (const radius of RINGS) {
@@ -27,16 +31,56 @@ export const Minimap: React.FC = () => {
         ctx.stroke();
       }
 
+      const { x, z } = playerPosition;
+      const mapX = (value: number) => CENTER + (value - x) * SCALE;
+      const mapZ = (value: number) => CENTER + (value - z) * SCALE;
+      const zone = frame?.ui.miningZone;
+      if (zone) {
+        ctx.strokeStyle = "#6ce4c4";
+        ctx.beginPath();
+        ctx.arc(mapX(zone.x), mapZ(zone.z), MINING_ZONE_RADIUS * SCALE, 0, Math.PI * 2);
+        ctx.stroke();
+      }
+
+      const positions = frame?.delta.entities;
+      const routes = frame?.delta.returnRoutes;
       if (positions) {
-        ctx.fillStyle = "#88d1bb";
-        const { x, z } = playerPosition;
-        for (let i = 0; i < positions.length; i += 3) {
-          const dx = positions[i] - x;
-          const dz = positions[i + 2] - z;
-          if (Math.abs(dx) < RANGE && Math.abs(dz) < RANGE) {
-            ctx.fillRect(CENTER + dx * SCALE - 1.5, CENTER + dz * SCALE - 1.5, 3, 3);
-          }
+        ctx.strokeStyle = "#f4bf6690";
+        ctx.beginPath();
+        for (let i = 0; routes && i < positions.length / 3; i++) {
+          if (!Number.isFinite(routes[i * 2])) continue;
+          ctx.moveTo(mapX(positions[i * 3]), mapZ(positions[i * 3 + 2]));
+          ctx.lineTo(mapX(routes[i * 2]), mapZ(routes[i * 2 + 1]));
         }
+        ctx.stroke();
+        const { buildingMode, placement, outpostPreview } = useUiStore.getState();
+        if (buildingMode === "OUTPOST" && placement && outpostPreview) {
+          const { redirected } = outpostPreview;
+          ctx.strokeStyle = "#92e8ff";
+          ctx.setLineDash([2, 2]);
+          ctx.beginPath();
+          for (const index of redirected) {
+            ctx.moveTo(mapX(positions[index * 3]), mapZ(positions[index * 3 + 2]));
+            ctx.lineTo(mapX(placement.x), mapZ(placement.z));
+          }
+          ctx.stroke();
+          ctx.setLineDash([]);
+          ctx.strokeRect(mapX(placement.x) - 3, mapZ(placement.z) - 3, 6, 6);
+        }
+        for (let i = 0; i < positions.length / 3; i++) {
+          const state = frame?.delta.entityStates?.[i];
+          ctx.fillStyle =
+            state === DRONE_STATE_ID.MINING ? "#fa947d"
+            : (frame?.delta.entityCargo?.[i] ?? 0) > 0 ? "#f4bf66"
+            : "#88d1bb";
+          ctx.fillRect(mapX(positions[i * 3]) - 1.5, mapZ(positions[i * 3 + 2]) - 1.5, 3, 3);
+        }
+      }
+
+      ctx.fillStyle = "#e5e7eb";
+      for (const outpost of frame?.delta.outposts ?? []) {
+        ctx.strokeStyle = outpost.queuedCount ? "#fa947d" : "#e5e7eb";
+        ctx.strokeRect(mapX(outpost.x) - 2.5, mapZ(outpost.z) - 2.5, 5, 5);
       }
 
       ctx.fillStyle = "#f4bf66";
@@ -47,12 +91,10 @@ export const Minimap: React.FC = () => {
 
     draw();
     return getSimBridge().onFrame((frame) => {
-      const positions = frame.delta.entities;
-      if (!positions) return;
       const now = performance.now();
       if (now - lastDraw < UPDATE_INTERVAL_MS) return;
       lastDraw = now;
-      draw(positions);
+      draw(frame);
     });
   }, []);
 
@@ -61,9 +103,10 @@ export const Minimap: React.FC = () => {
       <figcaption className="game-stat-label px-2 pt-1">Drone map</figcaption>
       <canvas
         ref={canvasRef}
+        className={belowMenus ? "w-[92px] sm:w-auto" : undefined}
         width={SIZE}
         height={SIZE}
-        aria-label="Drone positions relative to the player"
+        aria-label="Drone positions, mining zone, and outpost return routes"
       />
     </figure>
   );

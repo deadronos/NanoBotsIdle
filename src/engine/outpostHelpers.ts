@@ -16,6 +16,7 @@ export const handleDockRequest = (
   outpost: Outpost,
   elapsedSeconds: number,
 ) => {
+  drone.routeOutpost = outpost;
   const result = world.requestDock(outpost, drone.id);
   if (result === "GRANTED") {
     drone.state = "DEPOSITING";
@@ -26,6 +27,8 @@ export const handleDockRequest = (
       world.getQueueLength(outpost) > QUEUE_THRESHOLD &&
       (drone.lastRerouteAt ?? 0) + REROUTE_COOLDOWN_SECONDS < elapsedSeconds
     ) {
+      world.undock(outpost, drone.id);
+      drone.routeOutpost = undefined;
       drone.lastRerouteAt = elapsedSeconds;
       drone.state = "RETURNING";
     } else {
@@ -51,13 +54,14 @@ export const handleDeposit = (
   if (drone.miningTimer >= 0.5) {
     const deposited = drone.payload;
     uiSnapshot.credits += deposited;
-    const outpost = world.getNearestOutpost(drone.x, drone.y, drone.z);
+    const outpost = drone.routeOutpost ?? world.getNearestOutpost(drone.x, drone.y, drone.z);
+    drone.routeOutpost = undefined;
     if (outpost) {
       depositEvents.push({
         x: outpost.x,
         y: outpost.y,
         z: outpost.z,
-        amount: Math.floor(deposited),
+        amount: deposited,
       });
       world.undock(outpost, drone.id);
     }

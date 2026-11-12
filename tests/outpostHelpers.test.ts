@@ -69,6 +69,7 @@ describe("handleDockRequest", () => {
     const world = {
       requestDock: vi.fn(() => "QUEUED"),
       getQueueLength: vi.fn(() => QUEUE_THRESHOLD + 1),
+      undock: vi.fn(),
     } as unknown as WorldModel;
     const drone = createMockDrone("RETURNING");
     drone.lastRerouteAt = 0; // Expired
@@ -85,6 +86,7 @@ describe("handleDockRequest", () => {
     const world = {
       requestDock: vi.fn(() => "QUEUED"),
       getQueueLength: vi.fn(() => QUEUE_THRESHOLD + 1),
+      undock: vi.fn(),
     } as unknown as WorldModel;
     const drone = createMockDrone("RETURNING");
     drone.lastRerouteAt = 100;

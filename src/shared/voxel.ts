@@ -10,6 +10,8 @@ export type VoxelMaterial = typeof MATERIAL_AIR | typeof MATERIAL_SOLID | typeof
 export type VoxelKey = number;
 
 const VOXEL_COORD_OFFSET = 512;
+export const VOXEL_COORD_MIN = -VOXEL_COORD_OFFSET;
+export const VOXEL_COORD_MAX = VOXEL_COORD_OFFSET - 1;
 
 const linearKeyScratch = new LinearKey();
 

@@ -8,6 +8,7 @@ import { TelemetryPanel } from "./TelemetryPanel";
 import { BuildingDrawer } from "./ui/BuildingDrawer";
 import { Hud } from "./ui/Hud";
 import { Minimap } from "./ui/Minimap";
+import { MiningOrders } from "./ui/MiningOrders";
 import { PauseButton } from "./ui/PauseButton";
 import { Reticle } from "./ui/Reticle";
 import { ShopModal } from "./ui/ShopModal";
@@ -20,10 +21,13 @@ interface UIProps {
 
 export const UI: React.FC<UIProps> = ({ viewMode, onToggleView }) => {
   const [modal, setModal] = useState<"research" | "settings" | null>(null);
+  const [menu, setMenu] = useState<"mining" | "build" | null>(null);
   const [isMapOpen, setMapOpen] = useState(false);
   const [isTelemetryOpen, setTelemetryOpen] = useState(false);
   const config = useConfig();
   const buildingMode = useUiStore((state) => state.buildingMode);
+  const hasPlacement = useUiStore((state) => !!state.placement);
+  const previewingOutpost = buildingMode === "OUTPOST" && hasPlacement;
   const setBuildingMode = useUiStore((state) => state.setBuildingMode);
 
   React.useEffect(() => {
@@ -49,7 +53,14 @@ export const UI: React.FC<UIProps> = ({ viewMode, onToggleView }) => {
           >
             Research
           </button>
-          <BuildingDrawer />
+          <BuildingDrawer
+            open={menu === "build"}
+            onToggle={() => setMenu(menu === "build" ? null : "build")}
+          />
+          <MiningOrders
+            open={menu === "mining"}
+            onToggle={() => setMenu(menu === "mining" ? null : "mining")}
+          />
           <button
             className="game-control"
             aria-label="First-person camera"
@@ -69,7 +80,9 @@ export const UI: React.FC<UIProps> = ({ viewMode, onToggleView }) => {
             Settings
           </button>
           <PauseButton />
-          {isMapOpen && <Minimap />}
+          {(isMapOpen || previewingOutpost) && (
+            <Minimap belowMenus={menu !== null || buildingMode !== "NONE"} />
+          )}
         </nav>
       </header>
 
