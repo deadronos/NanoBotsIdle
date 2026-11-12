@@ -3,10 +3,7 @@ import React, { useCallback, useMemo, useRef } from "react";
 
 import { useConfig } from "../../config/useConfig";
 import { applyLodGeometry } from "../../render/lodGeometry";
-import {
-  createLodThresholds,
-  isChunkVisible as isChunkVisibleFn,
-} from "../../render/lodUtils";
+import { createLodThresholds, isChunkVisible as isChunkVisibleFn } from "../../render/lodUtils";
 import { defaultOcclusionConfig } from "../../render/occlusionCuller";
 import { getSimBridge } from "../../simBridge/simBridge";
 import { normalizeChunkLoadConfig } from "./chunkLoadConfig";
@@ -50,6 +47,12 @@ export const VoxelLayerMeshed: React.FC<{
     lastRequestedPlayerChunkRef.current = null;
   }, []);
 
+  const isChunkVisible = useCallback(
+    (coord: { cx: number; cy: number; cz: number }) =>
+      isChunkVisibleFn(coord, chunkSize, camera, lodThresholds),
+    [chunkSize, camera, lodThresholds],
+  );
+
   const { ensureChunk, getDebugState, groupRef, markDirtyForEdits, reset, setFocusChunk } =
     useMeshedChunks({
       chunkSize,
@@ -57,12 +60,12 @@ export const VoxelLayerMeshed: React.FC<{
       waterLevel: cfg.terrain.waterLevel,
       seed,
       onSchedulerChange: handleSchedulerChange,
-      isChunkVisible: (coord: { cx: number; cy: number; cz: number }) =>
-        isChunkVisibleFn(coord, chunkSize, camera, lodThresholds),
+      isChunkVisible,
     });
 
   useMeshedSimStream({
     bridge,
+    camera,
     tracking: {
       activeChunks,
       initialSurfaceChunkRef,

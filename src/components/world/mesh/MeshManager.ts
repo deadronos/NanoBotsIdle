@@ -112,6 +112,7 @@ export class MeshManager {
       meshChunkKeys: Array.from(this.meshes.keys()),
       processedChunkKeys: Array.from(this.processedChunkKeys.keys()),
       emptyChunkKeys: Array.from(this.emptyChunkKeys.keys()),
+      pendingResultKeys: Array.from(this.pendingResults.keys()),
       pendingResultCount: this.pendingResults.size,
     };
   }

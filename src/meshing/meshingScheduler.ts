@@ -58,6 +58,7 @@ export class MeshingScheduler {
     number,
     { key: string; rev: number; queuedAt: number; retryCount: number }
   >();
+  private readonly failed = new Set<string>();
   private readonly retryByKey = new Map<string, number>();
   private nextJobId = 1;
   private droppedTasksCount = 0;
@@ -102,7 +103,7 @@ export class MeshingScheduler {
       const telemetry = getTelemetryCollector();
       telemetry.recordMeshingError();
 
-      if (inFlightData) {
+      if (inFlightData && inFlightData.rev === this.revByChunk.get(inFlightData.key)) {
         const key = inFlightData.key;
         const retryCount = inFlightData.retryCount;
 
@@ -126,6 +127,7 @@ export class MeshingScheduler {
             `Meshing failed after ${this.maxRetries} attempts for chunk ` +
               `${msg.chunk.cx},${msg.chunk.cy},${msg.chunk.cz}: ${msg.message}`,
           );
+          this.failed.add(key);
           // Clear retry count as we're giving up
           this.retryByKey.delete(key);
         }
@@ -195,6 +197,7 @@ export class MeshingScheduler {
 
   markDirty(coord: ChunkCoord3) {
     const key = chunkKey(coord.cx, coord.cy, coord.cz);
+    this.failed.delete(key);
     const nextRev = (this.revByChunk.get(key) ?? 0) + 1;
     this.revByChunk.set(key, nextRev);
 
@@ -252,6 +255,7 @@ export class MeshingScheduler {
     this.inFlightByJob.clear();
     this.droppedTasksCount = 0;
     this.retryByKey.clear();
+    this.failed.clear();
   }
 
   private popNextDirty(): DirtyEntry | null {
@@ -297,6 +301,14 @@ export class MeshingScheduler {
 
   getChunkRevision(coord: ChunkCoord3) {
     return this.revByChunk.get(chunkKey(coord.cx, coord.cy, coord.cz)) ?? 0;
+  }
+
+  getInFlightKeys() {
+    return Array.from(this.inFlightByJob.values(), ({ key }) => key);
+  }
+
+  getFailedKeys() {
+    return Array.from(this.failed);
   }
 
   getInFlightCount() {

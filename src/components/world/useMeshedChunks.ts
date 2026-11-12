@@ -150,6 +150,8 @@ export const useMeshedChunks = (options: {
     return {
       ...meshState,
       dirtyKeys: scheduler?.getDirtyKeys() ?? [],
+      inFlightKeys: scheduler?.getInFlightKeys() ?? [],
+      failedKeys: scheduler?.getFailedKeys() ?? [],
       inFlight: scheduler?.getInFlightCount() ?? 0,
     };
   }, [meshManager]);
