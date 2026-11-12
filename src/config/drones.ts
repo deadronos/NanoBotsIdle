@@ -63,6 +63,8 @@ export type DronesConfig = {
       randomIntensity: number;
     };
     payloadScaleAmplitude: number;
+    /** Uniform scale for the drone body; the GLB is ~3 units long, so 0.4 is ~1 voxel. */
+    bodyScale: number;
   };
   useGLBMesh: boolean;
   glbPath: string;
@@ -133,6 +135,7 @@ export const defaultDronesConfig: DronesConfig = {
       randomIntensity: 3,
     },
     payloadScaleAmplitude: 0.2,
+    bodyScale: 0.4,
   },
   useGLBMesh: true,
   glbPath: `${import.meta.env.BASE_URL}assets/glb/drone/drone_compressed.glb`.replace(/\/\//g, "/"),

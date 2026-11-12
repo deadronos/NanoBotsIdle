@@ -29,7 +29,7 @@ export const DroneCargo: React.FC<{
       for (let i = 0; i < limit; i++) {
         if (cargo[i] <= 0) continue;
         const base = i * 3;
-        transform.position.set(positions[base], positions[base + 1] - 0.75, positions[base + 2]);
+        transform.position.set(positions[base], positions[base + 1] - 0.28, positions[base + 2]);
         transform.scale.setScalar(0.65 + cargo[i] * 0.35);
         transform.updateMatrix();
         mesh.setMatrixAt(count++, transform.matrix);
@@ -41,7 +41,7 @@ export const DroneCargo: React.FC<{
 
   return (
     <instancedMesh ref={meshRef} args={[undefined, undefined, capacity]} frustumCulled={false}>
-      <boxGeometry args={[0.45, 0.34, 0.45]} />
+      <boxGeometry args={[0.28, 0.2, 0.28]} />
       <meshBasicMaterial color="#ffc35b" />
     </instancedMesh>
   );

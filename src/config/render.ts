@@ -18,8 +18,17 @@ export const voxelRenderModes = ["frontier", "frontier-fill", "dense", "meshed"]
 
 export type VoxelRenderMode = (typeof voxelRenderModes)[number];
 
+export type BloomConfig = {
+  enabled: boolean;
+  intensity: number;
+  /** Only pixels brighter than this bloom; keep >= 1 so only HDR emissives glow. */
+  luminanceThreshold: number;
+  luminanceSmoothing: number;
+};
+
 export type RenderConfig = {
   sky: SkyConfig;
+  bloom: BloomConfig;
   ambientLightIntensity: number;
   sun: SunConfig;
   voxels: {
@@ -60,6 +69,12 @@ export const defaultRenderConfig: RenderConfig = {
     sunPosition: [50, 50, 20],
     turbidity: 4,
     rayleigh: 2,
+  },
+  bloom: {
+    enabled: true,
+    intensity: 0.9,
+    luminanceThreshold: 1,
+    luminanceSmoothing: 0.2,
   },
   ambientLightIntensity: 0.65,
   sun: {

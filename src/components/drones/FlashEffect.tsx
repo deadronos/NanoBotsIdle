@@ -6,6 +6,8 @@ import { AdditiveBlending, Color, DynamicDrawUsage, Object3D } from "three";
 const CAPACITY = 10;
 const DURATION = 0.22;
 const WHITE = new Color(1, 1, 1);
+// Peak flash brightness; values above 1 feed the bloom pass.
+const INTENSITY = 3;
 
 export interface FlashHandle {
   trigger: (pos: Vector3, color: Color) => void;
@@ -62,7 +64,7 @@ export const FlashEffect = forwardRef<FlashHandle>((_, ref) => {
         flashColor
           .copy(slot.color)
           .lerp(WHITE, 0.65)
-          .multiplyScalar(fade ** 2),
+          .multiplyScalar(INTENSITY * fade ** 2),
       );
       count++;
     }
