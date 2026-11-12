@@ -1,5 +1,8 @@
 import React, { type RefObject } from "react";
-import type { BufferGeometry, InstancedMesh, Material } from "three";
+import { type BufferGeometry, Color, type InstancedMesh, type Material } from "three";
+
+// HDR red (above 1.0, not tone mapped) so the mining beam blooms.
+const MINING_LASER_COLOR = new Color(3.5, 0.5, 0.35);
 
 export const DroneInstancedMeshes: React.FC<{
   maxDrones: number;
@@ -54,11 +57,12 @@ export const DroneInstancedMeshes: React.FC<{
       >
         <cylinderGeometry args={[0.05, 0.05, 1, 8, 1, true]} />
         <meshBasicMaterial
-          color="#ff3333"
+          color={MINING_LASER_COLOR}
           transparent
           opacity={0.7}
           blending={2}
           depthWrite={false}
+          toneMapped={false}
         />
       </instancedMesh>
 

@@ -7,6 +7,7 @@ import { DynamicResScaler } from "./components/DynamicResScaler";
 import { Environment } from "./components/Environment";
 import { Outposts } from "./components/Outposts";
 import { Player } from "./components/Player";
+import { PostEffects } from "./components/PostEffects";
 import { UI } from "./components/UI";
 import { World } from "./components/World";
 import { PlacementManager } from "./components/world/PlacementManager";
@@ -92,6 +93,7 @@ function App() {
           <Drones />
           <Outposts />
           <PlacementManager />
+          <PostEffects />
         </Suspense>
       </Canvas>
     </>

@@ -1,4 +1,4 @@
-import { type InstancedMesh, type Matrix4, Vector3 } from "three";
+import { type InstancedMesh, type Matrix4, Quaternion, Vector3 } from "three";
 import { describe, expect, it, vi } from "vitest";
 
 import { updateDroneInstancedVisuals } from "../src/components/drones/droneInstancedVisuals";
@@ -67,6 +67,33 @@ describe("droneVisuals performance optimization", () => {
       expect(nose().x).toBeCloseTo(-1);
     },
   );
+
+  it("renders the drone body at the configured body scale", () => {
+    const cfg = getConfig();
+    const body = new MockInstancedMesh();
+    let bodyMatrix: Matrix4 | undefined;
+    body.setMatrixAt.mockImplementation((_index: number, matrix: Matrix4) => {
+      bodyMatrix = matrix.clone();
+    });
+    updateDroneInstancedVisuals(
+      cfg,
+      1,
+      new Float32Array([0, 10, 0]),
+      new Float32Array([NaN, NaN, NaN]),
+      new Uint8Array([DRONE_STATE_ID.RETURNING]),
+      null,
+      null,
+      body as unknown as InstancedMesh,
+      new MockInstancedMesh() as unknown as InstancedMesh,
+      new MockInstancedMesh() as unknown as InstancedMesh,
+      new MockInstancedMesh() as unknown as InstancedMesh,
+      0,
+    );
+    const scale = new Vector3();
+    bodyMatrix!.decompose(new Vector3(), new Quaternion(), scale);
+    expect(cfg.drones.visual.bodyScale).toBeLessThan(1);
+    expect(scale.x).toBeCloseTo(cfg.drones.visual.bodyScale);
+  });
 
   it("keeps body colors stable until roles change", () => {
     const cfg = getConfig();

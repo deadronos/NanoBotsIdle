@@ -158,6 +158,7 @@ export const updateDroneInstancedVisuals = (
   const jitterBase = cfg.drones.visual.miningLaser.baseWidth;
   const jitterAmp = cfg.drones.visual.miningLaser.jitterAmplitude;
   const payloadScaleAmp = cfg.drones.visual.payloadScaleAmplitude;
+  const bodyScale = cfg.drones.visual.bodyScale;
 
   for (let i = 0; i < count; i += 1) {
     _bobbingCache![i] = Math.sin(elapsedTime * bobbingSpeed + i) * bobbingAmp;
@@ -200,7 +201,7 @@ export const updateDroneInstancedVisuals = (
 
     // Payload-based scale
     const payloadRatio = scales ? scales[i] : 0;
-    const s = 1.0 + payloadRatio * payloadScaleAmp;
+    const s = bodyScale * (1.0 + payloadRatio * payloadScaleAmp);
 
     if (hasBodyColors) {
       const role = roles?.[i] ?? 0;
